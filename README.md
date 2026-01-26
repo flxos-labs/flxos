@@ -1,6 +1,6 @@
 # ESP32 Desktop Environment (OS)
 
-[![Build Status](https://github.com/your-repo/esp32-os/actions/workflows/build.yml/badge.svg)](https://github.com/your-repo/esp32-os/actions)
+[![Build Status](https://github.com/your-repo/esp32-os/actions/workflows/build.yml/badge.svg)](https://github.com/Itsmeakash248/OS/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.x-blue)](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html)
 [![LVGL](https://img.shields.io/badge/LVGL-v9.x-orange)](https://lvgl.io)
@@ -99,12 +99,7 @@ Detailed developer documentation is available within the repository:
 - **[Full API List](LVGL_full_api_list.md)**: Comprehensive list of available LVGL APIs for app development.
 - **[Update API List](scripts/update_api_list.py)**: Script to regenerate API documentation based on current headers.
 
-## 🗺️ Roadmap
-
-- [ ] **Dynamic App Loading**: Load applications from SD Card (ELF/WASM).
-- [ ] **Bluetooth Audio Stack**: Integrated A2DP/HFP support.
-- [ ] **Theme Store**: Support for downloadable CSS-like UI themes.
-- [ ] **Python Bindings**: Scriptable UI components via MicroPython.
+## 🗺️ Roadmap (Coming Soon)
 
 ## 🤝 Contributing
 Contributions are welcome! Please submit Pull Requests or open Issues for new feature requests and driver support.
