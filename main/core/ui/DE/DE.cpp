@@ -1,11 +1,11 @@
 #include "DE.hpp"
-#include "wm/WM.hpp"
+#include "../theming/ThemeEngine.hpp"
+#include "core/apps/AppManager.hpp"
+#include "core/connectivity/ConnectivityManager.hpp"
+#include "core/system/SystemManager.hpp"
 #include "esp_timer.h"
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
-#include "core/system/SystemManager.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
-#include "core/apps/AppManager.hpp"
-#include "../theming/ThemeEngine.hpp"
+#include "wm/WM.hpp"
 #include <algorithm>
 #include <cstring>
 #include <ctime>
@@ -36,7 +36,8 @@ void DE::apply_glass(lv_obj_t *obj, int32_t blur) {
       obj, (void *)(intptr_t)blur);
 }
 
-lv_obj_t *DE::create_dock_btn(lv_obj_t *parent, const char *icon, int32_t w, int32_t h) {
+lv_obj_t *DE::create_dock_btn(lv_obj_t *parent, const char *icon, int32_t w,
+                              int32_t h) {
   lv_obj_t *btn = lv_button_create(parent);
   lv_obj_set_size(btn, w, h);
   lv_obj_set_style_radius(btn, lv_dpx(6), 0);
@@ -47,11 +48,11 @@ lv_obj_t *DE::create_dock_btn(lv_obj_t *parent, const char *icon, int32_t w, int
 }
 
 DE::DE()
-    : screen(nullptr), wallpaper(nullptr), wallpaper_img(nullptr), wallpaper_icon(nullptr),
-      window_container(nullptr),
-      status_bar(nullptr), dock(nullptr), time_label(nullptr),
-      theme_label(nullptr), launcher(nullptr), quick_access_panel(nullptr),
-      greetings(nullptr), app_container(nullptr) {}
+    : screen(nullptr), wallpaper(nullptr), wallpaper_img(nullptr),
+      wallpaper_icon(nullptr), window_container(nullptr), status_bar(nullptr),
+      dock(nullptr), time_label(nullptr), theme_label(nullptr),
+      launcher(nullptr), quick_access_panel(nullptr), greetings(nullptr),
+      app_container(nullptr) {}
 
 DE::~DE() {}
 
@@ -68,7 +69,7 @@ void DE::init() {
     wallpaper = lv_obj_create(screen);
     lv_obj_remove_style_all(wallpaper);
     lv_obj_set_size(wallpaper, lv_pct(100), lv_pct(100));
-    
+
     ThemeConfig cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
     lv_obj_set_style_bg_color(wallpaper, cfg.primary, 0);
     lv_obj_set_style_bg_opa(wallpaper, LV_OPA_COVER, 0);
@@ -77,7 +78,7 @@ void DE::init() {
 
     wallpaper_icon = lv_label_create(wallpaper);
     lv_label_set_text(wallpaper_icon, LV_SYMBOL_IMAGE);
-    lv_obj_set_style_text_font(wallpaper_icon, &lv_font_montserrat_48, 0);
+    lv_obj_set_style_text_font(wallpaper_icon, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_opa(wallpaper_icon, LV_OPA_30, 0);
     lv_obj_center(wallpaper_icon);
 
@@ -98,20 +99,26 @@ void DE::init() {
         [](lv_observer_t *observer, lv_subject_t *subject) {
           DE *instance = (DE *)lv_observer_get_user_data(observer);
           bool enabled = lv_subject_get_int(subject);
-          
+
           if (enabled) {
-            if (instance->wallpaper_icon) lv_obj_add_flag(instance->wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-            if (instance->wallpaper_img == nullptr && instance->wallpaper != nullptr) {
+            if (instance->wallpaper_icon)
+              lv_obj_add_flag(instance->wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+            if (instance->wallpaper_img == nullptr &&
+                instance->wallpaper != nullptr) {
               instance->wallpaper_img = lv_image_create(instance->wallpaper);
-              lv_image_set_src(instance->wallpaper_img, "A:/data/wallpaper.png");
-              lv_obj_set_size(instance->wallpaper_img, lv_pct(100), lv_pct(100));
+              lv_image_set_src(instance->wallpaper_img,
+                               "A:/data/wallpaper.png");
+              lv_obj_set_size(instance->wallpaper_img, lv_pct(100),
+                              lv_pct(100));
               lv_obj_set_style_pad_all(instance->wallpaper_img, 0, 0);
               lv_obj_set_style_border_width(instance->wallpaper_img, 0, 0);
-              lv_image_set_inner_align(instance->wallpaper_img, LV_IMAGE_ALIGN_COVER);
+              lv_image_set_inner_align(instance->wallpaper_img,
+                                       LV_IMAGE_ALIGN_COVER);
               lv_obj_move_background(instance->wallpaper_img);
             }
           } else {
-            if (instance->wallpaper_icon) lv_obj_clear_flag(instance->wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+            if (instance->wallpaper_icon)
+              lv_obj_clear_flag(instance->wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
             if (instance->wallpaper_img != nullptr) {
               lv_obj_delete(instance->wallpaper_img);
               instance->wallpaper_img = nullptr;
@@ -134,12 +141,14 @@ void DE::init() {
 
   create_dock();
 
-  WM::getInstance().init(window_container, app_container, screen, status_bar, dock);
+  WM::getInstance().init(window_container, app_container, screen, status_bar,
+                         dock);
 
   if (wallpaper) {
     greetings = lv_label_create(wallpaper);
     lv_label_set_text(greetings, "Hey !");
-    lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(2), -lv_dpx(2));
+    lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(2),
+                    -lv_dpx(2));
   }
 
   create_launcher();
@@ -199,7 +208,8 @@ void DE::create_launcher() {
 void DE::create_quick_access_panel() {
   quick_access_panel = lv_obj_create(screen);
   configure_panel_style(quick_access_panel);
-  lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(2));
+  lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0,
+                  -lv_dpx(2));
   lv_obj_set_flex_flow(quick_access_panel, LV_FLEX_FLOW_COLUMN);
   lv_obj_set_flex_align(quick_access_panel, LV_FLEX_ALIGN_START,
                         LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -301,10 +311,12 @@ void DE::realign_panels() {
       lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(2));
     }
     if (quick_access_panel) {
-      lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(2));
+      lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0,
+                      -lv_dpx(2));
     }
     if (greetings) {
-      lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(2), -lv_dpx(2));
+      lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(2),
+                      -lv_dpx(2));
     }
   }
 }
@@ -403,12 +415,13 @@ void DE::create_status_bar() {
       wifi_icon, nullptr);
 
   time_label = lv_label_create(status_bar);
-  
+
   time_t now;
   struct tm timeinfo;
   time(&now);
   localtime_r(&now, &timeinfo);
-  lv_label_set_text_fmt(time_label, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+  lv_label_set_text_fmt(time_label, "%02d:%02d", timeinfo.tm_hour,
+                        timeinfo.tm_min);
 
   lv_timer_create(
       [](lv_timer_t *t) {
@@ -417,7 +430,8 @@ void DE::create_status_bar() {
         struct tm timeinfo;
         time(&now);
         localtime_r(&now, &timeinfo);
-        lv_label_set_text_fmt(label, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+        lv_label_set_text_fmt(label, "%02d:%02d", timeinfo.tm_hour,
+                              timeinfo.tm_min);
       },
       1000, time_label);
 }
@@ -436,8 +450,9 @@ void DE::create_dock() {
   lv_obj_set_flex_align(dock, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
                         LV_FLEX_ALIGN_CENTER);
 
-  lv_obj_add_event_cb(DE::create_dock_btn(dock, LV_SYMBOL_LIST, lv_pct(13), lv_pct(85)),
-                      on_start_click, LV_EVENT_CLICKED, this);
+  lv_obj_add_event_cb(
+      DE::create_dock_btn(dock, LV_SYMBOL_LIST, lv_pct(13), lv_pct(85)),
+      on_start_click, LV_EVENT_CLICKED, this);
 
   app_container = lv_obj_create(dock);
   lv_obj_remove_style_all(app_container);
@@ -448,6 +463,7 @@ void DE::create_dock() {
   lv_obj_set_flex_align(app_container, LV_FLEX_ALIGN_START,
                         LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-  lv_obj_add_event_cb(DE::create_dock_btn(dock, LV_SYMBOL_UP, lv_pct(13), lv_pct(80)), on_up_click,
-                      LV_EVENT_CLICKED, this);
+  lv_obj_add_event_cb(
+      DE::create_dock_btn(dock, LV_SYMBOL_UP, lv_pct(13), lv_pct(80)),
+      on_up_click, LV_EVENT_CLICKED, this);
 }

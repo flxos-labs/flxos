@@ -1,42 +1,57 @@
 #pragma once
 
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "freertos/task.h"
-#include <algorithm>
-#include <functional>
+#include <atomic>
 #include <mutex>
 #include <string>
 #include <vector>
-#include <atomic>
 
 namespace System {
 class Task {
 public:
-  enum class RestartPolicy { 
-    NEVER, 
-    RESTART_TASK, // WARNING: Forcefully restarting a task can orphan mutexes and leak memory
-    REBOOT_SYSTEM 
+  enum class RestartPolicy {
+    NEVER,
+    RESTART_TASK, // WARNING: Forcefully restarting a task can orphan mutexes
+                  // and leak memory
+    REBOOT_SYSTEM
   };
 
-  Task(const std::string &name, uint32_t stackSize, UBaseType_t priority, BaseType_t coreId = tskNO_AFFINITY);
+  Task(const std::string &name, uint32_t stackSize, UBaseType_t priority,
+       BaseType_t coreId = tskNO_AFFINITY);
   virtual ~Task();
 
   bool start(void *data = nullptr);
   void stop();
   void requestStop() { m_stopRequested = true; }
-  void suspend() { TaskHandle_t h = m_handle.load(); if (h) vTaskSuspend(h); }
-  void resume() { TaskHandle_t h = m_handle.load(); if (h) vTaskResume(h); }
+  void suspend() {
+    TaskHandle_t h = m_handle.load();
+    if (h)
+      vTaskSuspend(h);
+  }
+  void resume() {
+    TaskHandle_t h = m_handle.load();
+    if (h)
+      vTaskResume(h);
+  }
   void join();
 
   bool shouldStop() const { return m_stopRequested.load(); }
 
   void heartbeat() { m_lastHeartbeat = esp_timer_get_time() / 1000; }
-  void setWatchdogTimeout(uint32_t timeoutMs) { m_watchdogTimeoutMs = timeoutMs; }
+  void setWatchdogTimeout(uint32_t timeoutMs) {
+    m_watchdogTimeoutMs = timeoutMs;
+  }
   uint32_t getWatchdogTimeout() const { return m_watchdogTimeoutMs; }
   uint64_t getLastHeartbeat() const { return m_lastHeartbeat; }
   bool isWatchdogEnabled() const { return m_watchdogTimeoutMs > 0; }
 
-  uint32_t getStackHighWaterMark() { TaskHandle_t h = m_handle.load(); return h ? uxTaskGetStackHighWaterMark(h) : 0; }
+  uint32_t getStackHighWaterMark() {
+    TaskHandle_t h = m_handle.load();
+    return h ? uxTaskGetStackHighWaterMark(h) : 0;
+  }
   uint32_t getStackSize() const { return m_stackSize; }
 
   void setRestartPolicy(RestartPolicy policy) { m_restartPolicy = policy; }

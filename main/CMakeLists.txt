@@ -8,5 +8,5 @@ idf_component_register(SRCS ${SRCS}
 )
 
 # Uploaded
-# fatfs_create_spiflash_image(system ../assets/system FLASH_IN_PROJECT)
-# fatfs_create_spiflash_image(data ../assets/data FLASH_IN_PROJECT)
+fatfs_create_spiflash_image(system ../assets/system FLASH_IN_PROJECT)
+fatfs_create_spiflash_image(data ../assets/data FLASH_IN_PROJECT)
