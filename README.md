@@ -89,7 +89,7 @@ idf.py menuconfig
 │   │   └── ui/         # Window Manager and UI Framework
 │   └── main.cpp        # Entry point
 ├── scripts/            # Documentation and build helpers
-└── partitions-16mb.csv # Recommended partition table
+└── partitions.csv      # 16MB partition table
 ```
 
 ## 📚 Documentation
