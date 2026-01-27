@@ -7,6 +7,11 @@ idf_component_register(SRCS ${SRCS}
     REQUIRES LovyanGFX lvgl dhcpserver
 )
 
+if(CONFIG_LV_USE_LOVYAN_GFX)
+    idf_component_get_property(lvgl_lib lvgl COMPONENT_LIB)
+    target_link_libraries(${lvgl_lib} PUBLIC idf::LovyanGFX)
+endif()
+
 # Uploaded
 fatfs_create_spiflash_image(system ../assets/system FLASH_IN_PROJECT)
 fatfs_create_spiflash_image(data ../assets/data FLASH_IN_PROJECT)
