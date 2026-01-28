@@ -403,6 +403,44 @@ void DE::create_status_bar() {
 		wifi_icon, nullptr
 	);
 
+	lv_obj_t* hotspot_group = lv_obj_create(left_group);
+	lv_obj_remove_style_all(hotspot_group);
+	lv_obj_set_size(hotspot_group, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(hotspot_group, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(hotspot_group, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+	lv_obj_t* hotspot_icon = lv_image_create(hotspot_group);
+	lv_image_set_src(hotspot_icon, LV_SYMBOL_WIFI);
+
+	lv_obj_t* hotspot_label = lv_label_create(hotspot_group);
+
+	lv_subject_add_observer_obj(
+		&System::ConnectivityManager::getInstance().getHotspotEnabledSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			lv_obj_t* group = lv_observer_get_target_obj(observer);
+			if (lv_subject_get_int(subject)) {
+				lv_obj_set_style_image_opa(group, LV_OPA_COVER, 0);
+			} else {
+				lv_obj_set_style_image_opa(group, LV_OPA_40, 0);
+			}
+		},
+		hotspot_group, nullptr
+	);
+
+	lv_subject_add_observer_obj(
+		&System::ConnectivityManager::getInstance().getHotspotClientsSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			lv_obj_t* label = lv_observer_get_target_obj(observer);
+			int32_t clients = lv_subject_get_int(subject);
+			if (clients > 0) {
+				lv_label_set_text_fmt(label, "%d", (int)clients);
+			} else {
+				lv_label_set_text(label, "");
+			}
+		},
+		hotspot_label, nullptr
+	);
+
 	time_label = lv_label_create(status_bar);
 
 	time_t now;
