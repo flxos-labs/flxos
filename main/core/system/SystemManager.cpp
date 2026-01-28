@@ -1,4 +1,5 @@
 #include "SystemManager.hpp"
+#include "../../lv_lgfx_user.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/tasks/TaskManager.hpp"
@@ -12,7 +13,6 @@
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 #include "src/debugging/sysmon/lv_sysmon.h"
-#include "src/drivers/display/lovyan_gfx/lv_lgfx_user.hpp"
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
 
 // Internal struct from lv_lovyan_gfx.cpp

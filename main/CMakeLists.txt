@@ -7,8 +7,12 @@ idf_component_register(SRCS ${SRCS}
     REQUIRES LovyanGFX lvgl dhcpserver
 )
 
+idf_component_get_property(lvgl_lib lvgl COMPONENT_LIB)
+if(CONFIG_LV_OS_IDLE_PERCENT_CUSTOM)
+    target_sources(${lvgl_lib} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lv_os_custom.c)
+endif()
+
 if(CONFIG_LV_USE_LOVYAN_GFX)
-    idf_component_get_property(lvgl_lib lvgl COMPONENT_LIB)
     target_link_libraries(${lvgl_lib} PUBLIC idf::LovyanGFX)
 endif()
 
