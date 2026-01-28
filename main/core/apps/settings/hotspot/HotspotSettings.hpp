@@ -100,9 +100,14 @@ private:
 		lv_obj_t* confBtn = lv_button_create(content);
 		lv_obj_set_width(confBtn, lv_pct(100));
 		lv_obj_set_style_margin_top(confBtn, 0, 0);
+		lv_obj_set_flex_flow(confBtn, LV_FLEX_FLOW_ROW);
+		lv_obj_set_flex_align(confBtn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+		lv_obj_t* confImg = lv_image_create(confBtn);
+		lv_image_set_src(confImg, LV_SYMBOL_SETTINGS);
+
 		lv_obj_t* confLabel = lv_label_create(confBtn);
-		lv_label_set_text(confLabel, LV_SYMBOL_SETTINGS " Configure Hotspot");
-		lv_obj_center(confLabel);
+		lv_label_set_text(confLabel, " Configure Hotspot");
 		lv_obj_add_event_cb(
 			confBtn,
 			[](lv_event_t* e) {
@@ -307,8 +312,8 @@ private:
 
 		lv_obj_t* saveBtn = lv_button_create(header);
 		lv_obj_set_size(saveBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-		lv_obj_t* saveLabel = lv_label_create(saveBtn);
-		lv_label_set_text(saveLabel, LV_SYMBOL_OK);
+		lv_obj_t* saveLabel = lv_image_create(saveBtn);
+		lv_image_set_src(saveLabel, LV_SYMBOL_OK);
 		lv_obj_add_event_cb(
 			saveBtn,
 			[](lv_event_t* e) {

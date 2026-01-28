@@ -1,191 +1,191 @@
 menu "Hardware Configuration"
 
-    config OS_DISPLAY_WIDTH
+    config FLXOS_DISPLAY_WIDTH
         int "Display Width"
         default 240
         help
             The horizontal resolution of the display.
 
-    config OS_DISPLAY_HEIGHT
+    config FLXOS_DISPLAY_HEIGHT
         int "Display Height"
         default 320
         help
             The vertical resolution of the display.
 
-    config OS_DISPLAY_ROTATION
+    config FLXOS_DISPLAY_ROTATION
         int "Display Rotation (0, 90, 180, 270)"
         range 0 270
         default 90
         help
             Initial rotation of the display in degrees.
 
-    choice OS_HARDWARE_MODE
+    choice FLXOS_HARDWARE_MODE
         prompt "Hardware Initialization Mode"
-        default OS_HARDWARE_MANUAL
+        default FLXOS_HARDWARE_MANUAL
         help
             Choose between manual pin configuration or LovyanGFX AutoDetect.
 
-        config OS_HARDWARE_MANUAL
+        config FLXOS_HARDWARE_MANUAL
             bool "Manual Configuration"
             help
                 Manually specify pins and drivers.
 
-        config OS_HARDWARE_AUTODETECT
+        config FLXOS_HARDWARE_AUTODETECT
             bool "AutoDetect (for known boards)"
             help
                 Use LovyanGFX AutoDetect to find hardware at runtime.
     endchoice
 
-    if OS_HARDWARE_MANUAL
+    if FLXOS_HARDWARE_MANUAL
         menu "Display Driver Selection"
-            choice OS_DISPLAY_DRIVER
+            choice FLXOS_DISPLAY_DRIVER
                 prompt "Panel Driver"
-                default OS_DISPLAY_ILI9341
+                default FLXOS_DISPLAY_ILI9341
                 
-                config OS_DISPLAY_ILI9163
+                config FLXOS_DISPLAY_ILI9163
                     bool "ILI9163"
-                config OS_DISPLAY_ILI9225
+                config FLXOS_DISPLAY_ILI9225
                     bool "ILI9225"
-                config OS_DISPLAY_ILI9341
+                config FLXOS_DISPLAY_ILI9341
                     bool "ILI9341"
-                config OS_DISPLAY_ILI9342
+                config FLXOS_DISPLAY_ILI9342
                     bool "ILI9342"
-                config OS_DISPLAY_ILI9481
+                config FLXOS_DISPLAY_ILI9481
                     bool "ILI9481"
-                config OS_DISPLAY_ILI9486
+                config FLXOS_DISPLAY_ILI9486
                     bool "ILI9486"
-                config OS_DISPLAY_ILI9488
+                config FLXOS_DISPLAY_ILI9488
                     bool "ILI9488"
-                config OS_DISPLAY_ST7735
+                config FLXOS_DISPLAY_ST7735
                     bool "ST7735"
-                config OS_DISPLAY_ST7789
+                config FLXOS_DISPLAY_ST7789
                     bool "ST7789"
-                config OS_DISPLAY_ST7796
+                config FLXOS_DISPLAY_ST7796
                     bool "ST7796"
-                config OS_DISPLAY_GC9A01
+                config FLXOS_DISPLAY_GC9A01
                     bool "GC9A01 (Round)"
-                config OS_DISPLAY_SSD1306
+                config FLXOS_DISPLAY_SSD1306
                     bool "SSD1306 (OLED)"
-                config OS_DISPLAY_SSD1327
+                config FLXOS_DISPLAY_SSD1327
                     bool "SSD1327 (OLED)"
-                config OS_DISPLAY_SSD1331
+                config FLXOS_DISPLAY_SSD1331
                     bool "SSD1331 (OLED)"
-                config OS_DISPLAY_SSD1351
+                config FLXOS_DISPLAY_SSD1351
                     bool "SSD1351 (OLED)"
-                config OS_DISPLAY_SSD1963
+                config FLXOS_DISPLAY_SSD1963
                     bool "SSD1963"
-                config OS_DISPLAY_NT35510
+                config FLXOS_DISPLAY_NT35510
                     bool "NT35510"
-                config OS_DISPLAY_RM68120
+                config FLXOS_DISPLAY_RM68120
                     bool "RM68120"
-                config OS_DISPLAY_RA8875
+                config FLXOS_DISPLAY_RA8875
                     bool "RA8875"
             endchoice
 
-            config OS_DISPLAY_INVERT
+            config FLXOS_DISPLAY_INVERT
                 bool "Invert Display Colors"
                 default n
 
-            config OS_DISPLAY_RGB_ORDER
+            config FLXOS_DISPLAY_RGB_ORDER
                 bool "Is RGB Order? (N=BGR)"
                 default n
         endmenu
 
         menu "Manual Pin Configuration"
-            config OS_SPI_HOST
+            config FLXOS_SPI_HOST
                 int "SPI Host (1=SPI2, 2=SPI3)"
                 range 1 2
                 default 1
 
-            config OS_SPI_FREQ_WRITE
+            config FLXOS_SPI_FREQ_WRITE
                 int "SPI Write Frequency (Hz)"
                 default 40000000
                 help
                     Default is 40MHz. Some displays support up to 80MHz.
 
-            config OS_SPI_FREQ_READ
+            config FLXOS_SPI_FREQ_READ
                 int "SPI Read Frequency (Hz)"
                 default 16000000
                 
-            config OS_PIN_SCLK
+            config FLXOS_PIN_SCLK
                 int "SPI SCLK Pin"
                 default 12
             
-            config OS_PIN_MOSI
+            config FLXOS_PIN_MOSI
                 int "SPI MOSI Pin"
                 default 11
             
-            config OS_PIN_MISO
+            config FLXOS_PIN_MISO
                 int "SPI MISO Pin"
                 default 7
             
-            config OS_PIN_CS
+            config FLXOS_PIN_CS
                 int "Display CS Pin"
                 default 10
             
-            config OS_PIN_DC
+            config FLXOS_PIN_DC
                 int "Display DC Pin"
                 default 9
             
-            config OS_PIN_RST
+            config FLXOS_PIN_RST
                 int "Display Reset Pin"
                 default 15
 
-            config OS_PIN_BCKL
+            config FLXOS_PIN_BCKL
                 int "Backlight Pin"
                 default 17
             
-            config OS_BCKL_FREQ
+            config FLXOS_BCKL_FREQ
                 int "Backlight PWM Frequency (Hz)"
                 default 20000
 
-            config OS_BCKL_PWM_CHANNEL
+            config FLXOS_BCKL_PWM_CHANNEL
                 int "Backlight PWM Channel"
                 default 7
 
-            config OS_TOUCH_ENABLED
+            config FLXOS_TOUCH_ENABLED
                 bool "Enable Touch"
                 default y
 
-            if OS_TOUCH_ENABLED
-                choice OS_TOUCH_DRIVER
+            if FLXOS_TOUCH_ENABLED
+                choice FLXOS_TOUCH_DRIVER
                     prompt "Touch Driver"
-                    default OS_TOUCH_XPT2046
+                    default FLXOS_TOUCH_XPT2046
                     
-                    config OS_TOUCH_XPT2046
+                    config FLXOS_TOUCH_XPT2046
                         bool "XPT2046 (SPI)"
-                    config OS_TOUCH_FT5x06
+                    config FLXOS_TOUCH_FT5x06
                         bool "FT5x06 / FT6x36 (I2C)"
-                    config OS_TOUCH_GT911
+                    config FLXOS_TOUCH_GT911
                         bool "GT911 (I2C)"
-                    config OS_TOUCH_CSTxxx
+                    config FLXOS_TOUCH_CSTxxx
                         bool "CSTxxx (I2C)"
-                    config OS_TOUCH_CHSC6x
+                    config FLXOS_TOUCH_CHSC6x
                         bool "CHSC6x (I2C)"
-                    config OS_TOUCH_GSLx680
+                    config FLXOS_TOUCH_GSLx680
                         bool "GSLx680 (I2C)"
-                    config OS_TOUCH_NS2009
+                    config FLXOS_TOUCH_NS2009
                         bool "NS2009 (I2C)"
-                    config OS_TOUCH_STMPE610
+                    config FLXOS_TOUCH_STMPE610
                         bool "STMPE610 (I2C)"
                 endchoice
 
-                config OS_PIN_TOUCH_CS
+                config FLXOS_PIN_TOUCH_CS
                     int "Touch CS Pin (SPI only)"
                     default 8
-                    depends on OS_TOUCH_XPT2046
+                    depends on FLXOS_TOUCH_XPT2046
                 
-                config OS_PIN_TOUCH_SCL
+                config FLXOS_PIN_TOUCH_SCL
                     int "Touch I2C SCL Pin"
                     default 12
-                    depends on !OS_TOUCH_XPT2046 && !OS_TOUCH_RA8875
+                    depends on !FLXOS_TOUCH_XPT2046 && !FLXOS_TOUCH_RA8875
 
-                config OS_PIN_TOUCH_SDA
+                config FLXOS_PIN_TOUCH_SDA
                     int "Touch I2C SDA Pin"
                     default 11
-                    depends on !OS_TOUCH_XPT2046 && !OS_TOUCH_RA8875
+                    depends on !FLXOS_TOUCH_XPT2046 && !FLXOS_TOUCH_RA8875
 
-                config OS_PIN_TOUCH_INT
+                config FLXOS_PIN_TOUCH_INT
                     int "Touch INT Pin"
                     default 16
             endif

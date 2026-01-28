@@ -2,6 +2,7 @@
 #include "../theming/ThemeEngine.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
+#include "core/lv_obj_style_gen.h"
 #include "core/system/SystemManager.hpp"
 #include "esp_timer.h"
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
@@ -75,10 +76,10 @@ void DE::init() {
 		lv_obj_add_flag(wallpaper, LV_OBJ_FLAG_FLOATING);
 		lv_obj_move_background(wallpaper);
 
-		wallpaper_icon = lv_label_create(wallpaper);
-		lv_label_set_text(wallpaper_icon, LV_SYMBOL_IMAGE);
-		lv_obj_set_style_text_font(wallpaper_icon, &lv_font_montserrat_14, 0);
+		wallpaper_icon = lv_image_create(wallpaper);
+		lv_image_set_src(wallpaper_icon, LV_SYMBOL_IMAGE);
 		lv_obj_set_style_text_opa(wallpaper_icon, LV_OPA_30, 0);
+		lv_obj_set_style_text_font(wallpaper_icon, &lv_font_montserrat_14, 0); // lv_font_montserrat_48 looks good
 		lv_obj_center(wallpaper_icon);
 
 		lv_subject_add_observer_obj(
@@ -387,16 +388,16 @@ void DE::create_status_bar() {
 		lv_label_set_text(safe_label, " SAFE MODE");
 	}
 
-	lv_obj_t* wifi_icon = lv_label_create(left_group);
-	lv_label_set_text(wifi_icon, LV_SYMBOL_WIFI);
+	lv_obj_t* wifi_icon = lv_image_create(left_group);
+	lv_image_set_src(wifi_icon, LV_SYMBOL_WIFI);
 	lv_subject_add_observer_obj(
 		&System::ConnectivityManager::getInstance().getWiFiConnectedSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			lv_obj_t* obj = lv_observer_get_target_obj(observer);
 			if (lv_subject_get_int(subject)) {
-				lv_obj_set_style_text_opa(obj, LV_OPA_COVER, 0);
+				lv_obj_set_style_image_opa(obj, LV_OPA_COVER, 0);
 			} else {
-				lv_obj_set_style_text_opa(obj, LV_OPA_40, 0);
+				lv_obj_set_style_image_opa(obj, LV_OPA_40, 0);
 			}
 		},
 		wifi_icon, nullptr

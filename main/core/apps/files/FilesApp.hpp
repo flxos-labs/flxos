@@ -40,8 +40,8 @@ public:
 		// Add a Home button
 		lv_obj_t* homeBtn = lv_button_create(m_header);
 		lv_obj_set_size(homeBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-		lv_obj_t* homeLabel = lv_label_create(homeBtn);
-		lv_label_set_text(homeLabel, LV_SYMBOL_HOME);
+		lv_obj_t* homeLabel = lv_image_create(homeBtn);
+		lv_image_set_src(homeLabel, LV_SYMBOL_HOME);
 		lv_obj_center(homeLabel);
 		lv_obj_add_event_cb(
 			homeBtn,
@@ -55,8 +55,8 @@ public:
 		// Add a New Folder button
 		lv_obj_t* mkdirBtn = lv_button_create(m_header);
 		lv_obj_set_size(mkdirBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-		lv_obj_t* mkdirLabel = lv_label_create(mkdirBtn);
-		lv_label_set_text(mkdirLabel, LV_SYMBOL_PLUS);
+		lv_obj_t* mkdirLabel = lv_image_create(mkdirBtn);
+		lv_image_set_src(mkdirLabel, LV_SYMBOL_PLUS);
 		lv_obj_center(mkdirLabel);
 		lv_obj_add_event_cb(
 			mkdirBtn,
@@ -72,8 +72,8 @@ public:
 		// Add a Paste button
 		m_pasteBtn = lv_button_create(m_header);
 		lv_obj_set_size(m_pasteBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-		lv_obj_t* pasteLabel = lv_label_create(m_pasteBtn);
-		lv_label_set_text(pasteLabel, LV_SYMBOL_PASTE);
+		lv_obj_t* pasteLabel = lv_image_create(m_pasteBtn);
+		lv_image_set_src(pasteLabel, LV_SYMBOL_PASTE);
 		lv_obj_center(pasteLabel);
 		lv_obj_add_event_cb(
 			m_pasteBtn,

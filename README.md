@@ -1,108 +1,63 @@
-# ESP32 Desktop Environment (OS)
+# FlxOS
 
-[![Build Status](https://github.com/your-repo/esp32-os/actions/workflows/build.yml/badge.svg)](https://github.com/Itsmeakash248/OS/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![ESP-IDF](https://img.shields.io/badge/ESP--IDF-v5.x-blue)](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html)
-[![LVGL](https://img.shields.io/badge/LVGL-v9.x-orange)](https://lvgl.io)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Framework](https://img.shields.io/badge/framework-ESP--IDF-green.svg)
+![Graphics](https://img.shields.io/badge/graphics-LVGL-orange.svg)
 
-A sophisticated, high-performance Desktop Environment designed for the **ESP32 series** (S3, S2, C3, C6, and classic ESP32). Powered by **LVGL v9** and **LovyanGFX**, this project provides a complete UI framework featuring window management, a modern glassmorphism aesthetic, and a robust, centralized hardware configuration system.
+## Overview
 
----
+Welcome to the **FlxOS**, a high-performance, feature-rich embedded environment designed for **ESP32 microcontrollers**. This project integrates the robustness of the **ESP-IDF** framework with the visual capabilities of **LVGL** to deliver a responsive and intuitive desktop-like experience on embedded hardware.
 
-## 📖 Table of Contents
-- [🚀 Key Features](#-key-features)
-- [🛠 Hardware Support](#-hardware-support)
-- [📥 Getting Started](#-getting-started)
-- [📂 Project Structure](#-project-structure)
-- [📚 Documentation](#-documentation)
-- [🗺️ Roadmap](#️-roadmap)
-- [🤝 Contributing](#-contributing)
-- [📜 License](#-license)
+## Key Features
 
----
+- **Advanced GUI Engine**: built on LVGL 9 and LovyanGFX for hardware-accelerated graphics and smooth frame rates.
+- **Modular App Architecture**: a scalable application system allowing for easy addition of new capabilities (`core/apps`).
+- **System Management**: centralized hardware abstraction and resource management (`core/system`).
+- **Robust Connectivity**: integrated Wi-Fi and network stack handling for IoT capabilities (`core/connectivity`).
+- **Multitasking Environment**: FreeRTOS-based task scheduling for efficient parallel processing.
 
-## 🚀 Key Features
+## Getting Started
 
-- **Universal Chip Support**: Native compatibility with **ESP32, S2, S3, C3, C6, and H2**.
-- **App Manager**: Robust lifecycle management for multi-tasking internal applications.
-- **Window Manager**: Advanced windowing system with focus management, overlapping, and transparency.
-- **Modern UI/UX**: Native glassmorphism, high-quality animations, and an integrated theme engine.
-- **Universal HAL**: Centralized hardware abstraction via Kconfig—switch hardware without touching code.
-- **System Services**: Dynamic Status Bar, App Launcher, Quick Access Panel, and Connectivity Management (WiFi/BT).
+### Prerequisites
 
-## 🛠 Hardware Support
+Ensure you have the following installed on your development environment:
 
-The OS is designed to be highly portable. While it defaults to ESP32-S3 for high-end UI features, it scales down to budget chips.
+- **ESP-IDF v5.x**: [Installation Guide](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/)
+- **CMake**: 3.16 or later
+- **Ninja Build System**
 
-### Supported Chipsets
-| Series | Recommended Use | PSRAM Support |
-| :--- | :--- | :--- |
-| **ESP32-S3** | Full Glassmorphism / 3D Graphics | High (Octal/Quad) |
-| **ESP32-S2** | Standard Window Management | Quad |
-| **ESP32-C3/C6** | Minimalist UI / IoT Dashboards | Internal only |
-| **ESP32** | Legacy hardware support | Quad |
+### Installation
 
-### Supported Display Controllers
-- **ILI Series**: ILI9163, ILI9225, ILI9341, ILI9342, ILI9481, ILI9486, ILI9488.
-- **ST Series**: ST7735, ST7789, ST7796.
-- **OLED Series**: SSD1306, SSD1327, SSD1331, SSD1351.
-- **Specialty**: GC9A01 (Round), SSD1963, NT35510, RM68120, RA8875.
+1.  **Clone the Repository**
+    ```bash
+    git clone --recursive https://github.com/YourUsername/FlxOS.git
+    cd FlxOS
+    ```
 
-### Supported Touch Controllers
-- **SPI**: XPT2046.
-- **I2C**: FT5x06/FT6x36, GT911, CSTxxx, CHSC6x, GSLx680, NS2009, STMPE610.
+2.  **Set up the Environment**
+    ```bash
+    . $HOME/esp/esp-idf/export.sh
+    ```
 
-## 📥 Getting Started
+3.  **Configure the Project**
+    ```bash
+    idf.py set-target <target> # e.g., esp32, esp32s3
+    idf.py menuconfig
+    ```
 
-### 1. Prerequisites
-Ensure you have the **ESP-IDF v5.x** environment installed.
+4.  **Build and Flash**
+    ```bash
+    idf.py build flash monitor
+    ```
 
-### 2. Clone and Initialize
-```bash
-git clone --recursive https://github.com/your-repo/esp32-os.git
-cd esp32-os
-```
+## Directory Structure
 
-### 3. Target Selection
-Switch to your specific hardware target before building:
-```bash
-# Example for ESP32-C3
-idf.py set-target esp32c3
-```
+- `main/`: Core source code and entry point.
+  - `core/`: System modules, apps, and UI logic.
+  - `lv_os_custom.c`: Custom LVGL OS bindings.
+- `components/`: External dependencies and custom component libraries.
+- `assets/`: Static assets such as images and fonts.
 
-### 4. Hardware Configuration
-All hardware settings (pins, resolution, drivers) are centralized in `menuconfig`.
-```bash
-idf.py menuconfig
-```
-## 📂 Project Structure
+## License
 
-```text
-├── assets/             # Wallpapers, icons, and system data
-├── components/         # Drivers and libraries
-│   ├── LovyanGFX/      # Display/Touch abstraction layer
-│   └── lvgl/           # Graphics library (v9)
-├── main/               # Core OS logic
-│   ├── core/
-│   │   ├── apps/       # Integrated system applications
-│   │   ├── system/     # HAL, Task Manager, and Resource Monitoring
-│   │   └── ui/         # Window Manager and UI Framework
-│   └── main.cpp        # Entry point
-├── scripts/            # Documentation and build helpers
-└── partitions.csv      # 16MB partition table
-```
-
-## 📚 Documentation
-
-Detailed developer documentation is available within the repository:
-- **[LVGL v9 Features](LVGL_Features.md)**: Deep dive into the capabilities of the graphics engine.
-- **[Full API List](LVGL_full_api_list.md)**: Comprehensive list of available LVGL APIs for app development.
-- **[Update API List](scripts/update_api_list.py)**: Script to regenerate API documentation based on current headers.
-
-## 🗺️ Roadmap (Coming Soon)
-
-## 🤝 Contributing
-Contributions are welcome! Please submit Pull Requests or open Issues for new feature requests and driver support.
-
-## 📜 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

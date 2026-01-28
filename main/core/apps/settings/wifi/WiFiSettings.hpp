@@ -75,8 +75,8 @@ public:
 
 			lv_obj_t* refreshBtn = lv_button_create(statusCont);
 			lv_obj_set_size(refreshBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-			lv_obj_t* refreshLabel = lv_label_create(refreshBtn);
-			lv_label_set_text(refreshLabel, LV_SYMBOL_REFRESH);
+			lv_obj_t* refreshLabel = lv_image_create(refreshBtn);
+			lv_image_set_src(refreshLabel, LV_SYMBOL_REFRESH);
 			lv_obj_add_event_cb(
 				refreshBtn,
 				[](lv_event_t* e) {
@@ -179,8 +179,8 @@ public:
 					lv_obj_set_style_text_opa(rssi_label, LV_OPA_60, 0);
 
 					if (net.authmode != WIFI_AUTH_OPEN) {
-						lv_obj_t* lock = lv_label_create(btn);
-						lv_label_set_text(lock, LV_SYMBOL_EYE_CLOSE);
+						lv_obj_t* lock = lv_image_create(btn);
+						lv_image_set_src(lock, LV_SYMBOL_EYE_CLOSE);
 						lv_obj_align(lock, LV_ALIGN_RIGHT_MID, 0, 0);
 					} else {
 						lv_obj_align(rssi_label, LV_ALIGN_RIGHT_MID, 0, 0);

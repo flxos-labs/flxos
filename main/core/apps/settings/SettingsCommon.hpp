@@ -35,8 +35,8 @@ inline lv_obj_t* create_header(lv_obj_t* parent, const char* title_text, lv_obj_
 	lv_obj_set_flex_align(header, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
 	lv_obj_t* backBtn = lv_button_create(header);
-	lv_obj_t* backLabel = lv_label_create(backBtn);
-	lv_label_set_text(backLabel, LV_SYMBOL_LEFT);
+	lv_obj_t* backLabel = lv_image_create(backBtn);
+	lv_image_set_src(backLabel, LV_SYMBOL_LEFT);
 	if (back_btn_out)
 		*back_btn_out = backBtn;
 
