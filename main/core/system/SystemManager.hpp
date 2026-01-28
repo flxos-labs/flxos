@@ -7,47 +7,48 @@
 namespace System {
 class SystemManager {
 public:
-  static SystemManager &getInstance();
 
-  esp_err_t initHardware();
-  esp_err_t initGuiState();
+	static SystemManager& getInstance();
 
-  wl_handle_t getSystemWlHandle() const { return m_wl_handle_system; }
-  wl_handle_t getDataWlHandle() const { return m_wl_handle_data; }
+	esp_err_t initHardware();
+	esp_err_t initGuiState();
 
-  bool isSafeMode() const { return m_isSafeMode; }
+	wl_handle_t getSystemWlHandle() const { return m_wl_handle_system; }
+	wl_handle_t getDataWlHandle() const { return m_wl_handle_data; }
 
-  lv_subject_t &getBrightnessSubject() { return m_brightness_subject; }
-  lv_subject_t &getThemeSubject() { return m_theme_subject; }
-  lv_subject_t &getRotationSubject() { return m_rotation_subject; }
-  lv_subject_t &getUptimeSubject() { return m_uptime_subject; }
-  lv_subject_t &getShowFpsSubject() { return m_show_fps_subject; }
-  lv_subject_t &getWallpaperEnabledSubject() { return m_wallpaper_enabled_subject; }
-  lv_subject_t &getGlassEnabledSubject() { return m_glass_enabled_subject; }
+	bool isSafeMode() const { return m_isSafeMode; }
+
+	lv_subject_t& getBrightnessSubject() { return m_brightness_subject; }
+	lv_subject_t& getThemeSubject() { return m_theme_subject; }
+	lv_subject_t& getRotationSubject() { return m_rotation_subject; }
+	lv_subject_t& getUptimeSubject() { return m_uptime_subject; }
+	lv_subject_t& getShowFpsSubject() { return m_show_fps_subject; }
+	lv_subject_t& getWallpaperEnabledSubject() {
+		return m_wallpaper_enabled_subject;
+	}
+	lv_subject_t& getGlassEnabledSubject() { return m_glass_enabled_subject; }
 
 private:
-  SystemManager() = default;
-  ~SystemManager() = default;
-  SystemManager(const SystemManager &) = delete;
-  SystemManager &operator=(const SystemManager &) = delete;
 
-  esp_err_t mountStorage();
-  static void mount_storage_helper(const char *path,
-                                   const char *partition_label,
-                                   wl_handle_t *wl_handle,
-                                   bool format_if_failed);
+	SystemManager() = default;
+	~SystemManager() = default;
+	SystemManager(const SystemManager&) = delete;
+	SystemManager& operator=(const SystemManager&) = delete;
 
-  wl_handle_t m_wl_handle_system = WL_INVALID_HANDLE;
-  wl_handle_t m_wl_handle_data = WL_INVALID_HANDLE;
-  bool m_isSafeMode = false;
+	esp_err_t mountStorage();
+	static void mount_storage_helper(const char* path, const char* partition_label, wl_handle_t* wl_handle, bool format_if_failed);
 
-  lv_subject_t m_brightness_subject;
-  lv_subject_t m_theme_subject;
-  lv_subject_t m_rotation_subject;
-  lv_subject_t m_uptime_subject;
-  lv_subject_t m_show_fps_subject;
-  lv_subject_t m_wallpaper_enabled_subject;
-  lv_subject_t m_glass_enabled_subject;
+	wl_handle_t m_wl_handle_system = WL_INVALID_HANDLE;
+	wl_handle_t m_wl_handle_data = WL_INVALID_HANDLE;
+	bool m_isSafeMode = false;
+
+	lv_subject_t m_brightness_subject;
+	lv_subject_t m_theme_subject;
+	lv_subject_t m_rotation_subject;
+	lv_subject_t m_uptime_subject;
+	lv_subject_t m_show_fps_subject;
+	lv_subject_t m_wallpaper_enabled_subject;
+	lv_subject_t m_glass_enabled_subject;
 };
 
 } // namespace System
