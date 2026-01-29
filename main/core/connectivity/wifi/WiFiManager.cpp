@@ -6,9 +6,6 @@
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include <cstring>
-extern "C" {
-#include "lwip/ip_addr.h"
-}
 
 static const char* TAG = "WiFiManager";
 

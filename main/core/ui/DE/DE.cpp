@@ -2,15 +2,9 @@
 #include "../theming/ThemeEngine.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
-#include "core/lv_obj_style_gen.h"
 #include "core/system/SystemManager.hpp"
-#include "esp_timer.h"
-#include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
 #include "wm/WM.hpp"
-#include <algorithm>
-#include <cstring>
 #include <ctime>
-#include <vector>
 
 DE& DE::getInstance() {
 	static DE instance;

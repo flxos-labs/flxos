@@ -1,9 +1,6 @@
 #pragma once
 
-#include "core/apps/AppManager.hpp"
 #include "lvgl.h"
-#include <map>
-#include <memory>
 #include <string>
 
 class DE {

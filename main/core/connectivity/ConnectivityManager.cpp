@@ -7,7 +7,6 @@
 #include "esp_wifi.h"
 #include "hotspot/HotspotManager.hpp"
 #include "wifi/WiFiManager.hpp"
-#include <cstring>
 
 static const char* TAG = "ConnectivityManager";
 

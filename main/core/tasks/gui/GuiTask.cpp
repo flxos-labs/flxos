@@ -1,6 +1,5 @@
 #include "GuiTask.hpp"
 #include "LovyanGFX.hpp"
-#include "core/apps/AppManager.hpp"
 #include "core/system/SystemManager.hpp"
 #include "core/ui/DE/DE.hpp"
 #include "core/ui/theming/ThemeEngine.hpp"
