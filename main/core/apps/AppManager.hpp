@@ -43,8 +43,8 @@ public:
 
 	void startApp(std::shared_ptr<App> app);
 	void startApp(const std::string& packageName);
-	void stopApp(const std::string& packageName);
-	void stopApp(std::shared_ptr<App> app);
+	void stopApp(const std::string& packageName, bool closeUI = true);
+	void stopApp(std::shared_ptr<App> app, bool closeUI = true);
 	void stopCurrentApp();
 
 	std::shared_ptr<App> getAppByPackageName(const std::string& packageName);

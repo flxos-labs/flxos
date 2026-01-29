@@ -3,7 +3,6 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include "esp_timer.h"
-#include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 static const char* TAG = "ResourceMonitor";
@@ -42,6 +41,10 @@ void ResourceMonitorTask::run(void* data) {
 
 		if (m_freeHeap < 32768) {
 			ESP_LOGW(TAG, "LOW MEMORY WARNING: Free heap is %u bytes", (unsigned int)m_freeHeap.load());
+		}
+
+		if (m_uptimeSeconds % 60 == 0) {
+			ESP_LOGI(TAG, "Status: Heap=%u, MinHeap=%u, PSRAM=%u, Uptime=%u s", (uint32_t)m_freeHeap.load(), (uint32_t)m_minFreeHeap.load(), (uint32_t)m_freePsram.load(), (uint32_t)m_uptimeSeconds.load());
 		}
 		vTaskDelay(pdMS_TO_TICKS(10000));
 	}

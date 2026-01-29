@@ -1,4 +1,5 @@
 #pragma once
+#include "esp_log.h"
 #include <string>
 
 namespace System {
@@ -22,12 +23,16 @@ public:
 	}
 
 	void set(const std::string& path, bool isDir, ClipboardOp op) {
+		ESP_LOGI("Clipboard", "Setting clipboard: %s (isDir=%d, op=%d)", path.c_str(), isDir, (int)op);
 		m_entry = {path, isDir, op};
 	}
 
 	const ClipboardEntry& get() const { return m_entry; }
 
-	void clear() { m_entry = {"", false, ClipboardOp::NONE}; }
+	void clear() {
+		ESP_LOGD("Clipboard", "Clearing clipboard");
+		m_entry = {"", false, ClipboardOp::NONE};
+	}
 
 	bool hasContent() const { return m_entry.op != ClipboardOp::NONE; }
 

@@ -57,8 +57,10 @@ void TimeManager::syncTime() {
 		init();
 	}
 
+	ESP_LOGI(TAG, "Requesting time sync...");
 	// Check if we are already synced
 	if (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
+		ESP_LOGI(TAG, "Time already synced");
 		m_is_synced = true;
 	}
 }
@@ -67,22 +69,31 @@ bool TimeManager::waitForSync(uint32_t timeout_ms) {
 	if (!m_is_init)
 		init();
 
+	ESP_LOGI(TAG, "Waiting for time sync (timeout: %d ms)...", (int)timeout_ms);
 	uint32_t waited = 0;
 	const uint32_t interval = 100;
 
 	while (!m_is_synced && waited < timeout_ms) {
 		if (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
 			m_is_synced = true;
+			ESP_LOGI(TAG, "Time synced successfully after %d ms", (int)waited);
 			break;
 		}
 		vTaskDelay(pdMS_TO_TICKS(interval));
 		waited += interval;
 	}
 
+	if (!m_is_synced) {
+		ESP_LOGW(TAG, "Time sync timed out after %d ms", (int)timeout_ms);
+	}
+
 	return m_is_synced;
 }
 
-void TimeManager::updateSyncStatus(bool synced) { m_is_synced = synced; }
+void TimeManager::updateSyncStatus(bool synced) {
+	ESP_LOGD(TAG, "Sync status update: %s", synced ? "SYNCED" : "NOT SYNCED");
+	m_is_synced = synced;
+}
 
 void TimeManager::setTimeZone(const char* tz) {
 	setenv("TZ", tz, 1);

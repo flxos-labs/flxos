@@ -1,12 +1,10 @@
 #include "GuiTask.hpp"
-#include "LovyanGFX.hpp"
 #include "core/system/SystemManager.hpp"
 #include "core/ui/DE/DE.hpp"
 #include "core/ui/theming/ThemeEngine.hpp"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_timer.h"
-#include "lvgl.h"
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
 
 SemaphoreHandle_t GuiTask::xGuiSemaphore = nullptr;
@@ -31,8 +29,11 @@ void GuiTask::display_init() {
 	const uint32_t sz =
 		CONFIG_FLXOS_DISPLAY_WIDTH * CONFIG_FLXOS_DISPLAY_HEIGHT / 10 * 2;
 	void* buf = heap_caps_malloc(sz, MALLOC_CAP_DMA);
-	if (!buf)
-		ESP_LOGE("GuiTask", "Failed to allocate display buffer!");
+	if (!buf) {
+		ESP_LOGE("GuiTask", "Failed to allocate display buffer of size %u!", (unsigned int)sz);
+	} else {
+		ESP_LOGI("GuiTask", "Allocated %u bytes for display buffer", (unsigned int)sz);
+	}
 
 	bool touch_en = false;
 #if CONFIG_FLXOS_HARDWARE_AUTODETECT
@@ -57,6 +58,8 @@ void GuiTask::display_init() {
 	lv_group_set_default(g);
 
 	lv_tick_set_cb([]() { return (uint32_t)(esp_timer_get_time() / 1000); });
+	ESP_LOGD("GuiTask", "LVGL Tick callback set");
+	ESP_LOGI("GuiTask", "Display initialized successfully.");
 }
 
 void GuiTask::run(void*) {
@@ -65,6 +68,7 @@ void GuiTask::run(void*) {
 	ThemeEngine::init();
 	System::SystemManager::getInstance().initGuiState();
 	DE::getInstance().init();
+	ESP_LOGI("GuiTask", "GUI Core components initialized.");
 	unlock();
 
 	setWatchdogTimeout(5000);

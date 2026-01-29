@@ -58,13 +58,16 @@ esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode) {
 	wifi_mode_t current_mode;
 	esp_err_t err = esp_wifi_get_mode(&current_mode);
 	if (err != ESP_OK && err != ESP_ERR_WIFI_NOT_INIT) {
+		ESP_LOGE(TAG, "Failed to get current WiFi mode: %s", esp_err_to_name(err));
 		return err;
 	}
 
 	if (err != ESP_ERR_WIFI_NOT_INIT && current_mode == mode) {
+		ESP_LOGD(TAG, "WiFi mode already %d, ensuring it's started", mode);
 		return esp_wifi_start(); // Ensure it's started even if mode is same
 	}
 
+	ESP_LOGI(TAG, "Setting WiFi mode: %d (current: %d)", mode, (err == ESP_ERR_WIFI_NOT_INIT) ? -1 : current_mode);
 	err = esp_wifi_set_mode(mode);
 	if (err != ESP_OK)
 		return err;
@@ -73,9 +76,11 @@ esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode) {
 }
 
 esp_err_t ConnectivityManager::connectWiFi(const char* s, const char* p) {
+	ESP_LOGI(TAG, "Connect request for SSID: %s", s);
 	return WiFiManager::getInstance().connect(s, p);
 }
 esp_err_t ConnectivityManager::disconnectWiFi() {
+	ESP_LOGI(TAG, "Disconnect request for WiFi");
 	return WiFiManager::getInstance().disconnect();
 }
 bool ConnectivityManager::isWiFiConnected() const {
@@ -85,6 +90,7 @@ esp_err_t ConnectivityManager::scanWiFi(WiFiManager::ScanCallback callback) {
 	return WiFiManager::getInstance().scan(callback);
 }
 esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
+	ESP_LOGI(TAG, "Setting WiFi Enabled: %d", enabled);
 	GuiTask::lock();
 	lv_subject_set_int(&m_wifi_enabled_subject, enabled ? 1 : 0);
 	GuiTask::unlock();
@@ -94,9 +100,11 @@ bool ConnectivityManager::isWiFiEnabled() const {
 	return WiFiManager::getInstance().isEnabled();
 }
 esp_err_t ConnectivityManager::startHotspot(const char* s, const char* p, int c, int m, bool h, wifi_auth_mode_t auth, int8_t tx) {
+	ESP_LOGI(TAG, "Start Hotspot request: %s", s);
 	return HotspotManager::getInstance().start(s, p, c, m, h, auth, tx);
 }
 esp_err_t ConnectivityManager::stopHotspot() {
+	ESP_LOGI(TAG, "Stop Hotspot request");
 	return HotspotManager::getInstance().stop();
 }
 bool ConnectivityManager::isHotspotEnabled() const {
@@ -107,6 +115,7 @@ ConnectivityManager::getHotspotClientsList() const {
 	return HotspotManager::getInstance().getConnectedClients();
 }
 esp_err_t ConnectivityManager::enableBluetooth(bool e) {
+	ESP_LOGI(TAG, "Setting Bluetooth Enabled: %d", e);
 	return BluetoothManager::getInstance().enable(e);
 }
 bool ConnectivityManager::isBluetoothEnabled() const {

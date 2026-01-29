@@ -92,6 +92,7 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 }
 
 esp_err_t WiFiManager::disconnect() {
+	ESP_LOGI(TAG, "Disconnecting from WiFi");
 	m_should_reconnect = false;
 	setStatus(WiFiStatus::DISCONNECTED);
 	return esp_wifi_disconnect();
@@ -101,6 +102,7 @@ esp_err_t WiFiManager::setEnabled(bool enabled) {
 	if (m_is_enabled == enabled)
 		return ESP_OK;
 
+	ESP_LOGI(TAG, "WiFi Manager setEnabled: %d", enabled);
 	std::lock_guard<std::recursive_mutex> wifi_lock(
 		ConnectivityManager::getInstance().getWifiMutex()
 	);
@@ -141,6 +143,7 @@ esp_err_t WiFiManager::scan(ScanCallback callback) {
 	wifi_scan_config_t scan_config = {};
 	scan_config.show_hidden = false;
 
+	ESP_LOGI(TAG, "Starting WiFi scan...");
 	setStatus(WiFiStatus::SCANNING);
 
 	wifi_mode_t current_mode;
@@ -173,11 +176,13 @@ esp_err_t WiFiManager::scan(ScanCallback callback) {
 bool WiFiManager::isConnected() const {
 	GuiTask::lock();
 	if (!m_connected_subject) {
+		ESP_LOGW(TAG, "isConnected check: No connected subject initialized");
 		GuiTask::unlock();
 		return false;
 	}
 	bool connected = lv_subject_get_int(m_connected_subject) != 0;
 	GuiTask::unlock();
+	ESP_LOGD(TAG, "isConnected check: %s", connected ? "TRUE" : "FALSE");
 	return connected;
 }
 
@@ -201,6 +206,7 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 	WiFiManager* self = static_cast<WiFiManager*>(arg);
 
 	if (event_id == WIFI_EVENT_STA_START) {
+		ESP_LOGI(TAG, "WiFi STA started");
 		if (self->m_should_reconnect)
 			esp_wifi_connect();
 	} else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
@@ -229,8 +235,12 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 		} else if (self->m_should_reconnect && self->m_retry_count < MAX_RETRIES) {
 			ESP_LOGI(TAG, "Disconnected from WiFi (reason=%d), retrying (%d/%d)...", event->reason, self->m_retry_count + 1, MAX_RETRIES);
 			self->setStatus(WiFiStatus::CONNECTING);
-			esp_wifi_connect();
-			self->m_retry_count++;
+			esp_err_t err = esp_wifi_connect();
+			if (err == ESP_OK) {
+				self->m_retry_count++;
+			} else {
+				ESP_LOGE(TAG, "Retry esp_wifi_connect failed: %s", esp_err_to_name(err));
+			}
 		} else if (self->m_retry_count >= MAX_RETRIES) {
 			ESP_LOGW(TAG, "Max retries reached. Stopping reconnection.");
 			self->m_should_reconnect = false;
@@ -241,16 +251,19 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 				self->setStatus(WiFiStatus::DISCONNECTED);
 			}
 		} else {
+			ESP_LOGI(TAG, "Disconnected from WiFi (reason=%d), no regrouping requested or enabled.", event->reason);
 			self->setStatus(WiFiStatus::DISCONNECTED);
 		}
 	} else if (event_id == WIFI_EVENT_STA_CONNECTED) {
 		wifi_event_sta_connected_t* event =
 			(wifi_event_sta_connected_t*)event_data;
+		ESP_LOGI(TAG, "WiFi connected to SSID: %s", (char*)event->ssid);
 		GuiTask::lock();
 		if (self->m_ssid_subject)
 			lv_subject_copy_string(self->m_ssid_subject, (char*)event->ssid);
 		GuiTask::unlock();
 	} else if (event_id == WIFI_EVENT_SCAN_DONE) {
+		ESP_LOGI(TAG, "WiFi scan done");
 		uint16_t ap_count = 0;
 		esp_wifi_scan_get_ap_num(&ap_count);
 		if (ap_count > 0) {

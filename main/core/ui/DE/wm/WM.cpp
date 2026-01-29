@@ -3,6 +3,9 @@
 #include "../DE.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
+#include "esp_log.h"
+
+static const char* TAG = "WM";
 
 WM& WM::getInstance() {
 	static WM instance;
@@ -24,12 +27,14 @@ void WM::init(lv_obj_t* window_container, lv_obj_t* app_container, lv_obj_t* scr
 	m_statusBar = status_bar;
 	m_dock = dock;
 
+	ESP_LOGI(TAG, "Initializing Window Manager...");
 	lv_obj_set_style_pad_all(m_windowContainer, lv_dpx(4), 0);
 }
 
 void WM::activate_window(lv_obj_t* target_win) {
 	if (!target_win)
 		return;
+	ESP_LOGD(TAG, "Activating window: %p", target_win);
 	// No internal locking to prevent deadlocks when called from locked
 	// contexts Bring target to foreground within container
 	lv_obj_move_to_index(target_win, -1);
@@ -68,6 +73,7 @@ void WM::openApp(const std::string& packageName) {
 	for (const auto& pair: m_windowAppMap) {
 		if (pair.second == packageName) {
 			lv_obj_t* win = pair.first;
+			ESP_LOGI(TAG, "App '%s' already open, bringing to front", packageName.c_str());
 			lv_obj_remove_flag(win, LV_OBJ_FLAG_HIDDEN);
 			activate_window(win);
 			System::Apps::AppManager::getInstance().startApp(packageName);
@@ -79,10 +85,12 @@ void WM::openApp(const std::string& packageName) {
 	auto app =
 		System::Apps::AppManager::getInstance().getAppByPackageName(packageName);
 	if (!app) {
+		ESP_LOGE(TAG, "Failed to find app package: %s", packageName.c_str());
 		GuiTask::unlock();
 		return;
 	}
 
+	ESP_LOGI(TAG, "Creating new window for app: %s", packageName.c_str());
 	// Create new window
 	lv_obj_t* win = lv_win_create(m_windowContainer);
 	// Initial size will be handled by updateLayout, but set defaults just
@@ -145,14 +153,19 @@ void WM::closeApp(const std::string& packageName) {
 			break;
 		}
 	}
-	if (winToClose)
+	if (winToClose) {
+		ESP_LOGI(TAG, "Closing app: %s", packageName.c_str());
 		closeWindow_internal(winToClose);
+	} else {
+		ESP_LOGW(TAG, "App not found for closing: %s", packageName.c_str());
+	}
 	GuiTask::unlock();
 }
 
 void WM::on_win_focus(lv_event_t* e) {
 	WM* wm = (WM*)lv_event_get_user_data(e);
-	lv_obj_t* win = lv_event_get_current_target_obj(e);
+	lv_obj_t* win = (lv_obj_t*)lv_event_get_target(e);
+	ESP_LOGD(TAG, "Window focused: %p. Activating.", win);
 	activate_window(win);
 
 	if (wm && wm->m_windowAppMap.count(win)) {
@@ -217,37 +230,38 @@ void WM::closeWindow(lv_obj_t* w) {
 	GuiTask::unlock();
 }
 
-void WM::closeWindow_internal(lv_obj_t* w) {
-	if (!w || !lv_obj_is_valid(w))
+void WM::closeWindow_internal(lv_obj_t* win) {
+	if (!win || !lv_obj_is_valid(win))
 		return;
+	ESP_LOGI(TAG, "Internal close request for window: %p", win);
 	// Assumes GuiTask lock is already held
 
-	if (w == m_fullScreenWindow) {
-		toggleFullScreen(w);
+	if (win == m_fullScreenWindow) {
+		toggleFullScreen(win);
 	}
 
-	if (m_windowAppMap.count(w)) {
-		std::string pkg = m_windowAppMap[w];
-		m_windowAppMap.erase(w);
-		System::Apps::AppManager::getInstance().stopApp(pkg);
+	if (m_windowAppMap.count(win)) {
+		std::string pkg = m_windowAppMap[win];
+		m_windowAppMap.erase(win);
+		System::Apps::AppManager::getInstance().stopApp(pkg, false);
 	}
 
-	if (m_windowMaxBtnLabelMap.count(w)) {
-		m_windowMaxBtnLabelMap.erase(w);
+	if (m_windowMaxBtnLabelMap.count(win)) {
+		m_windowMaxBtnLabelMap.erase(win);
 	}
 
-	lv_obj_t* db = (lv_obj_t*)lv_obj_get_user_data(w);
+	lv_obj_t* db = (lv_obj_t*)lv_obj_get_user_data(win);
 	if (db && lv_obj_is_valid(db))
 		lv_obj_delete(db);
 
 	// Remove from tiled list
 	for (auto it = m_tiledWindows.begin(); it != m_tiledWindows.end(); ++it) {
-		if (*it == w) {
+		if (*it == win) {
 			m_tiledWindows.erase(it);
 			break;
 		}
 	}
-	lv_obj_delete(w);
+	lv_obj_delete(win);
 	updateLayout();
 }
 
@@ -281,6 +295,7 @@ void WM::toggleFullScreen(lv_obj_t* win) {
 	}
 
 	if (m_fullScreenWindow == win) {
+		ESP_LOGI(TAG, "Toggling off full screen for window: %p", win);
 		lv_obj_set_parent(win, m_windowContainer);
 		lv_obj_remove_flag(win, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_remove_flag(m_statusBar, LV_OBJ_FLAG_HIDDEN);
@@ -290,6 +305,7 @@ void WM::toggleFullScreen(lv_obj_t* win) {
 			lv_image_set_src(max_btn_content, LV_SYMBOL_PLUS);
 		}
 	} else {
+		ESP_LOGI(TAG, "Toggling on full screen for window: %p", win);
 		if (m_fullScreenWindow) {
 			// Recursively toggle off existing full screen
 			toggleFullScreen(m_fullScreenWindow);
@@ -317,6 +333,7 @@ void WM::updateLayout() {
 	// Force layout update on the parent (screen) to ensure
 	// m_windowContainer has updated size after toggling status_bar or dock
 	// visibility.
+	ESP_LOGD(TAG, "Updating layout for %u tiled windows", (unsigned int)m_tiledWindows.size());
 	lv_obj_update_layout(m_screen);
 
 	std::vector<lv_obj_t*> visibleWins;

@@ -27,6 +27,7 @@ public:
 		return m_wallpaper_enabled_subject;
 	}
 	lv_subject_t& getGlassEnabledSubject() { return m_glass_enabled_subject; }
+	lv_subject_t& getWallpaperPathSubject() { return m_wallpaper_path_subject; }
 
 private:
 
@@ -49,6 +50,7 @@ private:
 	lv_subject_t m_show_fps_subject;
 	lv_subject_t m_wallpaper_enabled_subject;
 	lv_subject_t m_glass_enabled_subject;
+	lv_subject_t m_wallpaper_path_subject;
 };
 
 } // namespace System

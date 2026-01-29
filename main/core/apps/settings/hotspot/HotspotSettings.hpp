@@ -2,6 +2,7 @@
 
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
+#include "esp_log.h"
 #include "lvgl.h"
 #include <functional>
 #include <string>
@@ -212,7 +213,10 @@ private:
 		lv_label_set_text(resetLabel, "Reset Usage");
 		lv_obj_add_event_cb(
 			resetUsageBtn,
-			[](lv_event_t* e) { HotspotManager::getInstance().resetUsage(); },
+			[](lv_event_t* e) {
+				ESP_LOGI("HotspotSettings", "Resetting usage statistics");
+				HotspotManager::getInstance().resetUsage();
+			},
 			LV_EVENT_CLICKED, nullptr
 		);
 
@@ -484,6 +488,7 @@ private:
 	}
 
 	void showMainPage() {
+		ESP_LOGD("HotspotSettings", "Switching to main hotspot status page");
 		lv_obj_add_flag(m_configPage, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_remove_flag(m_mainPage, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -522,11 +527,13 @@ private:
 		int8_t tx_power = (int8_t)lv_slider_get_value(m_txPowerSlider);
 
 		if (strlen(ssid) == 0) {
+			ESP_LOGE("HotspotSettings", "Validation failed: Empty SSID");
 			lv_obj_remove_state(m_hotspotSwitch, LV_STATE_CHECKED);
 			return;
 		}
 
 		if (auth != WIFI_AUTH_OPEN && strlen(pass) < 8) {
+			ESP_LOGE("HotspotSettings", "Validation failed: Password too short (<8 chars)");
 			lv_obj_remove_state(m_hotspotSwitch, LV_STATE_CHECKED);
 			return;
 		}

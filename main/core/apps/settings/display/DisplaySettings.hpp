@@ -2,7 +2,9 @@
 
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/system/SystemManager.hpp"
+#include "core/ui/FileChooser.hpp"
 #include "core/ui/theming/ThemeEngine.hpp"
+#include "esp_log.h"
 #include "lvgl.h"
 #include <functional>
 
@@ -89,6 +91,59 @@ public:
 			lv_obj_t* wpSw = lv_switch_create(wpBtn);
 			lv_obj_bind_checked(
 				wpSw, &SystemManager::getInstance().getWallpaperEnabledSubject()
+			);
+
+			lv_obj_t* chooseWpBtn =
+				add_list_btn(m_list, LV_SYMBOL_DIRECTORY, "Choose Wallpaper");
+
+			// Sync button state with wallpaper enablement
+			auto update_chooser_state = [](lv_obj_t* btn, int32_t enabled) {
+				if (enabled) {
+					lv_obj_remove_state(btn, LV_STATE_DISABLED);
+				} else {
+					lv_obj_add_state(btn, LV_STATE_DISABLED);
+				}
+			};
+
+			// Initial state
+			update_chooser_state(
+				chooseWpBtn,
+				lv_subject_get_int(
+					&SystemManager::getInstance().getWallpaperEnabledSubject()
+				)
+			);
+
+			// Observer for changes
+			lv_subject_add_observer_obj(
+				&SystemManager::getInstance().getWallpaperEnabledSubject(),
+				[](lv_observer_t* observer, lv_subject_t* subject) {
+					lv_obj_t* btn = lv_observer_get_target_obj(observer);
+					int32_t val = lv_subject_get_int(subject);
+					if (val) {
+						lv_obj_remove_state(btn, LV_STATE_DISABLED);
+					} else {
+						lv_obj_add_state(btn, LV_STATE_DISABLED);
+					}
+				},
+				chooseWpBtn, nullptr
+			);
+
+			lv_obj_add_event_cb(
+				chooseWpBtn,
+				[](lv_event_t* e) {
+					ESP_LOGI("DisplaySettings", "Choosing wallpaper button clicked");
+					UI::FileChooser::show([](std::string path) {
+						ESP_LOGI("DisplaySettings", "Wallpaper selected: %s", path.c_str());
+						static char path_buf[256];
+						strncpy(path_buf, path.c_str(), sizeof(path_buf) - 1);
+						lv_subject_set_pointer(
+							&SystemManager::getInstance()
+								 .getWallpaperPathSubject(),
+							path_buf
+						);
+					});
+				},
+				LV_EVENT_CLICKED, nullptr
 			);
 
 			lv_obj_t* glassBtn =

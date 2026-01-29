@@ -45,7 +45,10 @@ bool Task::start(void* data) {
 	expected = (TaskHandle_t)1;
 	if (!m_handle.compare_exchange_strong(expected, handle)) {
 		// stop() was called during creation
+		ESP_LOGW(TASK_TAG, "Task %s stopped during creation", m_name.c_str());
 		vTaskDelete(handle);
+	} else {
+		ESP_LOGI(TASK_TAG, "Started task: %s", m_name.c_str());
 	}
 	return true;
 }
@@ -54,6 +57,7 @@ void Task::stop() {
 	m_stopRequested = true;
 	TaskHandle_t handle = m_handle.exchange(nullptr);
 	if (handle && handle != (TaskHandle_t)1) {
+		ESP_LOGI(TASK_TAG, "Stopped task: %s", m_name.c_str());
 		vTaskDelete(handle);
 	}
 }
@@ -67,6 +71,7 @@ void Task::join() {
 void Task::taskEntry(void* param) {
 	Task* t = static_cast<Task*>(param);
 	if (t) {
+		ESP_LOGI(TASK_TAG, "Task entry: %s", t->m_name.c_str());
 		t->run(t->m_data);
 		TaskHandle_t handle = t->m_handle.exchange(nullptr);
 		if (handle) {
@@ -84,6 +89,7 @@ TaskManager& TaskManager::getInstance() {
 }
 
 void TaskManager::registerTask(Task* t) {
+	ESP_LOGD(TM_TAG, "Registering task: %s", t ? t->getName().c_str() : "NULL");
 	std::lock_guard<std::mutex> lock(m_mutex);
 	if (std::find(m_tasks.begin(), m_tasks.end(), t) == m_tasks.end())
 		m_tasks.push_back(t);

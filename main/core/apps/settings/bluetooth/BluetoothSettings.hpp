@@ -3,6 +3,7 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/bluetooth/BluetoothManager.hpp"
+#include "esp_log.h"
 #include "lvgl.h"
 #include <functional>
 
@@ -40,6 +41,7 @@ public:
 					auto* sw = lv_event_get_target_obj(e);
 					auto* instance = (BluetoothSettings*)lv_event_get_user_data(e);
 					bool enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
+					ESP_LOGI("BluetoothSettings", "Bluetooth toggle: %s", enabled ? "ENABLED" : "DISABLED");
 					BluetoothManager::getInstance().enable(enabled);
 					instance->refresh();
 				},
@@ -92,6 +94,7 @@ public:
 		lv_obj_clean(m_list);
 		lv_list_add_text(m_list, "Scanning for devices...");
 		lv_label_set_text(m_statusLabel, "Scanning...");
+		ESP_LOGI("BluetoothSettings", "Starting mock Bluetooth scan...");
 
 		// Mock scan result after 2 seconds
 		lv_timer_create(

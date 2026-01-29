@@ -12,12 +12,14 @@ BluetoothManager& BluetoothManager::getInstance() {
 }
 
 esp_err_t BluetoothManager::init(lv_subject_t* enabled_subject) {
+	ESP_LOGI(TAG, "Initializing Bluetooth Manager");
 	m_enabled_subject = enabled_subject;
 	m_is_init = true;
 	return ESP_OK;
 }
 
 esp_err_t BluetoothManager::enable(bool enable) {
+	ESP_LOGI(TAG, "Enabling Bluetooth: %d", enable);
 	ESP_LOGW(TAG, "Bluetooth not yet implemented");
 	GuiTask::lock();
 	if (m_enabled_subject)
@@ -32,6 +34,7 @@ bool BluetoothManager::isEnabled() const {
 	if (m_enabled_subject)
 		enabled = lv_subject_get_int(m_enabled_subject) != 0;
 	GuiTask::unlock();
+	ESP_LOGD(TAG, "isEnabled check: %s", enabled ? "TRUE" : "FALSE");
 	return enabled;
 }
 

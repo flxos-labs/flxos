@@ -1,7 +1,10 @@
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lvgl.h"
 #include <string.h>
+
+static const char* TAG = "lv_os_custom";
 
 #define globals LV_GLOBAL_DEFAULT()
 
@@ -20,6 +23,7 @@ uint32_t lv_os_get_idle_percent(void) {
 	// Take a snapshot of the number of tasks in case it changes while we are
 	// accessing the array
 	uxArraySize = uxTaskGetNumberOfTasks();
+	ESP_LOGD(TAG, "Calculating idle percent for %d tasks", (int)uxArraySize);
 	pxTaskStatusArray = lv_malloc(uxArraySize * sizeof(TaskStatus_t));
 
 	if (pxTaskStatusArray != NULL) {
@@ -51,6 +55,7 @@ uint32_t lv_os_get_idle_percent(void) {
 				idle_delta = total_delta;
 
 			pct = (idle_delta * 100) / total_delta;
+			ESP_LOGD(TAG, "Idle percent calculated: %d%% (idle_delta: %u, total_delta: %u)", (int)pct, (unsigned int)idle_delta, (unsigned int)total_delta);
 		}
 		last_total_time = ulTotalRunTime;
 		last_idle_time = current_idle_time;

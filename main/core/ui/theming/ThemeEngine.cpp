@@ -28,6 +28,7 @@ void ThemeEngine::set_theme(ThemeType theme, lv_display_t* disp) {
 	}
 
 	if (current_theme != theme) {
+		ESP_LOGI("ThemeEngine", "Setting theme to: %d", (int)theme);
 		current_theme = theme;
 		apply_theme(theme, disp);
 	}
@@ -53,6 +54,7 @@ void ThemeEngine::cycle_theme() {
 }
 
 void ThemeEngine::cleanup_previous_theme(lv_display_t* disp) {
+	ESP_LOGD("ThemeEngine", "Cleaning up previous theme for display %p", disp);
 	if (engine_themes.count(disp)) {
 		auto& themes = engine_themes[disp];
 		for (auto it = themes.rbegin(); it != themes.rend(); ++it) {
@@ -74,6 +76,7 @@ void ThemeEngine::apply_theme(ThemeType theme, lv_display_t* disp) {
 		return;
 	}
 
+	ESP_LOGI("ThemeEngine", "Applying theme %d to display %p", (int)theme, disp);
 	ThemeConfig cfg = Themes::GetConfig(theme);
 	std::vector<lv_theme_t*> new_themes_vec;
 

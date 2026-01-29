@@ -97,6 +97,7 @@ void HotspotManager::processIncomingPacket(void* ptr) {
 }
 
 void HotspotManager::updateClientHostname(uint8_t* mac, const std::string& hostname) {
+	ESP_LOGI(TAG, "Updating hostname for client " MACSTR " to: %s", MAC2STR(mac), hostname.c_str());
 	std::lock_guard<std::mutex> lock(m_mutex);
 	for (auto& client: m_clients) {
 		if (memcmp(client.mac, mac, 6) == 0) {
@@ -166,6 +167,7 @@ esp_err_t HotspotManager::init(lv_subject_t* enabled_subject, lv_subject_t* clie
 	}
 
 	WiFiManager::getInstance().setOnGotIPCallback([this]() {
+		ESP_LOGI(TAG, "Uplink IP obtained, running post-IP hotspot configuration");
 		initByteCounter(); // Ensure byte counter is initialized when STA is ready
 		if (m_nat_enabled && isEnabled()) {
 			// Re-apply NAT settings to ensure everything is synced with the new
@@ -179,10 +181,11 @@ esp_err_t HotspotManager::init(lv_subject_t* enabled_subject, lv_subject_t* clie
 			if (sta_netif && ap_netif) {
 				if (esp_netif_get_dns_info(sta_netif, ESP_NETIF_DNS_MAIN, &dns) ==
 					ESP_OK) {
+					ESP_LOGI(TAG, "Syncing DNS from STA to AP: " IPSTR, IP2STR(&dns.ip.u_addr.ip4));
 					esp_netif_dhcps_stop(ap_netif);
 					esp_netif_set_dns_info(ap_netif, ESP_NETIF_DNS_MAIN, &dns);
 					esp_netif_dhcps_start(ap_netif);
-					ESP_LOGI(TAG, "DNS Synced from STA to AP and DHCP server restarted");
+					ESP_LOGI(TAG, "DNS Synced and DHCP server restarted");
 				}
 			}
 		}
@@ -248,7 +251,7 @@ void HotspotManager::checkAutoShutdown() {
 	uint64_t now = esp_timer_get_time() / 1000000;
 	if (m_client_count == 0 && m_last_client_time > 0) {
 		if ((now - m_last_client_time) >= m_auto_shutdown_timeout) {
-			ESP_LOGI(TAG, "Auto-shutting down hotspot due to inactivity");
+			ESP_LOGI(TAG, "Auto-shutting down hotspot due to inactivity (%d seconds)", (int)m_auto_shutdown_timeout);
 			stop();
 		}
 	}
@@ -318,9 +321,11 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 		m_last_bytes_sent = m_bytes_sent;
 		m_last_bytes_received = m_bytes_received;
 		m_last_client_time = m_start_time / 1000000;
+		ESP_LOGI(TAG, "Hotspot state initialized (StartTime: %llu)", m_start_time);
 	}
 	return ESP_OK;
 }
+
 
 esp_err_t HotspotManager::stop() {
 	ESP_LOGI(TAG, "Stopping Hotspot");
@@ -374,6 +379,7 @@ esp_err_t HotspotManager::setNatEnabled(bool enabled) {
 		return ESP_ERR_NOT_FOUND;
 	}
 
+	ESP_LOGI(TAG, "Setting NAT enabled: %d", enabled);
 	if (isEnabled() && enabled) {
 		esp_netif_ip_info_t ip_info;
 		esp_netif_get_ip_info(ap_netif, &ip_info);

@@ -39,6 +39,7 @@ void VirtualKeyboard::register_input_area(lv_obj_t* obj) {
 	if (!m_keyboard)
 		init();
 
+	ESP_LOGD(TAG, "Registering input area for virtual keyboard: %p", obj);
 	// Add event callback to show/hide keyboard on focus
 	lv_obj_add_event_cb(obj, on_ta_event, LV_EVENT_ALL, this);
 }
@@ -51,6 +52,7 @@ void VirtualKeyboard::on_ta_event(lv_event_t* e) {
 	if (code == LV_EVENT_FOCUSED || code == LV_EVENT_CLICKED) {
 		// Show keyboard
 		if (vk->m_keyboard) {
+			ESP_LOGD(TAG, "Textarea focused, showing keyboard");
 			lv_keyboard_set_textarea(vk->m_keyboard, ta);
 			lv_obj_remove_flag(vk->m_keyboard, LV_OBJ_FLAG_HIDDEN);
 			lv_obj_move_foreground(vk->m_keyboard);
@@ -78,6 +80,7 @@ void VirtualKeyboard::on_ta_event(lv_event_t* e) {
 		// Ideally, we hide when the user explicitly closes it or focuses something
 		// else that is NOT the keyboard. Simple behavior: Hide when defocused.
 		if (vk->m_keyboard) {
+			ESP_LOGD(TAG, "Textarea defocused, hiding keyboard");
 			lv_keyboard_set_textarea(vk->m_keyboard, NULL);
 			lv_obj_add_flag(vk->m_keyboard, LV_OBJ_FLAG_HIDDEN);
 			vk->m_current_ta = nullptr;

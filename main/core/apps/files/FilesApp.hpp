@@ -3,6 +3,7 @@
 #include "core/apps/AppManager.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/system/ClipboardManager.hpp"
+#include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -102,6 +103,7 @@ public:
 		if (m_currentPath.empty()) {
 			m_currentPath = "A:/";
 		}
+		ESP_LOGI("FilesApp", "UI created, starting at: %s", m_currentPath.c_str());
 		refreshList();
 	}
 
@@ -514,6 +516,7 @@ private:
 		}
 
 		if (cb.get().op == ClipboardOp::CUT) {
+			ESP_LOGI("FilesApp", "Pasting (CUT): %s -> %s", srcPath.c_str(), destPath.c_str());
 			if (rename(srcPath.c_str(), destPath.c_str()) != 0) {
 				lv_obj_t* mb = lv_msgbox_create(NULL);
 				lv_msgbox_add_title(mb, "Error");
@@ -522,6 +525,7 @@ private:
 			}
 			cb.clear();
 		} else {
+			ESP_LOGI("FilesApp", "Pasting (COPY): %s -> %s", srcPath.c_str(), destPath.c_str());
 			showProgressDialog("Copying");
 
 			if (copyRecursive(srcPath.c_str(), destPath.c_str()) != 0) {
@@ -573,6 +577,7 @@ private:
 			fullPath += "/";
 		fullPath += name;
 
+		ESP_LOGI("FilesApp", "Deleting %s: %s", isDir ? "directory" : "file", fullPath.c_str());
 		showProgressDialog("Deleting");
 		int res =
 			isDir ? removeRecursive(fullPath.c_str()) : unlink(fullPath.c_str());
@@ -595,6 +600,7 @@ private:
 			base += "/";
 		std::string oldPath = base + oldName;
 		std::string newPath = base + newName;
+		ESP_LOGI("FilesApp", "Renaming: %s -> %s", oldPath.c_str(), newPath.c_str());
 		if (rename(oldPath.c_str(), newPath.c_str()) != 0) {
 			lv_obj_t* mb = lv_msgbox_create(NULL);
 			lv_msgbox_add_title(mb, "Error");
@@ -611,6 +617,7 @@ private:
 		if (fullPath.back() != '/')
 			fullPath += "/";
 		fullPath += name;
+		ESP_LOGI("FilesApp", "Creating folder: %s", fullPath.c_str());
 		if (mkdir(fullPath.c_str(), 0777) != 0) {
 			lv_obj_t* mb = lv_msgbox_create(NULL);
 			lv_msgbox_add_title(mb, "Error");

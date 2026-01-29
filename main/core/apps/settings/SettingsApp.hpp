@@ -6,11 +6,6 @@
 #include "core/apps/settings/display/DisplaySettings.hpp"
 #include "core/apps/settings/hotspot/HotspotSettings.hpp"
 #include "core/apps/settings/wifi/WiFiSettings.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
-#include "core/system/SystemManager.hpp"
-#include "core/ui/theming/ThemeEngine.hpp"
-#include "lvgl.h"
-#include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
 #include <memory>
 
 namespace System {
@@ -38,6 +33,7 @@ public:
 		m_displaySettings = std::make_unique<Settings::DisplaySettings>(
 			m_container, [this]() { showMainSettings(); }
 		);
+		ESP_LOGI("SettingsApp", "UI Shell components created");
 		showMainSettings();
 	}
 
@@ -135,6 +131,7 @@ private:
 	}
 
 	void showWiFiSettings() {
+		ESP_LOGI("SettingsApp", "Showing WiFi settings page");
 		if (m_mainList)
 			lv_obj_add_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
 
@@ -162,6 +159,7 @@ private:
 	}
 
 	void showDisplaySettings() {
+		ESP_LOGI("SettingsApp", "Showing Display settings page");
 		if (m_mainList) {
 			lv_obj_add_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
 		}
