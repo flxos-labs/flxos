@@ -1,5 +1,5 @@
 #include "SystemManager.hpp"
-#include "../../lv_lgfx_user.hpp"
+#include "../../hal/display/lv_lgfx_user.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/tasks/TaskManager.hpp"

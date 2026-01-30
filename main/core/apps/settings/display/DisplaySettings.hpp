@@ -2,7 +2,7 @@
 
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/system/SystemManager.hpp"
-#include "core/ui/FileChooser.hpp"
+#include "core/ui/components/FileChooser.hpp"
 #include "core/ui/theming/ThemeEngine.hpp"
 #include "esp_log.h"
 #include "lvgl.h"
