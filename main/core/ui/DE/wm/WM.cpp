@@ -2,6 +2,7 @@
 
 #include "../DE.hpp"
 #include "core/apps/AppManager.hpp"
+#include "core/system/SystemManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "esp_log.h"
 
@@ -29,6 +30,24 @@ void WM::init(lv_obj_t* window_container, lv_obj_t* app_container, lv_obj_t* scr
 
 	ESP_LOGI(TAG, "Initializing Window Manager...");
 	lv_obj_set_style_pad_all(m_windowContainer, lv_dpx(4), 0);
+
+	// Register as observer of AppManager for state synchronization
+	System::Apps::AppManager::getInstance().addObserver(this);
+	ESP_LOGI(TAG, "Registered WM as AppManager observer");
+
+	// Register rotation observer to update layout on display orientation changes
+	lv_subject_add_observer(
+		&System::SystemManager::getInstance().getRotationSubject(),
+		on_rotation_change,
+		nullptr
+	);
+
+	// Register global event listener on all input devices to focus windows when clicking any child widget
+	lv_indev_t* indev = lv_indev_get_next(nullptr);
+	while (indev) {
+		lv_indev_add_event_cb(indev, on_global_event, LV_EVENT_PRESSED, this);
+		indev = lv_indev_get_next(indev);
+	}
 }
 
 void WM::activate_window(lv_obj_t* target_win) {
@@ -154,18 +173,18 @@ void WM::closeApp(const std::string& packageName) {
 		}
 	}
 	if (winToClose) {
-		ESP_LOGI(TAG, "Closing app: %s", packageName.c_str());
+		ESP_LOGI(TAG, "Closing window for app: %s", packageName.c_str());
 		closeWindow_internal(winToClose);
 	} else {
-		ESP_LOGW(TAG, "App not found for closing: %s", packageName.c_str());
+		ESP_LOGD(TAG, "No window found for app '%s', may have been closed already", packageName.c_str());
 	}
 	GuiTask::unlock();
 }
 
 void WM::on_win_focus(lv_event_t* e) {
 	WM* wm = (WM*)lv_event_get_user_data(e);
-	lv_obj_t* win = (lv_obj_t*)lv_event_get_target(e);
-	ESP_LOGD(TAG, "Window focused: %p. Activating.", win);
+	lv_obj_t* win = (lv_obj_t*)lv_event_get_current_target(e);
+	ESP_LOGI(TAG, "Window focused via direct callback: %p", win);
 	activate_window(win);
 
 	if (wm && wm->m_windowAppMap.count(win)) {
@@ -191,9 +210,15 @@ void WM::on_win_minimize(lv_event_t* e) {
 		if (is_hidden) {
 			lv_obj_remove_flag(w, LV_OBJ_FLAG_HIDDEN);
 			activate_window(w);
+			if (wm->m_windowAppMap.count(w)) {
+				System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[w]);
+			}
 		} else {
 			if (!is_active) {
 				activate_window(w);
+				if (wm->m_windowAppMap.count(w)) {
+					System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[w]);
+				}
 			} else {
 				lv_obj_add_flag(w, LV_OBJ_FLAG_HIDDEN);
 				lv_obj_remove_state(db, LV_STATE_CHECKED);
@@ -391,4 +416,68 @@ void WM::updateLayout() {
 		// Debug or refresh if needed
 		lv_obj_invalidate(win);
 	}
+}
+void WM::on_rotation_change(lv_observer_t* observer, lv_subject_t* subject) {
+	ESP_LOGI(TAG, "Rotation change detected. Updating window layout.");
+	// Force a layout update for all tiled windows
+	WM::getInstance().updateLayout();
+}
+
+void WM::on_global_event(lv_event_t* e) {
+	WM* wm = (WM*)lv_event_get_user_data(e);
+	if (!wm || !wm->m_windowContainer)
+		return;
+
+	// For indev events, the target is the input device.
+	// We need to find the object that triggered the event.
+	lv_obj_t* target = lv_indev_get_active_obj();
+	if (!target)
+		return;
+
+	// Traverse up from the clicked object to find if it's within a window
+	lv_obj_t* obj = target;
+	while (obj) {
+		lv_obj_t* parent = lv_obj_get_parent(obj);
+		// Check both normal tiled container and the screen (for full-screen windows)
+		if (parent == wm->m_windowContainer || parent == wm->m_screen) {
+			// Ensure it's not the container itself or other UI elements
+			if (obj != wm->m_statusBar && obj != wm->m_dock && obj != wm->m_windowContainer) {
+				ESP_LOGI(TAG, "Global focus detected for window: %p (clicked on %p)", obj, target);
+				activate_window(obj);
+
+				// Synchronize AppManager
+				if (wm->m_windowAppMap.count(obj)) {
+					System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[obj]);
+				}
+				return;
+			}
+		}
+		obj = parent;
+	}
+}
+
+// AppStateObserver implementation
+void WM::onAppStarted(const std::string& packageName) {
+	ESP_LOGD(TAG, "Observer notified: app started '%s'", packageName.c_str());
+	// Currently no action needed when app starts
+	// Window is already created via openApp() before app starts
+}
+
+void WM::onAppStopped(const std::string& packageName) {
+	ESP_LOGI(TAG, "Observer notified: app stopped '%s'", packageName.c_str());
+	// App was stopped, ensure window is closed if it exists
+	// This handles the case where app is stopped programmatically
+	if (hasWindowForApp(packageName)) {
+		ESP_LOGD(TAG, "Closing window for stopped app: %s", packageName.c_str());
+		closeApp(packageName);
+	}
+}
+
+bool WM::hasWindowForApp(const std::string& packageName) const {
+	for (const auto& pair: m_windowAppMap) {
+		if (pair.second == packageName) {
+			return true;
+		}
+	}
+	return false;
 }

@@ -4,9 +4,10 @@
 #include <string>
 #include <vector>
 
+#include "core/apps/AppManager.hpp"
 #include "lvgl.h"
 
-class WM {
+class WM : public System::Apps::AppStateObserver {
 public:
 
 	static WM& getInstance();
@@ -16,6 +17,13 @@ public:
 	void openApp(const std::string& packageName);
 	void closeApp(const std::string& packageName);
 	void closeWindow(lv_obj_t* w);
+
+	// AppStateObserver interface
+	void onAppStarted(const std::string& packageName) override;
+	void onAppStopped(const std::string& packageName) override;
+
+	// State validation
+	bool hasWindowForApp(const std::string& packageName) const;
 
 private:
 
@@ -42,6 +50,8 @@ private:
 	static void on_win_minimize(lv_event_t* e);
 	static void on_header_minimize(lv_event_t* e);
 	static void on_win_maximize(lv_event_t* e);
+	static void on_rotation_change(lv_observer_t* observer, lv_subject_t* subject);
+	static void on_global_event(lv_event_t* e);
 
 	// Window management helpers
 	void closeWindow_internal(lv_obj_t* w);

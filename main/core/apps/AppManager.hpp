@@ -7,6 +7,15 @@
 
 namespace System {
 namespace Apps {
+
+// Observer interface for app state changes
+class AppStateObserver {
+public:
+
+	virtual void onAppStarted(const std::string& packageName) = 0;
+	virtual void onAppStopped(const std::string& packageName) = 0;
+	virtual ~AppStateObserver() = default;
+};
 class App {
 public:
 
@@ -41,14 +50,24 @@ public:
 	void registerApp(std::shared_ptr<App> app);
 	const std::vector<std::shared_ptr<App>>& getInstalledApps() const;
 
-	void startApp(std::shared_ptr<App> app);
-	void startApp(const std::string& packageName);
-	void stopApp(const std::string& packageName, bool closeUI = true);
-	void stopApp(std::shared_ptr<App> app, bool closeUI = true);
+	// App lifecycle methods with error handling
+	bool startApp(std::shared_ptr<App> app);
+	bool startApp(const std::string& packageName);
+	bool stopApp(const std::string& packageName, bool closeUI = true);
+	bool stopApp(std::shared_ptr<App> app, bool closeUI = true);
 	void stopCurrentApp();
 
+	// App queries and validation
 	std::shared_ptr<App> getAppByPackageName(const std::string& packageName);
 	std::shared_ptr<App> getCurrentApp() const;
+	bool isAppRegistered(const std::string& packageName) const;
+
+	// Observer pattern for state synchronization
+	void addObserver(AppStateObserver* observer);
+	void removeObserver(AppStateObserver* observer);
+
+	// Diagnostics and health checks
+	void performHealthCheck();
 
 	void update();
 
@@ -61,9 +80,14 @@ private:
 
 	std::shared_ptr<App> m_currentApp;
 	std::vector<std::shared_ptr<App>> m_apps;
+	std::vector<AppStateObserver*> m_observers;
 
 	void* m_mutex = nullptr;
 	void* m_executor = nullptr;
+
+	// Helper methods
+	void notifyAppStarted(const std::string& packageName);
+	void notifyAppStopped(const std::string& packageName);
 };
 
 } // namespace Apps
