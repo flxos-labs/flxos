@@ -3,12 +3,37 @@ name: ESP-IDF Build
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.editorconfig'
+      - '.clang-format'
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.editorconfig'
+      - '.clang-format'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [esp32, esp32s3]
 
     steps:
     - name: Checkout repository
@@ -16,10 +41,19 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Setup ccache
+      uses: actions/cache@v4
+      with:
+        path: .ccache
+        key: ccache-${{ matrix.target }}-${{ github.sha }}
+        restore-keys: |
+          ccache-${{ matrix.target }}-
+
     - name: esp-idf build
       uses: espressif/esp-idf-ci-action@v1
       with:
         esp_idf_version: v5.5
-        target: esp32s3
+        target: ${{ matrix.target }}
         path: "."
+        extra_docker_args: -v ${{ github.workspace }}/.ccache:/root/.ccache -e CCACHE_DIR=/root/.ccache
 
