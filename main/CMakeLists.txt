@@ -7,10 +7,6 @@ idf_component_register(SRCS ${SRCS}
     REQUIRES LovyanGFX lvgl dhcpserver
 )
 
-# Enable C++ exceptions for crash recovery
-target_compile_options(${COMPONENT_LIB} PRIVATE -fexceptions)
-target_link_libraries(${COMPONENT_LIB} PRIVATE -fexceptions)
-
 idf_component_get_property(lvgl_lib lvgl COMPONENT_LIB)
 if(CONFIG_LV_OS_IDLE_PERCENT_CUSTOM)
     target_sources(${lvgl_lib} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/hal/os/lv_os_custom.c)

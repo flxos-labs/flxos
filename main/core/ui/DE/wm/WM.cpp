@@ -2,9 +2,11 @@
 
 #include "../DE.hpp"
 #include "core/apps/AppManager.hpp"
+#include "core/system/FocusManager.hpp"
 #include "core/system/SystemManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "esp_log.h"
+#include <algorithm>
 
 static const char* TAG = "WM";
 
@@ -42,67 +44,24 @@ void WM::init(lv_obj_t* window_container, lv_obj_t* app_container, lv_obj_t* scr
 		nullptr
 	);
 
-	// Register global event listener on all input devices to focus windows when clicking any child widget
-	lv_indev_t* indev = lv_indev_get_next(nullptr);
-	while (indev) {
-		lv_indev_add_event_cb(indev, on_global_event, LV_EVENT_PRESSED, this);
-		indev = lv_indev_get_next(indev);
-	}
-}
-
-void WM::activate_window(lv_obj_t* target_win) {
-	if (!target_win)
-		return;
-	ESP_LOGD(TAG, "Activating window: %p", target_win);
-	// No internal locking to prevent deadlocks when called from locked
-	// contexts Bring target to foreground within container
-	lv_obj_move_to_index(target_win, -1);
-
-	// Update states for all windows in the container
-	uint32_t cnt = lv_obj_get_child_count(getInstance().m_windowContainer);
-	for (uint32_t i = 0; i < cnt; i++) {
-		lv_obj_t* win = lv_obj_get_child(getInstance().m_windowContainer, i);
-		if (!lv_obj_is_valid(win) || lv_obj_get_user_data(win) == nullptr)
-			continue; // Not a window
-
-		bool is_active = (win == target_win);
-		lv_obj_t* dock_btn = (lv_obj_t*)lv_obj_get_user_data(win);
-
-		if (is_active) {
-			lv_obj_add_state(win, LV_STATE_FOCUSED);
-			lv_obj_set_style_border_width(win, lv_dpx(2), 0);
-			lv_obj_set_style_border_opa(win, LV_OPA_COVER, 0);
-			if (dock_btn && lv_obj_is_valid(dock_btn))
-				lv_obj_add_state(dock_btn, LV_STATE_CHECKED);
-		} else {
-			lv_obj_remove_state(win, LV_STATE_FOCUSED);
-			lv_obj_set_style_border_width(win, lv_dpx(1), 0);
-			lv_obj_set_style_border_opa(win, LV_OPA_40, 0);
-			if (dock_btn && lv_obj_is_valid(dock_btn))
-				lv_obj_remove_state(dock_btn, LV_STATE_CHECKED);
-		}
-		lv_obj_invalidate(win);
-	}
+	// Initialize FocusManager with our containers
+	System::FocusManager::getInstance().init(m_windowContainer, m_screen, m_statusBar, m_dock);
 }
 
 void WM::openApp(const std::string& packageName) {
 	GuiTask::lock();
 
 	// Check if app is already open
-	for (const auto& pair: m_windowAppMap) {
-		if (pair.second == packageName) {
-			lv_obj_t* win = pair.first;
-			ESP_LOGI(TAG, "App '%s' already open, bringing to front", packageName.c_str());
-			lv_obj_remove_flag(win, LV_OBJ_FLAG_HIDDEN);
-			activate_window(win);
-			System::Apps::AppManager::getInstance().startApp(packageName);
-			GuiTask::unlock();
-			return;
-		}
+	if (lv_obj_t* win = findWindowByPackage(packageName)) {
+		ESP_LOGI(TAG, "App '%s' already open, bringing to front", packageName.c_str());
+		lv_obj_remove_flag(win, LV_OBJ_FLAG_HIDDEN);
+		System::FocusManager::getInstance().activateWindow(win);
+		System::Apps::AppManager::getInstance().startApp(packageName);
+		GuiTask::unlock();
+		return;
 	}
 
-	auto app =
-		System::Apps::AppManager::getInstance().getAppByPackageName(packageName);
+	auto app = System::Apps::AppManager::getInstance().getAppByPackageName(packageName);
 	if (!app) {
 		ESP_LOGE(TAG, "Failed to find app package: %s", packageName.c_str());
 		GuiTask::unlock();
@@ -132,21 +91,25 @@ void WM::openApp(const std::string& packageName) {
 
 	lv_obj_t* header = lv_win_get_header(win);
 	lv_obj_set_height(header, lv_pct(10));
+	lv_obj_set_style_min_height(header, lv_dpx(30), 0);
 	lv_obj_set_style_pad_all(header, 0, 0);
 	lv_obj_add_flag(header, LV_OBJ_FLAG_EVENT_BUBBLE);
 	lv_obj_remove_flag(header, LV_OBJ_FLAG_SCROLLABLE);
 	lv_win_add_title(win, app->getAppName().c_str());
 
 	lv_obj_t* min_btn = lv_win_add_button(win, LV_SYMBOL_DOWN, lv_pct(10));
+	lv_obj_set_style_min_width(min_btn, lv_dpx(30), 0);
 	lv_obj_add_event_cb(min_btn, on_header_minimize, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* max_btn = lv_win_add_button(win, LV_SYMBOL_PLUS, lv_pct(10));
+	lv_obj_set_style_min_width(max_btn, lv_dpx(30), 0);
 	if (lv_obj_get_child_count(max_btn) > 0) {
 		m_windowMaxBtnLabelMap[win] = lv_obj_get_child(max_btn, 0);
 	}
 	lv_obj_add_event_cb(max_btn, on_win_maximize, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* close_btn = lv_win_add_button(win, LV_SYMBOL_CLOSE, lv_pct(10));
+	lv_obj_set_style_min_width(close_btn, lv_dpx(30), 0);
 	lv_obj_add_event_cb(close_btn, on_win_close, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* content = lv_win_get_content(win);
@@ -155,8 +118,9 @@ void WM::openApp(const std::string& packageName) {
 
 	app->createUI(content);
 
-	lv_obj_add_event_cb(win, on_win_focus, LV_EVENT_PRESSED, this);
-	activate_window(win);
+	// Register window for event-based focus management
+	System::FocusManager::getInstance().registerWindow(win);
+	System::FocusManager::getInstance().activateWindow(win);
 
 	System::Apps::AppManager::getInstance().startApp(app);
 	updateLayout(); // Layout updates after window creation
@@ -165,68 +129,38 @@ void WM::openApp(const std::string& packageName) {
 
 void WM::closeApp(const std::string& packageName) {
 	GuiTask::lock();
-	lv_obj_t* winToClose = nullptr;
-	for (const auto& pair: m_windowAppMap) {
-		if (pair.second == packageName) {
-			winToClose = pair.first;
-			break;
-		}
-	}
-	if (winToClose) {
+	if (lv_obj_t* win = findWindowByPackage(packageName)) {
 		ESP_LOGI(TAG, "Closing window for app: %s", packageName.c_str());
-		closeWindow_internal(winToClose);
+		closeWindow_internal(win);
 	} else {
 		ESP_LOGD(TAG, "No window found for app '%s', may have been closed already", packageName.c_str());
 	}
 	GuiTask::unlock();
 }
 
-void WM::on_win_focus(lv_event_t* e) {
-	WM* wm = (WM*)lv_event_get_user_data(e);
-	lv_obj_t* win = (lv_obj_t*)lv_event_get_current_target(e);
-	ESP_LOGI(TAG, "Window focused via direct callback: %p", win);
-	activate_window(win);
-
-	if (wm && wm->m_windowAppMap.count(win)) {
-		System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[win]);
-	}
-}
-
 void WM::on_win_minimize(lv_event_t* e) {
 	WM* wm = (WM*)lv_event_get_user_data(e);
 	lv_obj_t* db = lv_event_get_target_obj(e);
-	if (!db || !wm)
-		return;
+	if (!db || !wm) return;
 
 	lv_obj_t* w = (lv_obj_t*)lv_obj_get_user_data(db);
-	if (w && lv_obj_is_valid(w)) {
-		if (w == wm->m_fullScreenWindow) {
-			wm->toggleFullScreen(w);
-		}
-		bool is_hidden = lv_obj_has_flag(w, LV_OBJ_FLAG_HIDDEN);
-		bool is_active =
-			(lv_obj_get_style_border_width(w, LV_PART_MAIN) == lv_dpx(2));
+	if (!w || !lv_obj_is_valid(w)) return;
 
-		if (is_hidden) {
-			lv_obj_remove_flag(w, LV_OBJ_FLAG_HIDDEN);
-			activate_window(w);
-			if (wm->m_windowAppMap.count(w)) {
-				System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[w]);
-			}
-		} else {
-			if (!is_active) {
-				activate_window(w);
-				if (wm->m_windowAppMap.count(w)) {
-					System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[w]);
-				}
-			} else {
-				lv_obj_add_flag(w, LV_OBJ_FLAG_HIDDEN);
-				lv_obj_remove_state(db, LV_STATE_CHECKED);
-			}
-		}
-		// Update layout after minimizing or restoring
-		wm->updateLayout();
+	if (w == wm->m_fullScreenWindow) wm->toggleFullScreen(w);
+
+	bool is_hidden = lv_obj_has_flag(w, LV_OBJ_FLAG_HIDDEN);
+	bool is_active = (lv_obj_get_style_border_width(w, LV_PART_MAIN) == lv_dpx(2));
+
+	if (is_hidden || !is_active) {
+		lv_obj_remove_flag(w, LV_OBJ_FLAG_HIDDEN);
+		System::FocusManager::getInstance().activateWindow(w);
+		if (wm->m_windowAppMap.count(w))
+			System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[w]);
+	} else {
+		lv_obj_add_flag(w, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_remove_state(db, LV_STATE_CHECKED);
 	}
+	wm->updateLayout();
 }
 
 void WM::on_header_minimize(lv_event_t* e) {
@@ -271,53 +205,31 @@ void WM::closeWindow_internal(lv_obj_t* win) {
 		System::Apps::AppManager::getInstance().stopApp(pkg, false);
 	}
 
-	if (m_windowMaxBtnLabelMap.count(win)) {
-		m_windowMaxBtnLabelMap.erase(win);
-	}
+	m_windowMaxBtnLabelMap.erase(win);
 
 	lv_obj_t* db = (lv_obj_t*)lv_obj_get_user_data(win);
-	if (db && lv_obj_is_valid(db))
-		lv_obj_delete(db);
+	if (db && lv_obj_is_valid(db)) lv_obj_delete(db);
 
-	// Remove from tiled list
-	for (auto it = m_tiledWindows.begin(); it != m_tiledWindows.end(); ++it) {
-		if (*it == win) {
-			m_tiledWindows.erase(it);
-			break;
-		}
-	}
+	m_tiledWindows.erase(std::remove(m_tiledWindows.begin(), m_tiledWindows.end(), win), m_tiledWindows.end());
 	lv_obj_delete(win);
 	updateLayout();
 }
 
 void WM::on_win_close(lv_event_t* e) {
 	WM* wm = (WM*)lv_event_get_user_data(e);
-	lv_obj_t* btn = lv_event_get_target_obj(e);
-	lv_obj_t* header = lv_obj_get_parent(btn);
-	lv_obj_t* w = lv_obj_get_parent(header);
-	if (wm)
-		// Runs in GUI thread implicitly, but to be sure we treat it as
-		// internal logic However, if we call internal() we assume lock
-		// is held. Callbacks are IN the lock.
-		wm->closeWindow_internal(w);
+	lv_obj_t* w = getWindowFromHeaderBtn(e);
+	if (wm) wm->closeWindow_internal(w);
 }
 
 void WM::on_win_maximize(lv_event_t* e) {
 	WM* wm = (WM*)lv_event_get_user_data(e);
-	lv_obj_t* btn = lv_event_get_target_obj(e);
-	lv_obj_t* header = lv_obj_get_parent(btn);
-	lv_obj_t* w = lv_obj_get_parent(header);
-
-	if (wm)
-		wm->toggleFullScreen(w);
+	lv_obj_t* w = getWindowFromHeaderBtn(e);
+	if (wm) wm->toggleFullScreen(w);
 }
 
 void WM::toggleFullScreen(lv_obj_t* win) {
-	// Internal helper, no lock
-	lv_obj_t* max_btn_content = nullptr;
-	if (m_windowMaxBtnLabelMap.count(win)) {
-		max_btn_content = m_windowMaxBtnLabelMap[win];
-	}
+	auto it = m_windowMaxBtnLabelMap.find(win);
+	lv_obj_t* max_btn_content = (it != m_windowMaxBtnLabelMap.end()) ? it->second : nullptr;
 
 	if (m_fullScreenWindow == win) {
 		ESP_LOGI(TAG, "Toggling off full screen for window: %p", win);
@@ -326,16 +238,10 @@ void WM::toggleFullScreen(lv_obj_t* win) {
 		lv_obj_remove_flag(m_statusBar, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_remove_flag(m_dock, LV_OBJ_FLAG_HIDDEN);
 		m_fullScreenWindow = nullptr;
-		if (max_btn_content) {
-			lv_image_set_src(max_btn_content, LV_SYMBOL_PLUS);
-		}
+		if (max_btn_content) lv_image_set_src(max_btn_content, LV_SYMBOL_PLUS);
 	} else {
 		ESP_LOGI(TAG, "Toggling on full screen for window: %p", win);
-		if (m_fullScreenWindow) {
-			// Recursively toggle off existing full screen
-			toggleFullScreen(m_fullScreenWindow);
-		}
-
+		if (m_fullScreenWindow) toggleFullScreen(m_fullScreenWindow);
 		lv_obj_set_parent(win, m_screen);
 		lv_obj_set_size(win, lv_pct(100), lv_pct(100));
 		lv_obj_set_pos(win, 0, 0);
@@ -343,11 +249,9 @@ void WM::toggleFullScreen(lv_obj_t* win) {
 		lv_obj_add_flag(m_dock, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_move_to_index(win, -1);
 		m_fullScreenWindow = win;
-		if (max_btn_content) {
-			lv_image_set_src(max_btn_content, LV_SYMBOL_MINUS);
-		}
+		if (max_btn_content) lv_image_set_src(max_btn_content, LV_SYMBOL_MINUS);
 	}
-	activate_window(win);
+	System::FocusManager::getInstance().activateWindow(win);
 	updateLayout();
 }
 
@@ -362,16 +266,11 @@ void WM::updateLayout() {
 	lv_obj_update_layout(m_screen);
 
 	std::vector<lv_obj_t*> visibleWins;
-	for (auto* w: m_tiledWindows) {
-		// Only layout windows that are in the container and not hidden
-		if (w && lv_obj_is_valid(w) && !lv_obj_has_flag(w, LV_OBJ_FLAG_HIDDEN) &&
-			lv_obj_get_parent(w) == m_windowContainer) {
-			visibleWins.push_back(w);
-		}
-	}
-
-	if (visibleWins.empty())
-		return;
+	std::copy_if(m_tiledWindows.begin(), m_tiledWindows.end(), std::back_inserter(visibleWins), [this](lv_obj_t* w) {
+		return w && lv_obj_is_valid(w) && !lv_obj_has_flag(w, LV_OBJ_FLAG_HIDDEN) &&
+			lv_obj_get_parent(w) == m_windowContainer;
+	});
+	if (visibleWins.empty()) return;
 
 	lv_coord_t w_avail = lv_obj_get_content_width(m_windowContainer);
 	lv_coord_t h_avail = lv_obj_get_content_height(m_windowContainer);
@@ -423,39 +322,6 @@ void WM::on_rotation_change(lv_observer_t* observer, lv_subject_t* subject) {
 	WM::getInstance().updateLayout();
 }
 
-void WM::on_global_event(lv_event_t* e) {
-	WM* wm = (WM*)lv_event_get_user_data(e);
-	if (!wm || !wm->m_windowContainer)
-		return;
-
-	// For indev events, the target is the input device.
-	// We need to find the object that triggered the event.
-	lv_obj_t* target = lv_indev_get_active_obj();
-	if (!target)
-		return;
-
-	// Traverse up from the clicked object to find if it's within a window
-	lv_obj_t* obj = target;
-	while (obj) {
-		lv_obj_t* parent = lv_obj_get_parent(obj);
-		// Check both normal tiled container and the screen (for full-screen windows)
-		if (parent == wm->m_windowContainer || parent == wm->m_screen) {
-			// Ensure it's not the container itself or other UI elements
-			if (obj != wm->m_statusBar && obj != wm->m_dock && obj != wm->m_windowContainer) {
-				ESP_LOGI(TAG, "Global focus detected for window: %p (clicked on %p)", obj, target);
-				activate_window(obj);
-
-				// Synchronize AppManager
-				if (wm->m_windowAppMap.count(obj)) {
-					System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[obj]);
-				}
-				return;
-			}
-		}
-		obj = parent;
-	}
-}
-
 // AppStateObserver implementation
 void WM::onAppStarted(const std::string& packageName) {
 	ESP_LOGD(TAG, "Observer notified: app started '%s'", packageName.c_str());
@@ -474,10 +340,16 @@ void WM::onAppStopped(const std::string& packageName) {
 }
 
 bool WM::hasWindowForApp(const std::string& packageName) const {
-	for (const auto& pair: m_windowAppMap) {
-		if (pair.second == packageName) {
-			return true;
-		}
-	}
-	return false;
+	return findWindowByPackage(packageName) != nullptr;
+}
+
+lv_obj_t* WM::findWindowByPackage(const std::string& packageName) const {
+	for (const auto& [win, pkg]: m_windowAppMap)
+		if (pkg == packageName) return win;
+	return nullptr;
+}
+
+lv_obj_t* WM::getWindowFromHeaderBtn(lv_event_t* e) {
+	lv_obj_t* btn = lv_event_get_target_obj(e);
+	return lv_obj_get_parent(lv_obj_get_parent(btn));
 }

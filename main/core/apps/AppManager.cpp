@@ -5,6 +5,8 @@
 #include "files/FilesApp.hpp"
 #include "freertos/semphr.h"
 #include "settings/SettingsApp.hpp"
+#include "system_info/SystemInfoApp.hpp"
+
 
 static const char* TAG = "AppManager";
 
@@ -39,6 +41,8 @@ void AppManager::init() {
 	ESP_LOGI(TAG, "Initializing AppManager...");
 	registerApp(std::make_shared<SettingsApp>());
 	registerApp(std::make_shared<FilesApp>());
+	registerApp(std::make_shared<SystemInfoApp>());
+
 	if (!m_executor) {
 		ESP_LOGD(TAG, "Starting AppExecutor task");
 		m_executor = new AppExecutor();

@@ -27,7 +27,9 @@ inline lv_obj_t* create_page_container(lv_obj_t* parent) {
 inline lv_obj_t* create_header(lv_obj_t* parent, const char* title_text, lv_obj_t** back_btn_out = nullptr) {
 	lv_obj_t* header = lv_obj_create(parent);
 	lv_obj_set_size(header, lv_pct(100), LV_SIZE_CONTENT);
+	lv_obj_set_style_max_height(header, lv_dpx(40), 0);
 	lv_obj_set_style_pad_all(header, 0, 0);
+	lv_obj_set_style_pad_gap(header, lv_dpx(4), 0);
 	lv_obj_set_style_border_width(header, 0, 0);
 	lv_obj_set_style_border_side(header, LV_BORDER_SIDE_BOTTOM, 0);
 	lv_obj_set_style_border_width(header, lv_dpx(1), 0);

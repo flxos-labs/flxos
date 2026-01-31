@@ -1,15 +1,24 @@
 #include "FilesApp.hpp"
+#include "core/services/filesystem/FileSystemService.hpp"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include <dirent.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 namespace System {
 namespace Apps {
+
+// Helper: Create a styled message box
+static void showMsgBox(const char* title, const char* text) {
+	lv_obj_t* mb = lv_msgbox_create(NULL);
+	lv_obj_set_size(mb, lv_pct(80), LV_SIZE_CONTENT);
+	lv_obj_set_style_max_height(mb, lv_pct(80), 0);
+	lv_obj_center(mb);
+	lv_msgbox_add_title(mb, title);
+	lv_msgbox_add_text(mb, text);
+	lv_msgbox_add_close_button(mb);
+}
+
 
 std::string FilesApp::getPackageName() const { return "com.os.files"; }
 std::string FilesApp::getAppName() const { return "Files"; }
@@ -117,6 +126,9 @@ void FilesApp::feedWatchdog() {
 
 void FilesApp::showProgressDialog(const char* title) {
 	m_progressMbox = lv_msgbox_create(NULL);
+	lv_obj_set_size(m_progressMbox, lv_pct(80), LV_SIZE_CONTENT);
+	lv_obj_set_style_max_height(m_progressMbox, lv_pct(80), 0);
+	lv_obj_center(m_progressMbox);
 	lv_msgbox_add_title(m_progressMbox, title);
 
 	lv_obj_t* cont = lv_msgbox_get_content(m_progressMbox);
@@ -161,11 +173,6 @@ void FilesApp::closeProgressDialog() {
 	}
 }
 
-std::string FilesApp::toVfsPath(const std::string& lvPath) {
-	if (lvPath.substr(0, 2) == "A:")
-		return lvPath.substr(2);
-	return lvPath;
-}
 
 void FilesApp::refreshList() {
 	if (!m_list)
@@ -187,38 +194,17 @@ void FilesApp::refreshList() {
 		lv_obj_add_flag(m_pasteBtn, LV_OBJ_FLAG_HIDDEN);
 	}
 
-	lv_fs_dir_t dir;
-	lv_fs_res_t res = lv_fs_dir_open(&dir, m_currentPath.c_str());
+	// Use FileSystemService to list directory
+	auto entries = Services::FileSystemService::getInstance().listDirectory(m_currentPath);
 
-	if (res != LV_FS_RES_OK &&
-		(m_currentPath == "A:/" || m_currentPath == "A:")) {
-		addListItem("system", true);
-		addListItem("data", true);
-		return;
-	}
-	if (res != LV_FS_RES_OK) {
-		lv_list_add_text(m_list, "Error opening directory");
-		return;
-	}
-
-	char fn[256];
-	bool hasItems = false;
-	while (lv_fs_dir_read(&dir, fn, sizeof(fn)) == LV_FS_RES_OK) {
-		feedWatchdog();
-		if (fn[0] == '\0')
-			break;
-		bool is_dir = (fn[0] == '/');
-		const char* name = is_dir ? fn + 1 : fn;
-		if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
-			continue;
-		addListItem(name, is_dir);
-		hasItems = true;
-	}
-
-	if (!hasItems) {
+	if (entries.empty()) {
 		lv_list_add_text(m_list, "Empty directory");
+	} else {
+		for (const auto& entry: entries) {
+			feedWatchdog();
+			addListItem(entry.name, entry.isDirectory);
+		}
 	}
-	lv_fs_dir_close(&dir);
 }
 
 void FilesApp::addListItem(const std::string& name, bool isDir) {
@@ -288,19 +274,12 @@ void FilesApp::addListItem(const std::string& name, bool isDir) {
 }
 
 void FilesApp::handleMenuAction(const std::string& action, const std::string& name, bool isDir) {
+	std::string basePath = Services::FileSystemService::toVfsPath(m_currentPath);
 	if (action == "Copy") {
-		std::string fullPath = toVfsPath(m_currentPath);
-		if (fullPath.back() != '/')
-			fullPath += "/";
-		fullPath += name;
-		ClipboardManager::getInstance().set(fullPath, isDir, ClipboardOp::COPY);
+		ClipboardManager::getInstance().set(Services::FileSystemService::buildPath(basePath, name), isDir, ClipboardOp::COPY);
 		refreshList();
 	} else if (action == "Cut") {
-		std::string fullPath = toVfsPath(m_currentPath);
-		if (fullPath.back() != '/')
-			fullPath += "/";
-		fullPath += name;
-		ClipboardManager::getInstance().set(fullPath, isDir, ClipboardOp::CUT);
+		ClipboardManager::getInstance().set(Services::FileSystemService::buildPath(basePath, name), isDir, ClipboardOp::CUT);
 		refreshList();
 	} else if (action == "Rename") {
 		showInputDialog("Rename", name, [this, name](std::string newName) {
@@ -308,6 +287,9 @@ void FilesApp::handleMenuAction(const std::string& action, const std::string& na
 		});
 	} else if (action == "Delete") {
 		lv_obj_t* confirm = lv_msgbox_create(NULL);
+		lv_obj_set_size(confirm, lv_pct(80), LV_SIZE_CONTENT);
+		lv_obj_set_style_max_height(confirm, lv_pct(80), 0);
+		lv_obj_center(confirm);
 		lv_msgbox_add_title(confirm, "Delete?");
 		lv_msgbox_add_text(
 			confirm, ("Are you sure you want to delete " + name + "?").c_str()
@@ -347,6 +329,9 @@ void FilesApp::handleMenuAction(const std::string& action, const std::string& na
 
 void FilesApp::showInputDialog(const char* title, const std::string& defaultVal, std::function<void(std::string)> cb) {
 	lv_obj_t* mbox = lv_msgbox_create(NULL);
+	lv_obj_set_size(mbox, lv_pct(80), LV_SIZE_CONTENT);
+	lv_obj_set_style_max_height(mbox, lv_pct(80), 0);
+	lv_obj_center(mbox);
 	lv_msgbox_add_title(mbox, title);
 
 	lv_obj_t* ta = lv_textarea_create(lv_msgbox_get_content(mbox));
@@ -387,79 +372,6 @@ void FilesApp::showInputDialog(const char* title, const std::string& defaultVal,
 	);
 }
 
-int FilesApp::copyFile(const char* src, const char* dst) {
-	struct stat st;
-	long totalSize = 0;
-	if (stat(src, &st) == 0)
-		totalSize = st.st_size;
-
-	FILE* fsrc = fopen(src, "rb");
-	if (!fsrc)
-		return -1;
-	FILE* fdst = fopen(dst, "wb");
-	if (!fdst) {
-		fclose(fsrc);
-		return -1;
-	}
-
-	char buf[4096];
-	size_t n;
-	long copied = 0;
-	while ((n = fread(buf, 1, sizeof(buf), fsrc)) > 0) {
-		if (fwrite(buf, 1, n, fdst) != n) {
-			fclose(fsrc);
-			fclose(fdst);
-			return -1;
-		}
-		copied += n;
-		if (totalSize > 0) {
-			int percent = (int)(copied * 100 / totalSize);
-			updateProgress(percent, src);
-		}
-		feedWatchdog();
-	}
-	fclose(fsrc);
-	fclose(fdst);
-	return 0;
-}
-
-int FilesApp::copyRecursive(const char* src, const char* dst) {
-	struct stat st;
-	if (stat(src, &st) != 0)
-		return -1;
-
-	if (S_ISDIR(st.st_mode)) {
-		updateProgress(0, src);
-		if (mkdir(dst, 0777) != 0 && errno != EEXIST)
-			return -1;
-		DIR* d = opendir(src);
-		if (!d)
-			return -1;
-		struct dirent* p;
-		int res = 0;
-		while ((p = readdir(d))) {
-			feedWatchdog();
-			if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
-				continue;
-			std::string subSrc = src;
-			if (subSrc.back() != '/')
-				subSrc += "/";
-			subSrc += p->d_name;
-			std::string subDst = dst;
-			if (subDst.back() != '/')
-				subDst += "/";
-			subDst += p->d_name;
-			if (copyRecursive(subSrc.c_str(), subDst.c_str()) != 0) {
-				res = -1;
-				break;
-			}
-		}
-		closedir(d);
-		return res;
-	} else {
-		return copyFile(src, dst);
-	}
-}
 
 void FilesApp::pasteItem() {
 	auto& cb = ClipboardManager::getInstance();
@@ -468,136 +380,83 @@ void FilesApp::pasteItem() {
 
 	std::string srcPath = cb.get().path;
 	std::string name = srcPath.substr(srcPath.find_last_of('/') + 1);
-	std::string destBase = toVfsPath(m_currentPath);
-	if (destBase.back() != '/')
-		destBase += "/";
-	std::string destPath = destBase + name;
+	std::string destBase = Services::FileSystemService::toVfsPath(m_currentPath);
+	std::string destPath = Services::FileSystemService::buildPath(destBase, name);
 
 	if (srcPath == destPath) {
-		lv_obj_t* mb = lv_msgbox_create(NULL);
-		lv_msgbox_add_title(mb, "Error");
-		lv_msgbox_add_text(mb, "Source and destination are the same.");
-		lv_msgbox_add_close_button(mb);
+		showMsgBox("Error", "Source and destination are the same.");
 		return;
 	}
 
 	if (cb.get().op == ClipboardOp::CUT) {
 		ESP_LOGI("FilesApp", "Pasting (CUT): %s -> %s", srcPath.c_str(), destPath.c_str());
-		if (rename(srcPath.c_str(), destPath.c_str()) != 0) {
-			lv_obj_t* mb = lv_msgbox_create(NULL);
-			lv_msgbox_add_title(mb, "Error");
-			lv_msgbox_add_text(mb, "Could not move item.");
-			lv_msgbox_add_close_button(mb);
-		}
+		if (!Services::FileSystemService::getInstance().move(srcPath, destPath))
+			showMsgBox("Error", "Could not move item.");
 		cb.clear();
 	} else {
 		ESP_LOGI("FilesApp", "Pasting (COPY): %s -> %s", srcPath.c_str(), destPath.c_str());
 		showProgressDialog("Copying");
 
-		if (copyRecursive(srcPath.c_str(), destPath.c_str()) != 0) {
-			lv_obj_t* mb = lv_msgbox_create(NULL);
-			lv_msgbox_add_title(mb, "Error");
-			lv_msgbox_add_text(mb, "Copy failed.");
-			lv_msgbox_add_close_button(mb);
-		}
+		auto progressCb = [this](int percent, const char* path) {
+			this->updateProgress(percent, path);
+			this->feedWatchdog();
+		};
+
+		if (!Services::FileSystemService::getInstance().copy(srcPath, destPath, progressCb))
+			showMsgBox("Error", "Copy failed.");
 		closeProgressDialog();
 	}
 	refreshList();
 }
 
-int FilesApp::removeRecursive(const char* path) {
-	DIR* d = opendir(path);
-	if (!d)
-		return -1;
-	struct dirent* p;
-	int r = 0;
-	while ((p = readdir(d))) {
-		updateProgress(0, path);
-		feedWatchdog();
-		if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
-			continue;
-		std::string subPath = path;
-		if (subPath.back() != '/')
-			subPath += "/";
-		subPath += p->d_name;
-		struct stat st;
-		if (stat(subPath.c_str(), &st) == 0) {
-			if (S_ISDIR(st.st_mode))
-				r = removeRecursive(subPath.c_str());
-			else
-				r = unlink(subPath.c_str());
-		} else
-			r = -1;
-		if (r != 0)
-			break;
-	}
-	closedir(d);
-	if (r == 0)
-		r = rmdir(path);
-	return r;
-}
 
 void FilesApp::deleteItem(const std::string& name, bool isDir) {
-	std::string fullPath = toVfsPath(m_currentPath);
-	if (fullPath.back() != '/')
-		fullPath += "/";
-	fullPath += name;
-
+	std::string fullPath = Services::FileSystemService::buildPath(
+		Services::FileSystemService::toVfsPath(m_currentPath), name
+	);
 	ESP_LOGI("FilesApp", "Deleting %s: %s", isDir ? "directory" : "file", fullPath.c_str());
 	showProgressDialog("Deleting");
-	int res =
-		isDir ? removeRecursive(fullPath.c_str()) : unlink(fullPath.c_str());
+
+	auto progressCb = [this](int percent, const char* path) {
+		this->updateProgress(percent, path);
+		this->feedWatchdog();
+	};
+
+	bool success = Services::FileSystemService::getInstance().remove(fullPath, progressCb);
 	closeProgressDialog();
 
-	if (res != 0) {
-		lv_obj_t* mb = lv_msgbox_create(NULL);
-		lv_msgbox_add_title(mb, "Error");
-		lv_msgbox_add_text(mb, "Could not delete item.");
-		lv_msgbox_add_close_button(mb);
-	}
+	if (!success)
+		showMsgBox("Error", "Could not delete item.");
 	refreshList();
 }
 
 void FilesApp::renameItem(const std::string& oldName, const std::string& newName) {
 	if (newName.empty() || oldName == newName)
 		return;
-	std::string base = toVfsPath(m_currentPath);
-	if (base.back() != '/')
-		base += "/";
-	std::string oldPath = base + oldName;
-	std::string newPath = base + newName;
+	std::string basePath = Services::FileSystemService::toVfsPath(m_currentPath);
+	std::string oldPath = Services::FileSystemService::buildPath(basePath, oldName);
+	std::string newPath = Services::FileSystemService::buildPath(basePath, newName);
 	ESP_LOGI("FilesApp", "Renaming: %s -> %s", oldPath.c_str(), newPath.c_str());
-	if (rename(oldPath.c_str(), newPath.c_str()) != 0) {
-		lv_obj_t* mb = lv_msgbox_create(NULL);
-		lv_msgbox_add_title(mb, "Error");
-		lv_msgbox_add_text(mb, "Could not rename item.");
-		lv_msgbox_add_close_button(mb);
-	}
+	if (!Services::FileSystemService::getInstance().move(oldPath, newPath))
+		showMsgBox("Error", "Could not rename item.");
 	refreshList();
 }
 
 void FilesApp::createFolder(const std::string& name) {
 	if (name.empty())
 		return;
-	std::string fullPath = toVfsPath(m_currentPath);
-	if (fullPath.back() != '/')
-		fullPath += "/";
-	fullPath += name;
+	std::string fullPath = Services::FileSystemService::buildPath(
+		Services::FileSystemService::toVfsPath(m_currentPath), name
+	);
 	ESP_LOGI("FilesApp", "Creating folder: %s", fullPath.c_str());
-	if (mkdir(fullPath.c_str(), 0777) != 0) {
-		lv_obj_t* mb = lv_msgbox_create(NULL);
-		lv_msgbox_add_title(mb, "Error");
-		lv_msgbox_add_text(mb, "Could not create folder.");
-		lv_msgbox_add_close_button(mb);
-	}
+	if (!Services::FileSystemService::getInstance().mkdir(fullPath))
+		showMsgBox("Error", "Could not create folder.");
 	refreshList();
 }
 
 void FilesApp::enterDir(const std::string& name) {
 	m_history.push(m_currentPath);
-	if (m_currentPath.back() != '/')
-		m_currentPath += "/";
-	m_currentPath += name;
+	m_currentPath = Services::FileSystemService::buildPath(m_currentPath, name);
 	refreshList();
 }
 
@@ -617,14 +476,7 @@ void FilesApp::goHome() {
 }
 
 void FilesApp::onFileClick(const std::string& name) {
-	std::string fullPath = m_currentPath;
-	if (fullPath.back() != '/')
-		fullPath += "/";
-	fullPath += name;
-	lv_obj_t* mbox = lv_msgbox_create(NULL);
-	lv_msgbox_add_title(mbox, "File Info");
-	lv_msgbox_add_text(mbox, fullPath.c_str());
-	lv_msgbox_add_close_button(mbox);
+	showMsgBox("File Info", Services::FileSystemService::buildPath(m_currentPath, name).c_str());
 }
 
 } // namespace Apps

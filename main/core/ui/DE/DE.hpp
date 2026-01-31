@@ -33,17 +33,25 @@ private:
 	lv_obj_t* theme_label;
 	lv_obj_t* launcher;
 	lv_obj_t* quick_access_panel;
+	lv_obj_t* notification_panel;
+	lv_obj_t* notification_list;
 	lv_obj_t* greetings;
 	lv_obj_t* app_container;
+
 
 	void create_status_bar();
 	void create_dock();
 	void create_launcher();
 	void create_quick_access_panel();
+	void create_notification_panel();
+	void update_notification_list();
 	void realign_panels();
 	void configure_panel_style(lv_obj_t* panel);
 
+
 	static void on_start_click(lv_event_t* e);
 	static void on_up_click(lv_event_t* e);
+	static void on_notification_click(lv_event_t* e);
+	static void on_clear_notifications_click(lv_event_t* e);
 	static void on_app_click(lv_event_t* e);
 };

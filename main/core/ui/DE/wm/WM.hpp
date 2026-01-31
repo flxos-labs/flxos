@@ -46,14 +46,13 @@ private:
 	void toggleFullScreen(lv_obj_t* win);
 
 	static void on_win_close(lv_event_t* e);
-	static void on_win_focus(lv_event_t* e);
 	static void on_win_minimize(lv_event_t* e);
 	static void on_header_minimize(lv_event_t* e);
 	static void on_win_maximize(lv_event_t* e);
 	static void on_rotation_change(lv_observer_t* observer, lv_subject_t* subject);
-	static void on_global_event(lv_event_t* e);
 
 	// Window management helpers
 	void closeWindow_internal(lv_obj_t* w);
-	static void activate_window(lv_obj_t* target_win);
+	lv_obj_t* findWindowByPackage(const std::string& packageName) const;
+	static lv_obj_t* getWindowFromHeaderBtn(lv_event_t* e);
 };

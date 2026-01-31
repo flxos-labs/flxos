@@ -2,7 +2,10 @@
 #include "../theming/ThemeEngine.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
+#include "core/system/FocusManager.hpp"
+#include "core/system/NotificationManager.hpp"
 #include "core/system/SystemManager.hpp"
+
 #include "esp_log.h"
 #include "wm/WM.hpp"
 #include <ctime>
@@ -49,8 +52,9 @@ DE::DE()
 	: screen(nullptr), wallpaper(nullptr), wallpaper_img(nullptr),
 	  wallpaper_icon(nullptr), window_container(nullptr), status_bar(nullptr),
 	  dock(nullptr), time_label(nullptr), theme_label(nullptr),
-	  launcher(nullptr), quick_access_panel(nullptr), greetings(nullptr),
-	  app_container(nullptr) {}
+	  launcher(nullptr), quick_access_panel(nullptr), notification_panel(nullptr),
+	  notification_list(nullptr), greetings(nullptr), app_container(nullptr) {}
+
 
 DE::~DE() {}
 
@@ -73,6 +77,7 @@ void DE::init() {
 		lv_obj_set_style_bg_color(wallpaper, cfg.primary, 0);
 		lv_obj_set_style_bg_opa(wallpaper, LV_OPA_COVER, 0);
 		lv_obj_add_flag(wallpaper, LV_OBJ_FLAG_FLOATING);
+		lv_obj_add_flag(wallpaper, LV_OBJ_FLAG_CLICK_FOCUSABLE); // Make focusable for panel dismissal
 		lv_obj_move_background(wallpaper);
 
 		wallpaper_icon = lv_image_create(wallpaper);
@@ -151,6 +156,13 @@ void DE::init() {
 
 	create_launcher();
 	create_quick_access_panel();
+	create_notification_panel();
+
+	// Register panels with FocusManager
+	System::FocusManager::getInstance().registerPanel(launcher);
+	System::FocusManager::getInstance().registerPanel(quick_access_panel);
+	System::FocusManager::getInstance().registerPanel(notification_panel);
+
 
 	lv_subject_add_observer(
 		&System::SystemManager::getInstance().getRotationSubject(),
@@ -330,39 +342,33 @@ void DE::realign_panels() {
 		if (greetings) {
 			lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(2), -lv_dpx(2));
 		}
+		if (notification_panel) {
+			lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, lv_dpx(30));
+		}
 	}
 }
 
 void DE::on_start_click(lv_event_t* e) {
 	DE* d = (DE*)lv_event_get_user_data(e);
-	if (lv_obj_has_flag(d->launcher, LV_OBJ_FLAG_HIDDEN)) {
-		ESP_LOGD(TAG, "Opening Application Launcher");
+	if (d && d->launcher) {
 		d->realign_panels();
-		lv_obj_clear_flag(d->launcher, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(d->quick_access_panel, LV_OBJ_FLAG_HIDDEN);
-	} else {
-		ESP_LOGD(TAG, "Closing Application Launcher");
-		lv_obj_add_flag(d->launcher, LV_OBJ_FLAG_HIDDEN);
+		System::FocusManager::getInstance().togglePanel(d->launcher);
 	}
 }
 
 void DE::on_up_click(lv_event_t* e) {
 	DE* d = (DE*)lv_event_get_user_data(e);
-	ESP_LOGD(TAG, "Quick Access Panel toggle clicked");
-	if (lv_obj_has_flag(d->quick_access_panel, LV_OBJ_FLAG_HIDDEN)) {
-		ESP_LOGD(TAG, "Opening Quick Access Panel");
+	if (d && d->quick_access_panel) {
 		d->realign_panels();
-		lv_obj_clear_flag(d->quick_access_panel, LV_OBJ_FLAG_HIDDEN);
-		lv_obj_add_flag(d->launcher, LV_OBJ_FLAG_HIDDEN);
-	} else {
-		ESP_LOGD(TAG, "Closing Quick Access Panel");
-		lv_obj_add_flag(d->quick_access_panel, LV_OBJ_FLAG_HIDDEN);
+		System::FocusManager::getInstance().togglePanel(d->quick_access_panel);
 	}
 }
+
 
 void DE::on_app_click(lv_event_t* e) {
 	DE* d = (DE*)lv_event_get_user_data(e);
 	lv_obj_t* btn = lv_event_get_target_obj(e);
+
 
 	System::Apps::App* appPtr = (System::Apps::App*)lv_obj_get_user_data(btn);
 	if (!appPtr)
@@ -371,11 +377,8 @@ void DE::on_app_click(lv_event_t* e) {
 	std::string packageName = appPtr->getPackageName();
 
 	ESP_LOGI(TAG, "App clicked in launcher: %s", packageName.c_str());
+	System::FocusManager::getInstance().dismissAllPanels();
 	d->openApp(packageName);
-
-	if (d && d->launcher) {
-		lv_obj_add_flag(d->launcher, LV_OBJ_FLAG_HIDDEN);
-	}
 }
 
 void DE::openApp(const std::string& packageName) {
@@ -470,6 +473,55 @@ void DE::create_status_bar() {
 		hotspot_label, nullptr
 	);
 
+	lv_obj_t* bt_icon = lv_image_create(left_group);
+	lv_image_set_src(bt_icon, LV_SYMBOL_BLUETOOTH);
+	lv_subject_add_observer_obj(
+		&System::ConnectivityManager::getInstance().getBluetoothEnabledSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			lv_obj_t* icon = lv_observer_get_target_obj(observer);
+			if (lv_subject_get_int(subject)) {
+				lv_obj_set_style_image_opa(icon, LV_OPA_COVER, 0);
+			} else {
+				lv_obj_set_style_image_opa(icon, LV_OPA_40, 0);
+			}
+		},
+		bt_icon, nullptr
+	);
+
+	lv_obj_t* notif_btn = lv_obj_create(left_group);
+	lv_obj_remove_style_all(notif_btn);
+	lv_obj_set_size(notif_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(notif_btn, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(notif_btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_add_event_cb(notif_btn, on_notification_click, LV_EVENT_CLICKED, this);
+
+	lv_obj_t* notif_icon = lv_image_create(notif_btn);
+	lv_image_set_src(notif_icon, LV_SYMBOL_BELL);
+
+	lv_obj_t* notif_badge = lv_label_create(notif_btn);
+	lv_obj_set_style_text_font(notif_badge, &lv_font_montserrat_14, 0);
+
+
+	lv_subject_add_observer_obj(
+		&System::NotificationManager::getInstance().getUnreadCountSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			lv_obj_t* btn = lv_observer_get_target_obj(observer);
+			lv_obj_t* badge = lv_obj_get_child(btn, 1);
+			lv_obj_t* icon = lv_obj_get_child(btn, 0);
+
+			int32_t count = lv_subject_get_int(subject);
+			if (count > 0) {
+				lv_label_set_text_fmt(badge, "%d", (int)count);
+				lv_obj_set_style_image_opa(icon, LV_OPA_COVER, 0);
+			} else {
+				lv_label_set_text(badge, "");
+				lv_obj_set_style_image_opa(icon, LV_OPA_40, 0);
+			}
+		},
+		notif_btn, nullptr
+	);
+
+
 	time_label = lv_label_create(status_bar);
 
 	time_t now;
@@ -521,4 +573,119 @@ void DE::create_dock() {
 		DE::create_dock_btn(dock, LV_SYMBOL_UP, lv_pct(13), lv_pct(80)),
 		on_up_click, LV_EVENT_CLICKED, this
 	);
+}
+
+void DE::create_notification_panel() {
+	ESP_LOGD(TAG, "Creating notification panel");
+	notification_panel = lv_obj_create(screen);
+	configure_panel_style(notification_panel);
+	// Center top, slightly below status bar
+	lv_obj_set_size(notification_panel, lv_pct(50), lv_pct(60));
+	lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, lv_dpx(30));
+	lv_obj_set_flex_flow(notification_panel, LV_FLEX_FLOW_COLUMN);
+
+	lv_obj_t* header = lv_obj_create(notification_panel);
+	lv_obj_remove_style_all(header);
+	lv_obj_set_size(header, lv_pct(100), LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(header, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(header, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_set_style_pad_all(header, lv_dpx(10), 0);
+
+	lv_obj_t* title = lv_label_create(header);
+	lv_label_set_text(title, "Notifications");
+	lv_obj_set_style_text_font(title, &lv_font_montserrat_14, 0);
+
+	lv_obj_t* clear_btn = lv_button_create(header);
+	lv_obj_set_size(clear_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_style_pad_all(clear_btn, lv_dpx(5), 0);
+	lv_obj_t* clear_label = lv_label_create(clear_btn);
+	lv_label_set_text(clear_label, "Clear All");
+	lv_obj_add_event_cb(clear_btn, on_clear_notifications_click, LV_EVENT_CLICKED, this);
+
+	notification_list = lv_obj_create(notification_panel);
+	lv_obj_remove_style_all(notification_list);
+	lv_obj_set_width(notification_list, lv_pct(100));
+	lv_obj_set_flex_grow(notification_list, 1);
+
+	lv_obj_set_flex_flow(notification_list, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(notification_list, lv_dpx(5), 0);
+	lv_obj_set_style_pad_row(notification_list, lv_dpx(5), 0);
+
+	// Observe updates
+	lv_subject_add_observer_obj(
+		&System::NotificationManager::getInstance().getUpdateSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			DE* instance = (DE*)lv_observer_get_user_data(observer);
+			if (instance) {
+				instance->update_notification_list();
+			}
+		},
+		notification_list, this
+	);
+
+	update_notification_list();
+}
+
+void DE::update_notification_list() {
+	if (!notification_list) return;
+
+	lv_obj_clean(notification_list);
+
+	const auto& notifs = System::NotificationManager::getInstance().getNotifications();
+
+	if (notifs.empty()) {
+		lv_obj_t* empty_label = lv_label_create(notification_list);
+		lv_label_set_text(empty_label, "No new notifications");
+		lv_obj_center(empty_label);
+		lv_obj_set_style_text_opa(empty_label, LV_OPA_50, 0);
+		return;
+	}
+
+	for (const auto& n: notifs) {
+		lv_obj_t* item = lv_obj_create(notification_list);
+		lv_obj_set_size(item, lv_pct(100), LV_SIZE_CONTENT);
+		lv_obj_set_style_radius(item, lv_dpx(8), 0);
+		lv_obj_set_style_bg_opa(item, LV_OPA_20, 0); // Very transparent
+		lv_obj_set_flex_flow(item, LV_FLEX_FLOW_ROW);
+		lv_obj_set_flex_align(item, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+		lv_obj_set_style_pad_all(item, lv_dpx(8), 0);
+
+		if (n.icon) {
+			lv_obj_t* icon = lv_image_create(item);
+			lv_image_set_src(icon, n.icon);
+		}
+
+		lv_obj_t* content = lv_obj_create(item);
+		lv_obj_remove_style_all(content);
+		lv_obj_set_flex_grow(content, 1);
+		lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
+
+		lv_obj_t* title_lbl = lv_label_create(content);
+		lv_label_set_text(title_lbl, n.title.c_str());
+		lv_obj_set_style_text_font(title_lbl, &lv_font_montserrat_14, 0);
+
+		lv_obj_t* msg_lbl = lv_label_create(content);
+		lv_label_set_text(msg_lbl, n.message.c_str());
+		lv_label_set_long_mode(msg_lbl, LV_LABEL_LONG_WRAP);
+		lv_obj_set_width(msg_lbl, lv_pct(95));
+		lv_obj_set_style_text_opa(msg_lbl, LV_OPA_70, 0);
+
+		lv_obj_t* time_lbl = lv_label_create(item);
+		// Simple timestamp logic, could be better
+		lv_label_set_text(time_lbl, "now");
+		lv_obj_set_style_text_opa(time_lbl, LV_OPA_50, 0);
+		lv_obj_set_style_text_font(time_lbl, &lv_font_montserrat_14, 0);
+	}
+}
+
+void DE::on_notification_click(lv_event_t* e) {
+	DE* d = (DE*)lv_event_get_user_data(e);
+	if (d && d->notification_panel) {
+		d->realign_panels();
+		System::FocusManager::getInstance().togglePanel(d->notification_panel);
+	}
+}
+
+void DE::on_clear_notifications_click(lv_event_t* e) {
+	System::NotificationManager::getInstance().clearAll();
 }

@@ -3,6 +3,7 @@
 #include "core/apps/AppManager.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/common/ClipboardManager.hpp"
+#include "core/services/filesystem/FileSystemService.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lvgl.h"
@@ -49,17 +50,12 @@ private:
 	void updateProgress(int percent, const char* text);
 	void closeProgressDialog();
 
-	std::string toVfsPath(const std::string& lvPath);
-
 	void refreshList();
 	void addListItem(const std::string& name, bool isDir);
 	void handleMenuAction(const std::string& action, const std::string& name, bool isDir);
 	void showInputDialog(const char* title, const std::string& defaultVal, std::function<void(std::string)> cb);
 
-	int copyFile(const char* src, const char* dst);
-	int copyRecursive(const char* src, const char* dst);
 	void pasteItem();
-	int removeRecursive(const char* path);
 	void deleteItem(const std::string& name, bool isDir);
 	void renameItem(const std::string& oldName, const std::string& newName);
 	void createFolder(const std::string& name);
