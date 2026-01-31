@@ -419,43 +419,79 @@ void DE::create_status_bar() {
 		lv_label_set_text(safe_label, " SAFE MODE");
 	}
 
-	lv_obj_t* wifi_icon = lv_image_create(left_group);
+	lv_obj_t* wifi_cont = lv_obj_create(left_group);
+	lv_obj_remove_style_all(wifi_cont);
+	lv_obj_set_size(wifi_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_t* wifi_icon = lv_image_create(wifi_cont);
 	lv_image_set_src(wifi_icon, LV_SYMBOL_WIFI);
+	lv_obj_t* wifi_slash = lv_label_create(wifi_cont);
+	lv_label_set_text(wifi_slash, "/");
+	lv_obj_center(wifi_slash);
+	lv_obj_add_flag(wifi_slash, LV_OBJ_FLAG_HIDDEN);
 	lv_subject_add_observer_obj(
 		&System::ConnectivityManager::getInstance().getWiFiConnectedSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
-			lv_obj_t* obj = lv_observer_get_target_obj(observer);
+			lv_obj_t* cont = lv_observer_get_target_obj(observer);
+			lv_obj_t* icon = lv_obj_get_child(cont, 0);
+			lv_obj_t* slash = lv_obj_get_child(cont, 1);
 			if (lv_subject_get_int(subject)) {
-				lv_obj_set_style_image_opa(obj, LV_OPA_COVER, 0);
+				lv_obj_set_style_image_opa(icon, LV_OPA_COVER, 0);
+				lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			} else {
-				lv_obj_set_style_image_opa(obj, LV_OPA_40, 0);
+				lv_obj_set_style_image_opa(icon, LV_OPA_60, 0);
+				lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			}
 		},
-		wifi_icon, nullptr
+		wifi_cont, nullptr
 	);
 
-	lv_obj_t* hotspot_group = lv_obj_create(left_group);
-	lv_obj_remove_style_all(hotspot_group);
-	lv_obj_set_size(hotspot_group, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-	lv_obj_set_flex_flow(hotspot_group, LV_FLEX_FLOW_ROW);
-	lv_obj_set_flex_align(hotspot_group, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_t* hotspot_icon = lv_obj_create(left_group);
+	lv_obj_remove_style_all(hotspot_icon);
+	lv_obj_set_size(hotspot_icon, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(hotspot_icon, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(hotspot_icon, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-	lv_obj_t* hotspot_icon = lv_image_create(hotspot_group);
-	lv_image_set_src(hotspot_icon, LV_SYMBOL_WIFI);
+	// First WiFi icon
+	lv_obj_t* hotspot_icon1 = lv_image_create(hotspot_icon);
+	lv_image_set_src(hotspot_icon1, LV_SYMBOL_WIFI);
+	lv_obj_set_style_transform_rotation(hotspot_icon1, -900, 0); // -90 degrees
+	lv_obj_set_style_transform_pivot_x(hotspot_icon1, lv_pct(50), 0);
+	lv_obj_set_style_transform_pivot_y(hotspot_icon1, lv_pct(50), 0);
 
-	lv_obj_t* hotspot_label = lv_label_create(hotspot_group);
+	// Second WiFi icon
+	lv_obj_t* hotspot_icon2 = lv_image_create(hotspot_icon);
+	lv_image_set_src(hotspot_icon2, LV_SYMBOL_WIFI);
+	lv_obj_set_style_transform_rotation(hotspot_icon2, 900, 0); // 90 degrees
+	lv_obj_set_style_transform_pivot_x(hotspot_icon2, lv_pct(50), 0);
+	lv_obj_set_style_transform_pivot_y(hotspot_icon2, lv_pct(50), 0);
+	lv_obj_set_style_margin_left(hotspot_icon2, -lv_dpx(12), 0); // Overlap
+
+	lv_obj_t* hotspot_slash = lv_label_create(hotspot_icon);
+	lv_label_set_text(hotspot_slash, "/");
+	lv_obj_add_flag(hotspot_slash, LV_OBJ_FLAG_FLOATING);
+	lv_obj_center(hotspot_slash);
+	lv_obj_add_flag(hotspot_slash, LV_OBJ_FLAG_HIDDEN);
+
+	lv_obj_t* hotspot_label = lv_label_create(hotspot_icon);
 
 	lv_subject_add_observer_obj(
 		&System::ConnectivityManager::getInstance().getHotspotEnabledSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
-			lv_obj_t* group = lv_observer_get_target_obj(observer);
+			lv_obj_t* cont = lv_observer_get_target_obj(observer);
+			lv_obj_t* icon1 = lv_obj_get_child(cont, 0);
+			lv_obj_t* icon2 = lv_obj_get_child(cont, 1);
+			lv_obj_t* slash = lv_obj_get_child(cont, 2);
 			if (lv_subject_get_int(subject)) {
-				lv_obj_set_style_image_opa(group, LV_OPA_COVER, 0);
+				lv_obj_set_style_image_opa(icon1, LV_OPA_COVER, 0);
+				lv_obj_set_style_image_opa(icon2, LV_OPA_COVER, 0);
+				lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			} else {
-				lv_obj_set_style_image_opa(group, LV_OPA_40, 0);
+				lv_obj_set_style_image_opa(icon1, LV_OPA_60, 0);
+				lv_obj_set_style_image_opa(icon2, LV_OPA_60, 0);
+				lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			}
 		},
-		hotspot_group, nullptr
+		hotspot_icon, nullptr
 	);
 
 	lv_subject_add_observer_obj(
@@ -472,19 +508,30 @@ void DE::create_status_bar() {
 		hotspot_label, nullptr
 	);
 
-	lv_obj_t* bt_icon = lv_image_create(left_group);
+	lv_obj_t* bt_cont = lv_obj_create(left_group);
+	lv_obj_remove_style_all(bt_cont);
+	lv_obj_set_size(bt_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_t* bt_icon = lv_image_create(bt_cont);
 	lv_image_set_src(bt_icon, LV_SYMBOL_BLUETOOTH);
+	lv_obj_t* bt_slash = lv_label_create(bt_cont);
+	lv_label_set_text(bt_slash, "/");
+	lv_obj_center(bt_slash);
+	lv_obj_add_flag(bt_slash, LV_OBJ_FLAG_HIDDEN);
 	lv_subject_add_observer_obj(
 		&System::ConnectivityManager::getInstance().getBluetoothEnabledSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
-			lv_obj_t* icon = lv_observer_get_target_obj(observer);
+			lv_obj_t* cont = lv_observer_get_target_obj(observer);
+			lv_obj_t* icon = lv_obj_get_child(cont, 0);
+			lv_obj_t* slash = lv_obj_get_child(cont, 1);
 			if (lv_subject_get_int(subject)) {
 				lv_obj_set_style_image_opa(icon, LV_OPA_COVER, 0);
+				lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			} else {
-				lv_obj_set_style_image_opa(icon, LV_OPA_40, 0);
+				lv_obj_set_style_image_opa(icon, LV_OPA_60, 0);
+				lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			}
 		},
-		bt_icon, nullptr
+		bt_cont, nullptr
 	);
 
 	lv_obj_t* notif_btn = lv_obj_create(left_group);
@@ -574,9 +621,11 @@ void DE::create_notification_panel() {
 	ESP_LOGD(TAG, "Creating notification panel");
 	notification_panel = lv_obj_create(screen);
 	configure_panel_style(notification_panel);
-	// Fullscreen Android-like notification panel
-	lv_obj_set_size(notification_panel, lv_pct(100), lv_pct(100));
-	lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, 0);
+	// Notification panel covers entire screen below status bar (including dock)
+	lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+	lv_coord_t status_bar_height = lv_obj_get_height(status_bar);
+	lv_obj_set_size(notification_panel, lv_pct(100), h - status_bar_height);
+	lv_obj_align_to(notification_panel, status_bar, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 	lv_obj_set_flex_flow(notification_panel, LV_FLEX_FLOW_COLUMN);
 
 	lv_obj_t* header = lv_obj_create(notification_panel);
@@ -659,6 +708,7 @@ void DE::update_notification_list() {
 
 		lv_obj_t* content = lv_obj_create(item);
 		lv_obj_remove_style_all(content);
+		lv_obj_set_size(content, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 		lv_obj_set_flex_grow(content, 1);
 		lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
 
@@ -713,9 +763,10 @@ void DE::on_swipe_zone_press(lv_event_t* e) {
 
 		// Prepare panel for dragging
 		lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+		lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
 		lv_obj_remove_flag(d->notification_panel, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_move_foreground(d->notification_panel);
-		lv_obj_set_y(d->notification_panel, -h); // Start hidden above screen
+		lv_obj_set_y(d->notification_panel, -h + status_bar_height); // Start hidden above, below status bar
 		ESP_LOGD(TAG, "Swipe tracking started at Y=%d", (int)point.y);
 	}
 }
@@ -729,11 +780,12 @@ void DE::on_swipe_zone_pressing(lv_event_t* e) {
 		lv_point_t point;
 		lv_indev_get_point(indev, &point);
 		lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+		lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
 		lv_coord_t diff = point.y - d->swipe_start_y;
 
-		// Calculate new Y position
-		lv_coord_t new_y = -h + diff;
-		if (new_y > 0) new_y = 0; // Don't go below top edge
+		// Calculate new Y position (offset by status bar height)
+		lv_coord_t new_y = -h + status_bar_height + diff;
+		if (new_y > status_bar_height) new_y = status_bar_height; // Don't go below status bar
 
 		lv_obj_set_y(d->notification_panel, new_y);
 	}
@@ -745,16 +797,17 @@ void DE::on_swipe_zone_release(lv_event_t* e) {
 
 	lv_coord_t current_y = lv_obj_get_y(d->notification_panel);
 	lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+	lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
 
 	// Snap based on position (if pulled down more than 15%)
-	if (current_y > -h + (h / 6)) {
+	if (current_y > -h + status_bar_height + (h / 6)) {
 		// Snap open
-		lv_obj_set_y(d->notification_panel, 0); // Animate here if possible in future
+		lv_obj_set_y(d->notification_panel, status_bar_height);
 		System::FocusManager::getInstance().activatePanel(d->notification_panel);
 		ESP_LOGI(TAG, "Swipe down completed, opening panel");
 	} else {
 		// Snap closed
-		lv_obj_set_y(d->notification_panel, -h);
+		lv_obj_set_y(d->notification_panel, -h + status_bar_height);
 		lv_obj_add_flag(d->notification_panel, LV_OBJ_FLAG_HIDDEN);
 		ESP_LOGI(TAG, "Swipe down cancelled, hiding panel");
 	}
@@ -792,9 +845,10 @@ void DE::on_notif_panel_pressing(lv_event_t* e) {
 		// New Y should be negative.
 		// new_y = 0 + diff.
 
-		lv_coord_t new_y = diff;
-		if (new_y > 0) new_y = 0; // Don't pull down further than 0
-		if (new_y < -h) new_y = -h;
+		lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
+		lv_coord_t new_y = status_bar_height + diff;
+		if (new_y > status_bar_height) new_y = status_bar_height; // Don't pull down further
+		if (new_y < -h + status_bar_height) new_y = -h + status_bar_height;
 
 		lv_obj_set_y(d->notification_panel, new_y);
 	}
@@ -806,16 +860,17 @@ void DE::on_notif_panel_release(lv_event_t* e) {
 
 	lv_coord_t current_y = lv_obj_get_y(d->notification_panel);
 	lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+	lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
 
 	// Snap based on position
-	if (current_y < -(h / 6)) {
+	if (current_y < status_bar_height - (h / 6)) {
 		// Snap closed
-		lv_obj_set_y(d->notification_panel, -h);
+		lv_obj_set_y(d->notification_panel, -h + status_bar_height);
 		System::FocusManager::getInstance().dismissAllPanels(); // This also hides it
 		ESP_LOGI(TAG, "Swipe up completed, closing panel");
 	} else {
 		// Snap open
-		lv_obj_set_y(d->notification_panel, 0);
+		lv_obj_set_y(d->notification_panel, status_bar_height);
 		ESP_LOGI(TAG, "Swipe up cancelled, panel stays open");
 	}
 	d->swipe_active = false;
