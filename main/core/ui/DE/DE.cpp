@@ -428,20 +428,36 @@ void DE::create_status_bar() {
 	lv_label_set_text(wifi_slash, "/");
 	lv_obj_center(wifi_slash);
 	lv_obj_add_flag(wifi_slash, LV_OBJ_FLAG_HIDDEN);
+	lv_observer_cb_t wifi_update_cb = [](lv_observer_t* observer, lv_subject_t* subject) {
+		lv_obj_t* cont = lv_observer_get_target_obj(observer);
+		lv_obj_t* icon = lv_obj_get_child(cont, 0);
+		lv_obj_t* slash = lv_obj_get_child(cont, 1);
+
+		// Use subject values directly for accurate state
+		bool connected = lv_subject_get_int(&System::ConnectivityManager::getInstance().getWiFiConnectedSubject()) != 0;
+		bool enabled = lv_subject_get_int(&System::ConnectivityManager::getInstance().getWiFiEnabledSubject()) != 0;
+
+		if (connected) {
+			lv_obj_set_style_opa(icon, LV_OPA_COVER, 0);
+			lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
+		} else if (enabled) {
+			lv_obj_set_style_opa(icon, LV_OPA_60, 0);
+			lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
+		} else {
+			lv_obj_set_style_opa(icon, LV_OPA_60, 0);
+			lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
+		}
+	};
+
 	lv_subject_add_observer_obj(
 		&System::ConnectivityManager::getInstance().getWiFiConnectedSubject(),
-		[](lv_observer_t* observer, lv_subject_t* subject) {
-			lv_obj_t* cont = lv_observer_get_target_obj(observer);
-			lv_obj_t* icon = lv_obj_get_child(cont, 0);
-			lv_obj_t* slash = lv_obj_get_child(cont, 1);
-			if (lv_subject_get_int(subject)) {
-				lv_obj_set_style_image_opa(icon, LV_OPA_COVER, 0);
-				lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
-			} else {
-				lv_obj_set_style_image_opa(icon, LV_OPA_60, 0);
-				lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
-			}
-		},
+		wifi_update_cb,
+		wifi_cont, nullptr
+	);
+
+	lv_subject_add_observer_obj(
+		&System::ConnectivityManager::getInstance().getWiFiEnabledSubject(),
+		wifi_update_cb,
 		wifi_cont, nullptr
 	);
 
@@ -482,12 +498,12 @@ void DE::create_status_bar() {
 			lv_obj_t* icon2 = lv_obj_get_child(cont, 1);
 			lv_obj_t* slash = lv_obj_get_child(cont, 2);
 			if (lv_subject_get_int(subject)) {
-				lv_obj_set_style_image_opa(icon1, LV_OPA_COVER, 0);
-				lv_obj_set_style_image_opa(icon2, LV_OPA_COVER, 0);
+				lv_obj_set_style_opa(icon1, LV_OPA_COVER, 0);
+				lv_obj_set_style_opa(icon2, LV_OPA_COVER, 0);
 				lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			} else {
-				lv_obj_set_style_image_opa(icon1, LV_OPA_60, 0);
-				lv_obj_set_style_image_opa(icon2, LV_OPA_60, 0);
+				lv_obj_set_style_opa(icon1, LV_OPA_60, 0);
+				lv_obj_set_style_opa(icon2, LV_OPA_60, 0);
 				lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			}
 		},
@@ -524,10 +540,10 @@ void DE::create_status_bar() {
 			lv_obj_t* icon = lv_obj_get_child(cont, 0);
 			lv_obj_t* slash = lv_obj_get_child(cont, 1);
 			if (lv_subject_get_int(subject)) {
-				lv_obj_set_style_image_opa(icon, LV_OPA_COVER, 0);
+				lv_obj_set_style_opa(icon, LV_OPA_COVER, 0);
 				lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			} else {
-				lv_obj_set_style_image_opa(icon, LV_OPA_60, 0);
+				lv_obj_set_style_opa(icon, LV_OPA_60, 0);
 				lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			}
 		},

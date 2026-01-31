@@ -91,10 +91,13 @@ esp_err_t ConnectivityManager::scanWiFi(WiFiManager::ScanCallback callback) {
 }
 esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
 	ESP_LOGI(TAG, "Setting WiFi Enabled: %d", enabled);
-	GuiTask::lock();
-	lv_subject_set_int(&m_wifi_enabled_subject, enabled ? 1 : 0);
-	GuiTask::unlock();
-	return WiFiManager::getInstance().setEnabled(enabled);
+	esp_err_t err = WiFiManager::getInstance().setEnabled(enabled);
+	if (err == ESP_OK) {
+		GuiTask::lock();
+		lv_subject_set_int(&m_wifi_enabled_subject, enabled ? 1 : 0);
+		GuiTask::unlock();
+	}
+	return err;
 }
 bool ConnectivityManager::isWiFiEnabled() const {
 	return WiFiManager::getInstance().isEnabled();
