@@ -19,7 +19,6 @@ static void showMsgBox(const char* title, const char* text) {
 	lv_msgbox_add_close_button(mb);
 }
 
-
 std::string FilesApp::getPackageName() const { return "com.os.files"; }
 std::string FilesApp::getAppName() const { return "Files"; }
 const void* FilesApp::getIcon() const { return LV_SYMBOL_DIRECTORY; }
@@ -172,7 +171,6 @@ void FilesApp::closeProgressDialog() {
 		m_progressLabel = nullptr;
 	}
 }
-
 
 void FilesApp::refreshList() {
 	if (!m_list)
@@ -372,7 +370,6 @@ void FilesApp::showInputDialog(const char* title, const std::string& defaultVal,
 	);
 }
 
-
 void FilesApp::pasteItem() {
 	auto& cb = ClipboardManager::getInstance();
 	if (!cb.hasContent())
@@ -408,7 +405,6 @@ void FilesApp::pasteItem() {
 	}
 	refreshList();
 }
-
 
 void FilesApp::deleteItem(const std::string& name, bool isDir) {
 	std::string fullPath = Services::FileSystemService::buildPath(

@@ -60,6 +60,12 @@ public:
 	void dismissAllPanels();
 
 	/**
+	 * @brief Set the notification panel for gesture access.
+	 * @param panel The notification panel object.
+	 */
+	void setNotificationPanel(lv_obj_t* panel);
+
+	/**
 	 * @brief Returns the currently active window.
 	 */
 	lv_obj_t* getActiveWindow() const { return m_activeWindow; }
@@ -76,11 +82,17 @@ private:
 	lv_obj_t* m_statusBar = nullptr;
 	lv_obj_t* m_dock = nullptr;
 	lv_obj_t* m_activeWindow = nullptr;
+	lv_obj_t* m_notificationPanel = nullptr;
 
 	std::vector<lv_obj_t*> m_panels;
 
 	static void on_global_press(lv_event_t* e);
+	static void on_global_release(lv_event_t* e);
 	static void on_focus_event(lv_event_t* e);
+
+	// Swipe gesture tracking
+	lv_coord_t m_swipeStartY = 0;
+	bool m_swipeTracking = false;
 };
 
 } // namespace System

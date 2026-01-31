@@ -37,7 +37,11 @@ private:
 	lv_obj_t* notification_list;
 	lv_obj_t* greetings;
 	lv_obj_t* app_container;
+	lv_obj_t* swipe_trigger_zone;
 
+	// Swipe tracking state
+	lv_coord_t swipe_start_y;
+	bool swipe_active;
 
 	void create_status_bar();
 	void create_dock();
@@ -47,11 +51,16 @@ private:
 	void update_notification_list();
 	void realign_panels();
 	void configure_panel_style(lv_obj_t* panel);
-
+	void create_swipe_trigger_zone();
 
 	static void on_start_click(lv_event_t* e);
 	static void on_up_click(lv_event_t* e);
-	static void on_notification_click(lv_event_t* e);
 	static void on_clear_notifications_click(lv_event_t* e);
 	static void on_app_click(lv_event_t* e);
+	static void on_swipe_zone_press(lv_event_t* e);
+	static void on_swipe_zone_pressing(lv_event_t* e);
+	static void on_swipe_zone_release(lv_event_t* e);
+	static void on_notif_panel_press(lv_event_t* e);
+	static void on_notif_panel_pressing(lv_event_t* e);
+	static void on_notif_panel_release(lv_event_t* e);
 };

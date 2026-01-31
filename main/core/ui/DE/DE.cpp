@@ -53,8 +53,8 @@ DE::DE()
 	  wallpaper_icon(nullptr), window_container(nullptr), status_bar(nullptr),
 	  dock(nullptr), time_label(nullptr), theme_label(nullptr),
 	  launcher(nullptr), quick_access_panel(nullptr), notification_panel(nullptr),
-	  notification_list(nullptr), greetings(nullptr), app_container(nullptr) {}
-
+	  notification_list(nullptr), greetings(nullptr), app_container(nullptr),
+	  swipe_trigger_zone(nullptr), swipe_start_y(0), swipe_active(false) {}
 
 DE::~DE() {}
 
@@ -83,7 +83,7 @@ void DE::init() {
 		wallpaper_icon = lv_image_create(wallpaper);
 		lv_image_set_src(wallpaper_icon, LV_SYMBOL_IMAGE);
 		lv_obj_set_style_text_opa(wallpaper_icon, LV_OPA_30, 0);
-		lv_obj_set_style_text_font(wallpaper_icon, &lv_font_montserrat_14, 0); // lv_font_montserrat_48 looks good
+
 		lv_obj_center(wallpaper_icon);
 
 		lv_subject_add_observer_obj(
@@ -157,12 +157,13 @@ void DE::init() {
 	create_launcher();
 	create_quick_access_panel();
 	create_notification_panel();
+	create_swipe_trigger_zone();
 
 	// Register panels with FocusManager
 	System::FocusManager::getInstance().registerPanel(launcher);
 	System::FocusManager::getInstance().registerPanel(quick_access_panel);
 	System::FocusManager::getInstance().registerPanel(notification_panel);
-
+	System::FocusManager::getInstance().setNotificationPanel(notification_panel);
 
 	lv_subject_add_observer(
 		&System::SystemManager::getInstance().getRotationSubject(),
@@ -343,7 +344,7 @@ void DE::realign_panels() {
 			lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(2), -lv_dpx(2));
 		}
 		if (notification_panel) {
-			lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, lv_dpx(30));
+			lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, 0);
 		}
 	}
 }
@@ -364,11 +365,9 @@ void DE::on_up_click(lv_event_t* e) {
 	}
 }
 
-
 void DE::on_app_click(lv_event_t* e) {
 	DE* d = (DE*)lv_event_get_user_data(e);
 	lv_obj_t* btn = lv_event_get_target_obj(e);
-
 
 	System::Apps::App* appPtr = (System::Apps::App*)lv_obj_get_user_data(btn);
 	if (!appPtr)
@@ -396,7 +395,7 @@ void DE::create_status_bar() {
 	lv_obj_remove_style_all(status_bar);
 	lv_obj_set_size(status_bar, lv_pct(100), lv_pct(7));
 	lv_obj_set_style_pad_hor(status_bar, lv_dpx(4), 0);
-	lv_obj_clear_flag(status_bar, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_scroll_dir(status_bar, LV_DIR_NONE); // Prevent scrolling but allow gestures
 
 	DE::apply_glass(status_bar, lv_dpx(10));
 
@@ -493,14 +492,11 @@ void DE::create_status_bar() {
 	lv_obj_set_size(notif_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(notif_btn, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(notif_btn, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	lv_obj_add_event_cb(notif_btn, on_notification_click, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* notif_icon = lv_image_create(notif_btn);
 	lv_image_set_src(notif_icon, LV_SYMBOL_BELL);
 
-	lv_obj_t* notif_badge = lv_label_create(notif_btn);
-	lv_obj_set_style_text_font(notif_badge, &lv_font_montserrat_14, 0);
-
+	lv_label_create(notif_btn);
 
 	lv_subject_add_observer_obj(
 		&System::NotificationManager::getInstance().getUnreadCountSubject(),
@@ -520,7 +516,6 @@ void DE::create_status_bar() {
 		},
 		notif_btn, nullptr
 	);
-
 
 	time_label = lv_label_create(status_bar);
 
@@ -579,9 +574,9 @@ void DE::create_notification_panel() {
 	ESP_LOGD(TAG, "Creating notification panel");
 	notification_panel = lv_obj_create(screen);
 	configure_panel_style(notification_panel);
-	// Center top, slightly below status bar
-	lv_obj_set_size(notification_panel, lv_pct(50), lv_pct(60));
-	lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, lv_dpx(30));
+	// Fullscreen Android-like notification panel
+	lv_obj_set_size(notification_panel, lv_pct(100), lv_pct(100));
+	lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, 0);
 	lv_obj_set_flex_flow(notification_panel, LV_FLEX_FLOW_COLUMN);
 
 	lv_obj_t* header = lv_obj_create(notification_panel);
@@ -593,7 +588,6 @@ void DE::create_notification_panel() {
 
 	lv_obj_t* title = lv_label_create(header);
 	lv_label_set_text(title, "Notifications");
-	lv_obj_set_style_text_font(title, &lv_font_montserrat_14, 0);
 
 	lv_obj_t* clear_btn = lv_button_create(header);
 	lv_obj_set_size(clear_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -624,6 +618,14 @@ void DE::create_notification_panel() {
 	);
 
 	update_notification_list();
+
+	// Add swipe-up-to-close gesture on notification panel and list
+	lv_obj_add_event_cb(notification_panel, on_notif_panel_press, LV_EVENT_PRESSED, this);
+	lv_obj_add_event_cb(notification_panel, on_notif_panel_pressing, LV_EVENT_PRESSING, this);
+	lv_obj_add_event_cb(notification_panel, on_notif_panel_release, LV_EVENT_RELEASED, this);
+	lv_obj_add_event_cb(notification_list, on_notif_panel_press, LV_EVENT_PRESSED, this);
+	lv_obj_add_event_cb(notification_list, on_notif_panel_pressing, LV_EVENT_PRESSING, this);
+	lv_obj_add_event_cb(notification_list, on_notif_panel_release, LV_EVENT_RELEASED, this);
 }
 
 void DE::update_notification_list() {
@@ -662,7 +664,6 @@ void DE::update_notification_list() {
 
 		lv_obj_t* title_lbl = lv_label_create(content);
 		lv_label_set_text(title_lbl, n.title.c_str());
-		lv_obj_set_style_text_font(title_lbl, &lv_font_montserrat_14, 0);
 
 		lv_obj_t* msg_lbl = lv_label_create(content);
 		lv_label_set_text(msg_lbl, n.message.c_str());
@@ -674,18 +675,148 @@ void DE::update_notification_list() {
 		// Simple timestamp logic, could be better
 		lv_label_set_text(time_lbl, "now");
 		lv_obj_set_style_text_opa(time_lbl, LV_OPA_50, 0);
-		lv_obj_set_style_text_font(time_lbl, &lv_font_montserrat_14, 0);
-	}
-}
-
-void DE::on_notification_click(lv_event_t* e) {
-	DE* d = (DE*)lv_event_get_user_data(e);
-	if (d && d->notification_panel) {
-		d->realign_panels();
-		System::FocusManager::getInstance().togglePanel(d->notification_panel);
 	}
 }
 
 void DE::on_clear_notifications_click(lv_event_t* e) {
 	System::NotificationManager::getInstance().clearAll();
+}
+
+void DE::create_swipe_trigger_zone() {
+	ESP_LOGD(TAG, "Creating swipe trigger zone");
+	// Create an invisible touch zone at the top of the screen
+	swipe_trigger_zone = lv_obj_create(screen);
+	lv_obj_remove_style_all(swipe_trigger_zone);
+	lv_obj_set_size(swipe_trigger_zone, lv_pct(100), lv_dpx(30)); // 30dp tall zone
+	lv_obj_add_flag(swipe_trigger_zone, LV_OBJ_FLAG_FLOATING);
+	lv_obj_add_flag(swipe_trigger_zone, LV_OBJ_FLAG_CLICKABLE);
+	lv_obj_align(swipe_trigger_zone, LV_ALIGN_TOP_MID, 0, 0);
+	lv_obj_move_foreground(swipe_trigger_zone); // Always on top
+
+	// Register press, pressing and release events
+	lv_obj_add_event_cb(swipe_trigger_zone, on_swipe_zone_press, LV_EVENT_PRESSED, this);
+	lv_obj_add_event_cb(swipe_trigger_zone, on_swipe_zone_pressing, LV_EVENT_PRESSING, this);
+	lv_obj_add_event_cb(swipe_trigger_zone, on_swipe_zone_release, LV_EVENT_RELEASED, this);
+	ESP_LOGI(TAG, "Swipe trigger zone created");
+}
+
+void DE::on_swipe_zone_press(lv_event_t* e) {
+	DE* d = (DE*)lv_event_get_user_data(e);
+	if (!d || !d->notification_panel) return;
+
+	lv_indev_t* indev = lv_indev_active();
+	if (indev) {
+		lv_point_t point;
+		lv_indev_get_point(indev, &point);
+		d->swipe_start_y = point.y;
+		d->swipe_active = true;
+
+		// Prepare panel for dragging
+		lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+		lv_obj_remove_flag(d->notification_panel, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_move_foreground(d->notification_panel);
+		lv_obj_set_y(d->notification_panel, -h); // Start hidden above screen
+		ESP_LOGD(TAG, "Swipe tracking started at Y=%d", (int)point.y);
+	}
+}
+
+void DE::on_swipe_zone_pressing(lv_event_t* e) {
+	DE* d = (DE*)lv_event_get_user_data(e);
+	if (!d || !d->swipe_active || !d->notification_panel) return;
+
+	lv_indev_t* indev = lv_indev_active();
+	if (indev) {
+		lv_point_t point;
+		lv_indev_get_point(indev, &point);
+		lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+		lv_coord_t diff = point.y - d->swipe_start_y;
+
+		// Calculate new Y position
+		lv_coord_t new_y = -h + diff;
+		if (new_y > 0) new_y = 0; // Don't go below top edge
+
+		lv_obj_set_y(d->notification_panel, new_y);
+	}
+}
+
+void DE::on_swipe_zone_release(lv_event_t* e) {
+	DE* d = (DE*)lv_event_get_user_data(e);
+	if (!d || !d->swipe_active || !d->notification_panel) return;
+
+	lv_coord_t current_y = lv_obj_get_y(d->notification_panel);
+	lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+
+	// Snap based on position (if pulled down more than 15%)
+	if (current_y > -h + (h / 6)) {
+		// Snap open
+		lv_obj_set_y(d->notification_panel, 0); // Animate here if possible in future
+		System::FocusManager::getInstance().activatePanel(d->notification_panel);
+		ESP_LOGI(TAG, "Swipe down completed, opening panel");
+	} else {
+		// Snap closed
+		lv_obj_set_y(d->notification_panel, -h);
+		lv_obj_add_flag(d->notification_panel, LV_OBJ_FLAG_HIDDEN);
+		ESP_LOGI(TAG, "Swipe down cancelled, hiding panel");
+	}
+	d->swipe_active = false;
+}
+
+void DE::on_notif_panel_press(lv_event_t* e) {
+	DE* d = (DE*)lv_event_get_user_data(e);
+	if (!d) return;
+
+	lv_indev_t* indev = lv_indev_active();
+	if (indev) {
+		lv_point_t point;
+		lv_indev_get_point(indev, &point);
+		d->swipe_start_y = point.y;
+		d->swipe_active = true;
+		// Reset Y to 0 just in case
+		// lv_obj_set_y(d->notification_panel, 0);
+		ESP_LOGD(TAG, "Notification panel swipe started at Y=%d", (int)point.y);
+	}
+}
+
+void DE::on_notif_panel_pressing(lv_event_t* e) {
+	DE* d = (DE*)lv_event_get_user_data(e);
+	if (!d || !d->swipe_active || !d->notification_panel) return;
+
+	lv_indev_t* indev = lv_indev_active();
+	if (indev) {
+		lv_point_t point;
+		lv_indev_get_point(indev, &point);
+		lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+		lv_coord_t diff = point.y - d->swipe_start_y; // Negative if going up? No, start Y > current Y if going up.
+
+		// If I swipe UP, point.y < start_y. Diff is negative.
+		// New Y should be negative.
+		// new_y = 0 + diff.
+
+		lv_coord_t new_y = diff;
+		if (new_y > 0) new_y = 0; // Don't pull down further than 0
+		if (new_y < -h) new_y = -h;
+
+		lv_obj_set_y(d->notification_panel, new_y);
+	}
+}
+
+void DE::on_notif_panel_release(lv_event_t* e) {
+	DE* d = (DE*)lv_event_get_user_data(e);
+	if (!d || !d->swipe_active || !d->notification_panel) return;
+
+	lv_coord_t current_y = lv_obj_get_y(d->notification_panel);
+	lv_coord_t h = lv_display_get_vertical_resolution(NULL);
+
+	// Snap based on position
+	if (current_y < -(h / 6)) {
+		// Snap closed
+		lv_obj_set_y(d->notification_panel, -h);
+		System::FocusManager::getInstance().dismissAllPanels(); // This also hides it
+		ESP_LOGI(TAG, "Swipe up completed, closing panel");
+	} else {
+		// Snap open
+		lv_obj_set_y(d->notification_panel, 0);
+		ESP_LOGI(TAG, "Swipe up cancelled, panel stays open");
+	}
+	d->swipe_active = false;
 }

@@ -145,8 +145,8 @@ std::vector<TaskInfo> SystemInfoService::getTaskList(size_t maxTasks) {
 	uint32_t total_runtime;
 	task_count = uxTaskGetSystemState(task_array, task_count, &total_runtime);
 
-	// Limit to maxTasks
-	size_t count = (task_count < maxTasks) ? task_count : maxTasks;
+	// Limit to maxTasks if specified
+	size_t count = (maxTasks == 0 || task_count < maxTasks) ? task_count : maxTasks;
 
 	for (size_t i = 0; i < count; i++) {
 		TaskInfo info;

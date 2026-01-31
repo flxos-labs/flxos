@@ -1,6 +1,4 @@
 #include "FocusManager.hpp"
-#include "core/apps/AppManager.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
 #include "esp_log.h"
 
 static const char* TAG = "FocusManager";
@@ -26,6 +24,7 @@ void FocusManager::init(lv_obj_t* window_container, lv_obj_t* screen, lv_obj_t* 
 	lv_indev_t* indev = lv_indev_get_next(nullptr);
 	while (indev) {
 		lv_indev_add_event_cb(indev, on_global_press, LV_EVENT_PRESSED, this);
+		lv_indev_add_event_cb(indev, on_global_release, LV_EVENT_RELEASED, this);
 		indev = lv_indev_get_next(indev);
 	}
 	ESP_LOGI(TAG, "Global input listeners registered.");
@@ -136,9 +135,31 @@ void FocusManager::dismissAllPanels() {
 	}
 }
 
+void FocusManager::setNotificationPanel(lv_obj_t* panel) {
+	m_notificationPanel = panel;
+	ESP_LOGI(TAG, "Notification panel set: %p", panel);
+}
+
 void FocusManager::on_global_press(lv_event_t* e) {
 	FocusManager* fm = (FocusManager*)lv_event_get_user_data(e);
 	if (!fm) return;
+
+	// Get touch point for swipe tracking
+	lv_indev_t* indev = lv_event_get_indev(e);
+	if (indev) {
+		lv_point_t point;
+		lv_indev_get_point(indev, &point);
+		lv_coord_t screen_height = lv_display_get_vertical_resolution(lv_display_get_default());
+		// Start tracking if touch started in top 15% of screen
+		if (point.y < screen_height / 7) {
+			fm->m_swipeStartY = point.y;
+			fm->m_swipeTracking = true;
+			ESP_LOGD(TAG, "Swipe tracking started at Y=%d", (int)point.y);
+		} else {
+			fm->m_swipeTracking = false;
+		}
+	}
+
 	lv_obj_t* target = lv_indev_get_active_obj();
 	if (!target) return;
 
@@ -160,10 +181,12 @@ void FocusManager::on_global_press(lv_event_t* e) {
 		lv_obj_t* parent = lv_obj_get_parent(obj);
 		if (parent == fm->m_windowContainer || parent == fm->m_screen) {
 			if (obj != fm->m_statusBar && obj != fm->m_dock && obj != fm->m_windowContainer) {
-				// Found window
-				ESP_LOGD(TAG, "Global press on window: %p", obj);
-				fm->activateWindow(obj);
-				return;
+				// Only activate if it has user_data (real windows have dock buttons stored)
+				if (lv_obj_get_user_data(obj) != nullptr) {
+					ESP_LOGD(TAG, "Global press on window: %p", obj);
+					fm->activateWindow(obj);
+					return;
+				}
 			}
 		}
 		obj = parent;
@@ -198,6 +221,25 @@ void FocusManager::on_focus_event(lv_event_t* e) {
 		lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE);
 	}
+}
+
+void FocusManager::on_global_release(lv_event_t* e) {
+	FocusManager* fm = (FocusManager*)lv_event_get_user_data(e);
+	if (!fm || !fm->m_swipeTracking || !fm->m_notificationPanel) return;
+
+	lv_indev_t* indev = lv_event_get_indev(e);
+	if (indev) {
+		lv_point_t point;
+		lv_indev_get_point(indev, &point);
+		lv_coord_t delta = point.y - fm->m_swipeStartY;
+
+		// Swipe down detected if moved at least 30 pixels down
+		if (delta > 30) {
+			ESP_LOGI(TAG, "Swipe down from top detected (delta=%d), opening notification panel", (int)delta);
+			fm->activatePanel(fm->m_notificationPanel);
+		}
+	}
+	fm->m_swipeTracking = false;
 }
 
 } // namespace System

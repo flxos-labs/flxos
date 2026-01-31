@@ -64,9 +64,9 @@ public:
 
 	/**
 	 * Get list of running FreeRTOS tasks
-	 * @param maxTasks Maximum number of tasks to return (default 10)
+	 * @param maxTasks Maximum number of tasks to return (0 for all)
 	 */
-	std::vector<TaskInfo> getTaskList(size_t maxTasks = 10);
+	std::vector<TaskInfo> getTaskList(size_t maxTasks = 0);
 
 	/**
 	 * Format bytes to human-readable string (B, KB, MB)

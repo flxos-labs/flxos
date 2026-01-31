@@ -7,7 +7,6 @@
 #include "settings/SettingsApp.hpp"
 #include "system_info/SystemInfoApp.hpp"
 
-
 static const char* TAG = "AppManager";
 
 namespace System::Apps {

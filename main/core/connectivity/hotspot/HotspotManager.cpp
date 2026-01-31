@@ -326,7 +326,6 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 	return ESP_OK;
 }
 
-
 esp_err_t HotspotManager::stop() {
 	ESP_LOGI(TAG, "Stopping Hotspot");
 

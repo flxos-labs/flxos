@@ -87,7 +87,6 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	// FlxOS Version
 	lv_obj_t* version_label = lv_label_create(tab);
 	lv_label_set_text_fmt(version_label, "FlxOS Version: %s", stats.flxosVersion.c_str());
-	lv_obj_set_style_text_font(version_label, &lv_font_montserrat_14, 0);
 
 	// ESP-IDF Version
 	m_idf_label = lv_label_create(tab);
@@ -158,7 +157,6 @@ void SystemInfoApp::createTasksTab(lv_obj_t* tab) {
 
 	lv_obj_t* header = lv_label_create(tab);
 	lv_label_set_text(header, "FreeRTOS Tasks:");
-	lv_obj_set_style_text_font(header, &lv_font_montserrat_14, 0);
 
 	m_tasks_list = lv_label_create(tab);
 	lv_label_set_text(m_tasks_list, "Loading tasks...");
@@ -206,7 +204,7 @@ void SystemInfoApp::updateInfo() {
 
 	// Update tasks list
 	if (m_tasks_list) {
-		auto tasks = Services::SystemInfoService::getInstance().getTaskList(10);
+		auto tasks = Services::SystemInfoService::getInstance().getTaskList();
 		std::stringstream ss;
 		ss << "Active Tasks: " << tasks.size() << "\n\n";
 
@@ -217,7 +215,6 @@ void SystemInfoApp::updateInfo() {
 		lv_label_set_text(m_tasks_list, ss.str().c_str());
 	}
 }
-
 
 } // namespace Apps
 } // namespace System
