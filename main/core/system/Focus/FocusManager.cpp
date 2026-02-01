@@ -51,7 +51,19 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 	}
 
 	if (m_activeWindow == win) {
-		return;
+		// Check if we really need to update (e.g. if dock button is missing checked state)
+		bool needs_update = false;
+
+		lv_obj_t* dock_btn = (lv_obj_t*)lv_obj_get_user_data(win);
+		if (dock_btn && lv_obj_is_valid(dock_btn) && !lv_obj_has_state(dock_btn, LV_STATE_CHECKED)) {
+			needs_update = true;
+		}
+
+		if (lv_obj_get_style_border_width(win, LV_PART_MAIN) != lv_dpx(2)) {
+			needs_update = true;
+		}
+
+		if (!needs_update) return;
 	}
 
 	m_activeWindow = win;

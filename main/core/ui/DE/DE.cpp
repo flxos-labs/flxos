@@ -1,6 +1,7 @@
 #include "DE.hpp"
-#include "../theming/LayoutConstants/LayoutConstants.hpp"
+#include "../theming/StyleUtils.hpp"
 #include "../theming/ThemeEngine/ThemeEngine.hpp"
+#include "../theming/UiConstants/UiConstants.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
@@ -19,31 +20,10 @@ DE& DE::getInstance() {
 	return instance;
 }
 
-void DE::apply_glass(lv_obj_t* obj, int32_t blur) {
-	lv_obj_set_style_bg_opa(obj, LV_OPA_60, 0);
-
-	lv_subject_add_observer_obj(
-		&System::SystemManager::getInstance().getGlassEnabledSubject(),
-		[](lv_observer_t* observer, lv_subject_t* subject) {
-			lv_obj_t* target = lv_observer_get_target_obj(observer);
-			int32_t b = (intptr_t)lv_observer_get_user_data(observer);
-			bool enabled = lv_subject_get_int(subject);
-			if (enabled) {
-				lv_obj_set_style_blur_backdrop(target, true, 0);
-				lv_obj_set_style_blur_radius(target, b, 0);
-			} else {
-				lv_obj_set_style_blur_backdrop(target, false, 0);
-				lv_obj_set_style_blur_radius(target, 0, 0);
-			}
-		},
-		obj, (void*)(intptr_t)blur
-	);
-}
-
 lv_obj_t* DE::create_dock_btn(lv_obj_t* parent, const char* icon, int32_t w, int32_t h) {
 	lv_obj_t* btn = lv_button_create(parent);
 	lv_obj_set_size(btn, w, h);
-	lv_obj_set_style_radius(btn, lv_dpx(UILayout::RADIUS_SMALL), 0);
+	lv_obj_set_style_radius(btn, lv_dpx(UiConstants::RADIUS_SMALL), 0);
 	lv_obj_t* img = lv_image_create(btn);
 	lv_image_set_src(img, icon);
 	lv_obj_center(img);
@@ -55,7 +35,7 @@ DE::DE()
 	  wallpaper_icon(nullptr), window_container(nullptr), status_bar(nullptr),
 	  dock(nullptr), time_label(nullptr), theme_label(nullptr),
 	  launcher(nullptr), quick_access_panel(nullptr), notification_panel(nullptr),
-	  notification_list(nullptr), greetings(nullptr), app_container(nullptr),
+	  notification_list(nullptr), clear_all_btn(nullptr), greetings(nullptr), app_container(nullptr),
 	  swipe_trigger_zone(nullptr), swipe_start_y(0), swipe_active(false) {}
 
 DE::~DE() {}
@@ -76,14 +56,14 @@ void DE::init() {
 
 		ThemeConfig cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 		lv_obj_set_style_bg_color(wallpaper, cfg.primary, 0);
-		lv_obj_set_style_bg_opa(wallpaper, LV_OPA_COVER, 0);
+		lv_obj_set_style_bg_opa(wallpaper, UiConstants::OPA_COVER, 0);
 		lv_obj_add_flag(wallpaper, LV_OBJ_FLAG_FLOATING);
 		lv_obj_add_flag(wallpaper, LV_OBJ_FLAG_CLICK_FOCUSABLE); // Make focusable for panel dismissal
 		lv_obj_move_background(wallpaper);
 
 		wallpaper_icon = lv_image_create(wallpaper);
 		lv_image_set_src(wallpaper_icon, LV_SYMBOL_IMAGE);
-		lv_obj_set_style_text_opa(wallpaper_icon, LV_OPA_30, 0);
+		lv_obj_set_style_text_opa(wallpaper_icon, UiConstants::OPA_30, 0);
 
 		lv_obj_center(wallpaper_icon);
 
@@ -132,7 +112,7 @@ void DE::init() {
 		);
 	} else {
 		lv_obj_set_style_bg_color(screen, lv_palette_main(LV_PALETTE_GREY), 0);
-		lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
+		lv_obj_set_style_bg_opa(screen, UiConstants::OPA_COVER, 0);
 	}
 
 	create_status_bar();
@@ -150,7 +130,7 @@ void DE::init() {
 	if (wallpaper) {
 		greetings = lv_label_create(wallpaper);
 		lv_label_set_text(greetings, "Hey !");
-		lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UILayout::OFFSET_TINY), -lv_dpx(UILayout::OFFSET_TINY));
+		lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UiConstants::OFFSET_TINY), -lv_dpx(UiConstants::OFFSET_TINY));
 	}
 
 	create_launcher();
@@ -182,21 +162,21 @@ void DE::init() {
 void DE::configure_panel_style(lv_obj_t* panel) {
 	lv_obj_set_size(panel, lv_pct(80), lv_pct(60));
 	lv_obj_set_style_pad_all(panel, 0, 0);
-	lv_obj_set_style_radius(panel, lv_dpx(UILayout::RADIUS_LARGE), 0);
+	lv_obj_set_style_radius(panel, lv_dpx(UiConstants::RADIUS_LARGE), 0);
 	lv_obj_set_style_border_width(panel, 0, 0);
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_FLOATING);
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
-	DE::apply_glass(panel, lv_dpx(UILayout::GLASS_BLUR_SMALL));
+	UI::StyleUtils::apply_glass(panel, lv_dpx(UiConstants::GLASS_BLUR_SMALL));
 }
 
 void DE::create_launcher() {
 	launcher = lv_obj_create(screen);
 	configure_panel_style(launcher);
-	lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(UILayout::OFFSET_TINY));
+	lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(UiConstants::OFFSET_TINY));
 
 	lv_obj_t* label = lv_label_create(launcher);
 	lv_label_set_text(label, "Applications");
-	lv_obj_align(label, LV_ALIGN_TOP_LEFT, lv_dpx(UILayout::PAD_LARGE), 0);
+	lv_obj_align(label, LV_ALIGN_TOP_LEFT, lv_dpx(UiConstants::PAD_LARGE), 0);
 
 	lv_obj_t* list = lv_list_create(launcher);
 	lv_obj_set_size(list, lv_pct(100), lv_pct(85));
@@ -221,7 +201,7 @@ void DE::create_launcher() {
 void DE::create_quick_access_panel() {
 	quick_access_panel = lv_obj_create(screen);
 	configure_panel_style(quick_access_panel);
-	lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(UILayout::OFFSET_TINY));
+	lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(UiConstants::OFFSET_TINY));
 	lv_obj_set_flex_flow(quick_access_panel, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(quick_access_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
@@ -316,13 +296,13 @@ void DE::create_quick_access_panel() {
 void DE::realign_panels() {
 	if (dock) {
 		if (launcher) {
-			lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(UILayout::OFFSET_TINY));
+			lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(UiConstants::OFFSET_TINY));
 		}
 		if (quick_access_panel) {
-			lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(UILayout::OFFSET_TINY));
+			lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(UiConstants::OFFSET_TINY));
 		}
 		if (greetings) {
-			lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UILayout::OFFSET_TINY), -lv_dpx(UILayout::OFFSET_TINY));
+			lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UiConstants::OFFSET_TINY), -lv_dpx(UiConstants::OFFSET_TINY));
 		}
 		if (notification_panel) {
 			lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, 0);
@@ -373,10 +353,10 @@ void DE::create_status_bar() {
 	status_bar = lv_obj_create(screen);
 	lv_obj_remove_style_all(status_bar);
 	lv_obj_set_size(status_bar, lv_pct(100), lv_pct(7));
-	lv_obj_set_style_pad_hor(status_bar, lv_dpx(UILayout::PAD_SMALL), 0);
+	lv_obj_set_style_pad_hor(status_bar, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_scroll_dir(status_bar, LV_DIR_NONE); // Prevent scrolling but allow gestures
 
-	DE::apply_glass(status_bar, lv_dpx(UILayout::GLASS_BLUR_DEFAULT));
+	UI::StyleUtils::apply_glass(status_bar, lv_dpx(UiConstants::GLASS_BLUR_DEFAULT));
 
 	lv_obj_set_flex_flow(status_bar, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(status_bar, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -392,7 +372,7 @@ void DE::create_status_bar() {
 		lv_obj_t* safe_img = lv_image_create(left_group);
 		lv_image_set_src(safe_img, LV_SYMBOL_WARNING);
 		lv_obj_set_style_image_recolor(safe_img, lv_palette_main(LV_PALETTE_RED), 0);
-		lv_obj_set_style_image_recolor_opa(safe_img, LV_OPA_COVER, 0);
+		lv_obj_set_style_image_recolor_opa(safe_img, UiConstants::OPA_COVER, 0);
 
 		lv_obj_t* safe_label = lv_label_create(left_group);
 		lv_label_set_text(safe_label, " SAFE MODE");
@@ -417,14 +397,15 @@ void DE::create_status_bar() {
 		bool enabled = lv_subject_get_int(&System::ConnectivityManager::getInstance().getWiFiEnabledSubject()) != 0;
 
 		if (connected) {
-			lv_obj_set_style_opa(icon, LV_OPA_COVER, 0);
+			lv_obj_set_style_opa(icon, UiConstants::OPA_COVER, 0);
 			lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 		} else if (enabled) {
-			lv_obj_set_style_opa(icon, LV_OPA_60, 0);
+			lv_obj_set_style_opa(icon, UiConstants::OPA_GLASS_BG, 0);
 			lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 		} else {
-			lv_obj_set_style_opa(icon, LV_OPA_60, 0);
+			lv_obj_set_style_opa(icon, UiConstants::OPA_GLASS_BG, 0);
 			lv_obj_remove_flag(slash, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_set_style_text_opa(slash, UiConstants::OPA_GLASS_BG, 0);
 		}
 	};
 
@@ -459,7 +440,7 @@ void DE::create_status_bar() {
 	lv_obj_set_style_transform_rotation(hotspot_icon2, 900, 0); // 90 degrees
 	lv_obj_set_style_transform_pivot_x(hotspot_icon2, lv_pct(50), 0);
 	lv_obj_set_style_transform_pivot_y(hotspot_icon2, lv_pct(50), 0);
-	lv_obj_set_style_margin_left(hotspot_icon2, -lv_dpx(UILayout::SIZE_ICON_OVERLAP), 0); // Overlap
+	lv_obj_set_style_margin_left(hotspot_icon2, -lv_dpx(UiConstants::SIZE_ICON_OVERLAP), 0); // Overlap
 
 	lv_obj_t* hotspot_slash = lv_label_create(hotspot_icon);
 	lv_label_set_text(hotspot_slash, "/");
@@ -477,13 +458,14 @@ void DE::create_status_bar() {
 			lv_obj_t* icon2 = lv_obj_get_child(cont, 1);
 			lv_obj_t* slash = lv_obj_get_child(cont, 2);
 			if (lv_subject_get_int(subject)) {
-				lv_obj_set_style_opa(icon1, LV_OPA_COVER, 0);
-				lv_obj_set_style_opa(icon2, LV_OPA_COVER, 0);
+				lv_obj_set_style_opa(icon1, UiConstants::OPA_COVER, 0);
+				lv_obj_set_style_opa(icon2, UiConstants::OPA_COVER, 0);
 				lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			} else {
-				lv_obj_set_style_opa(icon1, LV_OPA_60, 0);
-				lv_obj_set_style_opa(icon2, LV_OPA_60, 0);
+				lv_obj_set_style_opa(icon1, UiConstants::OPA_GLASS_BG, 0);
+				lv_obj_set_style_opa(icon2, UiConstants::OPA_GLASS_BG, 0);
 				lv_obj_remove_flag(slash, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_set_style_text_opa(slash, UiConstants::OPA_GLASS_BG, 0);
 			}
 		},
 		hotspot_icon, nullptr
@@ -519,11 +501,12 @@ void DE::create_status_bar() {
 			lv_obj_t* icon = lv_obj_get_child(cont, 0);
 			lv_obj_t* slash = lv_obj_get_child(cont, 1);
 			if (lv_subject_get_int(subject)) {
-				lv_obj_set_style_opa(icon, LV_OPA_COVER, 0);
+				lv_obj_set_style_opa(icon, UiConstants::OPA_COVER, 0);
 				lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			} else {
-				lv_obj_set_style_opa(icon, LV_OPA_60, 0);
+				lv_obj_set_style_opa(icon, UiConstants::OPA_GLASS_BG, 0);
 				lv_obj_remove_flag(slash, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_set_style_text_opa(slash, UiConstants::OPA_GLASS_BG, 0);
 			}
 		},
 		bt_cont, nullptr
@@ -550,10 +533,12 @@ void DE::create_status_bar() {
 			int32_t count = lv_subject_get_int(subject);
 			if (count > 0) {
 				lv_label_set_text_fmt(badge, "%d", (int)count);
-				lv_obj_set_style_image_opa(icon, LV_OPA_COVER, 0);
+				lv_obj_set_style_image_opa(icon, UiConstants::OPA_COVER, 0);
+				lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
 			} else {
 				lv_label_set_text(badge, "");
-				lv_obj_set_style_image_opa(icon, LV_OPA_40, 0);
+				lv_obj_set_style_image_opa(icon, UiConstants::OPA_40, 0);
+				lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
 			}
 		},
 		notif_btn, nullptr
@@ -584,11 +569,11 @@ void DE::create_dock() {
 	dock = lv_obj_create(screen);
 	lv_obj_remove_style_all(dock);
 	lv_obj_set_size(dock, lv_pct(90), lv_pct(14));
-	lv_obj_set_style_pad_hor(dock, lv_dpx(UILayout::PAD_SMALL), 0);
-	lv_obj_set_style_radius(dock, lv_dpx(UILayout::RADIUS_DEFAULT), 0);
-	lv_obj_set_style_margin_bottom(dock, lv_dpx(UILayout::PAD_SMALL), 0);
+	lv_obj_set_style_pad_hor(dock, lv_dpx(UiConstants::PAD_SMALL), 0);
+	lv_obj_set_style_radius(dock, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
+	lv_obj_set_style_margin_bottom(dock, lv_dpx(UiConstants::PAD_SMALL), 0);
 
-	DE::apply_glass(dock, lv_dpx(UILayout::GLASS_BLUR_LARGE));
+	UI::StyleUtils::apply_glass(dock, lv_dpx(UiConstants::GLASS_BLUR_LARGE));
 
 	lv_obj_set_flex_flow(dock, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(dock, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -601,7 +586,7 @@ void DE::create_dock() {
 	app_container = lv_obj_create(dock);
 	lv_obj_remove_style_all(app_container);
 	lv_obj_set_size(app_container, 0, lv_pct(100));
-	lv_obj_set_style_pad_hor(app_container, lv_dpx(UILayout::PAD_SMALL), 0);
+	lv_obj_set_style_pad_hor(app_container, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_flex_grow(app_container, 1);
 	lv_obj_set_flex_flow(app_container, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(app_container, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -626,17 +611,17 @@ void DE::create_notification_panel() {
 	lv_obj_set_size(header, lv_pct(100), LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(header, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(header, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	lv_obj_set_style_pad_all(header, lv_dpx(UILayout::PAD_LARGE), 0);
+	lv_obj_set_style_pad_all(header, lv_dpx(UiConstants::PAD_LARGE), 0);
 
 	lv_obj_t* title = lv_label_create(header);
 	lv_label_set_text(title, "Notifications");
 
-	lv_obj_t* clear_btn = lv_button_create(header);
-	lv_obj_set_size(clear_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-	lv_obj_set_style_pad_all(clear_btn, lv_dpx(UILayout::PAD_MEDIUM), 0);
-	lv_obj_t* clear_label = lv_label_create(clear_btn);
+	clear_all_btn = lv_button_create(header);
+	lv_obj_set_size(clear_all_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_style_pad_all(clear_all_btn, lv_dpx(UiConstants::PAD_MEDIUM), 0);
+	lv_obj_t* clear_label = lv_label_create(clear_all_btn);
 	lv_label_set_text(clear_label, "Clear All");
-	lv_obj_add_event_cb(clear_btn, on_clear_notifications_click, LV_EVENT_CLICKED, this);
+	lv_obj_add_event_cb(clear_all_btn, on_clear_notifications_click, LV_EVENT_CLICKED, this);
 
 	notification_list = lv_obj_create(notification_panel);
 	lv_obj_remove_style_all(notification_list);
@@ -644,8 +629,8 @@ void DE::create_notification_panel() {
 	lv_obj_set_flex_grow(notification_list, 1);
 
 	lv_obj_set_flex_flow(notification_list, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(notification_list, lv_dpx(UILayout::PAD_MEDIUM), 0);
-	lv_obj_set_style_pad_row(notification_list, lv_dpx(UILayout::PAD_MEDIUM), 0);
+	lv_obj_set_style_pad_all(notification_list, lv_dpx(UiConstants::PAD_MEDIUM), 0);
+	lv_obj_set_style_pad_row(notification_list, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 
 	// Observe updates
 	lv_subject_add_observer_obj(
@@ -660,6 +645,15 @@ void DE::create_notification_panel() {
 	);
 
 	update_notification_list();
+
+	// Add swipe-up indicator
+	lv_obj_t* up_indicator = lv_label_create(notification_panel);
+	lv_label_set_text(up_indicator, LV_SYMBOL_UP);
+	lv_obj_set_width(up_indicator, lv_pct(100));
+	lv_obj_set_style_text_align(up_indicator, LV_TEXT_ALIGN_CENTER, 0);
+	lv_obj_set_style_text_opa(up_indicator, UiConstants::OPA_TEXT_DIM, 0);
+	lv_obj_set_style_pad_bottom(up_indicator, lv_dpx(UiConstants::PAD_SMALL), 0);
+	// It will be at the bottom because of flex flow
 
 	// Add swipe-up-to-close gesture on notification panel and list
 	lv_obj_add_event_cb(notification_panel, on_notif_panel_press, LV_EVENT_PRESSED, this);
@@ -678,21 +672,29 @@ void DE::update_notification_list() {
 	const auto& notifs = System::NotificationManager::getInstance().getNotifications();
 
 	if (notifs.empty()) {
+		// specific layout for empty state
+		lv_obj_set_flex_align(notification_list, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
 		lv_obj_t* empty_label = lv_label_create(notification_list);
 		lv_label_set_text(empty_label, "No new notifications");
-		lv_obj_center(empty_label);
-		lv_obj_set_style_text_opa(empty_label, LV_OPA_50, 0);
+		lv_obj_set_style_text_opa(empty_label, UiConstants::OPA_TEXT_DIM, 0);
+		if (clear_all_btn) lv_obj_add_flag(clear_all_btn, LV_OBJ_FLAG_HIDDEN);
 		return;
 	}
+
+	if (clear_all_btn) lv_obj_remove_flag(clear_all_btn, LV_OBJ_FLAG_HIDDEN);
+
+	// Restore list layout
+	lv_obj_set_flex_align(notification_list, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
 	for (const auto& n: notifs) {
 		lv_obj_t* item = lv_obj_create(notification_list);
 		lv_obj_set_size(item, lv_pct(100), LV_SIZE_CONTENT);
-		lv_obj_set_style_radius(item, lv_dpx(UILayout::RADIUS_DEFAULT), 0);
-		lv_obj_set_style_bg_opa(item, LV_OPA_20, 0); // Very transparent
+		lv_obj_set_style_radius(item, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
+		lv_obj_set_style_bg_opa(item, UiConstants::OPA_ITEM_BG, 0); // Very transparent
 		lv_obj_set_flex_flow(item, LV_FLEX_FLOW_ROW);
-		lv_obj_set_flex_align(item, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-		lv_obj_set_style_pad_all(item, lv_dpx(UILayout::PAD_DEFAULT), 0);
+		lv_obj_set_flex_align(item, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+		lv_obj_set_style_pad_all(item, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 
 		if (n.icon) {
 			lv_obj_t* icon = lv_image_create(item);
@@ -704,20 +706,67 @@ void DE::update_notification_list() {
 		lv_obj_set_size(content, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 		lv_obj_set_flex_grow(content, 1);
 		lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
+		lv_obj_set_style_pad_hor(content, lv_dpx(UiConstants::PAD_SMALL), 0);
 
-		lv_obj_t* title_lbl = lv_label_create(content);
+		// Header row for Title + Time
+		lv_obj_t* header_cont = lv_obj_create(content);
+		lv_obj_remove_style_all(header_cont);
+		lv_obj_set_size(header_cont, lv_pct(100), LV_SIZE_CONTENT);
+		lv_obj_set_flex_flow(header_cont, LV_FLEX_FLOW_ROW);
+		lv_obj_set_flex_align(header_cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+		lv_obj_set_style_pad_column(header_cont, lv_dpx(UiConstants::PAD_SMALL), 0);
+
+		lv_obj_t* title_lbl = lv_label_create(header_cont);
 		lv_label_set_text(title_lbl, n.title.c_str());
+		// Make title bold
+		// lv_obj_set_style_text_font(title_lbl, &lv_font_montserrat_16, 0);
+
+		lv_obj_t* time_lbl = lv_label_create(header_cont);
+		// Simple timestamp logic, formatted for display
+		// For now using static "now" or "10:00" as placeholder since we don't have formatted time in Notification struct yet
+		// We could generate it from timestamp
+		time_t ts = n.timestamp;
+		struct tm timeinfo;
+		localtime_r(&ts, &timeinfo);
+		lv_label_set_text_fmt(time_lbl, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+		lv_obj_set_style_text_opa(time_lbl, UiConstants::OPA_TEXT_DIM, 0);
 
 		lv_obj_t* msg_lbl = lv_label_create(content);
 		lv_label_set_text(msg_lbl, n.message.c_str());
 		lv_label_set_long_mode(msg_lbl, LV_LABEL_LONG_WRAP);
-		lv_obj_set_width(msg_lbl, lv_pct(95));
-		lv_obj_set_style_text_opa(msg_lbl, LV_OPA_70, 0);
+		lv_obj_set_width(msg_lbl, lv_pct(100));
+		lv_obj_set_style_text_opa(msg_lbl, UiConstants::OPA_70, 0);
 
-		lv_obj_t* time_lbl = lv_label_create(item);
-		// Simple timestamp logic, could be better
-		lv_label_set_text(time_lbl, "now");
-		lv_obj_set_style_text_opa(time_lbl, LV_OPA_50, 0);
+		// Close button
+		lv_obj_t* close_btn = lv_button_create(item);
+		lv_obj_set_size(close_btn, 30, 30); // Touch target
+		lv_obj_set_style_radius(close_btn, LV_RADIUS_CIRCLE, 0);
+		lv_obj_t* close_icon = lv_label_create(close_btn);
+		lv_label_set_text(close_icon, LV_SYMBOL_CLOSE);
+		lv_obj_center(close_icon);
+		lv_obj_set_style_text_opa(close_icon, UiConstants::OPA_TEXT_DIM, 0);
+
+		// Copy ID to heap for callback
+		std::string* id_ptr = new std::string(n.id);
+		lv_obj_set_user_data(close_btn, id_ptr);
+		lv_obj_add_event_cb(close_btn, on_notification_close_click, LV_EVENT_ALL, NULL);
+	}
+}
+
+void DE::on_notification_close_click(lv_event_t* e) {
+	lv_event_code_t code = lv_event_get_code(e);
+	lv_obj_t* btn = lv_event_get_target_obj(e);
+	std::string* id = (std::string*)lv_obj_get_user_data(btn);
+
+	if (code == LV_EVENT_CLICKED) {
+		if (id) {
+			System::NotificationManager::getInstance().removeNotification(*id);
+		}
+	} else if (code == LV_EVENT_DELETE) {
+		if (id) {
+			delete id;
+			lv_obj_set_user_data(btn, nullptr);
+		}
 	}
 }
 
@@ -729,7 +778,7 @@ void DE::create_swipe_trigger_zone() {
 	// Create an invisible touch zone at the top of the screen
 	swipe_trigger_zone = lv_obj_create(screen);
 	lv_obj_remove_style_all(swipe_trigger_zone);
-	lv_obj_set_size(swipe_trigger_zone, lv_pct(100), lv_dpx(UILayout::SIZE_SWIPE_ZONE)); // 30dp tall zone
+	lv_obj_set_size(swipe_trigger_zone, lv_pct(100), lv_dpx(UiConstants::SIZE_SWIPE_ZONE)); // 30dp tall zone
 	lv_obj_add_flag(swipe_trigger_zone, LV_OBJ_FLAG_FLOATING);
 	lv_obj_add_flag(swipe_trigger_zone, LV_OBJ_FLAG_CLICKABLE);
 	lv_obj_align(swipe_trigger_zone, LV_ALIGN_TOP_MID, 0, 0);

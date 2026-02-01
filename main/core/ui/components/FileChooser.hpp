@@ -7,6 +7,7 @@
 #include <stack>
 #include <string>
 #include <sys/stat.h>
+#include <vector>
 
 namespace System {
 namespace UI {
@@ -14,8 +15,8 @@ namespace UI {
 class FileChooser {
 public:
 
-	static void show(std::function<void(std::string)> callback, const char* initialPath = "A:/") {
-		auto* chooser = new FileChooser(callback, initialPath);
+	static void show(std::function<void(std::string)> callback, const std::vector<std::string>& extensions = {}, const char* initialPath = "A:/") {
+		auto* chooser = new FileChooser(callback, extensions, initialPath);
 		chooser->createUI();
 	}
 
@@ -23,6 +24,7 @@ private:
 
 	std::function<void(std::string)> m_callback;
 	std::string m_currentPath;
+	std::vector<std::string> m_extensions;
 	std::stack<std::string> m_history;
 
 	lv_obj_t* m_dialog = nullptr;
@@ -30,8 +32,8 @@ private:
 	lv_obj_t* m_pathLabel = nullptr;
 	lv_obj_t* m_backBtn = nullptr;
 
-	FileChooser(std::function<void(std::string)> cb, const char* path)
-		: m_callback(cb), m_currentPath(path) {}
+	FileChooser(std::function<void(std::string)> cb, const std::vector<std::string>& extensions, const char* path)
+		: m_callback(cb), m_currentPath(path), m_extensions(extensions) {}
 
 	void createUI() {
 		m_dialog = lv_obj_create(lv_layer_top());
@@ -109,6 +111,11 @@ private:
 		close();
 	}
 
+	bool hasExtension(const std::string& fileName, const std::string& ext) {
+		if (fileName.length() < ext.length()) return false;
+		return fileName.compare(fileName.length() - ext.length(), ext.length(), ext) == 0;
+	}
+
 	void refreshList() {
 		lv_obj_clean(m_list);
 		lv_label_set_text(m_pathLabel, m_currentPath.c_str());
@@ -139,6 +146,18 @@ private:
 			bool is_dir = (fn[0] == '/');
 			const char* name = is_dir ? fn + 1 : fn;
 			if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) continue;
+
+			if (!is_dir && !m_extensions.empty()) {
+				bool match = false;
+				for (const auto& ext: m_extensions) {
+					if (hasExtension(name, ext)) {
+						match = true;
+						break;
+					}
+				}
+				if (!match) continue;
+			}
+
 			addListItem(name, is_dir);
 		}
 		lv_fs_dir_close(&dir);

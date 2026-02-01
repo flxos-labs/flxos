@@ -17,7 +17,6 @@ public:
 	void closeApp(const std::string& packageName);
 
 	// UI Utilities
-	static void apply_glass(lv_obj_t* obj, int32_t blur);
 	static lv_obj_t* create_dock_btn(lv_obj_t* parent, const char* icon, int32_t w, int32_t h);
 
 private:
@@ -35,6 +34,7 @@ private:
 	lv_obj_t* quick_access_panel;
 	lv_obj_t* notification_panel;
 	lv_obj_t* notification_list;
+	lv_obj_t* clear_all_btn;
 	lv_obj_t* greetings;
 	lv_obj_t* app_container;
 	lv_obj_t* swipe_trigger_zone;
@@ -57,6 +57,7 @@ private:
 	static void on_up_click(lv_event_t* e);
 	static void on_clear_notifications_click(lv_event_t* e);
 	static void on_app_click(lv_event_t* e);
+	static void on_notification_close_click(lv_event_t* e);
 	static void on_swipe_zone_press(lv_event_t* e);
 	static void on_swipe_zone_pressing(lv_event_t* e);
 	static void on_swipe_zone_release(lv_event_t* e);

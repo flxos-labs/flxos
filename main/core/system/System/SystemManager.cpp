@@ -66,6 +66,7 @@ esp_err_t SystemManager::initGuiState() {
 	lv_subject_init_int(&m_show_fps_subject, 0);
 	lv_subject_init_int(&m_wallpaper_enabled_subject, 0);
 	lv_subject_init_int(&m_glass_enabled_subject, 0);
+	lv_subject_init_int(&m_transparency_enabled_subject, 1);
 	lv_subject_init_pointer(&m_wallpaper_path_subject, nullptr);
 
 	auto add_obs = [](lv_subject_t* s,

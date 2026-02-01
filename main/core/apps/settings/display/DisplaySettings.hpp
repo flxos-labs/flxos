@@ -96,12 +96,33 @@ public:
 			lv_obj_t* chooseWpBtn =
 				add_list_btn(m_list, LV_SYMBOL_DIRECTORY, "Choose Wallpaper");
 
+			lv_obj_set_flex_grow(lv_obj_get_child(chooseWpBtn, 1), 1);
+			lv_obj_t* wpValLabel = lv_label_create(chooseWpBtn);
+			lv_label_set_text(wpValLabel, "");
+
+			lv_subject_add_observer_obj(
+				&SystemManager::getInstance().getWallpaperPathSubject(),
+				[](lv_observer_t* observer, lv_subject_t* subject) {
+					lv_obj_t* label = lv_observer_get_target_obj(observer);
+					const char* path = (const char*)lv_subject_get_pointer(subject);
+					if (path) {
+						std::string p = path;
+						size_t pos = p.find_last_of("/\\");
+						std::string filename = (pos == std::string::npos) ? p : p.substr(pos + 1);
+						lv_label_set_text(label, filename.c_str());
+					} else {
+						lv_label_set_text(label, "None");
+					}
+				},
+				wpValLabel, nullptr
+			);
+
 			// Sync button state with wallpaper enablement
 			auto update_chooser_state = [](lv_obj_t* btn, int32_t enabled) {
 				if (enabled) {
-					lv_obj_remove_state(btn, LV_STATE_DISABLED);
+					lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
 				} else {
-					lv_obj_add_state(btn, LV_STATE_DISABLED);
+					lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
 				}
 			};
 
@@ -120,9 +141,9 @@ public:
 					lv_obj_t* btn = lv_observer_get_target_obj(observer);
 					int32_t val = lv_subject_get_int(subject);
 					if (val) {
-						lv_obj_remove_state(btn, LV_STATE_DISABLED);
+						lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
 					} else {
-						lv_obj_add_state(btn, LV_STATE_DISABLED);
+						lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
 					}
 				},
 				chooseWpBtn, nullptr
@@ -131,17 +152,32 @@ public:
 			lv_obj_add_event_cb(
 				chooseWpBtn,
 				[](lv_event_t* e) {
-					UI::FileChooser::show([](std::string path) {
-						static char path_buf[256];
-						strncpy(path_buf, path.c_str(), sizeof(path_buf) - 1);
-						lv_subject_set_pointer(
-							&SystemManager::getInstance()
-								 .getWallpaperPathSubject(),
-							path_buf
-						);
-					});
+					UI::FileChooser::show(
+						[](std::string path) {
+							static char path_buf[256];
+							strncpy(
+								path_buf, path.c_str(),
+								sizeof(path_buf) - 1
+							);
+							lv_subject_set_pointer(
+								&SystemManager::getInstance()
+									 .getWallpaperPathSubject(),
+								path_buf
+							);
+						},
+						{".png", ".jpg", ".jpeg", ".bmp"}
+					);
 				},
 				LV_EVENT_CLICKED, nullptr
+			);
+
+			lv_obj_t* transpBtn =
+				add_list_btn(m_list, LV_SYMBOL_EYE_OPEN, "Transparency");
+			lv_obj_set_flex_grow(lv_obj_get_child(transpBtn, 1), 1);
+			lv_obj_t* transpSw = lv_switch_create(transpBtn);
+			lv_obj_bind_checked(
+				transpSw,
+				&SystemManager::getInstance().getTransparencyEnabledSubject()
 			);
 
 			lv_obj_t* glassBtn =
@@ -150,6 +186,26 @@ public:
 			lv_obj_t* glassSw = lv_switch_create(glassBtn);
 			lv_obj_bind_checked(
 				glassSw, &SystemManager::getInstance().getGlassEnabledSubject()
+			);
+
+			// observer to disable glass setting if transparency is off
+			lv_subject_add_observer_obj(
+				&SystemManager::getInstance().getTransparencyEnabledSubject(),
+				[](lv_observer_t* observer, lv_subject_t* subject) {
+					lv_obj_t* glassSw = lv_observer_get_target_obj(observer);
+					lv_obj_t* glassBtn = lv_obj_get_parent(glassSw);
+					int32_t enabled = lv_subject_get_int(subject);
+					if (enabled) {
+						lv_obj_remove_state(glassBtn, LV_STATE_DISABLED);
+						lv_obj_remove_state(glassSw, LV_STATE_DISABLED);
+						lv_obj_set_style_opa(glassBtn, LV_OPA_COVER, 0);
+					} else {
+						lv_obj_add_state(glassBtn, LV_STATE_DISABLED);
+						lv_obj_add_state(glassSw, LV_STATE_DISABLED);
+						lv_obj_set_style_opa(glassBtn, LV_OPA_50, 0);
+					}
+				},
+				glassSw, nullptr
 			);
 		} else {
 			lv_obj_remove_flag(m_container, LV_OBJ_FLAG_HIDDEN);

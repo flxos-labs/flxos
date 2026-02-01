@@ -1,10 +1,10 @@
 # LVGL API List
 
-*Last Updated: 2026-01-25 17:57:10*
+*Last Updated: 2026-02-01 23:40:40*
 
 Sorted from highly featured (most functions) to least featured.
 
-## lv_obj (531 APIs)
+## lv_obj (503 APIs)
 - `lv_obj_add_event_cb`
 - `lv_obj_add_flag`
 - `lv_obj_add_play_timeline_event`
@@ -508,206 +508,6 @@ Sorted from highly featured (most functions) to least featured.
 - `lv_obj_tree_walk_res_t`
 - `lv_obj_update_layout`
 - `lv_obj_update_snap`
-- `lv_obj_xml_bind_flag_apply`
-- `lv_obj_xml_bind_flag_create`
-- `lv_obj_xml_bind_state_apply`
-- `lv_obj_xml_bind_state_create`
-- `lv_obj_xml_bind_style_apply`
-- `lv_obj_xml_bind_style_create`
-- `lv_obj_xml_bind_style_prop_apply`
-- `lv_obj_xml_bind_style_prop_create`
-- `lv_obj_xml_event_cb_apply`
-- `lv_obj_xml_event_cb_create`
-- `lv_obj_xml_play_timeline_event_apply`
-- `lv_obj_xml_play_timeline_event_create`
-- `lv_obj_xml_remove_style_all_apply`
-- `lv_obj_xml_remove_style_all_create`
-- `lv_obj_xml_remove_style_apply`
-- `lv_obj_xml_remove_style_create`
-- `lv_obj_xml_screen_create_event_apply`
-- `lv_obj_xml_screen_create_event_create`
-- `lv_obj_xml_screen_load_event_apply`
-- `lv_obj_xml_screen_load_event_create`
-- `lv_obj_xml_style_apply`
-- `lv_obj_xml_style_create`
-- `lv_obj_xml_subject_increment_apply`
-- `lv_obj_xml_subject_increment_create`
-- `lv_obj_xml_subject_set_apply`
-- `lv_obj_xml_subject_set_create`
-- `lv_obj_xml_subject_toggle_apply`
-- `lv_obj_xml_subject_toggle_create`
-
-## lv_xml (170 APIs)
-- `lv_xml_align_to_enum`
-- `lv_xml_arc_apply`
-- `lv_xml_arc_create`
-- `lv_xml_atof`
-- `lv_xml_atof_split`
-- `lv_xml_atoi`
-- `lv_xml_atoi_split`
-- `lv_xml_bar_apply`
-- `lv_xml_bar_create`
-- `lv_xml_base_dir_to_enum`
-- `lv_xml_blend_mode_to_enum`
-- `lv_xml_blur_quality_to_enum`
-- `lv_xml_border_side_to_enum`
-- `lv_xml_button_apply`
-- `lv_xml_button_create`
-- `lv_xml_buttonmatrix_apply`
-- `lv_xml_buttonmatrix_create`
-- `lv_xml_calendar_apply`
-- `lv_xml_calendar_create`
-- `lv_xml_calendar_header_arrow_apply`
-- `lv_xml_calendar_header_arrow_create`
-- `lv_xml_calendar_header_dropdown_apply`
-- `lv_xml_calendar_header_dropdown_create`
-- `lv_xml_canvas_apply`
-- `lv_xml_canvas_create`
-- `lv_xml_chart_apply`
-- `lv_xml_chart_axis_apply`
-- `lv_xml_chart_axis_create`
-- `lv_xml_chart_create`
-- `lv_xml_chart_cursor_apply`
-- `lv_xml_chart_cursor_create`
-- `lv_xml_chart_series_apply`
-- `lv_xml_chart_series_create`
-- `lv_xml_check_file`
-- `lv_xml_checkbox_apply`
-- `lv_xml_checkbox_create`
-- `lv_xml_component_get_grad`
-- `lv_xml_component_get_scope`
-- `lv_xml_component_process`
-- `lv_xml_create`
-- `lv_xml_create_in_scope`
-- `lv_xml_create_screen`
-- `lv_xml_deinit`
-- `lv_xml_dir_to_enum`
-- `lv_xml_dropdown_apply`
-- `lv_xml_dropdown_create`
-- `lv_xml_dropdown_list_apply`
-- `lv_xml_dropdown_list_create`
-- `lv_xml_flex_align_to_enum`
-- `lv_xml_flex_flow_to_enum`
-- `lv_xml_get_const`
-- `lv_xml_get_event_cb`
-- `lv_xml_get_font`
-- `lv_xml_get_image`
-- `lv_xml_get_style_by_name`
-- `lv_xml_get_subject`
-- `lv_xml_get_timeline`
-- `lv_xml_get_value_of`
-- `lv_xml_grad_dir_to_enum`
-- `lv_xml_grid_align_to_enum`
-- `lv_xml_image_apply`
-- `lv_xml_image_create`
-- `lv_xml_imagebutton_apply`
-- `lv_xml_imagebutton_create`
-- `lv_xml_imagebutton_src_left_apply`
-- `lv_xml_imagebutton_src_left_create`
-- `lv_xml_imagebutton_src_mid_apply`
-- `lv_xml_imagebutton_src_mid_create`
-- `lv_xml_imagebutton_src_right_apply`
-- `lv_xml_imagebutton_src_right_create`
-- `lv_xml_init`
-- `lv_xml_keyboard_apply`
-- `lv_xml_keyboard_create`
-- `lv_xml_label_apply`
-- `lv_xml_label_create`
-- `lv_xml_layout_to_enum`
-- `lv_xml_load_all_from_data`
-- `lv_xml_load_all_from_file`
-- `lv_xml_load_all_from_path`
-- `lv_xml_obj_apply`
-- `lv_xml_obj_create`
-- `lv_xml_parser_end_section`
-- `lv_xml_parser_start_section`
-- `lv_xml_parser_state_init`
-- `lv_xml_qrcode_apply`
-- `lv_xml_qrcode_create`
-- `lv_xml_register_component_from_data`
-- `lv_xml_register_component_from_file`
-- `lv_xml_register_const`
-- `lv_xml_register_event_cb`
-- `lv_xml_register_font`
-- `lv_xml_register_image`
-- `lv_xml_register_style`
-- `lv_xml_register_subject`
-- `lv_xml_register_timeline`
-- `lv_xml_register_translation_from_data`
-- `lv_xml_register_translation_from_file`
-- `lv_xml_register_widget`
-- `lv_xml_roller_apply`
-- `lv_xml_roller_create`
-- `lv_xml_scale_apply`
-- `lv_xml_scale_create`
-- `lv_xml_scale_section_apply`
-- `lv_xml_scale_section_create`
-- `lv_xml_screen_load_anim_text_to_enum_value`
-- `lv_xml_scroll_snap_to_enum`
-- `lv_xml_scrollbar_mode_to_enum`
-- `lv_xml_set_default_asset_path`
-- `lv_xml_slider_apply`
-- `lv_xml_slider_create`
-- `lv_xml_spangroup_apply`
-- `lv_xml_spangroup_create`
-- `lv_xml_spangroup_span_apply`
-- `lv_xml_spangroup_span_create`
-- `lv_xml_spinbox_apply`
-- `lv_xml_spinbox_create`
-- `lv_xml_spinner_apply`
-- `lv_xml_spinner_create`
-- `lv_xml_split_str`
-- `lv_xml_state_get_item`
-- `lv_xml_state_get_parent`
-- `lv_xml_state_to_enum`
-- `lv_xml_strtol`
-- `lv_xml_style_part_to_enum`
-- `lv_xml_style_prop_to_enum`
-- `lv_xml_style_selector_text_to_enum`
-- `lv_xml_style_state_to_enum`
-- `lv_xml_style_string_process`
-- `lv_xml_switch_apply`
-- `lv_xml_switch_create`
-- `lv_xml_table_apply`
-- `lv_xml_table_cell_apply`
-- `lv_xml_table_cell_create`
-- `lv_xml_table_column_apply`
-- `lv_xml_table_column_create`
-- `lv_xml_table_create`
-- `lv_xml_tabview_apply`
-- `lv_xml_tabview_create`
-- `lv_xml_tabview_tab_apply`
-- `lv_xml_tabview_tab_bar_apply`
-- `lv_xml_tabview_tab_bar_create`
-- `lv_xml_tabview_tab_button_apply`
-- `lv_xml_tabview_tab_button_create`
-- `lv_xml_tabview_tab_create`
-- `lv_xml_test_get_status`
-- `lv_xml_test_get_step_count`
-- `lv_xml_test_get_step_next`
-- `lv_xml_test_get_step_type`
-- `lv_xml_test_register_from_data`
-- `lv_xml_test_register_from_file`
-- `lv_xml_test_run_all`
-- `lv_xml_test_run_init`
-- `lv_xml_test_run_next`
-- `lv_xml_test_run_stop`
-- `lv_xml_test_run_to`
-- `lv_xml_text_align_to_enum`
-- `lv_xml_text_decor_to_enum`
-- `lv_xml_textarea_apply`
-- `lv_xml_textarea_create`
-- `lv_xml_to_bool`
-- `lv_xml_to_color`
-- `lv_xml_to_opa`
-- `lv_xml_to_size`
-- `lv_xml_trigger_text_to_enum_value`
-- `lv_xml_unload`
-- `lv_xml_unregister_component`
-- `lv_xml_unregister_test`
-- `lv_xml_update_from_data`
-- `lv_xml_widget_get_extended_widget_processor`
-- `lv_xml_widget_get_processor`
 
 ## lv_style (155 APIs)
 - `lv_style_copy`
@@ -1374,7 +1174,7 @@ Sorted from highly featured (most functions) to least featured.
 - `lv_display_trigger_activity`
 - `lv_display_unregister_vsync_event`
 
-## lv_indev (69 APIs)
+## lv_indev (71 APIs)
 - `lv_indev_active`
 - `lv_indev_add_event_cb`
 - `lv_indev_create`
@@ -1429,6 +1229,8 @@ Sorted from highly featured (most functions) to least featured.
 - `lv_indev_set_driver_data`
 - `lv_indev_set_external_data`
 - `lv_indev_set_gesture_data`
+- `lv_indev_set_gesture_min_distance`
+- `lv_indev_set_gesture_min_velocity`
 - `lv_indev_set_group`
 - `lv_indev_set_key_remap_cb`
 - `lv_indev_set_long_press_repeat_time`
@@ -1860,7 +1662,7 @@ Sorted from highly featured (most functions) to least featured.
 - `lv_draw_buf_width_to_stride`
 - `lv_draw_buf_width_to_stride_ex`
 
-## lv_opengles (34 APIs)
+## lv_opengles (35 APIs)
 - `lv_opengles_deinit`
 - `lv_opengles_egl_clear`
 - `lv_opengles_egl_color_format_from_egl_config`
@@ -1874,6 +1676,7 @@ Sorted from highly featured (most functions) to least featured.
 - `lv_opengles_glfw_window_set_title`
 - `lv_opengles_glsl_version_to_string`
 - `lv_opengles_init`
+- `lv_opengles_reinit_state`
 - `lv_opengles_render_clear`
 - `lv_opengles_render_display_texture`
 - `lv_opengles_render_fill`
@@ -3536,10 +3339,6 @@ Sorted from highly featured (most functions) to least featured.
 - `lv_lodepng_deinit`
 - `lv_lodepng_init`
 
-## lv_lovyan (2 APIs)
-- `lv_lovyan_gfx_create`
-- `lv_lovyan_gfx_set_brightness`
-
 ## lv_pct (2 APIs)
 - `lv_pct`
 - `lv_pct_to_px`
@@ -3637,6 +3436,9 @@ Sorted from highly featured (most functions) to least featured.
 
 ## lv_littlefs (1 APIs)
 - `lv_littlefs_set_handler`
+
+## lv_lovyan (1 APIs)
+- `lv_lovyan_gfx_create`
 
 ## lv_map (1 APIs)
 - `lv_map`

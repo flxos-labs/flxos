@@ -1,5 +1,5 @@
 #include "WM.hpp"
-#include "../../theming/LayoutConstants/LayoutConstants.hpp"
+#include "../../theming/UiConstants/UiConstants.hpp"
 #include "core/common/Logger.hpp"
 
 #include "../DE.hpp"
@@ -33,7 +33,7 @@ void WM::init(lv_obj_t* window_container, lv_obj_t* app_container, lv_obj_t* scr
 	m_statusBar = status_bar;
 	m_dock = dock;
 
-	lv_obj_set_style_pad_all(m_windowContainer, lv_dpx(UILayout::PAD_SMALL), 0);
+	lv_obj_set_style_pad_all(m_windowContainer, lv_dpx(UiConstants::PAD_SMALL), 0);
 
 	// Register as observer of AppManager for state synchronization
 	System::Apps::AppManager::getInstance().addObserver(this);
@@ -56,6 +56,10 @@ void WM::openApp(const std::string& packageName) {
 	if (lv_obj_t* win = findWindowByPackage(packageName)) {
 		Log::info(TAG, "App %s already open, activating window", packageName.c_str());
 		lv_obj_remove_flag(win, LV_OBJ_FLAG_HIDDEN);
+
+		lv_obj_t* dp = (lv_obj_t*)lv_obj_get_user_data(win);
+		if (dp && lv_obj_is_valid(dp)) lv_obj_add_state(dp, LV_STATE_USER_1);
+
 		System::FocusManager::getInstance().activateWindow(win);
 		System::Apps::AppManager::getInstance().startApp(packageName);
 		GuiTask::unlock();
@@ -74,7 +78,7 @@ void WM::openApp(const std::string& packageName) {
 	lv_obj_t* win = lv_win_create(m_windowContainer);
 	// Initial size will be handled by updateLayout, but set defaults just
 	// in case
-	lv_obj_set_style_radius(win, lv_dpx(UILayout::RADIUS_DEFAULT), 0);
+	lv_obj_set_style_radius(win, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
 	lv_obj_set_style_border_post(win, true, 0);
 
 	m_windowAppMap[win] = packageName;
@@ -83,8 +87,17 @@ void WM::openApp(const std::string& packageName) {
 	const char* iconSymbol = (const char*)app->getIcon();
 	lv_obj_t* dock_btn =
 		DE::create_dock_btn(m_appContainer, iconSymbol, lv_pct(15), lv_pct(85));
-	lv_obj_set_style_bg_opa(dock_btn, LV_OPA_TRANSP, 0);
-	lv_obj_set_style_bg_opa(dock_btn, LV_OPA_80, LV_STATE_CHECKED);
+
+	// Dock button state styles:
+	// Default (Minimized): Transparent
+	// USER_1 (Open/Visible): Glass Opacity
+	// CHECKED (Active): High Opacity (Active color handled by Theme)
+	lv_obj_set_style_bg_opa(dock_btn, UiConstants::OPA_TRANSP, 0);
+	lv_obj_set_style_bg_opa(dock_btn, UiConstants::OPA_GLASS_BG, LV_STATE_USER_1);
+	lv_obj_set_style_bg_opa(dock_btn, UiConstants::OPA_HIGH, LV_STATE_CHECKED);
+
+	lv_obj_add_state(dock_btn, LV_STATE_USER_1); // Window starts visible
+
 	lv_obj_add_event_cb(dock_btn, on_win_minimize, LV_EVENT_CLICKED, this);
 
 	lv_obj_set_user_data(win, dock_btn);
@@ -93,24 +106,24 @@ void WM::openApp(const std::string& packageName) {
 	lv_win_add_title(win, app->getAppName().c_str());
 	lv_obj_t* header = lv_win_get_header(win);
 	lv_obj_set_height(header, lv_pct(10));
-	lv_obj_set_style_min_height(header, lv_dpx(UILayout::SIZE_HEADER), 0);
+	lv_obj_set_style_min_height(header, lv_dpx(UiConstants::SIZE_HEADER), 0);
 	lv_obj_set_style_pad_all(header, 0, 0);
 	lv_obj_add_flag(header, LV_OBJ_FLAG_EVENT_BUBBLE);
 	lv_obj_remove_flag(header, LV_OBJ_FLAG_SCROLLABLE);
 
 	lv_obj_t* min_btn = lv_win_add_button(win, LV_SYMBOL_DOWN, lv_pct(10));
-	lv_obj_set_style_min_width(min_btn, lv_dpx(UILayout::SIZE_HEADER), 0);
+	lv_obj_set_style_min_width(min_btn, lv_dpx(UiConstants::SIZE_HEADER), 0);
 	lv_obj_add_event_cb(min_btn, on_header_minimize, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* max_btn = lv_win_add_button(win, LV_SYMBOL_PLUS, lv_pct(10));
-	lv_obj_set_style_min_width(max_btn, lv_dpx(UILayout::SIZE_HEADER), 0);
+	lv_obj_set_style_min_width(max_btn, lv_dpx(UiConstants::SIZE_HEADER), 0);
 	if (lv_obj_get_child_count(max_btn) > 0) {
 		m_windowMaxBtnLabelMap[win] = lv_obj_get_child(max_btn, 0);
 	}
 	lv_obj_add_event_cb(max_btn, on_win_maximize, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* close_btn = lv_win_add_button(win, LV_SYMBOL_CLOSE, lv_pct(10));
-	lv_obj_set_style_min_width(close_btn, lv_dpx(UILayout::SIZE_HEADER), 0);
+	lv_obj_set_style_min_width(close_btn, lv_dpx(UiConstants::SIZE_HEADER), 0);
 	lv_obj_add_event_cb(close_btn, on_win_close, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* content = lv_win_get_content(win);
@@ -148,16 +161,20 @@ void WM::on_win_minimize(lv_event_t* e) {
 	if (w == wm->m_fullScreenWindow) wm->toggleFullScreen(w);
 
 	bool is_hidden = lv_obj_has_flag(w, LV_OBJ_FLAG_HIDDEN);
-	bool is_active = (lv_obj_get_style_border_width(w, LV_PART_MAIN) == lv_dpx(UILayout::BORDER_FOCUS));
+	bool is_active = (lv_obj_get_style_border_width(w, LV_PART_MAIN) == lv_dpx(UiConstants::BORDER_FOCUS));
 
 	if (is_hidden || !is_active) {
 		lv_obj_remove_flag(w, LV_OBJ_FLAG_HIDDEN);
+		// Restore visible state on dock btn
+		if (db && lv_obj_is_valid(db)) lv_obj_add_state(db, LV_STATE_USER_1);
+
 		System::FocusManager::getInstance().activateWindow(w);
 		if (wm->m_windowAppMap.count(w))
 			System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[w]);
 	} else {
 		lv_obj_add_flag(w, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_remove_state(db, LV_STATE_CHECKED);
+		lv_obj_remove_state(db, LV_STATE_USER_1); // Minimized
 	}
 	wm->updateLayout();
 }
@@ -174,8 +191,10 @@ void WM::on_header_minimize(lv_event_t* e) {
 		}
 		lv_obj_t* dock_btn = (lv_obj_t*)lv_obj_get_user_data(w);
 		lv_obj_add_flag(w, LV_OBJ_FLAG_HIDDEN);
-		if (dock_btn)
+		if (dock_btn) {
 			lv_obj_remove_state(dock_btn, LV_STATE_CHECKED);
+			lv_obj_remove_state(dock_btn, LV_STATE_USER_1); // Minimized
+		}
 		wm->updateLayout();
 	}
 }
@@ -282,7 +301,7 @@ void WM::updateLayout() {
 
 	bool split_vertical =
 		true; // Start with identifying Left vs Right split (vertical line)
-	int gap = lv_dpx(UILayout::PAD_SMALL);
+	int gap = lv_dpx(UiConstants::PAD_SMALL);
 
 	for (size_t i = 0; i < visibleWins.size(); ++i) {
 		lv_obj_t* win = visibleWins[i];

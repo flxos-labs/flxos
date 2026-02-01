@@ -1,5 +1,5 @@
 #include "SystemInfoApp.hpp"
-#include "../../ui/theming/LayoutConstants/LayoutConstants.hpp"
+#include "../../ui/theming/UiConstants/UiConstants.hpp"
 #include "core/common/Logger.hpp"
 #include "core/services/systeminfo/SystemInfoService.hpp"
 #include "esp_timer.h"
@@ -61,7 +61,7 @@ void SystemInfoApp::createUI(void* parent) {
 	m_tabview = lv_tabview_create(container);
 	lv_obj_set_size(m_tabview, lv_pct(100), lv_pct(100));
 	lv_tabview_set_tab_bar_position(m_tabview, LV_DIR_TOP);
-	lv_tabview_set_tab_bar_size(m_tabview, lv_dpx(UILayout::SIZE_TAB_BAR));
+	lv_tabview_set_tab_bar_size(m_tabview, lv_dpx(UiConstants::SIZE_TAB_BAR));
 
 	// Create tabs
 	lv_obj_t* tab_system = lv_tabview_add_tab(m_tabview, "System");
@@ -79,8 +79,8 @@ void SystemInfoApp::createUI(void* parent) {
 
 void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(tab, lv_dpx(UILayout::PAD_LARGE), 0);
-	lv_obj_set_style_pad_row(tab, lv_dpx(UILayout::PAD_DEFAULT), 0);
+	lv_obj_set_style_pad_all(tab, lv_dpx(UiConstants::PAD_LARGE), 0);
+	lv_obj_set_style_pad_row(tab, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 
 	// Get initial system stats
 	auto stats = Services::SystemInfoService::getInstance().getSystemStats();
@@ -104,8 +104,8 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 
 void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(tab, lv_dpx(UILayout::PAD_LARGE), 0);
-	lv_obj_set_style_pad_row(tab, lv_dpx(UILayout::PAD_DEFAULT), 0);
+	lv_obj_set_style_pad_all(tab, lv_dpx(UiConstants::PAD_LARGE), 0);
+	lv_obj_set_style_pad_row(tab, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 
 	// Heap info label
 	m_heap_label = lv_label_create(tab);
@@ -116,7 +116,7 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	lv_label_set_text(bar_label, "Heap Usage:");
 
 	m_heap_bar = lv_bar_create(tab);
-	lv_obj_set_size(m_heap_bar, lv_pct(90), lv_dpx(UILayout::SIZE_BAR_HEIGHT));
+	lv_obj_set_size(m_heap_bar, lv_pct(90), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 	lv_bar_set_range(m_heap_bar, 0, 100);
 	lv_bar_set_value(m_heap_bar, 0, LV_ANIM_OFF);
 
@@ -130,7 +130,7 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 		lv_label_set_text(psram_bar_label, "PSRAM Usage:");
 
 		m_psram_bar = lv_bar_create(tab);
-		lv_obj_set_size(m_psram_bar, lv_pct(90), lv_dpx(UILayout::SIZE_BAR_HEIGHT));
+		lv_obj_set_size(m_psram_bar, lv_pct(90), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 		lv_bar_set_range(m_psram_bar, 0, 100);
 		lv_bar_set_value(m_psram_bar, 0, LV_ANIM_OFF);
 	} else {
@@ -141,8 +141,8 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 
 void SystemInfoApp::createNetworkTab(lv_obj_t* tab) {
 	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(tab, lv_dpx(UILayout::PAD_LARGE), 0);
-	lv_obj_set_style_pad_row(tab, lv_dpx(UILayout::PAD_DEFAULT), 0);
+	lv_obj_set_style_pad_all(tab, lv_dpx(UiConstants::PAD_LARGE), 0);
+	lv_obj_set_style_pad_row(tab, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 
 	m_wifi_status_label = lv_label_create(tab);
 	lv_label_set_text(m_wifi_status_label, "WiFi: Checking...");
