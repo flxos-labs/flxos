@@ -43,7 +43,8 @@ FlxOS/
 │   │   ├── apps/           # Application modules (Settings, Files, etc.)
 │   │   ├── common/         # Shared utilities and helpers
 │   │   ├── connectivity/   # Wi-Fi, networking, and IoT features
-│   │   ├── system/         # System manager and core services
+│   │   ├── services/       # System background services (FileSystem, SystemInfo)
+│   │   ├── system/         # System managers (Focus, Notification, Time)
 │   │   ├── tasks/          # FreeRTOS task definitions
 │   │   └── ui/             # Desktop environment and window manager
 │   └── hal/                # Hardware Abstraction Layer
