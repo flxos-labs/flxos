@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../ui/theming/LayoutConstants.hpp"
+#include "../../ui/theming/LayoutConstants/LayoutConstants.hpp"
 #include "lvgl.h"
 #include <functional>
 

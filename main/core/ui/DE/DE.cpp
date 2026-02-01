@@ -1,12 +1,12 @@
 #include "DE.hpp"
-#include "../theming/LayoutConstants.hpp"
-#include "../theming/ThemeEngine.hpp"
+#include "../theming/LayoutConstants/LayoutConstants.hpp"
+#include "../theming/ThemeEngine/ThemeEngine.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
-#include "core/system/FocusManager.hpp"
-#include "core/system/NotificationManager.hpp"
-#include "core/system/SystemManager.hpp"
+#include "core/system/FocusManager/FocusManager.hpp"
+#include "core/system/NotificationManager/NotificationManager.hpp"
+#include "core/system/SystemManager/SystemManager.hpp"
 
 #include "wm/WM.hpp"
 #include <ctime>

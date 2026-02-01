@@ -1,11 +1,11 @@
 #include "WM.hpp"
-#include "../../theming/LayoutConstants.hpp"
+#include "../../theming/LayoutConstants/LayoutConstants.hpp"
 #include "core/common/Logger.hpp"
 
 #include "../DE.hpp"
 #include "core/apps/AppManager.hpp"
-#include "core/system/FocusManager.hpp"
-#include "core/system/SystemManager.hpp"
+#include "core/system/FocusManager/FocusManager.hpp"
+#include "core/system/SystemManager/SystemManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include <algorithm>
 #include <string_view>

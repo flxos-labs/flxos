@@ -1,5 +1,5 @@
 #include "SystemInfoApp.hpp"
-#include "../../ui/theming/LayoutConstants.hpp"
+#include "../../ui/theming/LayoutConstants/LayoutConstants.hpp"
 #include "core/common/Logger.hpp"
 #include "core/services/systeminfo/SystemInfoService.hpp"
 #include "esp_timer.h"
