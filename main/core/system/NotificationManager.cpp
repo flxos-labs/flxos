@@ -1,11 +1,9 @@
 #include "NotificationManager.hpp"
-#include "esp_log.h"
+#include "core/common/Logger.hpp"
 #include "esp_timer.h"
 #include <algorithm>
 #include <random>
 #include <sstream>
-
-static const char* TAG = "NotificationManager";
 
 namespace System {
 
@@ -20,7 +18,6 @@ NotificationManager::NotificationManager() {
 }
 
 void NotificationManager::init() {
-	ESP_LOGI(TAG, "NotificationManager initialized");
 }
 
 std::string NotificationManager::generateId() {
@@ -32,6 +29,7 @@ std::string NotificationManager::generateId() {
 
 void NotificationManager::addNotification(const std::string& title, const std::string& message, const std::string& appName, const void* icon, int priority) {
 	std::lock_guard<std::mutex> lock(m_mutex);
+	Log::info("Notification", "New notification from %s: %s", appName.c_str(), title.c_str());
 
 	Notification notif;
 	notif.id = generateId();
@@ -46,7 +44,6 @@ void NotificationManager::addNotification(const std::string& title, const std::s
 	// Add to beginning (newest first)
 	m_notifications.insert(m_notifications.begin(), notif);
 
-	ESP_LOGI(TAG, "Added notification: %s", title.c_str());
 	updateSubjects();
 }
 
@@ -56,15 +53,14 @@ void NotificationManager::removeNotification(const std::string& id) {
 
 	if (it != m_notifications.end()) {
 		m_notifications.erase(it, m_notifications.end());
-		ESP_LOGD(TAG, "Removed notification: %s", id.c_str());
 		updateSubjects();
 	}
 }
 
 void NotificationManager::clearAll() {
 	std::lock_guard<std::mutex> lock(m_mutex);
+	Log::info("Notification", "Clearing all notifications (%zu count)", m_notifications.size());
 	m_notifications.clear();
-	ESP_LOGI(TAG, "Cleared all notifications");
 	updateSubjects();
 }
 

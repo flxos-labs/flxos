@@ -1,18 +1,16 @@
 #include "SystemInfoService.hpp"
+#include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "esp_chip_info.h"
 #include "esp_heap_caps.h"
-#include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "esp_wifi.h"
-#include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <iomanip>
 #include <sstream>
 
-static const char* TAG = "SystemInfoService";
 static constexpr const char* FLXOS_VERSION = "0.1.0-alpha";
 
 namespace System {
@@ -20,6 +18,11 @@ namespace Services {
 
 SystemInfoService& SystemInfoService::getInstance() {
 	static SystemInfoService instance;
+	static bool initialized = false;
+	if (!initialized) {
+		Log::info("SystemInfo", "SystemInfoService initialized");
+		initialized = true;
+	}
 	return instance;
 }
 
@@ -67,8 +70,6 @@ SystemStats SystemInfoService::getSystemStats() {
 	int64_t uptime_us = esp_timer_get_time();
 	stats.uptimeSeconds = uptime_us / 1000000;
 
-	ESP_LOGD(TAG, "System stats retrieved: %s, %d cores, uptime: %llu s", stats.chipModel.c_str(), stats.cores, stats.uptimeSeconds);
-
 	return stats;
 }
 
@@ -85,8 +86,6 @@ MemoryStats SystemInfoService::getMemoryStats() {
 	stats.totalPsram = heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
 	stats.freePsram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
 	stats.hasPsram = (stats.totalPsram > 0);
-
-	ESP_LOGD(TAG, "Memory stats: Total=%u, Free=%u, Used=%u (%d%%)", stats.totalHeap, stats.freeHeap, stats.usedHeap, stats.usagePercent);
 
 	return stats;
 }
@@ -120,8 +119,6 @@ WiFiStats SystemInfoService::getWiFiStats() {
 				stats.signalStrength = "Fair";
 			else
 				stats.signalStrength = "Weak";
-
-			ESP_LOGD(TAG, "WiFi stats: SSID=%s, RSSI=%d (%s)", stats.ssid.c_str(), stats.rssi, stats.signalStrength.c_str());
 		}
 
 		// IP address would come from connectivity manager subject
@@ -137,7 +134,6 @@ std::vector<TaskInfo> SystemInfoService::getTaskList(size_t maxTasks) {
 
 	UBaseType_t task_count = uxTaskGetNumberOfTasks();
 	if (task_count == 0) {
-		ESP_LOGW(TAG, "No tasks found");
 		return tasks;
 	}
 
@@ -157,7 +153,6 @@ std::vector<TaskInfo> SystemInfoService::getTaskList(size_t maxTasks) {
 
 	delete[] task_array;
 
-	ESP_LOGD(TAG, "Retrieved %d tasks (out of %d total)", count, task_count);
 	return tasks;
 }
 

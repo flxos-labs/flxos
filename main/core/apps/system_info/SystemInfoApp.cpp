@@ -1,10 +1,8 @@
 #include "SystemInfoApp.hpp"
 #include "core/services/systeminfo/SystemInfoService.hpp"
-#include "esp_log.h"
 #include "esp_timer.h"
 #include <sstream>
 
-static const char* TAG = "SystemInfoApp";
 static constexpr uint32_t UPDATE_INTERVAL_MS = 1000;
 
 namespace System {
@@ -14,20 +12,16 @@ SystemInfoApp::SystemInfoApp()
 	: m_tabview(nullptr), m_uptime_label(nullptr), m_chip_label(nullptr), m_idf_label(nullptr), m_heap_label(nullptr), m_heap_bar(nullptr), m_psram_label(nullptr), m_wifi_status_label(nullptr), m_wifi_ssid_label(nullptr), m_wifi_ip_label(nullptr), m_wifi_mac_label(nullptr), m_wifi_rssi_label(nullptr), m_tasks_list(nullptr), m_last_update(0) {}
 
 void SystemInfoApp::onStart() {
-	ESP_LOGI(TAG, "SystemInfoApp started");
 }
 
 void SystemInfoApp::onResume() {
-	ESP_LOGI(TAG, "SystemInfoApp resumed");
 	updateInfo();
 }
 
 void SystemInfoApp::onPause() {
-	ESP_LOGI(TAG, "SystemInfoApp paused");
 }
 
 void SystemInfoApp::onStop() {
-	ESP_LOGI(TAG, "SystemInfoApp stopped");
 	m_tabview = nullptr;
 	m_uptime_label = nullptr;
 	m_chip_label = nullptr;

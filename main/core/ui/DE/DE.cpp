@@ -1,16 +1,14 @@
 #include "DE.hpp"
 #include "../theming/ThemeEngine.hpp"
 #include "core/apps/AppManager.hpp"
+#include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/FocusManager.hpp"
 #include "core/system/NotificationManager.hpp"
 #include "core/system/SystemManager.hpp"
 
-#include "esp_log.h"
 #include "wm/WM.hpp"
 #include <ctime>
-
-static const char* TAG = "DE";
 
 DE& DE::getInstance() {
 	static DE instance;
@@ -59,16 +57,15 @@ DE::DE()
 DE::~DE() {}
 
 void DE::init() {
+	Log::info("DE", "Initializing Desktop Environment...");
 	screen = lv_obj_create(NULL);
 	lv_obj_remove_style_all(screen);
 	lv_obj_set_flex_flow(screen, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(screen, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-	ESP_LOGI(TAG, "Initializing Desktop Environment...");
 	lv_screen_load(screen);
 
 	if (!System::SystemManager::getInstance().isSafeMode()) {
-		ESP_LOGI(TAG, "Standard mode: Creating wallpaper and panels");
 		wallpaper = lv_obj_create(screen);
 		lv_obj_remove_style_all(wallpaper);
 		lv_obj_set_size(wallpaper, lv_pct(100), lv_pct(100));
@@ -130,12 +127,10 @@ void DE::init() {
 			this
 		);
 	} else {
-		ESP_LOGW(TAG, "Safe mode detected");
 		lv_obj_set_style_bg_color(screen, lv_palette_main(LV_PALETTE_GREY), 0);
 		lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, 0);
 	}
 
-	ESP_LOGD(TAG, "Creating UI components...");
 	create_status_bar();
 
 	window_container = lv_obj_create(screen);
@@ -170,13 +165,14 @@ void DE::init() {
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			DE* instance = (DE*)lv_observer_get_user_data(observer);
 			if (instance && instance->screen) {
+				Log::info("DE", "Realigning panels due to rotation");
 				lv_obj_update_layout(instance->screen);
 				instance->realign_panels();
 			}
 		},
 		this
 	);
-	ESP_LOGI(TAG, "Desktop Environment initialized.");
+	Log::info("DE", "DE initialization complete");
 }
 
 void DE::configure_panel_style(lv_obj_t* panel) {
@@ -213,40 +209,34 @@ void DE::create_launcher() {
 		lv_obj_move_to_index(img, 0);
 
 		lv_obj_add_event_cb(btn, on_app_click, LV_EVENT_CLICKED, this);
-		ESP_LOGD(TAG, "UI component: Launcher app button created for '%s'", app->getAppName().c_str());
 
 		lv_obj_set_user_data(btn, app.get());
 	}
 }
 
 void DE::create_quick_access_panel() {
-	ESP_LOGD(TAG, "Creating quick access panel");
 	quick_access_panel = lv_obj_create(screen);
 	configure_panel_style(quick_access_panel);
 	lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(2));
 	lv_obj_set_flex_flow(quick_access_panel, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(quick_access_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	ESP_LOGD(TAG, "UI component: Quick Access Panel created");
 
 	lv_obj_t* label = lv_label_create(quick_access_panel);
 	lv_label_set_text(label, "Quick Access");
 	lv_obj_set_width(label, lv_pct(100));
 	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
-	ESP_LOGD(TAG, "UI component: Quick Access Panel title label created");
 
 	lv_obj_t* toggles_cont = lv_obj_create(quick_access_panel);
 	lv_obj_remove_style_all(toggles_cont);
 	lv_obj_set_size(toggles_cont, lv_pct(100), LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(toggles_cont, LV_FLEX_FLOW_ROW_WRAP);
 	lv_obj_set_flex_align(toggles_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	ESP_LOGD(TAG, "UI component: Quick Access Panel toggles container created");
 
 	lv_obj_t* theme_cont = lv_obj_create(toggles_cont);
 	lv_obj_remove_style_all(theme_cont);
 	lv_obj_set_size(theme_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(theme_cont, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(theme_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	ESP_LOGD(TAG, "UI component: Quick Access Panel theme container created");
 
 	lv_obj_t* theme_btn = lv_button_create(theme_cont);
 	lv_obj_set_size(theme_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -254,11 +244,9 @@ void DE::create_quick_access_panel() {
 	lv_obj_t* theme_icon = lv_image_create(theme_btn);
 	lv_image_set_src(theme_icon, LV_SYMBOL_IMAGE);
 	lv_obj_center(theme_icon);
-	ESP_LOGD(TAG, "UI component: Quick Access Panel theme button created");
 
 	theme_label = lv_label_create(theme_cont);
 	lv_label_set_text(theme_label, Themes::ToString(ThemeEngine::get_current_theme()));
-	ESP_LOGD(TAG, "UI component: Quick Access Panel theme label created");
 
 	lv_subject_add_observer_obj(
 		&System::SystemManager::getInstance().getThemeSubject(),
@@ -267,7 +255,6 @@ void DE::create_quick_access_panel() {
 			if (label) {
 				int32_t v = lv_subject_get_int(subject);
 				lv_label_set_text(label, Themes::ToString((ThemeType)v));
-				ESP_LOGD(TAG, "Quick Access Panel: Theme label updated to %s", Themes::ToString((ThemeType)v));
 			}
 		},
 		theme_label, nullptr
@@ -277,14 +264,12 @@ void DE::create_quick_access_panel() {
 		theme_btn, &System::SystemManager::getInstance().getThemeSubject(),
 		LV_EVENT_CLICKED
 	);
-	ESP_LOGD(TAG, "Event: Theme toggle event added to theme button");
 
 	lv_obj_t* rot_cont = lv_obj_create(toggles_cont);
 	lv_obj_remove_style_all(rot_cont);
 	lv_obj_set_size(rot_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(rot_cont, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(rot_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	ESP_LOGD(TAG, "UI component: Quick Access Panel rotation container created");
 
 	lv_obj_t* rot_btn = lv_button_create(rot_cont);
 	lv_obj_set_size(rot_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -292,11 +277,9 @@ void DE::create_quick_access_panel() {
 	lv_obj_t* rot_icon = lv_image_create(rot_btn);
 	lv_image_set_src(rot_icon, LV_SYMBOL_REFRESH);
 	lv_obj_center(rot_icon);
-	ESP_LOGD(TAG, "UI component: Quick Access Panel rotation button created");
 
 	lv_obj_t* rot_label = lv_label_create(rot_cont);
 	lv_label_bind_text(rot_label, &System::SystemManager::getInstance().getRotationSubject(), "%d°");
-	ESP_LOGD(TAG, "UI component: Quick Access Panel rotation label created");
 
 	lv_subject_increment_dsc_t* rot_dsc = lv_obj_add_subject_increment_event(
 		rot_btn, &System::SystemManager::getInstance().getRotationSubject(),
@@ -305,7 +288,6 @@ void DE::create_quick_access_panel() {
 	lv_obj_set_subject_increment_event_min_value(rot_btn, rot_dsc, 0);
 	lv_obj_set_subject_increment_event_max_value(rot_btn, rot_dsc, 270);
 	lv_obj_set_subject_increment_event_rollover(rot_btn, rot_dsc, true);
-	ESP_LOGD(TAG, "Event: Rotation increment event added to rotation button");
 
 	{
 		lv_obj_t* slider_cont = lv_obj_create(quick_access_panel);
@@ -313,11 +295,9 @@ void DE::create_quick_access_panel() {
 		lv_obj_set_size(slider_cont, lv_pct(100), LV_SIZE_CONTENT);
 		lv_obj_set_flex_flow(slider_cont, LV_FLEX_FLOW_ROW);
 		lv_obj_set_flex_align(slider_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-		ESP_LOGD(TAG, "UI component: Quick Access Panel slider container created");
 
 		lv_obj_t* icon = lv_image_create(slider_cont);
 		lv_image_set_src(icon, LV_SYMBOL_SETTINGS);
-		ESP_LOGD(TAG, "UI component: Quick Access Panel slider icon created");
 
 		lv_obj_t* slider = lv_slider_create(slider_cont);
 		lv_obj_set_flex_grow(slider, 1);
@@ -326,7 +306,6 @@ void DE::create_quick_access_panel() {
 		lv_slider_bind_value(
 			slider, &System::SystemManager::getInstance().getBrightnessSubject()
 		);
-		ESP_LOGD(TAG, "UI component: Quick Access Panel brightness slider created");
 	}
 }
 
@@ -334,11 +313,9 @@ void DE::realign_panels() {
 	if (dock) {
 		if (launcher) {
 			lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(2));
-			ESP_LOGD(TAG, "Realigned launcher panel");
 		}
 		if (quick_access_panel) {
 			lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(2));
-			ESP_LOGD(TAG, "Realigned quick access panel");
 		}
 		if (greetings) {
 			lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(2), -lv_dpx(2));
@@ -375,18 +352,16 @@ void DE::on_app_click(lv_event_t* e) {
 
 	std::string packageName = appPtr->getPackageName();
 
-	ESP_LOGI(TAG, "App clicked in launcher: %s", packageName.c_str());
 	System::FocusManager::getInstance().dismissAllPanels();
 	d->openApp(packageName);
 }
 
 void DE::openApp(const std::string& packageName) {
-	ESP_LOGI(TAG, "Opening App: %s", packageName.c_str());
+	Log::info("DE", "Requesting WM to open app: %s", packageName.c_str());
 	WM::getInstance().openApp(packageName);
 }
 
 void DE::closeApp(const std::string& packageName) {
-	ESP_LOGI(TAG, "Closing App: %s", packageName.c_str());
 	WM::getInstance().closeApp(packageName);
 }
 
@@ -634,7 +609,6 @@ void DE::create_dock() {
 }
 
 void DE::create_notification_panel() {
-	ESP_LOGD(TAG, "Creating notification panel");
 	notification_panel = lv_obj_create(screen);
 	configure_panel_style(notification_panel);
 	// Notification panel covers entire screen below status bar (including dock)
@@ -749,7 +723,6 @@ void DE::on_clear_notifications_click(lv_event_t* e) {
 }
 
 void DE::create_swipe_trigger_zone() {
-	ESP_LOGD(TAG, "Creating swipe trigger zone");
 	// Create an invisible touch zone at the top of the screen
 	swipe_trigger_zone = lv_obj_create(screen);
 	lv_obj_remove_style_all(swipe_trigger_zone);
@@ -763,7 +736,6 @@ void DE::create_swipe_trigger_zone() {
 	lv_obj_add_event_cb(swipe_trigger_zone, on_swipe_zone_press, LV_EVENT_PRESSED, this);
 	lv_obj_add_event_cb(swipe_trigger_zone, on_swipe_zone_pressing, LV_EVENT_PRESSING, this);
 	lv_obj_add_event_cb(swipe_trigger_zone, on_swipe_zone_release, LV_EVENT_RELEASED, this);
-	ESP_LOGI(TAG, "Swipe trigger zone created");
 }
 
 void DE::on_swipe_zone_press(lv_event_t* e) {
@@ -780,10 +752,10 @@ void DE::on_swipe_zone_press(lv_event_t* e) {
 		// Prepare panel for dragging
 		lv_coord_t h = lv_display_get_vertical_resolution(NULL);
 		lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
+		Log::debug("DE", "Notification swipe started at y=%d", (int)d->swipe_start_y);
 		lv_obj_remove_flag(d->notification_panel, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_move_foreground(d->notification_panel);
 		lv_obj_set_y(d->notification_panel, -h + status_bar_height); // Start hidden above, below status bar
-		ESP_LOGD(TAG, "Swipe tracking started at Y=%d", (int)point.y);
 	}
 }
 
@@ -818,14 +790,14 @@ void DE::on_swipe_zone_release(lv_event_t* e) {
 	// Snap based on position (if pulled down more than 15%)
 	if (current_y > -h + status_bar_height + (h / 6)) {
 		// Snap open
+		Log::debug("DE", "Notification swipe snap OPEN");
 		lv_obj_set_y(d->notification_panel, status_bar_height);
 		System::FocusManager::getInstance().activatePanel(d->notification_panel);
-		ESP_LOGI(TAG, "Swipe down completed, opening panel");
 	} else {
 		// Snap closed
+		Log::debug("DE", "Notification swipe snap CLOSED");
 		lv_obj_set_y(d->notification_panel, -h + status_bar_height);
 		lv_obj_add_flag(d->notification_panel, LV_OBJ_FLAG_HIDDEN);
-		ESP_LOGI(TAG, "Swipe down cancelled, hiding panel");
 	}
 	d->swipe_active = false;
 }
@@ -842,7 +814,6 @@ void DE::on_notif_panel_press(lv_event_t* e) {
 		d->swipe_active = true;
 		// Reset Y to 0 just in case
 		// lv_obj_set_y(d->notification_panel, 0);
-		ESP_LOGD(TAG, "Notification panel swipe started at Y=%d", (int)point.y);
 	}
 }
 
@@ -883,11 +854,9 @@ void DE::on_notif_panel_release(lv_event_t* e) {
 		// Snap closed
 		lv_obj_set_y(d->notification_panel, -h + status_bar_height);
 		System::FocusManager::getInstance().dismissAllPanels(); // This also hides it
-		ESP_LOGI(TAG, "Swipe up completed, closing panel");
 	} else {
 		// Snap open
 		lv_obj_set_y(d->notification_panel, status_bar_height);
-		ESP_LOGI(TAG, "Swipe up cancelled, panel stays open");
 	}
 	d->swipe_active = false;
 }

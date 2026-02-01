@@ -1,14 +1,12 @@
 #include "WM.hpp"
+#include "core/common/Logger.hpp"
 
 #include "../DE.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/system/FocusManager.hpp"
 #include "core/system/SystemManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
-#include "esp_log.h"
 #include <algorithm>
-
-static const char* TAG = "WM";
 
 WM& WM::getInstance() {
 	static WM instance;
@@ -24,18 +22,17 @@ WM::WM()
 WM::~WM() {}
 
 void WM::init(lv_obj_t* window_container, lv_obj_t* app_container, lv_obj_t* screen, lv_obj_t* status_bar, lv_obj_t* dock) {
+	Log::info("WM", "Initializing Window Manager...");
 	m_windowContainer = window_container;
 	m_appContainer = app_container;
 	m_screen = screen;
 	m_statusBar = status_bar;
 	m_dock = dock;
 
-	ESP_LOGI(TAG, "Initializing Window Manager...");
 	lv_obj_set_style_pad_all(m_windowContainer, lv_dpx(4), 0);
 
 	// Register as observer of AppManager for state synchronization
 	System::Apps::AppManager::getInstance().addObserver(this);
-	ESP_LOGI(TAG, "Registered WM as AppManager observer");
 
 	// Register rotation observer to update layout on display orientation changes
 	lv_subject_add_observer(
@@ -53,7 +50,7 @@ void WM::openApp(const std::string& packageName) {
 
 	// Check if app is already open
 	if (lv_obj_t* win = findWindowByPackage(packageName)) {
-		ESP_LOGI(TAG, "App '%s' already open, bringing to front", packageName.c_str());
+		Log::info("WM", "App %s already open, activating window", packageName.c_str());
 		lv_obj_remove_flag(win, LV_OBJ_FLAG_HIDDEN);
 		System::FocusManager::getInstance().activateWindow(win);
 		System::Apps::AppManager::getInstance().startApp(packageName);
@@ -61,14 +58,14 @@ void WM::openApp(const std::string& packageName) {
 		return;
 	}
 
+	Log::info("WM", "Opening app: %s", packageName.c_str());
 	auto app = System::Apps::AppManager::getInstance().getAppByPackageName(packageName);
 	if (!app) {
-		ESP_LOGE(TAG, "Failed to find app package: %s", packageName.c_str());
+		Log::error("WM", "Failed to open app: %s (not found)", packageName.c_str());
 		GuiTask::unlock();
 		return;
 	}
 
-	ESP_LOGI(TAG, "Creating new window for app: %s", packageName.c_str());
 	// Create new window
 	lv_obj_t* win = lv_win_create(m_windowContainer);
 	// Initial size will be handled by updateLayout, but set defaults just
@@ -130,10 +127,8 @@ void WM::openApp(const std::string& packageName) {
 void WM::closeApp(const std::string& packageName) {
 	GuiTask::lock();
 	if (lv_obj_t* win = findWindowByPackage(packageName)) {
-		ESP_LOGI(TAG, "Closing window for app: %s", packageName.c_str());
 		closeWindow_internal(win);
 	} else {
-		ESP_LOGD(TAG, "No window found for app '%s', may have been closed already", packageName.c_str());
 	}
 	GuiTask::unlock();
 }
@@ -192,7 +187,8 @@ void WM::closeWindow(lv_obj_t* w) {
 void WM::closeWindow_internal(lv_obj_t* win) {
 	if (!win || !lv_obj_is_valid(win))
 		return;
-	ESP_LOGI(TAG, "Internal close request for window: %p", win);
+
+	Log::info("WM", "Closing window: %p", win);
 	// Assumes GuiTask lock is already held
 
 	if (win == m_fullScreenWindow) {
@@ -232,7 +228,6 @@ void WM::toggleFullScreen(lv_obj_t* win) {
 	lv_obj_t* max_btn_content = (it != m_windowMaxBtnLabelMap.end()) ? it->second : nullptr;
 
 	if (m_fullScreenWindow == win) {
-		ESP_LOGI(TAG, "Toggling off full screen for window: %p", win);
 		lv_obj_set_parent(win, m_windowContainer);
 		lv_obj_remove_flag(win, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_remove_flag(m_statusBar, LV_OBJ_FLAG_HIDDEN);
@@ -240,7 +235,6 @@ void WM::toggleFullScreen(lv_obj_t* win) {
 		m_fullScreenWindow = nullptr;
 		if (max_btn_content) lv_image_set_src(max_btn_content, LV_SYMBOL_PLUS);
 	} else {
-		ESP_LOGI(TAG, "Toggling on full screen for window: %p", win);
 		if (m_fullScreenWindow) toggleFullScreen(m_fullScreenWindow);
 		lv_obj_set_parent(win, m_screen);
 		lv_obj_set_size(win, lv_pct(100), lv_pct(100));
@@ -252,6 +246,7 @@ void WM::toggleFullScreen(lv_obj_t* win) {
 		if (max_btn_content) lv_image_set_src(max_btn_content, LV_SYMBOL_MINUS);
 	}
 	System::FocusManager::getInstance().activateWindow(win);
+	Log::info("WM", "Toggled FullScreen for win: %p (active: %s)", win, m_fullScreenWindow == win ? "YES" : "NO");
 	updateLayout();
 }
 
@@ -262,7 +257,6 @@ void WM::updateLayout() {
 	// Force layout update on the parent (screen) to ensure
 	// m_windowContainer has updated size after toggling status_bar or dock
 	// visibility.
-	ESP_LOGD(TAG, "Updating layout for %u tiled windows", (unsigned int)m_tiledWindows.size());
 	lv_obj_update_layout(m_screen);
 
 	std::vector<lv_obj_t*> visibleWins;
@@ -270,6 +264,7 @@ void WM::updateLayout() {
 		return w && lv_obj_is_valid(w) && !lv_obj_has_flag(w, LV_OBJ_FLAG_HIDDEN) &&
 			lv_obj_get_parent(w) == m_windowContainer;
 	});
+	Log::debug("WM", "Updating layout for %zu visible windows", visibleWins.size());
 	if (visibleWins.empty()) return;
 
 	lv_coord_t w_avail = lv_obj_get_content_width(m_windowContainer);
@@ -317,24 +312,20 @@ void WM::updateLayout() {
 	}
 }
 void WM::on_rotation_change(lv_observer_t* observer, lv_subject_t* subject) {
-	ESP_LOGI(TAG, "Rotation change detected. Updating window layout.");
 	// Force a layout update for all tiled windows
 	WM::getInstance().updateLayout();
 }
 
 // AppStateObserver implementation
 void WM::onAppStarted(const std::string& packageName) {
-	ESP_LOGD(TAG, "Observer notified: app started '%s'", packageName.c_str());
 	// Currently no action needed when app starts
 	// Window is already created via openApp() before app starts
 }
 
 void WM::onAppStopped(const std::string& packageName) {
-	ESP_LOGI(TAG, "Observer notified: app stopped '%s'", packageName.c_str());
 	// App was stopped, ensure window is closed if it exists
 	// This handles the case where app is stopped programmatically
 	if (hasWindowForApp(packageName)) {
-		ESP_LOGD(TAG, "Closing window for stopped app: %s", packageName.c_str());
 		closeApp(packageName);
 	}
 }

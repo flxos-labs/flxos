@@ -1,8 +1,6 @@
 #include "Themes.hpp"
 #include "core/ui/VirtualKeyboard/VirtualKeyboard.hpp"
-#include "esp_log.h"
 
-static const char* TAG = "Themes";
 
 namespace Themes {
 ThemeConfig GetConfig(ThemeType type) {
@@ -43,7 +41,6 @@ void ApplyGlobal(lv_theme_t* th, lv_obj_t* obj) {
 	LV_UNUSED(th);
 
 	if (lv_obj_check_type(obj, &lv_textarea_class)) {
-		ESP_LOGD(TAG, "ApplyGlobal: Registering textarea %p with virtual keyboard", obj);
 		VirtualKeyboard::getInstance().register_input_area(obj);
 	}
 }

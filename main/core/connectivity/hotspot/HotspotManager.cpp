@@ -2,7 +2,6 @@
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/wifi/WiFiManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
-#include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_timer.h"
 #include "esp_wifi.h"
@@ -24,8 +23,6 @@ extern "C" {
 struct netif* esp_netif_get_netif_impl(esp_netif_t* esp_netif);
 }
 #include "esp_netif.h"
-
-static const char* TAG = "HotspotManager";
 
 namespace System {
 
@@ -81,8 +78,6 @@ void HotspotManager::initByteCounter() {
 
 			m_original_linkoutput = (void*)lwip_netif->linkoutput;
 			lwip_netif->linkoutput = netif_linkoutput_hook;
-
-			ESP_LOGI(TAG, "Usage tracking hooks installed on STA interface");
 		}
 	}
 }
@@ -97,7 +92,6 @@ void HotspotManager::processIncomingPacket(void* ptr) {
 }
 
 void HotspotManager::updateClientHostname(uint8_t* mac, const std::string& hostname) {
-	ESP_LOGI(TAG, "Updating hostname for client " MACSTR " to: %s", MAC2STR(mac), hostname.c_str());
 	std::lock_guard<std::mutex> lock(m_mutex);
 	for (auto& client: m_clients) {
 		if (memcmp(client.mac, mac, 6) == 0) {
@@ -162,12 +156,10 @@ esp_err_t HotspotManager::init(lv_subject_t* enabled_subject, lv_subject_t* clie
 		WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, this, nullptr
 	);
 	if (err != ESP_OK) {
-		ESP_LOGE(TAG, "Failed to register WiFi event handler: %s", esp_err_to_name(err));
 		return err;
 	}
 
 	WiFiManager::getInstance().setOnGotIPCallback([this]() {
-		ESP_LOGI(TAG, "Uplink IP obtained, running post-IP hotspot configuration");
 		initByteCounter(); // Ensure byte counter is initialized when STA is ready
 		if (m_nat_enabled && isEnabled()) {
 			// Re-apply NAT settings to ensure everything is synced with the new
@@ -181,11 +173,9 @@ esp_err_t HotspotManager::init(lv_subject_t* enabled_subject, lv_subject_t* clie
 			if (sta_netif && ap_netif) {
 				if (esp_netif_get_dns_info(sta_netif, ESP_NETIF_DNS_MAIN, &dns) ==
 					ESP_OK) {
-					ESP_LOGI(TAG, "Syncing DNS from STA to AP: " IPSTR, IP2STR(&dns.ip.u_addr.ip4));
 					esp_netif_dhcps_stop(ap_netif);
 					esp_netif_set_dns_info(ap_netif, ESP_NETIF_DNS_MAIN, &dns);
 					esp_netif_dhcps_start(ap_netif);
-					ESP_LOGI(TAG, "DNS Synced and DHCP server restarted");
 				}
 			}
 		}
@@ -251,7 +241,6 @@ void HotspotManager::checkAutoShutdown() {
 	uint64_t now = esp_timer_get_time() / 1000000;
 	if (m_client_count == 0 && m_last_client_time > 0) {
 		if ((now - m_last_client_time) >= m_auto_shutdown_timeout) {
-			ESP_LOGI(TAG, "Auto-shutting down hotspot due to inactivity (%d seconds)", (int)m_auto_shutdown_timeout);
 			stop();
 		}
 	}
@@ -259,18 +248,12 @@ void HotspotManager::checkAutoShutdown() {
 
 esp_err_t HotspotManager::start(const char* ssid, const char* password, int channel, int max_connections, bool hidden, wifi_auth_mode_t auth_mode, int8_t max_tx_power) {
 	if (!ssid || strlen(ssid) == 0 || strlen(ssid) > 32) {
-		ESP_LOGE(TAG, "Invalid SSID");
 		return ESP_ERR_INVALID_ARG;
 	}
 
 	if (auth_mode != WIFI_AUTH_OPEN && (!password || strlen(password) < 8)) {
-		ESP_LOGE(TAG, "Password must be at least 8 characters for protected modes");
 		return ESP_ERR_INVALID_ARG;
 	}
-
-	ESP_LOGI(TAG, "Starting Hotspot: %s, Channel: %d, Max Conn: %d, Hidden: %d, Auth: "
-				  "%d, TX Power: %d",
-			 ssid, channel, max_connections, hidden, auth_mode, max_tx_power);
 
 	std::lock_guard<std::recursive_mutex> wifi_lock(
 		ConnectivityManager::getInstance().getWifiMutex()
@@ -301,13 +284,11 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 
 	esp_err_t err = ConnectivityManager::getInstance().setWifiMode(target_mode);
 	if (err != ESP_OK) {
-		ESP_LOGE(TAG, "Failed to set WiFi mode: %s", esp_err_to_name(err));
 		return err;
 	}
 
 	err = esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
 	if (err != ESP_OK) {
-		ESP_LOGE(TAG, "Failed to set WiFi config: %s", esp_err_to_name(err));
 		return err;
 	}
 
@@ -321,13 +302,11 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 		m_last_bytes_sent = m_bytes_sent;
 		m_last_bytes_received = m_bytes_received;
 		m_last_client_time = m_start_time / 1000000;
-		ESP_LOGI(TAG, "Hotspot state initialized (StartTime: %llu)", m_start_time);
 	}
 	return ESP_OK;
 }
 
 esp_err_t HotspotManager::stop() {
-	ESP_LOGI(TAG, "Stopping Hotspot");
 
 	std::lock_guard<std::recursive_mutex> wifi_lock(
 		ConnectivityManager::getInstance().getWifiMutex()
@@ -344,7 +323,6 @@ esp_err_t HotspotManager::stop() {
 	}
 
 	if (err != ESP_OK) {
-		ESP_LOGE(TAG, "Failed to stop AP mode: %s", esp_err_to_name(err));
 	}
 
 	{
@@ -374,15 +352,12 @@ esp_err_t HotspotManager::setNatEnabled(bool enabled) {
 	m_nat_enabled = enabled;
 	esp_netif_t* ap_netif = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
 	if (!ap_netif) {
-		ESP_LOGE(TAG, "Failed to get AP netif for NAT");
 		return ESP_ERR_NOT_FOUND;
 	}
 
-	ESP_LOGI(TAG, "Setting NAT enabled: %d", enabled);
 	if (isEnabled() && enabled) {
 		esp_netif_ip_info_t ip_info;
 		esp_netif_get_ip_info(ap_netif, &ip_info);
-		ESP_LOGI(TAG, "Enabling NAT on IP: " IPSTR, IP2STR(&ip_info.ip));
 
 		// Enable NAPT
 		ip_napt_enable(ip_info.ip.addr, 1);
@@ -402,7 +377,6 @@ esp_err_t HotspotManager::setNatEnabled(bool enabled) {
 		// Disable WiFi power save for better performance/reliability when routing
 		esp_wifi_set_ps(WIFI_PS_NONE);
 
-		ESP_LOGI(TAG, "NAT Enabled on AP interface with DNS offering");
 	} else if (!enabled) {
 		esp_netif_ip_info_t ip_info;
 		esp_netif_get_ip_info(ap_netif, &ip_info);
@@ -410,8 +384,6 @@ esp_err_t HotspotManager::setNatEnabled(bool enabled) {
 
 		// Restore default power save if NAT is disabled
 		esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
-
-		ESP_LOGI(TAG, "NAT Disabled");
 	}
 	return ESP_OK;
 }
@@ -420,7 +392,6 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 	HotspotManager* self = static_cast<HotspotManager*>(arg);
 
 	if (event_id == WIFI_EVENT_AP_START) {
-		ESP_LOGI(TAG, "Hotspot started");
 		self->initApHook();
 
 		if (self->m_nat_enabled) {
@@ -445,7 +416,6 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 			lv_subject_set_int(self->m_enabled_subject, 1);
 		GuiTask::unlock();
 	} else if (event_id == WIFI_EVENT_AP_STOP) {
-		ESP_LOGI(TAG, "Hotspot stopped");
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
 			self->m_client_count = 0;
@@ -461,7 +431,6 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 	} else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
 		wifi_event_ap_staconnected_t* event =
 			(wifi_event_ap_staconnected_t*)event_data;
-		ESP_LOGI(TAG, "Station " MACSTR " joined, AID=%d", MAC2STR(event->mac), event->aid);
 
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
@@ -483,7 +452,6 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 	} else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
 		wifi_event_ap_stadisconnected_t* event =
 			(wifi_event_ap_stadisconnected_t*)event_data;
-		ESP_LOGI(TAG, "Station " MACSTR " left, AID=%d", MAC2STR(event->mac), event->aid);
 
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);

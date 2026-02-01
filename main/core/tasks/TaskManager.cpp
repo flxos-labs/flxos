@@ -1,5 +1,4 @@
 #include "TaskManager.hpp"
-#include "esp_log.h"
 #include "esp_task_wdt.h"
 #include "esp_timer.h"
 #include <algorithm>
@@ -37,7 +36,6 @@ bool Task::start(void* data) {
 		: xTaskCreatePinnedToCore(taskEntry, m_name.c_str(), m_stackSize, this, m_priority, &handle, m_coreId);
 
 	if (res != pdPASS) {
-		ESP_LOGE(TASK_TAG, "Failed to start %s", m_name.c_str());
 		m_handle = nullptr;
 		return false;
 	}
@@ -45,10 +43,8 @@ bool Task::start(void* data) {
 	expected = (TaskHandle_t)1;
 	if (!m_handle.compare_exchange_strong(expected, handle)) {
 		// stop() was called during creation
-		ESP_LOGW(TASK_TAG, "Task %s stopped during creation", m_name.c_str());
 		vTaskDelete(handle);
 	} else {
-		ESP_LOGI(TASK_TAG, "Started task: %s", m_name.c_str());
 	}
 	return true;
 }
@@ -57,7 +53,6 @@ void Task::stop() {
 	m_stopRequested = true;
 	TaskHandle_t handle = m_handle.exchange(nullptr);
 	if (handle && handle != (TaskHandle_t)1) {
-		ESP_LOGI(TASK_TAG, "Stopped task: %s", m_name.c_str());
 		vTaskDelete(handle);
 	}
 }
@@ -71,7 +66,6 @@ void Task::join() {
 void Task::taskEntry(void* param) {
 	Task* t = static_cast<Task*>(param);
 	if (t) {
-		ESP_LOGI(TASK_TAG, "Task entry: %s", t->m_name.c_str());
 		t->run(t->m_data);
 		TaskHandle_t handle = t->m_handle.exchange(nullptr);
 		if (handle) {
@@ -89,7 +83,6 @@ TaskManager& TaskManager::getInstance() {
 }
 
 void TaskManager::registerTask(Task* t) {
-	ESP_LOGD(TM_TAG, "Registering task: %s", t ? t->getName().c_str() : "NULL");
 	std::lock_guard<std::mutex> lock(m_mutex);
 	if (std::find(m_tasks.begin(), m_tasks.end(), t) == m_tasks.end())
 		m_tasks.push_back(t);
@@ -121,7 +114,6 @@ void TaskManager::initWatchdog(uint32_t interval) {
 		esp_task_wdt_init(&twdt_config);
 	}
 
-	ESP_LOGI(TM_TAG, "Hardware TWDT Initialized (Timeout: %d ms)", (int)twdt_config.timeout_ms);
 
 	if (!m_watchdogTaskHandle) {
 		BaseType_t res = xTaskCreatePinnedToCore(
@@ -129,7 +121,6 @@ void TaskManager::initWatchdog(uint32_t interval) {
 			&m_watchdogTaskHandle, 0
 		);
 		if (res != pdPASS) {
-			ESP_LOGE(TM_TAG, "Failed to create watchdog task!");
 		}
 	}
 }
@@ -140,7 +131,6 @@ void TaskManager::watchdogTaskEntry(void* p) {
 	while (true) {
 		tm->checkTasks(getMillis());
 		if (!tm->checkHeapIntegrity()) {
-			ESP_LOGE(TM_TAG, "Heap corruption detected! Restarting...");
 			esp_restart();
 		}
 		esp_task_wdt_reset(); // Hardware kick
@@ -154,7 +144,6 @@ void TaskManager::checkTasks(uint64_t now) {
 		if (t->isRunning() && t->isWatchdogEnabled()) {
 			if ((int64_t)(now - t->getLastHeartbeat()) >
 				(int64_t)t->getWatchdogTimeout()) {
-				ESP_LOGE(TM_TAG, "WATCHDOG: %s timeout", t->getName().c_str());
 				if (t->getRestartPolicy() == Task::RestartPolicy::REBOOT_SYSTEM)
 					esp_restart();
 				else if (t->getRestartPolicy() == Task::RestartPolicy::RESTART_TASK) {
@@ -169,7 +158,6 @@ void TaskManager::checkTasks(uint64_t now) {
 bool TaskManager::checkHeapIntegrity() {
 	bool ok = heap_caps_check_integrity_all(true);
 	if (!ok) {
-		ESP_LOGE(TM_TAG, "CRITICAL: HEAP INTEGRITY CHECK FAILED!");
 	}
 	return ok;
 }
@@ -178,7 +166,6 @@ void TaskManager::printTasks() {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	for (auto* t: m_tasks) {
 		uint32_t hwm = t->getStackHighWaterMark();
-		ESP_LOGI(TM_TAG, "Task: %s, HWM: %u", t->getName().c_str(), (unsigned int)hwm);
 	}
 }
 

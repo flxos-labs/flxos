@@ -1,9 +1,9 @@
 #pragma once
+#include <cstring>
 
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
-#include "esp_log.h"
 #include "esp_wifi.h"
 #include "lvgl.h"
 #include <algorithm>
@@ -44,7 +44,6 @@ public:
 					auto* sw = lv_event_get_target_obj(e);
 					auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
 					bool enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
-					ESP_LOGI("WiFiSettings", "WiFi toggle: %s", enabled ? "ENABLED" : "DISABLED");
 					ConnectivityManager::getInstance().setWiFiEnabled(enabled);
 					if (!enabled) {
 						instance->m_isScanning = false;
@@ -121,7 +120,6 @@ public:
 		}
 
 		m_isScanning = true;
-		ESP_LOGI("WiFiSettings", "Starting WiFi scan...");
 		lv_list_add_text(m_list, "Scanning...");
 
 		ConnectivityManager::getInstance().scanWiFi(
@@ -161,11 +159,9 @@ public:
 					}
 
 					if (authmode == WIFI_AUTH_OPEN) {
-						ESP_LOGI("WiFiSettings", "Connecting to open network: %s", ssid);
 						ConnectivityManager::getInstance().connectWiFi(ssid, "");
 						instance->updateStatus();
 					} else {
-						ESP_LOGD("WiFiSettings", "Password required for: %s", ssid);
 						instance->showConnectScreen(ssid);
 					}
 				};
@@ -303,7 +299,6 @@ public:
 			connectBtn,
 			[](lv_event_t* e) {
 				auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
-				ESP_LOGI("WiFiSettings", "Connect button pressed for SSID: %s", instance->m_connectSsid.c_str());
 				const char* password = lv_textarea_get_text(instance->m_passwordTa);
 				ConnectivityManager::getInstance().connectWiFi(
 					instance->m_connectSsid.c_str(), password

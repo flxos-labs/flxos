@@ -1,11 +1,9 @@
 #include "ResourceMonitorTask.hpp"
+#include "core/common/Logger.hpp"
 #include "esp_heap_caps.h"
-#include "esp_log.h"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "freertos/task.h"
-
-static const char* TAG = "ResourceMonitor";
 
 namespace System {
 ResourceMonitorTask& ResourceMonitorTask::getInstance() {
@@ -21,7 +19,6 @@ ResourceMonitorTask::Stats ResourceMonitorTask::getLatestStats() const {
 }
 
 void ResourceMonitorTask::run(void* data) {
-	ESP_LOGI(TAG, "Resource Monitor Task Started");
 
 	setWatchdogTimeout(15000);
 
@@ -33,18 +30,12 @@ void ResourceMonitorTask::run(void* data) {
 		m_freePsram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
 		m_uptimeSeconds = (uint32_t)(esp_timer_get_time() / 1000000);
 
-		ESP_LOGD(
-			TAG, "Heap: %u, Min: %u, PSRAM: %u, Uptime: %u s",
-			(unsigned int)m_freeHeap.load(), (unsigned int)m_minFreeHeap.load(),
-			(unsigned int)m_freePsram.load(), (unsigned int)m_uptimeSeconds.load()
-		);
-
 		if (m_freeHeap < 32768) {
-			ESP_LOGW(TAG, "LOW MEMORY WARNING: Free heap is %u bytes", (unsigned int)m_freeHeap.load());
+			Log::warn("ResourceMonitor", "LOW HEAP MEMORY: %lu bytes", (uint32_t)m_freeHeap.load());
 		}
 
 		if (m_uptimeSeconds % 60 == 0) {
-			ESP_LOGI(TAG, "Status: Heap=%u, MinHeap=%u, PSRAM=%u, Uptime=%u s", (uint32_t)m_freeHeap.load(), (uint32_t)m_minFreeHeap.load(), (uint32_t)m_freePsram.load(), (uint32_t)m_uptimeSeconds.load());
+			Log::info("ResourceMonitor", "Stats - Heap: %lu, PSRAM: %lu, Uptime: %lu s", (uint32_t)m_freeHeap.load(), (uint32_t)m_freePsram.load(), (uint32_t)m_uptimeSeconds.load());
 		}
 		vTaskDelay(pdMS_TO_TICKS(10000));
 	}

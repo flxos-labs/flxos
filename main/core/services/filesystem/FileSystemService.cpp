@@ -1,12 +1,11 @@
 #include "FileSystemService.hpp"
-#include "esp_log.h"
+#include "core/common/Logger.hpp"
 #include "lvgl.h"
+#include <cstring>
 #include <dirent.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-static const char* TAG = "FileSystemService";
 
 namespace System {
 namespace Services {
@@ -36,6 +35,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 		lv_fs_res_t res = lv_fs_dir_open(&dir, path.c_str());
 
 		if (res != LV_FS_RES_OK) {
+			Log::warn("FileSystem", "Failed to open root A:/, returning defaults");
 			// Return default directories
 			entries.push_back({"system", true, 0});
 			entries.push_back({"data", true, 0});
@@ -48,7 +48,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 	lv_fs_res_t res = lv_fs_dir_open(&dir, path.c_str());
 
 	if (res != LV_FS_RES_OK) {
-		ESP_LOGE(TAG, "Failed to open directory: %s", path.c_str());
+		Log::error("FileSystem", "Failed to open directory: %s", path.c_str());
 		return entries;
 	}
 
@@ -82,7 +82,6 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 	}
 
 	lv_fs_dir_close(&dir);
-	ESP_LOGD(TAG, "Listed %d entries in %s", entries.size(), path.c_str());
 	return entries;
 }
 
@@ -94,16 +93,18 @@ int FileSystemService::copyFile(const char* src, const char* dst, ProgressCallba
 
 	FILE* fsrc = fopen(src, "rb");
 	if (!fsrc) {
-		ESP_LOGE(TAG, "Failed to open source file: %s", src);
+		Log::error("FileSystem", "Failed to open source file for copying: %s", src);
 		return -1;
 	}
 
 	FILE* fdst = fopen(dst, "wb");
 	if (!fdst) {
-		ESP_LOGE(TAG, "Failed to open destination file: %s", dst);
+		Log::error("FileSystem", "Failed to open destination file for copying: %s", dst);
 		fclose(fsrc);
 		return -1;
 	}
+
+	Log::info("FileSystem", "Copying file: %s -> %s (%ld bytes)", src, dst, totalSize);
 
 	char buf[4096];
 	size_t n;
@@ -111,7 +112,6 @@ int FileSystemService::copyFile(const char* src, const char* dst, ProgressCallba
 
 	while ((n = fread(buf, 1, sizeof(buf), fsrc)) > 0) {
 		if (fwrite(buf, 1, n, fdst) != n) {
-			ESP_LOGE(TAG, "Write error during copy");
 			fclose(fsrc);
 			fclose(fdst);
 			return -1;
@@ -126,14 +126,13 @@ int FileSystemService::copyFile(const char* src, const char* dst, ProgressCallba
 
 	fclose(fsrc);
 	fclose(fdst);
-	ESP_LOGD(TAG, "Copied file: %s -> %s (%ld bytes)", src, dst, copied);
+	Log::info("FileSystem", "Copy completed: %s", dst);
 	return 0;
 }
 
 int FileSystemService::copyRecursive(const char* src, const char* dst, ProgressCallback callback) {
 	struct stat st;
 	if (stat(src, &st) != 0) {
-		ESP_LOGE(TAG, "Failed to stat: %s", src);
 		return -1;
 	}
 
@@ -142,13 +141,11 @@ int FileSystemService::copyRecursive(const char* src, const char* dst, ProgressC
 			callback(0, src);
 
 		if (::mkdir(dst, 0777) != 0 && errno != EEXIST) {
-			ESP_LOGE(TAG, "Failed to create directory: %s", dst);
 			return -1;
 		}
 
 		DIR* d = opendir(src);
 		if (!d) {
-			ESP_LOGE(TAG, "Failed to open directory: %s", src);
 			return -1;
 		}
 
@@ -176,18 +173,17 @@ int FileSystemService::copyRecursive(const char* src, const char* dst, ProgressC
 }
 
 bool FileSystemService::copy(const std::string& src, const std::string& dst, ProgressCallback callback) {
-	ESP_LOGI(TAG, "Copying: %s -> %s", src.c_str(), dst.c_str());
 	return copyRecursive(src.c_str(), dst.c_str(), callback) == 0;
 }
 
 bool FileSystemService::move(const std::string& src, const std::string& dst) {
-	ESP_LOGI(TAG, "Moving: %s -> %s", src.c_str(), dst.c_str());
 
 	if (rename(src.c_str(), dst.c_str()) == 0) {
+		Log::info("FileSystem", "Moved: %s -> %s", src.c_str(), dst.c_str());
 		return true;
 	}
 
-	ESP_LOGE(TAG, "Failed to move/rename: %s -> %s", src.c_str(), dst.c_str());
+	Log::error("FileSystem", "Move failed: %s -> %s (errno: %d)", src.c_str(), dst.c_str(), errno);
 	return false;
 }
 
@@ -233,29 +229,29 @@ int FileSystemService::removeRecursive(const char* path, ProgressCallback callba
 }
 
 bool FileSystemService::remove(const std::string& path, ProgressCallback callback) {
-	ESP_LOGI(TAG, "Removing: %s", path.c_str());
 
 	struct stat st;
 	if (stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
+		Log::info("FileSystem", "Removing directory: %s", path.c_str());
 		return removeRecursive(path.c_str(), callback) == 0;
 	} else {
+		Log::info("FileSystem", "Removing file: %s", path.c_str());
 		return unlink(path.c_str()) == 0;
 	}
 }
 
 bool FileSystemService::mkdir(const std::string& path) {
-	ESP_LOGI(TAG, "Creating directory: %s", path.c_str());
 
 	if (::mkdir(path.c_str(), 0777) == 0) {
+		Log::info("FileSystem", "Created directory: %s", path.c_str());
 		return true;
 	}
 
 	if (errno == EEXIST) {
-		ESP_LOGW(TAG, "Directory already exists: %s", path.c_str());
 		return true;
 	}
 
-	ESP_LOGE(TAG, "Failed to create directory: %s", path.c_str());
+	Log::error("FileSystem", "Failed to create directory: %s (errno: %d)", path.c_str(), errno);
 	return false;
 }
 

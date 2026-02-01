@@ -1,7 +1,5 @@
 #include "FocusManager.hpp"
-#include "esp_log.h"
-
-static const char* TAG = "FocusManager";
+#include "core/common/Logger.hpp"
 
 namespace System {
 
@@ -18,8 +16,6 @@ void FocusManager::init(lv_obj_t* window_container, lv_obj_t* screen, lv_obj_t* 
 	m_statusBar = status_bar;
 	m_dock = dock;
 
-	ESP_LOGI(TAG, "Initializing Focus Manager...");
-
 	// Register global event listener on all input devices
 	lv_indev_t* indev = lv_indev_get_next(nullptr);
 	while (indev) {
@@ -27,7 +23,6 @@ void FocusManager::init(lv_obj_t* window_container, lv_obj_t* screen, lv_obj_t* 
 		lv_indev_add_event_cb(indev, on_global_release, LV_EVENT_RELEASED, this);
 		indev = lv_indev_get_next(indev);
 	}
-	ESP_LOGI(TAG, "Global input listeners registered.");
 }
 
 void FocusManager::registerPanel(lv_obj_t* panel) {
@@ -36,7 +31,6 @@ void FocusManager::registerPanel(lv_obj_t* panel) {
 		// Add event callbacks for defocus events (like dropdown does)
 		lv_obj_add_event_cb(panel, on_focus_event, LV_EVENT_DEFOCUSED, this);
 		lv_obj_add_event_cb(panel, on_focus_event, LV_EVENT_LEAVE, this);
-		ESP_LOGD(TAG, "Panel registered with defocus handlers: %p", panel);
 	}
 }
 
@@ -45,18 +39,16 @@ void FocusManager::registerWindow(lv_obj_t* win) {
 		// Make window focusable and add focus event handler
 		lv_obj_add_flag(win, LV_OBJ_FLAG_CLICK_FOCUSABLE);
 		lv_obj_add_event_cb(win, on_focus_event, LV_EVENT_FOCUSED, this);
-		ESP_LOGD(TAG, "Window registered with focus handler: %p", win);
 	}
 }
 
 void FocusManager::activateWindow(lv_obj_t* win) {
 	if (!win || !lv_obj_is_valid(win)) {
-		ESP_LOGW(TAG, "activateWindow called with invalid window");
 		return;
 	}
-	ESP_LOGD(TAG, "Activating window: %p", win);
 
 	m_activeWindow = win;
+	Log::info("FocusManager", "Activating window...");
 
 	// Bring target to foreground
 	lv_obj_move_to_index(win, -1);
@@ -91,7 +83,7 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 void FocusManager::activatePanel(lv_obj_t* panel) {
 	if (!panel) return;
 
-	ESP_LOGD(TAG, "Activating panel: %p", panel);
+	Log::debug("FocusManager", "Activating panel: %p", panel);
 
 	// Hide other panels
 	for (auto* p: m_panels) {
@@ -116,17 +108,17 @@ void FocusManager::togglePanel(lv_obj_t* panel) {
 	if (!panel) return;
 
 	if (lv_obj_has_flag(panel, LV_OBJ_FLAG_HIDDEN)) {
-		ESP_LOGD(TAG, "Toggling panel ON: %p", panel);
+		Log::debug("FocusManager", "Toggling panel ON: %p", panel);
 		activatePanel(panel);
 	} else {
-		ESP_LOGD(TAG, "Toggling panel OFF: %p", panel);
+		Log::debug("FocusManager", "Toggling panel OFF: %p", panel);
 		lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_remove_flag(panel, LV_OBJ_FLAG_CLICK_FOCUSABLE);
 	}
 }
 
 void FocusManager::dismissAllPanels() {
-	ESP_LOGD(TAG, "Dismissing all panels");
+	Log::debug("FocusManager", "Dismissing all panels");
 	for (auto* p: m_panels) {
 		if (lv_obj_is_valid(p)) {
 			lv_obj_add_flag(p, LV_OBJ_FLAG_HIDDEN);
@@ -137,7 +129,6 @@ void FocusManager::dismissAllPanels() {
 
 void FocusManager::setNotificationPanel(lv_obj_t* panel) {
 	m_notificationPanel = panel;
-	ESP_LOGI(TAG, "Notification panel set: %p", panel);
 }
 
 void FocusManager::on_global_press(lv_event_t* e) {
@@ -154,7 +145,6 @@ void FocusManager::on_global_press(lv_event_t* e) {
 		if (point.y < screen_height / 7) {
 			fm->m_swipeStartY = point.y;
 			fm->m_swipeTracking = true;
-			ESP_LOGD(TAG, "Swipe tracking started at Y=%d", (int)point.y);
 		} else {
 			fm->m_swipeTracking = false;
 		}
@@ -183,7 +173,6 @@ void FocusManager::on_global_press(lv_event_t* e) {
 			if (obj != fm->m_statusBar && obj != fm->m_dock && obj != fm->m_windowContainer) {
 				// Only activate if it has user_data (real windows have dock buttons stored)
 				if (lv_obj_get_user_data(obj) != nullptr) {
-					ESP_LOGD(TAG, "Global press on window: %p", obj);
 					fm->activateWindow(obj);
 					return;
 				}
@@ -211,13 +200,11 @@ void FocusManager::on_focus_event(lv_event_t* e) {
 			}
 		}
 		if (!is_panel) {
-			ESP_LOGD(TAG, "Window focused: %p", obj);
 			fm->activateWindow(obj);
 		}
 	}
 	// Handle panel defocus events (like dropdown)
 	else if (code == LV_EVENT_DEFOCUSED || code == LV_EVENT_LEAVE) {
-		ESP_LOGD(TAG, "Panel defocused/left: %p", obj);
 		lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_remove_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE);
 	}
@@ -235,7 +222,6 @@ void FocusManager::on_global_release(lv_event_t* e) {
 
 		// Swipe down detected if moved at least 30 pixels down
 		if (delta > 30) {
-			ESP_LOGI(TAG, "Swipe down from top detected (delta=%d), opening notification panel", (int)delta);
 			fm->activatePanel(fm->m_notificationPanel);
 		}
 	}

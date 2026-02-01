@@ -1,14 +1,12 @@
 #include "ConnectivityManager.hpp"
 #include "bluetooth/BluetoothManager.hpp"
+#include "core/common/Logger.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "esp_event.h"
-#include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include "hotspot/HotspotManager.hpp"
 #include "wifi/WiFiManager.hpp"
-
-static const char* TAG = "ConnectivityManager";
 
 namespace System {
 ConnectivityManager& ConnectivityManager::getInstance() {
@@ -19,7 +17,7 @@ ConnectivityManager& ConnectivityManager::getInstance() {
 esp_err_t ConnectivityManager::init() {
 	if (m_is_init)
 		return ESP_OK;
-	ESP_LOGI(TAG, "Initializing Connectivity...");
+	Log::info("Connectivity", "Initializing networking stack...");
 	ESP_ERROR_CHECK(esp_netif_init());
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
 	esp_netif_create_default_wifi_sta();
@@ -49,6 +47,7 @@ esp_err_t ConnectivityManager::init() {
 
 	ESP_ERROR_CHECK(setWifiMode(WIFI_MODE_NULL));
 	m_is_init = true;
+	Log::info("Connectivity", "ConnectivityManager initialized");
 	return ESP_OK;
 }
 
@@ -58,29 +57,27 @@ esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode) {
 	wifi_mode_t current_mode;
 	esp_err_t err = esp_wifi_get_mode(&current_mode);
 	if (err != ESP_OK && err != ESP_ERR_WIFI_NOT_INIT) {
-		ESP_LOGE(TAG, "Failed to get current WiFi mode: %s", esp_err_to_name(err));
 		return err;
 	}
 
 	if (err != ESP_ERR_WIFI_NOT_INIT && current_mode == mode) {
-		ESP_LOGD(TAG, "WiFi mode already %d, ensuring it's started", mode);
 		return esp_wifi_start(); // Ensure it's started even if mode is same
 	}
 
-	ESP_LOGI(TAG, "Setting WiFi mode: %d (current: %d)", mode, (err == ESP_ERR_WIFI_NOT_INIT) ? -1 : current_mode);
+	Log::info("Connectivity", "Setting WiFi mode: %d", (int)mode);
 	err = esp_wifi_set_mode(mode);
-	if (err != ESP_OK)
+	if (err != ESP_OK) {
+		Log::error("Connectivity", "Failed to set WiFi mode: %d (0x%x)", (int)mode, err);
 		return err;
+	}
 
 	return esp_wifi_start();
 }
 
 esp_err_t ConnectivityManager::connectWiFi(const char* s, const char* p) {
-	ESP_LOGI(TAG, "Connect request for SSID: %s", s);
 	return WiFiManager::getInstance().connect(s, p);
 }
 esp_err_t ConnectivityManager::disconnectWiFi() {
-	ESP_LOGI(TAG, "Disconnect request for WiFi");
 	return WiFiManager::getInstance().disconnect();
 }
 bool ConnectivityManager::isWiFiConnected() const {
@@ -90,7 +87,7 @@ esp_err_t ConnectivityManager::scanWiFi(WiFiManager::ScanCallback callback) {
 	return WiFiManager::getInstance().scan(callback);
 }
 esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
-	ESP_LOGI(TAG, "Setting WiFi Enabled: %d", enabled);
+	Log::info("Connectivity", "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
 	esp_err_t err = WiFiManager::getInstance().setEnabled(enabled);
 	if (err == ESP_OK) {
 		GuiTask::lock();
@@ -103,11 +100,11 @@ bool ConnectivityManager::isWiFiEnabled() const {
 	return WiFiManager::getInstance().isEnabled();
 }
 esp_err_t ConnectivityManager::startHotspot(const char* s, const char* p, int c, int m, bool h, wifi_auth_mode_t auth, int8_t tx) {
-	ESP_LOGI(TAG, "Start Hotspot request: %s", s);
+	Log::info("Connectivity", "Starting Hotspot (SSID: %s)", s);
 	return HotspotManager::getInstance().start(s, p, c, m, h, auth, tx);
 }
 esp_err_t ConnectivityManager::stopHotspot() {
-	ESP_LOGI(TAG, "Stop Hotspot request");
+	Log::info("Connectivity", "Stopping Hotspot");
 	return HotspotManager::getInstance().stop();
 }
 bool ConnectivityManager::isHotspotEnabled() const {
@@ -118,7 +115,6 @@ ConnectivityManager::getHotspotClientsList() const {
 	return HotspotManager::getInstance().getConnectedClients();
 }
 esp_err_t ConnectivityManager::enableBluetooth(bool e) {
-	ESP_LOGI(TAG, "Setting Bluetooth Enabled: %d", e);
 	return BluetoothManager::getInstance().enable(e);
 }
 bool ConnectivityManager::isBluetoothEnabled() const {

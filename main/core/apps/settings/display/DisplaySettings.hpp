@@ -1,10 +1,10 @@
 #pragma once
+#include <cstring>
 
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/system/SystemManager.hpp"
 #include "core/ui/components/FileChooser.hpp"
 #include "core/ui/theming/ThemeEngine.hpp"
-#include "esp_log.h"
 #include "lvgl.h"
 #include <functional>
 
@@ -131,9 +131,7 @@ public:
 			lv_obj_add_event_cb(
 				chooseWpBtn,
 				[](lv_event_t* e) {
-					ESP_LOGI("DisplaySettings", "Choosing wallpaper button clicked");
 					UI::FileChooser::show([](std::string path) {
-						ESP_LOGI("DisplaySettings", "Wallpaper selected: %s", path.c_str());
 						static char path_buf[256];
 						strncpy(path_buf, path.c_str(), sizeof(path_buf) - 1);
 						lv_subject_set_pointer(

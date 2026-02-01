@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/apps/settings/SettingsCommon.hpp"
-#include "esp_log.h"
 #include "lvgl.h"
+#include <cstring>
 #include <dirent.h>
 #include <functional>
 #include <stack>
@@ -17,7 +17,6 @@ class FileChooser {
 public:
 
 	static void show(std::function<void(std::string)> callback, const char* initialPath = "A:/") {
-		ESP_LOGI("FileChooser", "Showing file chooser at: %s", initialPath);
 		auto* chooser = new FileChooser(callback, initialPath);
 		chooser->createUI();
 	}
@@ -98,7 +97,6 @@ private:
 		m_history.push(m_currentPath);
 		if (m_currentPath.back() != '/') m_currentPath += "/";
 		m_currentPath += name;
-		ESP_LOGD("FileChooser", "Entering directory: %s", m_currentPath.c_str());
 		refreshList();
 	}
 
@@ -107,7 +105,6 @@ private:
 		if (fullPath.back() != '/') fullPath += "/";
 		fullPath += name;
 
-		ESP_LOGI("FileChooser", "File selected: %s", fullPath.c_str());
 		if (m_callback) {
 			m_callback(fullPath);
 		}

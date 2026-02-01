@@ -1,9 +1,9 @@
 #include "FilesApp.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
-#include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <cstring>
 
 namespace System {
 namespace Apps {
@@ -97,7 +97,6 @@ void FilesApp::createUI(void* parent) {
 	if (m_currentPath.empty()) {
 		m_currentPath = "A:/";
 	}
-	ESP_LOGI("FilesApp", "UI created, starting at: %s", m_currentPath.c_str());
 	refreshList();
 }
 
@@ -386,12 +385,10 @@ void FilesApp::pasteItem() {
 	}
 
 	if (cb.get().op == ClipboardOp::CUT) {
-		ESP_LOGI("FilesApp", "Pasting (CUT): %s -> %s", srcPath.c_str(), destPath.c_str());
 		if (!Services::FileSystemService::getInstance().move(srcPath, destPath))
 			showMsgBox("Error", "Could not move item.");
 		cb.clear();
 	} else {
-		ESP_LOGI("FilesApp", "Pasting (COPY): %s -> %s", srcPath.c_str(), destPath.c_str());
 		showProgressDialog("Copying");
 
 		auto progressCb = [this](int percent, const char* path) {
@@ -410,7 +407,6 @@ void FilesApp::deleteItem(const std::string& name, bool isDir) {
 	std::string fullPath = Services::FileSystemService::buildPath(
 		Services::FileSystemService::toVfsPath(m_currentPath), name
 	);
-	ESP_LOGI("FilesApp", "Deleting %s: %s", isDir ? "directory" : "file", fullPath.c_str());
 	showProgressDialog("Deleting");
 
 	auto progressCb = [this](int percent, const char* path) {
@@ -432,7 +428,6 @@ void FilesApp::renameItem(const std::string& oldName, const std::string& newName
 	std::string basePath = Services::FileSystemService::toVfsPath(m_currentPath);
 	std::string oldPath = Services::FileSystemService::buildPath(basePath, oldName);
 	std::string newPath = Services::FileSystemService::buildPath(basePath, newName);
-	ESP_LOGI("FilesApp", "Renaming: %s -> %s", oldPath.c_str(), newPath.c_str());
 	if (!Services::FileSystemService::getInstance().move(oldPath, newPath))
 		showMsgBox("Error", "Could not rename item.");
 	refreshList();
@@ -444,7 +439,6 @@ void FilesApp::createFolder(const std::string& name) {
 	std::string fullPath = Services::FileSystemService::buildPath(
 		Services::FileSystemService::toVfsPath(m_currentPath), name
 	);
-	ESP_LOGI("FilesApp", "Creating folder: %s", fullPath.c_str());
 	if (!Services::FileSystemService::getInstance().mkdir(fullPath))
 		showMsgBox("Error", "Could not create folder.");
 	refreshList();

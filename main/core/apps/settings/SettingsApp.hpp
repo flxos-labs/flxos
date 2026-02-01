@@ -33,7 +33,6 @@ public:
 		m_displaySettings = std::make_unique<Settings::DisplaySettings>(
 			m_container, [this]() { showMainSettings(); }
 		);
-		ESP_LOGI("SettingsApp", "UI Shell components created");
 		showMainSettings();
 	}
 
@@ -131,7 +130,6 @@ private:
 	}
 
 	void showWiFiSettings() {
-		ESP_LOGI("SettingsApp", "Showing WiFi settings page");
 		if (m_mainList)
 			lv_obj_add_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
 
@@ -159,7 +157,6 @@ private:
 	}
 
 	void showDisplaySettings() {
-		ESP_LOGI("SettingsApp", "Showing Display settings page");
 		if (m_mainList) {
 			lv_obj_add_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
 		}

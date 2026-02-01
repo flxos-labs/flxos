@@ -1,8 +1,6 @@
 #include "TimeManager.hpp"
-#include "esp_log.h"
+#include "core/common/Logger.hpp"
 #include "esp_sntp.h"
-
-static const char* TAG = "TimeManager";
 
 namespace System {
 
@@ -12,27 +10,24 @@ TimeManager& TimeManager::getInstance() {
 }
 
 static void time_sync_notification_cb(struct timeval* tv) {
-	ESP_LOGI(TAG, "Notification of a time synchronization event");
 	TimeManager::getInstance().updateSyncStatus(true);
 
 	time_t now = 0;
 	struct tm timeinfo = {};
 	time(&now);
 	localtime_r(&now, &timeinfo);
-	ESP_LOGI(TAG, "Current time: %s", asctime(&timeinfo));
 }
 
 void TimeManager::init() {
 	if (m_is_init)
 		return;
 
-	ESP_LOGI(TAG, "Initializing SNTP");
-
 	esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
 	esp_sntp_setservername(0, "pool.ntp.org");
 	esp_sntp_setservername(1, "time.google.com");
 	esp_sntp_setservername(2, "time.cloudflare.com");
 	sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+	Log::info("TimeManager", "Initializing SNTP...");
 	esp_sntp_init();
 
 	// Set default timezone to India (IST)
@@ -46,7 +41,6 @@ void TimeManager::deinit() {
 	if (!m_is_init)
 		return;
 
-	ESP_LOGI(TAG, "Deinitializing SNTP");
 	esp_sntp_stop();
 	m_is_init = false;
 	m_is_synced = false;
@@ -57,10 +51,8 @@ void TimeManager::syncTime() {
 		init();
 	}
 
-	ESP_LOGI(TAG, "Requesting time sync...");
 	// Check if we are already synced
 	if (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
-		ESP_LOGI(TAG, "Time already synced");
 		m_is_synced = true;
 	}
 }
@@ -69,14 +61,12 @@ bool TimeManager::waitForSync(uint32_t timeout_ms) {
 	if (!m_is_init)
 		init();
 
-	ESP_LOGI(TAG, "Waiting for time sync (timeout: %d ms)...", (int)timeout_ms);
 	uint32_t waited = 0;
 	const uint32_t interval = 100;
 
 	while (!m_is_synced && waited < timeout_ms) {
 		if (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
 			m_is_synced = true;
-			ESP_LOGI(TAG, "Time synced successfully after %d ms", (int)waited);
 			break;
 		}
 		vTaskDelay(pdMS_TO_TICKS(interval));
@@ -84,21 +74,21 @@ bool TimeManager::waitForSync(uint32_t timeout_ms) {
 	}
 
 	if (!m_is_synced) {
-		ESP_LOGW(TAG, "Time sync timed out after %d ms", (int)timeout_ms);
 	}
 
 	return m_is_synced;
 }
 
 void TimeManager::updateSyncStatus(bool synced) {
-	ESP_LOGD(TAG, "Sync status update: %s", synced ? "SYNCED" : "NOT SYNCED");
+	if (synced != m_is_synced) {
+		Log::info("TimeManager", "Time sync status changed: %s", synced ? "SYNCED" : "NOT SYNCED");
+	}
 	m_is_synced = synced;
 }
 
 void TimeManager::setTimeZone(const char* tz) {
 	setenv("TZ", tz, 1);
 	tzset();
-	ESP_LOGI(TAG, "Timezone set to %s", tz);
 }
 
 } // namespace System
