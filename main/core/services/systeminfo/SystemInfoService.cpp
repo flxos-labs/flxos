@@ -10,6 +10,9 @@
 #include "freertos/task.h"
 #include <iomanip>
 #include <sstream>
+#include <string_view>
+
+static constexpr std::string_view TAG = "SystemInfo";
 
 static constexpr const char* FLXOS_VERSION = "0.1.0-alpha";
 
@@ -20,7 +23,7 @@ SystemInfoService& SystemInfoService::getInstance() {
 	static SystemInfoService instance;
 	static bool initialized = false;
 	if (!initialized) {
-		Log::info("SystemInfo", "SystemInfoService initialized");
+		Log::info(TAG, "SystemInfoService initialized");
 		initialized = true;
 	}
 	return instance;
@@ -86,6 +89,13 @@ MemoryStats SystemInfoService::getMemoryStats() {
 	stats.totalPsram = heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
 	stats.freePsram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
 	stats.hasPsram = (stats.totalPsram > 0);
+	if (stats.hasPsram) {
+		stats.usedPsram = stats.totalPsram - stats.freePsram;
+		stats.usagePercentPsram = (stats.usedPsram * 100) / stats.totalPsram;
+	} else {
+		stats.usedPsram = 0;
+		stats.usagePercentPsram = 0;
+	}
 
 	return stats;
 }
@@ -121,9 +131,10 @@ WiFiStats SystemInfoService::getWiFiStats() {
 				stats.signalStrength = "Weak";
 		}
 
-		// IP address would come from connectivity manager subject
-		// For now, just indicate it's via DHCP
-		stats.ipAddress = "(via DHCP)";
+		// Retrieve IP address from ConnectivityManager
+		lv_subject_t& ipSubject = ConnectivityManager::getInstance().getWiFiIpSubject();
+		const char* ip = lv_subject_get_string(&ipSubject);
+		stats.ipAddress = ip ? std::string(ip) : "0.0.0.0";
 	}
 
 	return stats;
@@ -148,6 +159,32 @@ std::vector<TaskInfo> SystemInfoService::getTaskList(size_t maxTasks) {
 		TaskInfo info;
 		info.name = task_array[i].pcTaskName;
 		info.stackHighWaterMark = task_array[i].usStackHighWaterMark;
+		info.currentPriority = task_array[i].uxCurrentPriority;
+		info.basePriority = task_array[i].uxBasePriority;
+		info.coreID = (int)task_array[i].xCoreID;
+		info.runtime = task_array[i].ulRunTimeCounter;
+
+		switch (task_array[i].eCurrentState) {
+			case eRunning:
+				info.state = "Running";
+				break;
+			case eReady:
+				info.state = "Ready";
+				break;
+			case eBlocked:
+				info.state = "Blocked";
+				break;
+			case eSuspended:
+				info.state = "Suspend";
+				break;
+			case eDeleted:
+				info.state = "Deleted";
+				break;
+			default:
+				info.state = "Invalid";
+				break;
+		}
+
 		tasks.push_back(info);
 	}
 

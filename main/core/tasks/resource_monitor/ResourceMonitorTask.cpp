@@ -4,6 +4,9 @@
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "freertos/task.h"
+#include <string_view>
+
+static constexpr std::string_view TAG = "ResourceMonitor";
 
 namespace System {
 ResourceMonitorTask& ResourceMonitorTask::getInstance() {
@@ -31,11 +34,11 @@ void ResourceMonitorTask::run(void* data) {
 		m_uptimeSeconds = (uint32_t)(esp_timer_get_time() / 1000000);
 
 		if (m_freeHeap < 32768) {
-			Log::warn("ResourceMonitor", "LOW HEAP MEMORY: %lu bytes", (uint32_t)m_freeHeap.load());
+			Log::warn(TAG, "LOW HEAP MEMORY: %lu bytes", (uint32_t)m_freeHeap.load());
 		}
 
 		if (m_uptimeSeconds % 60 == 0) {
-			Log::info("ResourceMonitor", "Stats - Heap: %lu, PSRAM: %lu, Uptime: %lu s", (uint32_t)m_freeHeap.load(), (uint32_t)m_freePsram.load(), (uint32_t)m_uptimeSeconds.load());
+			Log::info(TAG, "Stats - Heap: %lu, PSRAM: %lu, Uptime: %lu s", (uint32_t)m_freeHeap.load(), (uint32_t)m_freePsram.load(), (uint32_t)m_uptimeSeconds.load());
 		}
 		vTaskDelay(pdMS_TO_TICKS(10000));
 	}

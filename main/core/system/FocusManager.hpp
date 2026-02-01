@@ -91,7 +91,7 @@ private:
 	static void on_focus_event(lv_event_t* e);
 
 	// Swipe gesture tracking
-	lv_coord_t m_swipeStartY = 0;
+	int32_t m_swipeStartY = 0;
 	bool m_swipeTracking = false;
 };
 

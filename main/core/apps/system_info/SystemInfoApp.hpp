@@ -22,7 +22,7 @@ public:
 
 	std::string getPackageName() const override { return "com.flxos.systeminfo"; }
 	std::string getAppName() const override { return "System Info"; }
-	const void* getIcon() const override { return LV_SYMBOL_EYE_OPEN; }
+	const void* getIcon() const override { return LV_SYMBOL_TINT; }
 
 private:
 
@@ -38,6 +38,7 @@ private:
 	lv_obj_t* m_heap_label;
 	lv_obj_t* m_heap_bar;
 	lv_obj_t* m_psram_label;
+	lv_obj_t* m_psram_bar;
 
 	// Network tab labels
 	lv_obj_t* m_wifi_status_label;
@@ -47,7 +48,7 @@ private:
 	lv_obj_t* m_wifi_rssi_label;
 
 	// Tasks tab
-	lv_obj_t* m_tasks_list;
+	lv_obj_t* m_tasks_table;
 
 	uint32_t m_last_update = 0;
 

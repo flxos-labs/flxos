@@ -25,6 +25,8 @@ struct MemoryStats {
 	int usagePercent;
 	uint32_t totalPsram;
 	uint32_t freePsram;
+	uint32_t usedPsram;
+	int usagePercentPsram;
 	bool hasPsram;
 };
 
@@ -40,6 +42,11 @@ struct WiFiStats {
 struct TaskInfo {
 	std::string name;
 	uint32_t stackHighWaterMark;
+	std::string state; // "Ready", "Running", "Blocked", "Suspended", "Deleted"
+	int currentPriority;
+	int basePriority;
+	int coreID;
+	uint32_t runtime; // Runtime counter
 };
 
 class SystemInfoService {

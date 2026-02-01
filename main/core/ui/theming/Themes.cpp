@@ -1,5 +1,9 @@
 #include "Themes.hpp"
+#include "core/common/Logger.hpp"
 #include "core/ui/VirtualKeyboard/VirtualKeyboard.hpp"
+#include <string_view>
+
+static constexpr std::string_view TAG = "Themes";
 
 namespace Themes {
 ThemeConfig GetConfig(ThemeType type) {
@@ -40,6 +44,7 @@ void ApplyGlobal(lv_theme_t* th, lv_obj_t* obj) {
 	LV_UNUSED(th);
 
 	if (lv_obj_check_type(obj, &lv_textarea_class)) {
+		Log::debug(TAG, "Registering textarea for virtual keyboard");
 		VirtualKeyboard::getInstance().register_input_area(obj);
 	}
 }

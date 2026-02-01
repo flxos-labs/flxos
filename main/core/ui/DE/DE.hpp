@@ -40,7 +40,7 @@ private:
 	lv_obj_t* swipe_trigger_zone;
 
 	// Swipe tracking state
-	lv_coord_t swipe_start_y;
+	int32_t swipe_start_y;
 	bool swipe_active;
 
 	void create_status_bar();

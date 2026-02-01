@@ -1,6 +1,5 @@
 #pragma once
 
-#include "core/apps/settings/SettingsCommon.hpp"
 #include "lvgl.h"
 #include <cstring>
 #include <dirent.h>
@@ -8,7 +7,6 @@
 #include <stack>
 #include <string>
 #include <sys/stat.h>
-#include <vector>
 
 namespace System {
 namespace UI {
@@ -80,7 +78,7 @@ private:
 
 	void close() {
 		if (m_dialog) {
-			lv_obj_del(m_dialog);
+			lv_obj_delete(m_dialog);
 		}
 		delete this;
 	}

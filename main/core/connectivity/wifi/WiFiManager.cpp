@@ -1,10 +1,14 @@
 #include "WiFiManager.hpp"
+#include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/TimeManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include <cstring>
+#include <string_view>
+
+static constexpr std::string_view TAG = "WiFiManager";
 
 namespace System {
 
@@ -16,6 +20,8 @@ WiFiManager& WiFiManager::getInstance() {
 esp_err_t WiFiManager::init(lv_subject_t* connected_subject, lv_subject_t* ssid_subject, lv_subject_t* ip_subject, lv_subject_t* status_subject) {
 	if (m_is_init)
 		return ESP_OK;
+
+	Log::info(TAG, "Initializing WiFi manager...");
 
 	m_connected_subject = connected_subject;
 	m_ssid_subject = ssid_subject;
@@ -42,6 +48,7 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 	if (!m_is_enabled)
 		return ESP_ERR_INVALID_STATE;
 
+	Log::info(TAG, "Connecting to SSID: %s", ssid);
 	m_should_reconnect = true;
 	m_retry_count = 0;
 	setStatus(WiFiStatus::CONNECTING);
@@ -84,6 +91,7 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 }
 
 esp_err_t WiFiManager::disconnect() {
+	Log::info(TAG, "Disconnecting WiFi...");
 	m_should_reconnect = false;
 	setStatus(WiFiStatus::DISCONNECTED);
 	return esp_wifi_disconnect();
@@ -128,6 +136,7 @@ esp_err_t WiFiManager::scan(ScanCallback callback) {
 		ConnectivityManager::getInstance().getWifiMutex()
 	);
 
+	Log::info(TAG, "Scanning for WiFi networks...");
 	m_is_scanning = true;
 	m_scan_callback = callback;
 	wifi_scan_config_t scan_config = {};
@@ -191,11 +200,13 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 	WiFiManager* self = static_cast<WiFiManager*>(arg);
 
 	if (event_id == WIFI_EVENT_STA_START) {
+		Log::debug(TAG, "STA started");
 		if (self->m_should_reconnect)
 			esp_wifi_connect();
 	} else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
 		wifi_event_sta_disconnected_t* event =
 			(wifi_event_sta_disconnected_t*)event_data;
+		Log::warn(TAG, "STA disconnected, reason: %d", event->reason);
 
 		GuiTask::lock();
 		if (self->m_connected_subject)
@@ -236,6 +247,7 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 	} else if (event_id == WIFI_EVENT_STA_CONNECTED) {
 		wifi_event_sta_connected_t* event =
 			(wifi_event_sta_connected_t*)event_data;
+		Log::info(TAG, "STA connected to SSID: %s", (char*)event->ssid);
 		GuiTask::lock();
 		if (self->m_ssid_subject)
 			lv_subject_copy_string(self->m_ssid_subject, (char*)event->ssid);
@@ -243,6 +255,7 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 	} else if (event_id == WIFI_EVENT_SCAN_DONE) {
 		uint16_t ap_count = 0;
 		esp_wifi_scan_get_ap_num(&ap_count);
+		Log::info(TAG, "Scan done, found %d APs", ap_count);
 		if (ap_count > 0) {
 			std::vector<wifi_ap_record_t> ap_records(ap_count);
 			esp_err_t err =
@@ -270,6 +283,7 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t event_base, int32
 		ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;
 		char ip_str[16];
 		esp_ip4addr_ntoa(&event->ip_info.ip, ip_str, sizeof(ip_str));
+		Log::info(TAG, "Got IP: %s", ip_str);
 
 		GuiTask::lock();
 		if (self->m_ip_subject)

@@ -2,8 +2,10 @@
 #include "core/common/Logger.hpp"
 #include "esp_timer.h"
 #include <algorithm>
-#include <random>
 #include <sstream>
+#include <string_view>
+
+static constexpr std::string_view TAG = "Notification";
 
 namespace System {
 
@@ -29,7 +31,7 @@ std::string NotificationManager::generateId() {
 
 void NotificationManager::addNotification(const std::string& title, const std::string& message, const std::string& appName, const void* icon, int priority) {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	Log::info("Notification", "New notification from %s: %s", appName.c_str(), title.c_str());
+	Log::info(TAG, "New notification from %s: %s", appName.c_str(), title.c_str());
 
 	Notification notif;
 	notif.id = generateId();
@@ -59,7 +61,7 @@ void NotificationManager::removeNotification(const std::string& id) {
 
 void NotificationManager::clearAll() {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	Log::info("Notification", "Clearing all notifications (%zu count)", m_notifications.size());
+	Log::info(TAG, "Clearing all notifications (%zu count)", m_notifications.size());
 	m_notifications.clear();
 	updateSubjects();
 }

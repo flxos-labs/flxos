@@ -10,8 +10,10 @@
 #include "esp_vfs_fat.h"
 #include "nvs_flash.h"
 #include "src/debugging/sysmon/lv_sysmon.h"
-#include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
 #include <cstring>
+#include <string_view>
+
+static constexpr std::string_view TAG = "SystemManager";
 
 // Internal struct from lv_lovyan_gfx.cpp
 #if LV_USE_LOVYAN_GFX
@@ -27,11 +29,11 @@ SystemManager& SystemManager::getInstance() {
 }
 
 esp_err_t SystemManager::initHardware() {
-	Log::info("SystemManager", "Starting hardware initialization...");
+	Log::info(TAG, "Starting hardware initialization...");
 	esp_err_t err = nvs_flash_init();
 	if (err == ESP_ERR_NVS_NO_FREE_PAGES ||
 		err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-		Log::warn("SystemManager", "NVS flash erase required");
+		Log::warn(TAG, "NVS flash erase required");
 		ESP_ERROR_CHECK(nvs_flash_erase());
 		err = nvs_flash_init();
 	}
@@ -41,10 +43,10 @@ esp_err_t SystemManager::initHardware() {
 	mount_storage_helper("/data", "data", &m_wl_handle_data, true);
 
 	if (m_wl_handle_system == WL_INVALID_HANDLE) {
-		Log::error("SystemManager", "Failed to mount /system - active SAFE MODE");
+		Log::error(TAG, "Failed to mount /system - active SAFE MODE");
 		m_isSafeMode = true;
 	} else {
-		Log::info("SystemManager", "System storage mounted successfully");
+		Log::info(TAG, "System storage mounted successfully");
 	}
 
 	TaskManager::getInstance().initWatchdog();
@@ -159,7 +161,7 @@ esp_err_t SystemManager::initGuiState() {
 }
 
 void SystemManager::mount_storage_helper(const char* p, const char* l, wl_handle_t* h, bool f) {
-	Log::info("SystemManager", "Mounting %s...", p);
+	Log::info(TAG, "Mounting %s...", p);
 	esp_vfs_fat_mount_config_t cfg = {
 		.format_if_mount_failed = f,
 		.max_files = 5,
@@ -168,9 +170,9 @@ void SystemManager::mount_storage_helper(const char* p, const char* l, wl_handle
 		.use_one_fat = false,
 	};
 	if (esp_vfs_fat_spiflash_mount_rw_wl(p, l, &cfg, h) != ESP_OK) {
-		Log::error("SystemManager", "FAILED to mount %s", p);
+		Log::error(TAG, "FAILED to mount %s", p);
 	} else {
-		Log::info("SystemManager", "Mounted %s on partition %s", p, l);
+		Log::info(TAG, "Mounted %s on partition %s", p, l);
 	}
 }
 

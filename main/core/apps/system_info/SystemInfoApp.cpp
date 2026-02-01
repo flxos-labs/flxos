@@ -1,7 +1,11 @@
 #include "SystemInfoApp.hpp"
+#include "../../ui/theming/LayoutConstants.hpp"
+#include "core/common/Logger.hpp"
 #include "core/services/systeminfo/SystemInfoService.hpp"
 #include "esp_timer.h"
-#include <sstream>
+#include <string_view>
+
+static constexpr std::string_view TAG = "SystemInfoApp";
 
 static constexpr uint32_t UPDATE_INTERVAL_MS = 1000;
 
@@ -9,12 +13,14 @@ namespace System {
 namespace Apps {
 
 SystemInfoApp::SystemInfoApp()
-	: m_tabview(nullptr), m_uptime_label(nullptr), m_chip_label(nullptr), m_idf_label(nullptr), m_heap_label(nullptr), m_heap_bar(nullptr), m_psram_label(nullptr), m_wifi_status_label(nullptr), m_wifi_ssid_label(nullptr), m_wifi_ip_label(nullptr), m_wifi_mac_label(nullptr), m_wifi_rssi_label(nullptr), m_tasks_list(nullptr), m_last_update(0) {}
+	: m_tabview(nullptr), m_uptime_label(nullptr), m_chip_label(nullptr), m_idf_label(nullptr), m_heap_label(nullptr), m_heap_bar(nullptr), m_psram_label(nullptr), m_psram_bar(nullptr), m_wifi_status_label(nullptr), m_wifi_ssid_label(nullptr), m_wifi_ip_label(nullptr), m_wifi_mac_label(nullptr), m_wifi_rssi_label(nullptr), m_tasks_table(nullptr), m_last_update(0) {}
 
 void SystemInfoApp::onStart() {
+	Log::info(TAG, "App started");
 }
 
 void SystemInfoApp::onResume() {
+	Log::debug(TAG, "App resumed, refreshing data");
 	updateInfo();
 }
 
@@ -29,12 +35,13 @@ void SystemInfoApp::onStop() {
 	m_heap_label = nullptr;
 	m_heap_bar = nullptr;
 	m_psram_label = nullptr;
+	m_psram_bar = nullptr;
 	m_wifi_status_label = nullptr;
 	m_wifi_ssid_label = nullptr;
 	m_wifi_ip_label = nullptr;
 	m_wifi_mac_label = nullptr;
 	m_wifi_rssi_label = nullptr;
-	m_tasks_list = nullptr;
+	m_tasks_table = nullptr;
 }
 
 void SystemInfoApp::update() {
@@ -54,7 +61,7 @@ void SystemInfoApp::createUI(void* parent) {
 	m_tabview = lv_tabview_create(container);
 	lv_obj_set_size(m_tabview, lv_pct(100), lv_pct(100));
 	lv_tabview_set_tab_bar_position(m_tabview, LV_DIR_TOP);
-	lv_tabview_set_tab_bar_size(m_tabview, lv_dpx(40));
+	lv_tabview_set_tab_bar_size(m_tabview, lv_dpx(UILayout::SIZE_TAB_BAR));
 
 	// Create tabs
 	lv_obj_t* tab_system = lv_tabview_add_tab(m_tabview, "System");
@@ -72,8 +79,8 @@ void SystemInfoApp::createUI(void* parent) {
 
 void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(tab, lv_dpx(10), 0);
-	lv_obj_set_style_pad_row(tab, lv_dpx(8), 0);
+	lv_obj_set_style_pad_all(tab, lv_dpx(UILayout::PAD_LARGE), 0);
+	lv_obj_set_style_pad_row(tab, lv_dpx(UILayout::PAD_DEFAULT), 0);
 
 	// Get initial system stats
 	auto stats = Services::SystemInfoService::getInstance().getSystemStats();
@@ -97,8 +104,8 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 
 void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(tab, lv_dpx(10), 0);
-	lv_obj_set_style_pad_row(tab, lv_dpx(8), 0);
+	lv_obj_set_style_pad_all(tab, lv_dpx(UILayout::PAD_LARGE), 0);
+	lv_obj_set_style_pad_row(tab, lv_dpx(UILayout::PAD_DEFAULT), 0);
 
 	// Heap info label
 	m_heap_label = lv_label_create(tab);
@@ -109,7 +116,7 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	lv_label_set_text(bar_label, "Heap Usage:");
 
 	m_heap_bar = lv_bar_create(tab);
-	lv_obj_set_size(m_heap_bar, lv_pct(90), lv_dpx(20));
+	lv_obj_set_size(m_heap_bar, lv_pct(90), lv_dpx(UILayout::SIZE_BAR_HEIGHT));
 	lv_bar_set_range(m_heap_bar, 0, 100);
 	lv_bar_set_value(m_heap_bar, 0, LV_ANIM_OFF);
 
@@ -118,15 +125,24 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	auto memStats = Services::SystemInfoService::getInstance().getMemoryStats();
 	if (memStats.hasPsram) {
 		lv_label_set_text_fmt(m_psram_label, "PSRAM: %s total", Services::SystemInfoService::formatBytes(memStats.totalPsram).c_str());
+
+		lv_obj_t* psram_bar_label = lv_label_create(tab);
+		lv_label_set_text(psram_bar_label, "PSRAM Usage:");
+
+		m_psram_bar = lv_bar_create(tab);
+		lv_obj_set_size(m_psram_bar, lv_pct(90), lv_dpx(UILayout::SIZE_BAR_HEIGHT));
+		lv_bar_set_range(m_psram_bar, 0, 100);
+		lv_bar_set_value(m_psram_bar, 0, LV_ANIM_OFF);
 	} else {
 		lv_label_set_text(m_psram_label, "PSRAM: Not available");
+		m_psram_bar = nullptr;
 	}
 }
 
 void SystemInfoApp::createNetworkTab(lv_obj_t* tab) {
 	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(tab, lv_dpx(10), 0);
-	lv_obj_set_style_pad_row(tab, lv_dpx(8), 0);
+	lv_obj_set_style_pad_all(tab, lv_dpx(UILayout::PAD_LARGE), 0);
+	lv_obj_set_style_pad_row(tab, lv_dpx(UILayout::PAD_DEFAULT), 0);
 
 	m_wifi_status_label = lv_label_create(tab);
 	lv_label_set_text(m_wifi_status_label, "WiFi: Checking...");
@@ -147,18 +163,35 @@ void SystemInfoApp::createNetworkTab(lv_obj_t* tab) {
 
 void SystemInfoApp::createTasksTab(lv_obj_t* tab) {
 	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(tab, lv_dpx(10), 0);
+	lv_obj_set_style_pad_all(tab, 0, 0);
 
-	lv_obj_t* header = lv_label_create(tab);
-	lv_label_set_text(header, "FreeRTOS Tasks:");
+	m_tasks_table = lv_table_create(tab);
+	lv_obj_set_style_pad_all(m_tasks_table, 0, LV_PART_MAIN);
+	lv_obj_set_style_pad_all(m_tasks_table, 0, LV_PART_ITEMS);
+	lv_obj_set_width(m_tasks_table, lv_pct(100));
+	lv_table_set_column_count(m_tasks_table, 5);
 
-	m_tasks_list = lv_label_create(tab);
-	lv_label_set_text(m_tasks_list, "Loading tasks...");
-	lv_label_set_long_mode(m_tasks_list, LV_LABEL_LONG_SCROLL);
-	lv_obj_set_width(m_tasks_list, lv_pct(95));
+	// Responsive column widths
+	lv_obj_update_layout(tab);
+	int32_t screen_w = lv_obj_get_width(tab);
+	// Use slightly less than full width to avoid potential scrollbar issues
+	int32_t w = screen_w - 5;
+
+	lv_table_set_column_width(m_tasks_table, 0, w * 0.32); // Name
+	lv_table_set_column_width(m_tasks_table, 1, w * 0.22); // State
+	lv_table_set_column_width(m_tasks_table, 2, w * 0.13); // Prio
+	lv_table_set_column_width(m_tasks_table, 3, w * 0.20); // Stack
+	lv_table_set_column_width(m_tasks_table, 4, w * 0.13); // Core
+
+	lv_table_set_cell_value(m_tasks_table, 0, 0, "Name");
+	lv_table_set_cell_value(m_tasks_table, 0, 1, "State");
+	lv_table_set_cell_value(m_tasks_table, 0, 2, "Prio");
+	lv_table_set_cell_value(m_tasks_table, 0, 3, "Stack");
+	lv_table_set_cell_value(m_tasks_table, 0, 4, "Core");
 }
 
 void SystemInfoApp::updateInfo() {
+	Log::verbose(TAG, "Refreshing system stats...");
 	// Get system stats
 	auto sysStats = Services::SystemInfoService::getInstance().getSystemStats();
 
@@ -178,6 +211,11 @@ void SystemInfoApp::updateInfo() {
 		lv_label_set_text_fmt(m_heap_label, "Total: %s\nUsed: %s\nFree: %s\nMin Free: %s", Services::SystemInfoService::formatBytes(memStats.totalHeap).c_str(), Services::SystemInfoService::formatBytes(memStats.usedHeap).c_str(), Services::SystemInfoService::formatBytes(memStats.freeHeap).c_str(), Services::SystemInfoService::formatBytes(memStats.minFreeHeap).c_str());
 
 		lv_bar_set_value(m_heap_bar, memStats.usagePercent, LV_ANIM_ON);
+
+		if (memStats.hasPsram && m_psram_label && m_psram_bar) {
+			lv_label_set_text_fmt(m_psram_label, "PSRAM Total: %s\nUsed: %s\nFree: %s", Services::SystemInfoService::formatBytes(memStats.totalPsram).c_str(), Services::SystemInfoService::formatBytes(memStats.usedPsram).c_str(), Services::SystemInfoService::formatBytes(memStats.freePsram).c_str());
+			lv_bar_set_value(m_psram_bar, memStats.usagePercentPsram, LV_ANIM_ON);
+		}
 	}
 
 	// Update WiFi info
@@ -196,17 +234,20 @@ void SystemInfoApp::updateInfo() {
 		}
 	}
 
-	// Update tasks list
-	if (m_tasks_list) {
+	// Update tasks table
+	if (m_tasks_table) {
 		auto tasks = Services::SystemInfoService::getInstance().getTaskList();
-		std::stringstream ss;
-		ss << "Active Tasks: " << tasks.size() << "\n\n";
+		lv_table_set_row_count(m_tasks_table, tasks.size() + 1);
 
-		for (const auto& task: tasks) {
-			ss << task.name << " (Stack: " << task.stackHighWaterMark << ")\n";
+		for (size_t i = 0; i < tasks.size(); ++i) {
+			const auto& task = tasks[i];
+			uint32_t row = i + 1;
+			lv_table_set_cell_value(m_tasks_table, row, 0, task.name.c_str());
+			lv_table_set_cell_value(m_tasks_table, row, 1, task.state.c_str());
+			lv_table_set_cell_value_fmt(m_tasks_table, row, 2, "%d", task.currentPriority);
+			lv_table_set_cell_value_fmt(m_tasks_table, row, 3, "%u", (unsigned int)task.stackHighWaterMark);
+			lv_table_set_cell_value_fmt(m_tasks_table, row, 4, "%d", (task.coreID == -1) ? -1 : task.coreID);
 		}
-
-		lv_label_set_text(m_tasks_list, ss.str().c_str());
 	}
 }
 

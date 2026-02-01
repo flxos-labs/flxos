@@ -7,6 +7,9 @@
 #include "esp_wifi.h"
 #include "hotspot/HotspotManager.hpp"
 #include "wifi/WiFiManager.hpp"
+#include <string_view>
+
+static constexpr std::string_view TAG = "Connectivity";
 
 namespace System {
 ConnectivityManager& ConnectivityManager::getInstance() {
@@ -17,7 +20,7 @@ ConnectivityManager& ConnectivityManager::getInstance() {
 esp_err_t ConnectivityManager::init() {
 	if (m_is_init)
 		return ESP_OK;
-	Log::info("Connectivity", "Initializing networking stack...");
+	Log::info(TAG, "Initializing networking stack...");
 	ESP_ERROR_CHECK(esp_netif_init());
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
 	esp_netif_create_default_wifi_sta();
@@ -47,7 +50,7 @@ esp_err_t ConnectivityManager::init() {
 
 	ESP_ERROR_CHECK(setWifiMode(WIFI_MODE_NULL));
 	m_is_init = true;
-	Log::info("Connectivity", "ConnectivityManager initialized");
+	Log::info(TAG, "ConnectivityManager initialized");
 	return ESP_OK;
 }
 
@@ -64,7 +67,7 @@ esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode) {
 		return esp_wifi_start(); // Ensure it's started even if mode is same
 	}
 
-	Log::info("Connectivity", "Setting WiFi mode: %d", (int)mode);
+	Log::info(TAG, "Setting WiFi mode: %d", (int)mode);
 	err = esp_wifi_set_mode(mode);
 	if (err != ESP_OK) {
 		Log::error("Connectivity", "Failed to set WiFi mode: %d (0x%x)", (int)mode, err);
@@ -87,7 +90,7 @@ esp_err_t ConnectivityManager::scanWiFi(WiFiManager::ScanCallback callback) {
 	return WiFiManager::getInstance().scan(callback);
 }
 esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
-	Log::info("Connectivity", "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
+	Log::info(TAG, "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
 	esp_err_t err = WiFiManager::getInstance().setEnabled(enabled);
 	if (err == ESP_OK) {
 		GuiTask::lock();
@@ -100,11 +103,11 @@ bool ConnectivityManager::isWiFiEnabled() const {
 	return WiFiManager::getInstance().isEnabled();
 }
 esp_err_t ConnectivityManager::startHotspot(const char* s, const char* p, int c, int m, bool h, wifi_auth_mode_t auth, int8_t tx) {
-	Log::info("Connectivity", "Starting Hotspot (SSID: %s)", s);
+	Log::info(TAG, "Starting Hotspot (SSID: %s)", s);
 	return HotspotManager::getInstance().start(s, p, c, m, h, auth, tx);
 }
 esp_err_t ConnectivityManager::stopHotspot() {
-	Log::info("Connectivity", "Stopping Hotspot");
+	Log::info(TAG, "Stopping Hotspot");
 	return HotspotManager::getInstance().stop();
 }
 bool ConnectivityManager::isHotspotEnabled() const {

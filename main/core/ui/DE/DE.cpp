@@ -1,4 +1,5 @@
 #include "DE.hpp"
+#include "../theming/LayoutConstants.hpp"
 #include "../theming/ThemeEngine.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/common/Logger.hpp"
@@ -9,6 +10,9 @@
 
 #include "wm/WM.hpp"
 #include <ctime>
+#include <string_view>
+
+static constexpr std::string_view TAG = "DE";
 
 DE& DE::getInstance() {
 	static DE instance;
@@ -39,7 +43,7 @@ void DE::apply_glass(lv_obj_t* obj, int32_t blur) {
 lv_obj_t* DE::create_dock_btn(lv_obj_t* parent, const char* icon, int32_t w, int32_t h) {
 	lv_obj_t* btn = lv_button_create(parent);
 	lv_obj_set_size(btn, w, h);
-	lv_obj_set_style_radius(btn, lv_dpx(6), 0);
+	lv_obj_set_style_radius(btn, lv_dpx(UILayout::RADIUS_SMALL), 0);
 	lv_obj_t* img = lv_image_create(btn);
 	lv_image_set_src(img, icon);
 	lv_obj_center(img);
@@ -57,7 +61,7 @@ DE::DE()
 DE::~DE() {}
 
 void DE::init() {
-	Log::info("DE", "Initializing Desktop Environment...");
+	Log::info(TAG, "Initializing Desktop Environment...");
 	screen = lv_obj_create(NULL);
 	lv_obj_remove_style_all(screen);
 	lv_obj_set_flex_flow(screen, LV_FLEX_FLOW_COLUMN);
@@ -117,7 +121,7 @@ void DE::init() {
 					}
 				} else {
 					if (instance->wallpaper_icon)
-						lv_obj_clear_flag(instance->wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+						lv_obj_remove_flag(instance->wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 					if (instance->wallpaper_img != nullptr) {
 						lv_obj_delete(instance->wallpaper_img);
 						instance->wallpaper_img = nullptr;
@@ -146,7 +150,7 @@ void DE::init() {
 	if (wallpaper) {
 		greetings = lv_label_create(wallpaper);
 		lv_label_set_text(greetings, "Hey !");
-		lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(2), -lv_dpx(2));
+		lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UILayout::OFFSET_TINY), -lv_dpx(UILayout::OFFSET_TINY));
 	}
 
 	create_launcher();
@@ -165,34 +169,34 @@ void DE::init() {
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			DE* instance = (DE*)lv_observer_get_user_data(observer);
 			if (instance && instance->screen) {
-				Log::info("DE", "Realigning panels due to rotation");
+				Log::info(TAG, "Realigning panels due to rotation");
 				lv_obj_update_layout(instance->screen);
 				instance->realign_panels();
 			}
 		},
 		this
 	);
-	Log::info("DE", "DE initialization complete");
+	Log::info(TAG, "DE initialization complete");
 }
 
 void DE::configure_panel_style(lv_obj_t* panel) {
 	lv_obj_set_size(panel, lv_pct(80), lv_pct(60));
 	lv_obj_set_style_pad_all(panel, 0, 0);
-	lv_obj_set_style_radius(panel, lv_dpx(10), 0);
+	lv_obj_set_style_radius(panel, lv_dpx(UILayout::RADIUS_LARGE), 0);
 	lv_obj_set_style_border_width(panel, 0, 0);
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_FLOATING);
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
-	DE::apply_glass(panel, lv_dpx(4));
+	DE::apply_glass(panel, lv_dpx(UILayout::GLASS_BLUR_SMALL));
 }
 
 void DE::create_launcher() {
 	launcher = lv_obj_create(screen);
 	configure_panel_style(launcher);
-	lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(2));
+	lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(UILayout::OFFSET_TINY));
 
 	lv_obj_t* label = lv_label_create(launcher);
 	lv_label_set_text(label, "Applications");
-	lv_obj_align(label, LV_ALIGN_TOP_LEFT, lv_dpx(10), 0);
+	lv_obj_align(label, LV_ALIGN_TOP_LEFT, lv_dpx(UILayout::PAD_LARGE), 0);
 
 	lv_obj_t* list = lv_list_create(launcher);
 	lv_obj_set_size(list, lv_pct(100), lv_pct(85));
@@ -217,7 +221,7 @@ void DE::create_launcher() {
 void DE::create_quick_access_panel() {
 	quick_access_panel = lv_obj_create(screen);
 	configure_panel_style(quick_access_panel);
-	lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(2));
+	lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(UILayout::OFFSET_TINY));
 	lv_obj_set_flex_flow(quick_access_panel, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(quick_access_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
@@ -312,13 +316,13 @@ void DE::create_quick_access_panel() {
 void DE::realign_panels() {
 	if (dock) {
 		if (launcher) {
-			lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(2));
+			lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(UILayout::OFFSET_TINY));
 		}
 		if (quick_access_panel) {
-			lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(2));
+			lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(UILayout::OFFSET_TINY));
 		}
 		if (greetings) {
-			lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(2), -lv_dpx(2));
+			lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UILayout::OFFSET_TINY), -lv_dpx(UILayout::OFFSET_TINY));
 		}
 		if (notification_panel) {
 			lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, 0);
@@ -357,7 +361,7 @@ void DE::on_app_click(lv_event_t* e) {
 }
 
 void DE::openApp(const std::string& packageName) {
-	Log::info("DE", "Requesting WM to open app: %s", packageName.c_str());
+	Log::info(TAG, "Requesting WM to open app: %s", packageName.c_str());
 	WM::getInstance().openApp(packageName);
 }
 
@@ -369,10 +373,10 @@ void DE::create_status_bar() {
 	status_bar = lv_obj_create(screen);
 	lv_obj_remove_style_all(status_bar);
 	lv_obj_set_size(status_bar, lv_pct(100), lv_pct(7));
-	lv_obj_set_style_pad_hor(status_bar, lv_dpx(4), 0);
+	lv_obj_set_style_pad_hor(status_bar, lv_dpx(UILayout::PAD_SMALL), 0);
 	lv_obj_set_scroll_dir(status_bar, LV_DIR_NONE); // Prevent scrolling but allow gestures
 
-	DE::apply_glass(status_bar, lv_dpx(10));
+	DE::apply_glass(status_bar, lv_dpx(UILayout::GLASS_BLUR_DEFAULT));
 
 	lv_obj_set_flex_flow(status_bar, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(status_bar, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -420,7 +424,7 @@ void DE::create_status_bar() {
 			lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 		} else {
 			lv_obj_set_style_opa(icon, LV_OPA_60, 0);
-			lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_remove_flag(slash, LV_OBJ_FLAG_HIDDEN);
 		}
 	};
 
@@ -455,7 +459,7 @@ void DE::create_status_bar() {
 	lv_obj_set_style_transform_rotation(hotspot_icon2, 900, 0); // 90 degrees
 	lv_obj_set_style_transform_pivot_x(hotspot_icon2, lv_pct(50), 0);
 	lv_obj_set_style_transform_pivot_y(hotspot_icon2, lv_pct(50), 0);
-	lv_obj_set_style_margin_left(hotspot_icon2, -lv_dpx(12), 0); // Overlap
+	lv_obj_set_style_margin_left(hotspot_icon2, -lv_dpx(UILayout::SIZE_ICON_OVERLAP), 0); // Overlap
 
 	lv_obj_t* hotspot_slash = lv_label_create(hotspot_icon);
 	lv_label_set_text(hotspot_slash, "/");
@@ -479,7 +483,7 @@ void DE::create_status_bar() {
 			} else {
 				lv_obj_set_style_opa(icon1, LV_OPA_60, 0);
 				lv_obj_set_style_opa(icon2, LV_OPA_60, 0);
-				lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_remove_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			}
 		},
 		hotspot_icon, nullptr
@@ -519,7 +523,7 @@ void DE::create_status_bar() {
 				lv_obj_add_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			} else {
 				lv_obj_set_style_opa(icon, LV_OPA_60, 0);
-				lv_obj_clear_flag(slash, LV_OBJ_FLAG_HIDDEN);
+				lv_obj_remove_flag(slash, LV_OBJ_FLAG_HIDDEN);
 			}
 		},
 		bt_cont, nullptr
@@ -580,11 +584,11 @@ void DE::create_dock() {
 	dock = lv_obj_create(screen);
 	lv_obj_remove_style_all(dock);
 	lv_obj_set_size(dock, lv_pct(90), lv_pct(14));
-	lv_obj_set_style_pad_hor(dock, lv_dpx(4), 0);
-	lv_obj_set_style_radius(dock, lv_dpx(8), 0);
-	lv_obj_set_style_margin_bottom(dock, lv_dpx(4), 0);
+	lv_obj_set_style_pad_hor(dock, lv_dpx(UILayout::PAD_SMALL), 0);
+	lv_obj_set_style_radius(dock, lv_dpx(UILayout::RADIUS_DEFAULT), 0);
+	lv_obj_set_style_margin_bottom(dock, lv_dpx(UILayout::PAD_SMALL), 0);
 
-	DE::apply_glass(dock, lv_dpx(15));
+	DE::apply_glass(dock, lv_dpx(UILayout::GLASS_BLUR_LARGE));
 
 	lv_obj_set_flex_flow(dock, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(dock, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -597,7 +601,7 @@ void DE::create_dock() {
 	app_container = lv_obj_create(dock);
 	lv_obj_remove_style_all(app_container);
 	lv_obj_set_size(app_container, 0, lv_pct(100));
-	lv_obj_set_style_pad_hor(app_container, lv_dpx(4), 0);
+	lv_obj_set_style_pad_hor(app_container, lv_dpx(UILayout::PAD_SMALL), 0);
 	lv_obj_set_flex_grow(app_container, 1);
 	lv_obj_set_flex_flow(app_container, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(app_container, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -612,9 +616,8 @@ void DE::create_notification_panel() {
 	notification_panel = lv_obj_create(screen);
 	configure_panel_style(notification_panel);
 	// Notification panel covers entire screen below status bar (including dock)
-	lv_coord_t h = lv_display_get_vertical_resolution(NULL);
-	lv_coord_t status_bar_height = lv_obj_get_height(status_bar);
-	lv_obj_set_size(notification_panel, lv_pct(100), h - status_bar_height);
+	// Status bar is 7%, so notification panel is 93%
+	lv_obj_set_size(notification_panel, lv_pct(100), lv_pct(93));
 	lv_obj_align_to(notification_panel, status_bar, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 	lv_obj_set_flex_flow(notification_panel, LV_FLEX_FLOW_COLUMN);
 
@@ -623,14 +626,14 @@ void DE::create_notification_panel() {
 	lv_obj_set_size(header, lv_pct(100), LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(header, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(header, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	lv_obj_set_style_pad_all(header, lv_dpx(10), 0);
+	lv_obj_set_style_pad_all(header, lv_dpx(UILayout::PAD_LARGE), 0);
 
 	lv_obj_t* title = lv_label_create(header);
 	lv_label_set_text(title, "Notifications");
 
 	lv_obj_t* clear_btn = lv_button_create(header);
 	lv_obj_set_size(clear_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-	lv_obj_set_style_pad_all(clear_btn, lv_dpx(5), 0);
+	lv_obj_set_style_pad_all(clear_btn, lv_dpx(UILayout::PAD_MEDIUM), 0);
 	lv_obj_t* clear_label = lv_label_create(clear_btn);
 	lv_label_set_text(clear_label, "Clear All");
 	lv_obj_add_event_cb(clear_btn, on_clear_notifications_click, LV_EVENT_CLICKED, this);
@@ -641,8 +644,8 @@ void DE::create_notification_panel() {
 	lv_obj_set_flex_grow(notification_list, 1);
 
 	lv_obj_set_flex_flow(notification_list, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(notification_list, lv_dpx(5), 0);
-	lv_obj_set_style_pad_row(notification_list, lv_dpx(5), 0);
+	lv_obj_set_style_pad_all(notification_list, lv_dpx(UILayout::PAD_MEDIUM), 0);
+	lv_obj_set_style_pad_row(notification_list, lv_dpx(UILayout::PAD_MEDIUM), 0);
 
 	// Observe updates
 	lv_subject_add_observer_obj(
@@ -685,11 +688,11 @@ void DE::update_notification_list() {
 	for (const auto& n: notifs) {
 		lv_obj_t* item = lv_obj_create(notification_list);
 		lv_obj_set_size(item, lv_pct(100), LV_SIZE_CONTENT);
-		lv_obj_set_style_radius(item, lv_dpx(8), 0);
+		lv_obj_set_style_radius(item, lv_dpx(UILayout::RADIUS_DEFAULT), 0);
 		lv_obj_set_style_bg_opa(item, LV_OPA_20, 0); // Very transparent
 		lv_obj_set_flex_flow(item, LV_FLEX_FLOW_ROW);
 		lv_obj_set_flex_align(item, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-		lv_obj_set_style_pad_all(item, lv_dpx(8), 0);
+		lv_obj_set_style_pad_all(item, lv_dpx(UILayout::PAD_DEFAULT), 0);
 
 		if (n.icon) {
 			lv_obj_t* icon = lv_image_create(item);
@@ -726,7 +729,7 @@ void DE::create_swipe_trigger_zone() {
 	// Create an invisible touch zone at the top of the screen
 	swipe_trigger_zone = lv_obj_create(screen);
 	lv_obj_remove_style_all(swipe_trigger_zone);
-	lv_obj_set_size(swipe_trigger_zone, lv_pct(100), lv_dpx(30)); // 30dp tall zone
+	lv_obj_set_size(swipe_trigger_zone, lv_pct(100), lv_dpx(UILayout::SIZE_SWIPE_ZONE)); // 30dp tall zone
 	lv_obj_add_flag(swipe_trigger_zone, LV_OBJ_FLAG_FLOATING);
 	lv_obj_add_flag(swipe_trigger_zone, LV_OBJ_FLAG_CLICKABLE);
 	lv_obj_align(swipe_trigger_zone, LV_ALIGN_TOP_MID, 0, 0);
@@ -750,9 +753,9 @@ void DE::on_swipe_zone_press(lv_event_t* e) {
 		d->swipe_active = true;
 
 		// Prepare panel for dragging
-		lv_coord_t h = lv_display_get_vertical_resolution(NULL);
-		lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
-		Log::debug("DE", "Notification swipe started at y=%d", (int)d->swipe_start_y);
+		int32_t h = lv_display_get_vertical_resolution(NULL);
+		int32_t status_bar_height = lv_obj_get_height(d->status_bar);
+		Log::debug(TAG, "Notification swipe started at y=%d", (int)d->swipe_start_y);
 		lv_obj_remove_flag(d->notification_panel, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_move_foreground(d->notification_panel);
 		lv_obj_set_y(d->notification_panel, -h + status_bar_height); // Start hidden above, below status bar
@@ -767,12 +770,12 @@ void DE::on_swipe_zone_pressing(lv_event_t* e) {
 	if (indev) {
 		lv_point_t point;
 		lv_indev_get_point(indev, &point);
-		lv_coord_t h = lv_display_get_vertical_resolution(NULL);
-		lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
-		lv_coord_t diff = point.y - d->swipe_start_y;
+		int32_t h = lv_display_get_vertical_resolution(NULL);
+		int32_t status_bar_height = lv_obj_get_height(d->status_bar);
+		int32_t diff = point.y - d->swipe_start_y;
 
 		// Calculate new Y position (offset by status bar height)
-		lv_coord_t new_y = -h + status_bar_height + diff;
+		int32_t new_y = -h + status_bar_height + diff;
 		if (new_y > status_bar_height) new_y = status_bar_height; // Don't go below status bar
 
 		lv_obj_set_y(d->notification_panel, new_y);
@@ -783,19 +786,19 @@ void DE::on_swipe_zone_release(lv_event_t* e) {
 	DE* d = (DE*)lv_event_get_user_data(e);
 	if (!d || !d->swipe_active || !d->notification_panel) return;
 
-	lv_coord_t current_y = lv_obj_get_y(d->notification_panel);
-	lv_coord_t h = lv_display_get_vertical_resolution(NULL);
-	lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
+	int32_t current_y = lv_obj_get_y(d->notification_panel);
+	int32_t h = lv_display_get_vertical_resolution(NULL);
+	int32_t status_bar_height = lv_obj_get_height(d->status_bar);
 
 	// Snap based on position (if pulled down more than 15%)
 	if (current_y > -h + status_bar_height + (h / 6)) {
 		// Snap open
-		Log::debug("DE", "Notification swipe snap OPEN");
+		Log::debug(TAG, "Notification swipe snap OPEN");
 		lv_obj_set_y(d->notification_panel, status_bar_height);
 		System::FocusManager::getInstance().activatePanel(d->notification_panel);
 	} else {
 		// Snap closed
-		Log::debug("DE", "Notification swipe snap CLOSED");
+		Log::debug(TAG, "Notification swipe snap CLOSED");
 		lv_obj_set_y(d->notification_panel, -h + status_bar_height);
 		lv_obj_add_flag(d->notification_panel, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -825,15 +828,15 @@ void DE::on_notif_panel_pressing(lv_event_t* e) {
 	if (indev) {
 		lv_point_t point;
 		lv_indev_get_point(indev, &point);
-		lv_coord_t h = lv_display_get_vertical_resolution(NULL);
-		lv_coord_t diff = point.y - d->swipe_start_y; // Negative if going up? No, start Y > current Y if going up.
+		int32_t h = lv_display_get_vertical_resolution(NULL);
+		int32_t diff = point.y - d->swipe_start_y; // Negative if going up? No, start Y > current Y if going up.
 
 		// If I swipe UP, point.y < start_y. Diff is negative.
 		// New Y should be negative.
 		// new_y = 0 + diff.
 
-		lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
-		lv_coord_t new_y = status_bar_height + diff;
+		int32_t status_bar_height = lv_obj_get_height(d->status_bar);
+		int32_t new_y = status_bar_height + diff;
 		if (new_y > status_bar_height) new_y = status_bar_height; // Don't pull down further
 		if (new_y < -h + status_bar_height) new_y = -h + status_bar_height;
 
@@ -845,9 +848,9 @@ void DE::on_notif_panel_release(lv_event_t* e) {
 	DE* d = (DE*)lv_event_get_user_data(e);
 	if (!d || !d->swipe_active || !d->notification_panel) return;
 
-	lv_coord_t current_y = lv_obj_get_y(d->notification_panel);
-	lv_coord_t h = lv_display_get_vertical_resolution(NULL);
-	lv_coord_t status_bar_height = lv_obj_get_height(d->status_bar);
+	int32_t current_y = lv_obj_get_y(d->notification_panel);
+	int32_t h = lv_display_get_vertical_resolution(NULL);
+	int32_t status_bar_height = lv_obj_get_height(d->status_bar);
 
 	// Snap based on position
 	if (current_y < status_bar_height - (h / 6)) {

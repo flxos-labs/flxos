@@ -1,4 +1,5 @@
 #include "WM.hpp"
+#include "../../theming/LayoutConstants.hpp"
 #include "core/common/Logger.hpp"
 
 #include "../DE.hpp"
@@ -7,6 +8,9 @@
 #include "core/system/SystemManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include <algorithm>
+#include <string_view>
+
+static constexpr std::string_view TAG = "WM";
 
 WM& WM::getInstance() {
 	static WM instance;
@@ -22,14 +26,14 @@ WM::WM()
 WM::~WM() {}
 
 void WM::init(lv_obj_t* window_container, lv_obj_t* app_container, lv_obj_t* screen, lv_obj_t* status_bar, lv_obj_t* dock) {
-	Log::info("WM", "Initializing Window Manager...");
+	Log::info(TAG, "Initializing Window Manager...");
 	m_windowContainer = window_container;
 	m_appContainer = app_container;
 	m_screen = screen;
 	m_statusBar = status_bar;
 	m_dock = dock;
 
-	lv_obj_set_style_pad_all(m_windowContainer, lv_dpx(4), 0);
+	lv_obj_set_style_pad_all(m_windowContainer, lv_dpx(UILayout::PAD_SMALL), 0);
 
 	// Register as observer of AppManager for state synchronization
 	System::Apps::AppManager::getInstance().addObserver(this);
@@ -50,7 +54,7 @@ void WM::openApp(const std::string& packageName) {
 
 	// Check if app is already open
 	if (lv_obj_t* win = findWindowByPackage(packageName)) {
-		Log::info("WM", "App %s already open, activating window", packageName.c_str());
+		Log::info(TAG, "App %s already open, activating window", packageName.c_str());
 		lv_obj_remove_flag(win, LV_OBJ_FLAG_HIDDEN);
 		System::FocusManager::getInstance().activateWindow(win);
 		System::Apps::AppManager::getInstance().startApp(packageName);
@@ -58,10 +62,10 @@ void WM::openApp(const std::string& packageName) {
 		return;
 	}
 
-	Log::info("WM", "Opening app: %s", packageName.c_str());
+	Log::info(TAG, "Opening app: %s", packageName.c_str());
 	auto app = System::Apps::AppManager::getInstance().getAppByPackageName(packageName);
 	if (!app) {
-		Log::error("WM", "Failed to open app: %s (not found)", packageName.c_str());
+		Log::error(TAG, "Failed to open app: %s (not found)", packageName.c_str());
 		GuiTask::unlock();
 		return;
 	}
@@ -70,7 +74,7 @@ void WM::openApp(const std::string& packageName) {
 	lv_obj_t* win = lv_win_create(m_windowContainer);
 	// Initial size will be handled by updateLayout, but set defaults just
 	// in case
-	lv_obj_set_style_radius(win, lv_dpx(8), 0);
+	lv_obj_set_style_radius(win, lv_dpx(UILayout::RADIUS_DEFAULT), 0);
 	lv_obj_set_style_border_post(win, true, 0);
 
 	m_windowAppMap[win] = packageName;
@@ -86,27 +90,28 @@ void WM::openApp(const std::string& packageName) {
 	lv_obj_set_user_data(win, dock_btn);
 	lv_obj_set_user_data(dock_btn, win);
 
+	lv_win_add_title(win, app->getAppName().c_str());
 	lv_obj_t* header = lv_win_get_header(win);
 	lv_obj_set_height(header, lv_pct(10));
-	lv_obj_set_style_min_height(header, lv_dpx(30), 0);
+	lv_obj_set_style_min_height(header, lv_dpx(UILayout::SIZE_HEADER), 0);
 	lv_obj_set_style_pad_all(header, 0, 0);
 	lv_obj_add_flag(header, LV_OBJ_FLAG_EVENT_BUBBLE);
 	lv_obj_remove_flag(header, LV_OBJ_FLAG_SCROLLABLE);
 	lv_win_add_title(win, app->getAppName().c_str());
 
 	lv_obj_t* min_btn = lv_win_add_button(win, LV_SYMBOL_DOWN, lv_pct(10));
-	lv_obj_set_style_min_width(min_btn, lv_dpx(30), 0);
+	lv_obj_set_style_min_width(min_btn, lv_dpx(UILayout::SIZE_HEADER), 0);
 	lv_obj_add_event_cb(min_btn, on_header_minimize, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* max_btn = lv_win_add_button(win, LV_SYMBOL_PLUS, lv_pct(10));
-	lv_obj_set_style_min_width(max_btn, lv_dpx(30), 0);
+	lv_obj_set_style_min_width(max_btn, lv_dpx(UILayout::SIZE_HEADER), 0);
 	if (lv_obj_get_child_count(max_btn) > 0) {
 		m_windowMaxBtnLabelMap[win] = lv_obj_get_child(max_btn, 0);
 	}
 	lv_obj_add_event_cb(max_btn, on_win_maximize, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* close_btn = lv_win_add_button(win, LV_SYMBOL_CLOSE, lv_pct(10));
-	lv_obj_set_style_min_width(close_btn, lv_dpx(30), 0);
+	lv_obj_set_style_min_width(close_btn, lv_dpx(UILayout::SIZE_HEADER), 0);
 	lv_obj_add_event_cb(close_btn, on_win_close, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* content = lv_win_get_content(win);
@@ -144,7 +149,7 @@ void WM::on_win_minimize(lv_event_t* e) {
 	if (w == wm->m_fullScreenWindow) wm->toggleFullScreen(w);
 
 	bool is_hidden = lv_obj_has_flag(w, LV_OBJ_FLAG_HIDDEN);
-	bool is_active = (lv_obj_get_style_border_width(w, LV_PART_MAIN) == lv_dpx(2));
+	bool is_active = (lv_obj_get_style_border_width(w, LV_PART_MAIN) == lv_dpx(UILayout::BORDER_FOCUS));
 
 	if (is_hidden || !is_active) {
 		lv_obj_remove_flag(w, LV_OBJ_FLAG_HIDDEN);
@@ -188,7 +193,7 @@ void WM::closeWindow_internal(lv_obj_t* win) {
 	if (!win || !lv_obj_is_valid(win))
 		return;
 
-	Log::info("WM", "Closing window: %p", win);
+	Log::info(TAG, "Closing window: %p", win);
 	// Assumes GuiTask lock is already held
 
 	if (win == m_fullScreenWindow) {
@@ -246,7 +251,7 @@ void WM::toggleFullScreen(lv_obj_t* win) {
 		if (max_btn_content) lv_image_set_src(max_btn_content, LV_SYMBOL_MINUS);
 	}
 	System::FocusManager::getInstance().activateWindow(win);
-	Log::info("WM", "Toggled FullScreen for win: %p (active: %s)", win, m_fullScreenWindow == win ? "YES" : "NO");
+	Log::info(TAG, "Toggled FullScreen for win: %p (active: %s)", win, m_fullScreenWindow == win ? "YES" : "NO");
 	updateLayout();
 }
 
@@ -264,11 +269,11 @@ void WM::updateLayout() {
 		return w && lv_obj_is_valid(w) && !lv_obj_has_flag(w, LV_OBJ_FLAG_HIDDEN) &&
 			lv_obj_get_parent(w) == m_windowContainer;
 	});
-	Log::debug("WM", "Updating layout for %zu visible windows", visibleWins.size());
+	Log::debug(TAG, "Updating layout for %zu visible windows", visibleWins.size());
 	if (visibleWins.empty()) return;
 
-	lv_coord_t w_avail = lv_obj_get_content_width(m_windowContainer);
-	lv_coord_t h_avail = lv_obj_get_content_height(m_windowContainer);
+	int32_t w_avail = lv_obj_get_content_width(m_windowContainer);
+	int32_t h_avail = lv_obj_get_content_height(m_windowContainer);
 
 	lv_area_t rect;
 	rect.x1 = 0;
@@ -278,7 +283,7 @@ void WM::updateLayout() {
 
 	bool split_vertical =
 		true; // Start with identifying Left vs Right split (vertical line)
-	int gap = lv_dpx(4);
+	int gap = lv_dpx(UILayout::PAD_SMALL);
 
 	for (size_t i = 0; i < visibleWins.size(); ++i) {
 		lv_obj_t* win = visibleWins[i];
@@ -292,11 +297,11 @@ void WM::updateLayout() {
 			lv_area_t second_half = rect;
 
 			if (split_vertical) {
-				lv_coord_t w_half = (rect.x2 - rect.x1) / 2;
+				int32_t w_half = (rect.x2 - rect.x1) / 2;
 				first_half.x2 = rect.x1 + w_half - (gap / 2);
 				second_half.x1 = rect.x1 + w_half + (gap / 2);
 			} else {
-				lv_coord_t h_half = (rect.y2 - rect.y1) / 2;
+				int32_t h_half = (rect.y2 - rect.y1) / 2;
 				first_half.y2 = rect.y1 + h_half - (gap / 2);
 				second_half.y1 = rect.y1 + h_half + (gap / 2);
 			}

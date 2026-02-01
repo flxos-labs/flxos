@@ -1,9 +1,13 @@
 #include "GuiTask.hpp"
+#include "core/common/Logger.hpp"
 #include "core/system/SystemManager.hpp"
 #include "core/ui/DE/DE.hpp"
 #include "core/ui/theming/ThemeEngine.hpp"
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
+#include <string_view>
+
+static constexpr std::string_view TAG = "GuiTask";
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
 
 SemaphoreHandle_t GuiTask::xGuiSemaphore = nullptr;
@@ -43,9 +47,11 @@ void GuiTask::display_init() {
 		CONFIG_FLXOS_DISPLAY_WIDTH, CONFIG_FLXOS_DISPLAY_HEIGHT, buf, sz, touch_en
 	);
 	if (!disp) {
+		Log::error(TAG, "Failed to create display driver!");
 		vTaskDelete(NULL);
 		return;
 	}
+	Log::info("GuiTask", "Display initialized: %dx%d", CONFIG_FLXOS_DISPLAY_WIDTH, CONFIG_FLXOS_DISPLAY_HEIGHT);
 	lv_display_set_rotation(
 		disp, (lv_display_rotation_t)(CONFIG_FLXOS_DISPLAY_ROTATION / 90)
 	);
@@ -58,12 +64,14 @@ void GuiTask::display_init() {
 
 void GuiTask::run(void*) {
 	lock();
+	Log::info(TAG, "Initializing GUI components...");
 	display_init();
 	ThemeEngine::init();
 	System::SystemManager::getInstance().initGuiState();
 	DE::getInstance().init();
 	unlock();
 
+	Log::info(TAG, "GUI task loop started");
 	setWatchdogTimeout(5000);
 
 	while (true) {

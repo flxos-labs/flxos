@@ -1,10 +1,12 @@
 #include "TaskManager.hpp"
+#include "core/common/Logger.hpp"
 #include "esp_task_wdt.h"
 #include "esp_timer.h"
 #include <algorithm>
+#include <string_view>
 
-static const char* TASK_TAG = "Task";
-static const char* TM_TAG = "TaskManager";
+static constexpr std::string_view TASK_TAG = "Task";
+static constexpr std::string_view TM_TAG = "TaskManager";
 
 namespace System {
 static uint64_t getMillis() { return esp_timer_get_time() / 1000; }
@@ -36,6 +38,7 @@ bool Task::start(void* data) {
 		: xTaskCreatePinnedToCore(taskEntry, m_name.c_str(), m_stackSize, this, m_priority, &handle, m_coreId);
 
 	if (res != pdPASS) {
+		Log::error(TASK_TAG, "Failed to create task: %s", m_name.c_str());
 		m_handle = nullptr;
 		return false;
 	}
@@ -45,6 +48,7 @@ bool Task::start(void* data) {
 		// stop() was called during creation
 		vTaskDelete(handle);
 	} else {
+		Log::info(TASK_TAG, "Task started: %s", m_name.c_str());
 	}
 	return true;
 }
@@ -53,6 +57,7 @@ void Task::stop() {
 	m_stopRequested = true;
 	TaskHandle_t handle = m_handle.exchange(nullptr);
 	if (handle && handle != (TaskHandle_t)1) {
+		Log::info(TASK_TAG, "Task stopped: %s", m_name.c_str());
 		vTaskDelete(handle);
 	}
 }
@@ -114,6 +119,8 @@ void TaskManager::initWatchdog(uint32_t interval) {
 		esp_task_wdt_init(&twdt_config);
 	}
 
+	Log::info(TM_TAG, "Watchdog initialized with %d ms interval", (int)interval);
+
 	if (!m_watchdogTaskHandle) {
 		BaseType_t res = xTaskCreatePinnedToCore(
 			watchdogTaskEntry, "tm_watchdog", 3072, this, configMAX_PRIORITIES - 1,
@@ -165,6 +172,7 @@ void TaskManager::printTasks() {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	for (auto* t: m_tasks) {
 		uint32_t hwm = t->getStackHighWaterMark();
+		Log::debug(TM_TAG, "Task: %s, Stack HWM: %u", t->getName().c_str(), (unsigned int)hwm);
 	}
 }
 

@@ -1,28 +1,25 @@
 #include "HotspotManager.hpp"
+#include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/wifi/WiFiManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
-#include "esp_mac.h"
 #include "esp_timer.h"
 #include "esp_wifi.h"
-#include "sdkconfig.h"
 #include <cstring>
+#include <string_view>
+
+#include "esp_netif.h"
+
 extern "C" {
-#include "lwip/def.h"
-#include "lwip/ip_addr.h"
 #include "lwip/lwip_napt.h"
 #include "lwip/netif.h"
-#include "lwip/opt.h"
 #include "lwip/pbuf.h"
-#include "lwip/prot/ethernet.h"
-#include "lwip/prot/ip.h"
-#include "lwip/prot/ip4.h"
-#include "lwip/prot/udp.h"
 
 // Internal IDF API to get lwIP netif from esp_netif
 struct netif* esp_netif_get_netif_impl(esp_netif_t* esp_netif);
 }
-#include "esp_netif.h"
+
+static constexpr std::string_view TAG = "HotspotManager";
 
 namespace System {
 
@@ -95,6 +92,7 @@ void HotspotManager::updateClientHostname(uint8_t* mac, const std::string& hostn
 	std::lock_guard<std::mutex> lock(m_mutex);
 	for (auto& client: m_clients) {
 		if (memcmp(client.mac, mac, 6) == 0) {
+			Log::info(TAG, "Updated client hostname: %s", hostname.c_str());
 			client.hostname = hostname;
 			break;
 		}
@@ -149,6 +147,7 @@ esp_err_t HotspotManager::init(lv_subject_t* enabled_subject, lv_subject_t* clie
 	if (m_is_init)
 		return ESP_OK;
 
+	Log::info(TAG, "Initializing Hotspot manager...");
 	m_enabled_subject = enabled_subject;
 	m_client_count_subject = client_count_subject;
 
@@ -241,12 +240,14 @@ void HotspotManager::checkAutoShutdown() {
 	uint64_t now = esp_timer_get_time() / 1000000;
 	if (m_client_count == 0 && m_last_client_time > 0) {
 		if ((now - m_last_client_time) >= m_auto_shutdown_timeout) {
+			Log::info(TAG, "Auto-shutdown triggered (no clients for %lu seconds)", m_auto_shutdown_timeout);
 			stop();
 		}
 	}
 }
 
 esp_err_t HotspotManager::start(const char* ssid, const char* password, int channel, int max_connections, bool hidden, wifi_auth_mode_t auth_mode, int8_t max_tx_power) {
+	Log::info(TAG, "Starting hotspot SSID: %s", ssid);
 	if (!ssid || strlen(ssid) == 0 || strlen(ssid) > 32) {
 		return ESP_ERR_INVALID_ARG;
 	}
@@ -307,7 +308,7 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 }
 
 esp_err_t HotspotManager::stop() {
-
+	Log::info(TAG, "Stopping hotspot...");
 	std::lock_guard<std::recursive_mutex> wifi_lock(
 		ConnectivityManager::getInstance().getWifiMutex()
 	);
@@ -392,6 +393,7 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 	HotspotManager* self = static_cast<HotspotManager*>(arg);
 
 	if (event_id == WIFI_EVENT_AP_START) {
+		Log::info(TAG, "Hotspot AP started");
 		self->initApHook();
 
 		if (self->m_nat_enabled) {
@@ -416,6 +418,7 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 			lv_subject_set_int(self->m_enabled_subject, 1);
 		GuiTask::unlock();
 	} else if (event_id == WIFI_EVENT_AP_STOP) {
+		Log::info(TAG, "Hotspot AP stopped");
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
 			self->m_client_count = 0;
@@ -431,6 +434,7 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 	} else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
 		wifi_event_ap_staconnected_t* event =
 			(wifi_event_ap_staconnected_t*)event_data;
+		Log::info(TAG, "Client connected to Hotspot, AID=%d", event->aid);
 
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
@@ -452,6 +456,7 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 	} else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
 		wifi_event_ap_stadisconnected_t* event =
 			(wifi_event_ap_stadisconnected_t*)event_data;
+		Log::info(TAG, "Client disconnected from Hotspot, AID=%d", event->aid);
 
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);

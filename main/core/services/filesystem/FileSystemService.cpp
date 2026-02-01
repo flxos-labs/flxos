@@ -4,8 +4,11 @@
 #include <cstring>
 #include <dirent.h>
 #include <string.h>
+#include <string_view>
 #include <sys/stat.h>
 #include <unistd.h>
+
+static constexpr std::string_view TAG = "FileSystem";
 
 namespace System {
 namespace Services {
@@ -35,7 +38,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 		lv_fs_res_t res = lv_fs_dir_open(&dir, path.c_str());
 
 		if (res != LV_FS_RES_OK) {
-			Log::warn("FileSystem", "Failed to open root A:/, returning defaults");
+			Log::warn(TAG, "Failed to open root A:/, returning defaults");
 			// Return default directories
 			entries.push_back({"system", true, 0});
 			entries.push_back({"data", true, 0});
@@ -48,7 +51,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 	lv_fs_res_t res = lv_fs_dir_open(&dir, path.c_str());
 
 	if (res != LV_FS_RES_OK) {
-		Log::error("FileSystem", "Failed to open directory: %s", path.c_str());
+		Log::error(TAG, "Failed to open directory: %s", path.c_str());
 		return entries;
 	}
 
@@ -93,18 +96,18 @@ int FileSystemService::copyFile(const char* src, const char* dst, ProgressCallba
 
 	FILE* fsrc = fopen(src, "rb");
 	if (!fsrc) {
-		Log::error("FileSystem", "Failed to open source file for copying: %s", src);
+		Log::error(TAG, "Failed to open source file for copying: %s", src);
 		return -1;
 	}
 
 	FILE* fdst = fopen(dst, "wb");
 	if (!fdst) {
-		Log::error("FileSystem", "Failed to open destination file for copying: %s", dst);
+		Log::error(TAG, "Failed to open destination file for copying: %s", dst);
 		fclose(fsrc);
 		return -1;
 	}
 
-	Log::info("FileSystem", "Copying file: %s -> %s (%ld bytes)", src, dst, totalSize);
+	Log::info(TAG, "Copying file: %s -> %s (%ld bytes)", src, dst, totalSize);
 
 	char buf[4096];
 	size_t n;
@@ -126,7 +129,7 @@ int FileSystemService::copyFile(const char* src, const char* dst, ProgressCallba
 
 	fclose(fsrc);
 	fclose(fdst);
-	Log::info("FileSystem", "Copy completed: %s", dst);
+	Log::info(TAG, "Copy completed: %s", dst);
 	return 0;
 }
 
@@ -179,11 +182,11 @@ bool FileSystemService::copy(const std::string& src, const std::string& dst, Pro
 bool FileSystemService::move(const std::string& src, const std::string& dst) {
 
 	if (rename(src.c_str(), dst.c_str()) == 0) {
-		Log::info("FileSystem", "Moved: %s -> %s", src.c_str(), dst.c_str());
+		Log::info(TAG, "Moved: %s -> %s", src.c_str(), dst.c_str());
 		return true;
 	}
 
-	Log::error("FileSystem", "Move failed: %s -> %s (errno: %d)", src.c_str(), dst.c_str(), errno);
+	Log::error(TAG, "Move failed: %s -> %s (errno: %d)", src.c_str(), dst.c_str(), errno);
 	return false;
 }
 
@@ -232,10 +235,10 @@ bool FileSystemService::remove(const std::string& path, ProgressCallback callbac
 
 	struct stat st;
 	if (stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
-		Log::info("FileSystem", "Removing directory: %s", path.c_str());
+		Log::info(TAG, "Removing directory: %s", path.c_str());
 		return removeRecursive(path.c_str(), callback) == 0;
 	} else {
-		Log::info("FileSystem", "Removing file: %s", path.c_str());
+		Log::info(TAG, "Removing file: %s", path.c_str());
 		return unlink(path.c_str()) == 0;
 	}
 }
@@ -243,7 +246,7 @@ bool FileSystemService::remove(const std::string& path, ProgressCallback callbac
 bool FileSystemService::mkdir(const std::string& path) {
 
 	if (::mkdir(path.c_str(), 0777) == 0) {
-		Log::info("FileSystem", "Created directory: %s", path.c_str());
+		Log::info(TAG, "Created directory: %s", path.c_str());
 		return true;
 	}
 
@@ -251,7 +254,7 @@ bool FileSystemService::mkdir(const std::string& path) {
 		return true;
 	}
 
-	Log::error("FileSystem", "Failed to create directory: %s (errno: %d)", path.c_str(), errno);
+	Log::error(TAG, "Failed to create directory: %s (errno: %d)", path.c_str(), errno);
 	return false;
 }
 

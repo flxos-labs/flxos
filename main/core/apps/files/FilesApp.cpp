@@ -1,9 +1,12 @@
 #include "FilesApp.hpp"
+#include "core/common/Logger.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "esp_timer.h"
-#include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <cstring>
+#include <string_view>
+
+static constexpr std::string_view TAG = "FilesApp";
 
 namespace System {
 namespace Apps {
@@ -97,6 +100,7 @@ void FilesApp::createUI(void* parent) {
 	if (m_currentPath.empty()) {
 		m_currentPath = "A:/";
 	}
+	Log::info(TAG, "UI created, starting at path: %s", m_currentPath.c_str());
 	refreshList();
 }
 
@@ -260,10 +264,13 @@ void FilesApp::addListItem(const std::string& name, bool isDir) {
 			if (code == LV_EVENT_CLICKED) {
 				bool isDir = (bool)(uintptr_t)lv_obj_get_user_data(btn);
 				const char* name = lv_list_get_button_text(app->m_list, btn);
-				if (isDir)
+				if (isDir) {
+					Log::debug(TAG, "User clicked directory: %s", name);
 					app->enterDir(name);
-				else
+				} else {
+					Log::debug("FilesApp", "User clicked file: %s", name);
 					app->onFileClick(name);
+				}
 			}
 		},
 		LV_EVENT_ALL, this
@@ -321,6 +328,8 @@ void FilesApp::handleMenuAction(const std::string& action, const std::string& na
 			},
 			LV_EVENT_DELETE, cctx
 		);
+
+		Log::info(TAG, "User requested delete for: %s", name.c_str());
 	}
 }
 
@@ -375,6 +384,7 @@ void FilesApp::pasteItem() {
 		return;
 
 	std::string srcPath = cb.get().path;
+	Log::info(TAG, "Pasting item from clipboard: %s", srcPath.c_str());
 	std::string name = srcPath.substr(srcPath.find_last_of('/') + 1);
 	std::string destBase = Services::FileSystemService::toVfsPath(m_currentPath);
 	std::string destPath = Services::FileSystemService::buildPath(destBase, name);
@@ -428,6 +438,7 @@ void FilesApp::renameItem(const std::string& oldName, const std::string& newName
 	std::string basePath = Services::FileSystemService::toVfsPath(m_currentPath);
 	std::string oldPath = Services::FileSystemService::buildPath(basePath, oldName);
 	std::string newPath = Services::FileSystemService::buildPath(basePath, newName);
+	Log::info(TAG, "Renaming item: %s -> %s", oldName.c_str(), newName.c_str());
 	if (!Services::FileSystemService::getInstance().move(oldPath, newPath))
 		showMsgBox("Error", "Could not rename item.");
 	refreshList();

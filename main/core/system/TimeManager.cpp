@@ -1,6 +1,9 @@
 #include "TimeManager.hpp"
 #include "core/common/Logger.hpp"
 #include "esp_sntp.h"
+#include <string_view>
+
+static constexpr std::string_view TAG = "TimeManager";
 
 namespace System {
 
@@ -27,7 +30,7 @@ void TimeManager::init() {
 	esp_sntp_setservername(1, "time.google.com");
 	esp_sntp_setservername(2, "time.cloudflare.com");
 	sntp_set_time_sync_notification_cb(time_sync_notification_cb);
-	Log::info("TimeManager", "Initializing SNTP...");
+	Log::info(TAG, "Initializing SNTP...");
 	esp_sntp_init();
 
 	// Set default timezone to India (IST)
@@ -81,7 +84,7 @@ bool TimeManager::waitForSync(uint32_t timeout_ms) {
 
 void TimeManager::updateSyncStatus(bool synced) {
 	if (synced != m_is_synced) {
-		Log::info("TimeManager", "Time sync status changed: %s", synced ? "SYNCED" : "NOT SYNCED");
+		Log::info(TAG, "Time sync status changed: %s", synced ? "SYNCED" : "NOT SYNCED");
 	}
 	m_is_synced = synced;
 }

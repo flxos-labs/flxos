@@ -1,5 +1,8 @@
 #include "FocusManager.hpp"
 #include "core/common/Logger.hpp"
+#include <string_view>
+
+static constexpr std::string_view TAG = "FocusManager";
 
 namespace System {
 
@@ -47,8 +50,12 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 		return;
 	}
 
+	if (m_activeWindow == win) {
+		return;
+	}
+
 	m_activeWindow = win;
-	Log::info("FocusManager", "Activating window...");
+	Log::info(TAG, "Activating window...");
 
 	// Bring target to foreground
 	lv_obj_move_to_index(win, -1);
@@ -83,7 +90,12 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 void FocusManager::activatePanel(lv_obj_t* panel) {
 	if (!panel) return;
 
-	Log::debug("FocusManager", "Activating panel: %p", panel);
+	Log::info(TAG, "Activating panel: %p", panel);
+
+	// [NEW] Avoid re-activating if already visible and focused
+	if (!lv_obj_has_flag(panel, LV_OBJ_FLAG_HIDDEN)) {
+		return;
+	}
 
 	// Hide other panels
 	for (auto* p: m_panels) {
@@ -95,7 +107,7 @@ void FocusManager::activatePanel(lv_obj_t* panel) {
 	}
 
 	// Show and focus the active panel
-	lv_obj_clear_flag(panel, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_remove_flag(panel, LV_OBJ_FLAG_HIDDEN);
 	// Make panel focusable and focus it (like dropdown does when opening)
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_CLICK_FOCUSABLE);
 	lv_group_t* g = lv_group_get_default();
@@ -108,17 +120,17 @@ void FocusManager::togglePanel(lv_obj_t* panel) {
 	if (!panel) return;
 
 	if (lv_obj_has_flag(panel, LV_OBJ_FLAG_HIDDEN)) {
-		Log::debug("FocusManager", "Toggling panel ON: %p", panel);
+		Log::debug(TAG, "Toggling panel ON: %p", panel);
 		activatePanel(panel);
 	} else {
-		Log::debug("FocusManager", "Toggling panel OFF: %p", panel);
+		Log::debug(TAG, "Toggling panel OFF: %p", panel);
 		lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_remove_flag(panel, LV_OBJ_FLAG_CLICK_FOCUSABLE);
 	}
 }
 
 void FocusManager::dismissAllPanels() {
-	Log::debug("FocusManager", "Dismissing all panels");
+	Log::debug(TAG, "Dismissing all panels");
 	for (auto* p: m_panels) {
 		if (lv_obj_is_valid(p)) {
 			lv_obj_add_flag(p, LV_OBJ_FLAG_HIDDEN);
@@ -140,7 +152,7 @@ void FocusManager::on_global_press(lv_event_t* e) {
 	if (indev) {
 		lv_point_t point;
 		lv_indev_get_point(indev, &point);
-		lv_coord_t screen_height = lv_display_get_vertical_resolution(lv_display_get_default());
+		int32_t screen_height = lv_display_get_vertical_resolution(lv_display_get_default());
 		// Start tracking if touch started in top 15% of screen
 		if (point.y < screen_height / 7) {
 			fm->m_swipeStartY = point.y;
@@ -159,10 +171,14 @@ void FocusManager::on_global_press(lv_event_t* e) {
 		for (auto* p: fm->m_panels) {
 			if (p == obj) return; // Inside panel -> do nothing
 		}
+		// [NEW] Also check if we clicked the Dock or Status Bar (they handle their own toggles)
+		if (obj == fm->m_dock || obj == fm->m_statusBar) {
+			return;
+		}
 		obj = lv_obj_get_parent(obj);
 	}
 
-	// 2. If we are here, we are NOT in a panel. Dismiss them.
+	// 2. If we are here, we are NOT in a panel, Dock, or StatusBar. Dismiss them.
 	fm->dismissAllPanels();
 
 	// 3. Check if we clicked inside a window (to activate it)
@@ -218,7 +234,7 @@ void FocusManager::on_global_release(lv_event_t* e) {
 	if (indev) {
 		lv_point_t point;
 		lv_indev_get_point(indev, &point);
-		lv_coord_t delta = point.y - fm->m_swipeStartY;
+		int32_t delta = point.y - fm->m_swipeStartY;
 
 		// Swipe down detected if moved at least 30 pixels down
 		if (delta > 30) {

@@ -1,17 +1,23 @@
 #include "ThemeEngine.hpp"
+#include "core/common/Logger.hpp"
 #include "core/system/SystemManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include <map>
+#include <string_view>
 #include <vector>
+
+static constexpr std::string_view TAG = "ThemeEngine";
 
 ThemeType ThemeEngine::current_theme = ThemeType::MATERIAL;
 static std::map<lv_display_t*, std::vector<lv_theme_t*>> engine_themes;
 
 void ThemeEngine::init() {
+	Log::info(TAG, "Initializing theme engine...");
 	lv_display_t* disp = lv_display_get_default();
 	if (disp) {
 		apply_theme(current_theme, disp);
 	} else {
+		Log::warn(TAG, "No default display found during init");
 	}
 }
 
@@ -25,6 +31,7 @@ void ThemeEngine::set_theme(ThemeType theme, lv_display_t* disp) {
 	}
 
 	if (current_theme != theme) {
+		Log::info(TAG, "Switching theme to %d", (int)theme);
 		current_theme = theme;
 		apply_theme(theme, disp);
 	}
@@ -71,6 +78,7 @@ void ThemeEngine::apply_theme(ThemeType theme, lv_display_t* disp) {
 	}
 
 	ThemeConfig cfg = Themes::GetConfig(theme);
+	Log::debug(TAG, "Applying theme: %d (Dark: %s)", (int)theme, cfg.dark ? "Yes" : "No");
 	std::vector<lv_theme_t*> new_themes_vec;
 
 	lv_theme_t* base_th = lv_theme_default_init(disp, cfg.primary, cfg.secondary, cfg.dark, LV_FONT_DEFAULT);
