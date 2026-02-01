@@ -3,7 +3,6 @@
 #include "lvgl.h"
 #include <string.h>
 
-
 #define globals LV_GLOBAL_DEFAULT()
 
 uint32_t lv_os_get_idle_percent(void) {

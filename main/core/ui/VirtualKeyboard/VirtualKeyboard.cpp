@@ -1,6 +1,5 @@
 #include "VirtualKeyboard.hpp"
 
-
 VirtualKeyboard& VirtualKeyboard::getInstance() {
 	static VirtualKeyboard instance;
 	return instance;
@@ -12,7 +11,6 @@ VirtualKeyboard::VirtualKeyboard()
 void VirtualKeyboard::init() {
 	if (m_keyboard)
 		return;
-
 
 	// Create keyboard on top layer to ensure visibility
 	m_keyboard = lv_keyboard_create(lv_layer_top());

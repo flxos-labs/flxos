@@ -1,7 +1,6 @@
 #include "BluetoothManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 
-
 namespace System {
 
 BluetoothManager& BluetoothManager::getInstance() {

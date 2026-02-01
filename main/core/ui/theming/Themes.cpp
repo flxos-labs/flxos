@@ -1,7 +1,6 @@
 #include "Themes.hpp"
 #include "core/ui/VirtualKeyboard/VirtualKeyboard.hpp"
 
-
 namespace Themes {
 ThemeConfig GetConfig(ThemeType type) {
 	ThemeConfig cfg;

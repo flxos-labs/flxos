@@ -114,7 +114,6 @@ void TaskManager::initWatchdog(uint32_t interval) {
 		esp_task_wdt_init(&twdt_config);
 	}
 
-
 	if (!m_watchdogTaskHandle) {
 		BaseType_t res = xTaskCreatePinnedToCore(
 			watchdogTaskEntry, "tm_watchdog", 3072, this, configMAX_PRIORITIES - 1,
