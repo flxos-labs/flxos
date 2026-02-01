@@ -1,6 +1,6 @@
 #include "ThemeEngine.hpp"
 #include "core/common/Logger.hpp"
-#include "core/system/SystemManager/SystemManager.hpp"
+#include "core/system/System/SystemManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include <map>
 #include <string_view>

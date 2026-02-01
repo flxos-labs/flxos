@@ -2,7 +2,7 @@
 #include <cstring>
 
 #include "core/apps/settings/SettingsCommon.hpp"
-#include "core/system/SystemManager/SystemManager.hpp"
+#include "core/system/System/SystemManager.hpp"
 #include "core/ui/components/FileChooser.hpp"
 #include "core/ui/theming/ThemeEngine/ThemeEngine.hpp"
 #include "lvgl.h"

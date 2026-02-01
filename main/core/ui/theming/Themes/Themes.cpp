@@ -1,6 +1,6 @@
 #include "Themes.hpp"
 #include "core/common/Logger.hpp"
-#include "core/ui/VirtualKeyboard/VirtualKeyboard.hpp"
+#include "core/ui/Keyboard/VirtualKeyboard.hpp"
 #include <string_view>
 
 static constexpr std::string_view TAG = "Themes";

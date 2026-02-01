@@ -1,7 +1,7 @@
 #include "WiFiManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
-#include "core/system/TimeManager/TimeManager.hpp"
+#include "core/system/Time/TimeManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "esp_netif.h"
 #include "esp_wifi.h"

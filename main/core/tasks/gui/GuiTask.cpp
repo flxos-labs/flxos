@@ -1,6 +1,6 @@
 #include "GuiTask.hpp"
 #include "core/common/Logger.hpp"
-#include "core/system/SystemManager/SystemManager.hpp"
+#include "core/system/System/SystemManager.hpp"
 #include "core/ui/DE/DE.hpp"
 #include "core/ui/theming/ThemeEngine/ThemeEngine.hpp"
 #include "esp_heap_caps.h"

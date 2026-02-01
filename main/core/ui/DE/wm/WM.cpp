@@ -4,8 +4,8 @@
 
 #include "../DE.hpp"
 #include "core/apps/AppManager.hpp"
-#include "core/system/FocusManager/FocusManager.hpp"
-#include "core/system/SystemManager/SystemManager.hpp"
+#include "core/system/Focus/FocusManager.hpp"
+#include "core/system/System/SystemManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include <algorithm>
 #include <string_view>
@@ -97,7 +97,6 @@ void WM::openApp(const std::string& packageName) {
 	lv_obj_set_style_pad_all(header, 0, 0);
 	lv_obj_add_flag(header, LV_OBJ_FLAG_EVENT_BUBBLE);
 	lv_obj_remove_flag(header, LV_OBJ_FLAG_SCROLLABLE);
-	lv_win_add_title(win, app->getAppName().c_str());
 
 	lv_obj_t* min_btn = lv_win_add_button(win, LV_SYMBOL_DOWN, lv_pct(10));
 	lv_obj_set_style_min_width(min_btn, lv_dpx(UILayout::SIZE_HEADER), 0);

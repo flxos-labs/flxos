@@ -1,6 +1,6 @@
 #include "core/common/Logger.hpp"
-#include "core/system/NotificationManager/NotificationManager.hpp"
-#include "core/system/SystemManager/SystemManager.hpp"
+#include "core/system/Notification/NotificationManager.hpp"
+#include "core/system/System/SystemManager.hpp"
 
 #include "core/tasks/gui/GuiTask.hpp"
 #include "freertos/task.h"
