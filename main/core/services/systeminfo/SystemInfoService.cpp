@@ -6,6 +6,7 @@
 #include "esp_mac.h"
 #include "esp_system.h"
 #include "esp_timer.h"
+#include "esp_vfs_fat.h"
 #include "esp_wifi.h"
 #include "freertos/task.h"
 #include <iomanip>
@@ -58,6 +59,7 @@ SystemStats SystemInfoService::getSystemStats() {
 	esp_chip_info(&chip_info);
 	stats.cores = chip_info.cores;
 	stats.revision = chip_info.revision;
+	stats.cpuFreqMhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ;
 
 	// Build features string
 	std::stringstream features;
@@ -84,6 +86,7 @@ MemoryStats SystemInfoService::getMemoryStats() {
 	stats.totalHeap = heap_caps_get_total_size(MALLOC_CAP_8BIT);
 	stats.usedHeap = stats.totalHeap - stats.freeHeap;
 	stats.usagePercent = (stats.usedHeap * 100) / stats.totalHeap;
+	stats.largestFreeBlock = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
 
 	// PSRAM info
 	stats.totalPsram = heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
@@ -97,6 +100,36 @@ MemoryStats SystemInfoService::getMemoryStats() {
 		stats.usagePercentPsram = 0;
 	}
 
+	return stats;
+}
+
+std::vector<StorageStats> SystemInfoService::getStorageStats() {
+	std::vector<StorageStats> storageStats;
+
+	// Helper lambda to get stats for a path
+	auto addStats = [&](const std::string& name, const char* path) {
+		uint64_t total = 0, free = 0;
+		if (esp_vfs_fat_info(path, &total, &free) == ESP_OK) {
+			StorageStats stats;
+			stats.name = name;
+			stats.totalBytes = (size_t)total;
+			stats.freeBytes = (size_t)free;
+			stats.usedBytes = stats.totalBytes - stats.freeBytes;
+			storageStats.push_back(stats);
+		}
+	};
+
+	addStats("System", "/system");
+	addStats("Data", "/data");
+
+	return storageStats;
+}
+
+BatteryStats SystemInfoService::getBatteryStats() {
+	BatteryStats stats;
+	// Placeholder: Assume full battery and not charging for now
+	stats.level = 100;
+	stats.isCharging = false;
 	return stats;
 }
 

@@ -33,12 +33,19 @@ private:
 	lv_obj_t* m_uptime_label;
 	lv_obj_t* m_chip_label;
 	lv_obj_t* m_idf_label;
+	lv_obj_t* m_battery_label;
 
 	// Memory tab labels
 	lv_obj_t* m_heap_label;
 	lv_obj_t* m_heap_bar;
 	lv_obj_t* m_psram_label;
 	lv_obj_t* m_psram_bar;
+
+	// Storage
+	lv_obj_t* m_storage_system_label;
+	lv_obj_t* m_storage_system_bar;
+	lv_obj_t* m_storage_data_label;
+	lv_obj_t* m_storage_data_bar;
 
 	// Network tab labels
 	lv_obj_t* m_wifi_status_label;

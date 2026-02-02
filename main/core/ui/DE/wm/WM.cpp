@@ -1,4 +1,5 @@
 #include "WM.hpp"
+#include "../../theming/LayoutConstants/LayoutConstants.hpp"
 #include "../../theming/UiConstants/UiConstants.hpp"
 #include "core/common/Logger.hpp"
 
@@ -86,7 +87,7 @@ void WM::openApp(const std::string& packageName) {
 
 	const char* iconSymbol = (const char*)app->getIcon();
 	lv_obj_t* dock_btn =
-		DE::create_dock_btn(m_appContainer, iconSymbol, lv_pct(15), lv_pct(85));
+		DE::create_dock_btn(m_appContainer, iconSymbol, lv_pct(UiConstants::SIZE_DOCK_ICON_PCT), lv_pct(LayoutConstants::LIST_HEIGHT_PCT));
 
 	// Dock button state styles:
 	// Default (Minimized): Transparent
@@ -95,6 +96,21 @@ void WM::openApp(const std::string& packageName) {
 	lv_obj_set_style_bg_opa(dock_btn, UiConstants::OPA_TRANSP, 0);
 	lv_obj_set_style_bg_opa(dock_btn, UiConstants::OPA_GLASS_BG, LV_STATE_USER_1);
 	lv_obj_set_style_bg_opa(dock_btn, UiConstants::OPA_HIGH, LV_STATE_CHECKED);
+
+	// Add observer for transparency
+	lv_subject_add_observer_obj(
+		&System::SystemManager::getInstance().getTransparencyEnabledSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			lv_obj_t* btn = lv_observer_get_target_obj(observer);
+			bool enabled = lv_subject_get_int(subject);
+			if (enabled) {
+				lv_obj_set_style_bg_opa(btn, UiConstants::OPA_GLASS_BG, LV_STATE_USER_1);
+			} else {
+				lv_obj_set_style_bg_opa(btn, UiConstants::OPA_COVER, LV_STATE_USER_1);
+			}
+		},
+		dock_btn, nullptr
+	);
 
 	lv_obj_add_state(dock_btn, LV_STATE_USER_1); // Window starts visible
 
@@ -105,24 +121,24 @@ void WM::openApp(const std::string& packageName) {
 
 	lv_win_add_title(win, app->getAppName().c_str());
 	lv_obj_t* header = lv_win_get_header(win);
-	lv_obj_set_height(header, lv_pct(10));
+	lv_obj_set_height(header, lv_pct(UiConstants::SIZE_WIN_HEADER_PCT));
 	lv_obj_set_style_min_height(header, lv_dpx(UiConstants::SIZE_HEADER), 0);
 	lv_obj_set_style_pad_all(header, 0, 0);
 	lv_obj_add_flag(header, LV_OBJ_FLAG_EVENT_BUBBLE);
 	lv_obj_remove_flag(header, LV_OBJ_FLAG_SCROLLABLE);
 
-	lv_obj_t* min_btn = lv_win_add_button(win, LV_SYMBOL_DOWN, lv_pct(10));
+	lv_obj_t* min_btn = lv_win_add_button(win, LV_SYMBOL_DOWN, lv_pct(UiConstants::SIZE_WIN_HEADER_PCT));
 	lv_obj_set_style_min_width(min_btn, lv_dpx(UiConstants::SIZE_HEADER), 0);
 	lv_obj_add_event_cb(min_btn, on_header_minimize, LV_EVENT_CLICKED, this);
 
-	lv_obj_t* max_btn = lv_win_add_button(win, LV_SYMBOL_PLUS, lv_pct(10));
+	lv_obj_t* max_btn = lv_win_add_button(win, LV_SYMBOL_PLUS, lv_pct(UiConstants::SIZE_WIN_HEADER_PCT));
 	lv_obj_set_style_min_width(max_btn, lv_dpx(UiConstants::SIZE_HEADER), 0);
 	if (lv_obj_get_child_count(max_btn) > 0) {
 		m_windowMaxBtnLabelMap[win] = lv_obj_get_child(max_btn, 0);
 	}
 	lv_obj_add_event_cb(max_btn, on_win_maximize, LV_EVENT_CLICKED, this);
 
-	lv_obj_t* close_btn = lv_win_add_button(win, LV_SYMBOL_CLOSE, lv_pct(10));
+	lv_obj_t* close_btn = lv_win_add_button(win, LV_SYMBOL_CLOSE, lv_pct(UiConstants::SIZE_WIN_HEADER_PCT));
 	lv_obj_set_style_min_width(close_btn, lv_dpx(UiConstants::SIZE_HEADER), 0);
 	lv_obj_add_event_cb(close_btn, on_win_close, LV_EVENT_CLICKED, this);
 

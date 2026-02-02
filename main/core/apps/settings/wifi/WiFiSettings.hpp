@@ -4,6 +4,8 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
+#include "core/ui/theming/LayoutConstants/LayoutConstants.hpp"
+#include "core/ui/theming/UiConstants/UiConstants.hpp"
 #include "esp_wifi.h"
 #include "lvgl.h"
 #include <algorithm>
@@ -61,7 +63,7 @@ public:
 			lv_obj_set_size(statusCont, lv_pct(100), LV_SIZE_CONTENT);
 			lv_obj_set_style_pad_all(statusCont, 0, 0);
 			lv_obj_set_style_pad_gap(statusCont, 0, 0);
-			lv_obj_set_style_pad_hor(statusCont, lv_dpx(5), 0);
+			lv_obj_set_style_pad_hor(statusCont, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 			lv_obj_set_style_border_width(statusCont, 0, 0);
 			lv_obj_set_flex_flow(statusCont, LV_FLEX_FLOW_ROW);
 			lv_obj_set_flex_align(statusCont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -250,13 +252,12 @@ public:
 		lv_obj_set_style_pad_all(m_connectContainer, 0, 0);
 		lv_obj_set_style_pad_row(m_connectContainer, 0, 0);
 		lv_obj_set_style_border_width(m_connectContainer, 0, 0);
-		lv_obj_set_style_bg_color(m_connectContainer, lv_palette_main(LV_PALETTE_GREY), 0);
 		lv_obj_set_flex_flow(m_connectContainer, LV_FLEX_FLOW_COLUMN);
 		lv_obj_set_flex_align(m_connectContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
 		lv_obj_t* header = lv_obj_create(m_connectContainer);
 		lv_obj_set_size(header, lv_pct(100), LV_SIZE_CONTENT);
-		lv_obj_set_style_pad_all(header, lv_dpx(5), 0);
+		lv_obj_set_style_pad_all(header, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 		lv_obj_t* title = lv_label_create(header);
 		lv_label_set_text_fmt(title, "Connect to %s", ssid);
 		lv_obj_center(title);
@@ -267,7 +268,7 @@ public:
 		lv_textarea_set_password_mode(m_passwordTa, true);
 		lv_textarea_set_one_line(m_passwordTa, true);
 		lv_textarea_set_placeholder_text(m_passwordTa, "Password");
-		lv_obj_set_width(m_passwordTa, lv_pct(90));
+		lv_obj_set_width(m_passwordTa, lv_pct(LayoutConstants::INPUT_WIDTH_PCT));
 		lv_obj_align(m_passwordTa, LV_ALIGN_TOP_MID, 0, 0);
 
 		lv_obj_t* btnCont = lv_obj_create(m_connectContainer);

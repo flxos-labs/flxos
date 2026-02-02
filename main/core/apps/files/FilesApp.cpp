@@ -1,6 +1,7 @@
 #include "FilesApp.hpp"
 #include "core/common/Logger.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
+#include "core/ui/theming/LayoutConstants/LayoutConstants.hpp"
 #include "esp_timer.h"
 #include "freertos/task.h"
 #include <cstring>
@@ -14,8 +15,8 @@ namespace Apps {
 // Helper: Create a styled message box
 static void showMsgBox(const char* title, const char* text) {
 	lv_obj_t* mb = lv_msgbox_create(NULL);
-	lv_obj_set_size(mb, lv_pct(80), LV_SIZE_CONTENT);
-	lv_obj_set_style_max_height(mb, lv_pct(80), 0);
+	lv_obj_set_size(mb, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), LV_SIZE_CONTENT);
+	lv_obj_set_style_max_height(mb, lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT), 0);
 	lv_obj_center(mb);
 	lv_msgbox_add_title(mb, title);
 	lv_msgbox_add_text(mb, text);
@@ -128,8 +129,8 @@ void FilesApp::feedWatchdog() {
 
 void FilesApp::showProgressDialog(const char* title) {
 	m_progressMbox = lv_msgbox_create(NULL);
-	lv_obj_set_size(m_progressMbox, lv_pct(80), LV_SIZE_CONTENT);
-	lv_obj_set_style_max_height(m_progressMbox, lv_pct(80), 0);
+	lv_obj_set_size(m_progressMbox, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), LV_SIZE_CONTENT);
+	lv_obj_set_style_max_height(m_progressMbox, lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT), 0);
 	lv_obj_center(m_progressMbox);
 	lv_msgbox_add_title(m_progressMbox, title);
 
@@ -216,7 +217,7 @@ void FilesApp::addListItem(const std::string& name, bool isDir) {
 
 	// Add a dropdown menu on the right side
 	lv_obj_t* dropdown = lv_dropdown_create(btn);
-	lv_obj_set_size(dropdown, lv_dpx(40), lv_dpx(35));
+	lv_obj_set_size(dropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_BTN_WIDTH), lv_dpx(LayoutConstants::SIZE_DROPDOWN_HEIGHT));
 	lv_obj_add_flag(dropdown, LV_OBJ_FLAG_FLOATING);
 	lv_obj_align(dropdown, LV_ALIGN_RIGHT_MID, 0, 0);
 
@@ -291,8 +292,8 @@ void FilesApp::handleMenuAction(const std::string& action, const std::string& na
 		});
 	} else if (action == "Delete") {
 		lv_obj_t* confirm = lv_msgbox_create(NULL);
-		lv_obj_set_size(confirm, lv_pct(80), LV_SIZE_CONTENT);
-		lv_obj_set_style_max_height(confirm, lv_pct(80), 0);
+		lv_obj_set_size(confirm, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), LV_SIZE_CONTENT);
+		lv_obj_set_style_max_height(confirm, lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT), 0);
 		lv_obj_center(confirm);
 		lv_msgbox_add_title(confirm, "Delete?");
 		lv_msgbox_add_text(
@@ -335,8 +336,8 @@ void FilesApp::handleMenuAction(const std::string& action, const std::string& na
 
 void FilesApp::showInputDialog(const char* title, const std::string& defaultVal, std::function<void(std::string)> cb) {
 	lv_obj_t* mbox = lv_msgbox_create(NULL);
-	lv_obj_set_size(mbox, lv_pct(80), LV_SIZE_CONTENT);
-	lv_obj_set_style_max_height(mbox, lv_pct(80), 0);
+	lv_obj_set_size(mbox, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), LV_SIZE_CONTENT);
+	lv_obj_set_style_max_height(mbox, lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT), 0);
 	lv_obj_center(mbox);
 	lv_msgbox_add_title(mbox, title);
 

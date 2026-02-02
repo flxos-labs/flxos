@@ -1,4 +1,5 @@
 #include "DE.hpp"
+#include "../theming/LayoutConstants/LayoutConstants.hpp"
 #include "../theming/StyleUtils.hpp"
 #include "../theming/ThemeEngine/ThemeEngine.hpp"
 #include "../theming/UiConstants/UiConstants.hpp"
@@ -49,16 +50,16 @@ void DE::init() {
 
 	lv_screen_load(screen);
 
+	ThemeConfig cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+
 	if (!System::SystemManager::getInstance().isSafeMode()) {
 		wallpaper = lv_obj_create(screen);
 		lv_obj_remove_style_all(wallpaper);
 		lv_obj_set_size(wallpaper, lv_pct(100), lv_pct(100));
 
-		ThemeConfig cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 		lv_obj_set_style_bg_color(wallpaper, cfg.primary, 0);
 		lv_obj_set_style_bg_opa(wallpaper, UiConstants::OPA_COVER, 0);
 		lv_obj_add_flag(wallpaper, LV_OBJ_FLAG_FLOATING);
-		lv_obj_add_flag(wallpaper, LV_OBJ_FLAG_CLICK_FOCUSABLE); // Make focusable for panel dismissal
 		lv_obj_move_background(wallpaper);
 
 		wallpaper_icon = lv_image_create(wallpaper);
@@ -111,7 +112,7 @@ void DE::init() {
 			this
 		);
 	} else {
-		lv_obj_set_style_bg_color(screen, lv_palette_main(LV_PALETTE_GREY), 0);
+		lv_obj_set_style_bg_color(screen, cfg.surface, 0);
 		lv_obj_set_style_bg_opa(screen, UiConstants::OPA_COVER, 0);
 	}
 
@@ -160,7 +161,7 @@ void DE::init() {
 }
 
 void DE::configure_panel_style(lv_obj_t* panel) {
-	lv_obj_set_size(panel, lv_pct(80), lv_pct(60));
+	lv_obj_set_size(panel, lv_pct(LayoutConstants::PANEL_WIDTH_PCT), lv_pct(LayoutConstants::PANEL_HEIGHT_PCT));
 	lv_obj_set_style_pad_all(panel, 0, 0);
 	lv_obj_set_style_radius(panel, lv_dpx(UiConstants::RADIUS_LARGE), 0);
 	lv_obj_set_style_border_width(panel, 0, 0);
@@ -179,7 +180,7 @@ void DE::create_launcher() {
 	lv_obj_align(label, LV_ALIGN_TOP_LEFT, lv_dpx(UiConstants::PAD_LARGE), 0);
 
 	lv_obj_t* list = lv_list_create(launcher);
-	lv_obj_set_size(list, lv_pct(100), lv_pct(85));
+	lv_obj_set_size(list, lv_pct(100), lv_pct(LayoutConstants::LIST_HEIGHT_PCT));
 	lv_obj_set_style_pad_all(list, 0, 0);
 	lv_obj_align(list, LV_ALIGN_BOTTOM_MID, 0, 0);
 	lv_obj_set_style_bg_opa(list, 0, 0);
@@ -285,7 +286,7 @@ void DE::create_quick_access_panel() {
 
 		lv_obj_t* slider = lv_slider_create(slider_cont);
 		lv_obj_set_flex_grow(slider, 1);
-		lv_obj_set_height(slider, lv_pct(70));
+		lv_obj_set_height(slider, lv_pct(LayoutConstants::SLIDER_HEIGHT_PCT));
 		lv_slider_set_range(slider, 0, 255);
 		lv_slider_bind_value(
 			slider, &System::SystemManager::getInstance().getBrightnessSubject()
@@ -352,7 +353,7 @@ void DE::closeApp(const std::string& packageName) {
 void DE::create_status_bar() {
 	status_bar = lv_obj_create(screen);
 	lv_obj_remove_style_all(status_bar);
-	lv_obj_set_size(status_bar, lv_pct(100), lv_pct(7));
+	lv_obj_set_size(status_bar, lv_pct(100), lv_pct(UiConstants::SIZE_STATUS_BAR_HEIGHT_PCT));
 	lv_obj_set_style_pad_hor(status_bar, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_scroll_dir(status_bar, LV_DIR_NONE); // Prevent scrolling but allow gestures
 
@@ -371,7 +372,8 @@ void DE::create_status_bar() {
 	if (System::SystemManager::getInstance().isSafeMode()) {
 		lv_obj_t* safe_img = lv_image_create(left_group);
 		lv_image_set_src(safe_img, LV_SYMBOL_WARNING);
-		lv_obj_set_style_image_recolor(safe_img, lv_palette_main(LV_PALETTE_RED), 0);
+		ThemeConfig cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+		lv_obj_set_style_image_recolor(safe_img, cfg.error, 0);
 		lv_obj_set_style_image_recolor_opa(safe_img, UiConstants::OPA_COVER, 0);
 
 		lv_obj_t* safe_label = lv_label_create(left_group);
@@ -430,14 +432,14 @@ void DE::create_status_bar() {
 	// First WiFi icon
 	lv_obj_t* hotspot_icon1 = lv_image_create(hotspot_icon);
 	lv_image_set_src(hotspot_icon1, LV_SYMBOL_WIFI);
-	lv_obj_set_style_transform_rotation(hotspot_icon1, -900, 0); // -90 degrees
+	lv_obj_set_style_transform_rotation(hotspot_icon1, -LayoutConstants::ROTATION_90_DEG, 0); // -90 degrees
 	lv_obj_set_style_transform_pivot_x(hotspot_icon1, lv_pct(50), 0);
 	lv_obj_set_style_transform_pivot_y(hotspot_icon1, lv_pct(50), 0);
 
 	// Second WiFi icon
 	lv_obj_t* hotspot_icon2 = lv_image_create(hotspot_icon);
 	lv_image_set_src(hotspot_icon2, LV_SYMBOL_WIFI);
-	lv_obj_set_style_transform_rotation(hotspot_icon2, 900, 0); // 90 degrees
+	lv_obj_set_style_transform_rotation(hotspot_icon2, LayoutConstants::ROTATION_90_DEG, 0); // 90 degrees
 	lv_obj_set_style_transform_pivot_x(hotspot_icon2, lv_pct(50), 0);
 	lv_obj_set_style_transform_pivot_y(hotspot_icon2, lv_pct(50), 0);
 	lv_obj_set_style_margin_left(hotspot_icon2, -lv_dpx(UiConstants::SIZE_ICON_OVERLAP), 0); // Overlap
@@ -568,7 +570,7 @@ void DE::create_status_bar() {
 void DE::create_dock() {
 	dock = lv_obj_create(screen);
 	lv_obj_remove_style_all(dock);
-	lv_obj_set_size(dock, lv_pct(90), lv_pct(14));
+	lv_obj_set_size(dock, lv_pct(UiConstants::SIZE_DOCK_WIDTH_PCT), lv_pct(UiConstants::SIZE_DOCK_HEIGHT_PCT));
 	lv_obj_set_style_pad_hor(dock, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_style_radius(dock, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
 	lv_obj_set_style_margin_bottom(dock, lv_dpx(UiConstants::PAD_SMALL), 0);
@@ -579,7 +581,7 @@ void DE::create_dock() {
 	lv_obj_set_flex_align(dock, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
 	lv_obj_add_event_cb(
-		DE::create_dock_btn(dock, LV_SYMBOL_LIST, lv_pct(13), lv_pct(85)),
+		DE::create_dock_btn(dock, LV_SYMBOL_LIST, lv_pct(LayoutConstants::DOCK_BTN_WIDTH_PCT), lv_pct(LayoutConstants::DOCK_BTN_HEIGHT_PCT)),
 		on_start_click, LV_EVENT_CLICKED, this
 	);
 
@@ -592,7 +594,7 @@ void DE::create_dock() {
 	lv_obj_set_flex_align(app_container, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
 	lv_obj_add_event_cb(
-		DE::create_dock_btn(dock, LV_SYMBOL_UP, lv_pct(13), lv_pct(80)),
+		DE::create_dock_btn(dock, LV_SYMBOL_UP, lv_pct(LayoutConstants::DOCK_BTN_WIDTH_PCT), lv_pct(LayoutConstants::DOCK_BTN_HEIGHT_SMALL_PCT)),
 		on_up_click, LV_EVENT_CLICKED, this
 	);
 }
@@ -602,7 +604,7 @@ void DE::create_notification_panel() {
 	configure_panel_style(notification_panel);
 	// Notification panel covers entire screen below status bar (including dock)
 	// Status bar is 7%, so notification panel is 93%
-	lv_obj_set_size(notification_panel, lv_pct(100), lv_pct(93));
+	lv_obj_set_size(notification_panel, lv_pct(100), lv_pct(UiConstants::SIZE_NOTIF_PANEL_HEIGHT_PCT));
 	lv_obj_align_to(notification_panel, status_bar, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 	lv_obj_set_flex_flow(notification_panel, LV_FLEX_FLOW_COLUMN);
 
@@ -739,7 +741,7 @@ void DE::update_notification_list() {
 
 		// Close button
 		lv_obj_t* close_btn = lv_button_create(item);
-		lv_obj_set_size(close_btn, 30, 30); // Touch target
+		lv_obj_set_size(close_btn, LayoutConstants::SIZE_TOUCH_TARGET, LayoutConstants::SIZE_TOUCH_TARGET); // Touch target
 		lv_obj_set_style_radius(close_btn, LV_RADIUS_CIRCLE, 0);
 		lv_obj_t* close_icon = lv_label_create(close_btn);
 		lv_label_set_text(close_icon, LV_SYMBOL_CLOSE);

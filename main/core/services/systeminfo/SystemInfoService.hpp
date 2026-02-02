@@ -15,6 +15,7 @@ struct SystemStats {
 	int revision;
 	std::string features;
 	uint64_t uptimeSeconds;
+	uint32_t cpuFreqMhz;
 };
 
 struct MemoryStats {
@@ -23,11 +24,24 @@ struct MemoryStats {
 	uint32_t minFreeHeap;
 	uint32_t usedHeap;
 	int usagePercent;
+	uint32_t largestFreeBlock;
 	uint32_t totalPsram;
 	uint32_t freePsram;
 	uint32_t usedPsram;
 	int usagePercentPsram;
 	bool hasPsram;
+};
+
+struct StorageStats {
+	std::string name;
+	size_t totalBytes;
+	size_t usedBytes;
+	size_t freeBytes;
+};
+
+struct BatteryStats {
+	int level; // 0-100
+	bool isCharging;
 };
 
 struct WiFiStats {
@@ -55,14 +69,24 @@ public:
 	static SystemInfoService& getInstance();
 
 	/**
-	 * Get system information (version, chip, uptime)
+	 * Get system information (version, chip, uptime, cpu freq)
 	 */
 	SystemStats getSystemStats();
 
 	/**
-	 * Get memory statistics (heap, PSRAM)
+	 * Get memory statistics (heap, PSRAM, largest free block)
 	 */
 	MemoryStats getMemoryStats();
+
+	/**
+	 * Get storage statistics for partitions
+	 */
+	std::vector<StorageStats> getStorageStats();
+
+	/**
+	 * Get battery statistics (placeholder)
+	 */
+	BatteryStats getBatteryStats();
 
 	/**
 	 * Get WiFi connection statistics

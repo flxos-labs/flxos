@@ -3,6 +3,7 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/bluetooth/BluetoothManager.hpp"
+#include "core/ui/theming/UiConstants/UiConstants.hpp"
 #include "lvgl.h"
 #include <functional>
 
@@ -50,7 +51,7 @@ public:
 			lv_obj_set_size(statusCont, lv_pct(100), LV_SIZE_CONTENT);
 			lv_obj_set_style_pad_all(statusCont, 0, 0);
 			lv_obj_set_style_pad_gap(statusCont, 0, 0);
-			lv_obj_set_style_pad_hor(statusCont, lv_dpx(5), 0);
+			lv_obj_set_style_pad_hor(statusCont, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 			lv_obj_set_style_border_width(statusCont, 0, 0);
 			lv_obj_set_flex_flow(statusCont, LV_FLEX_FLOW_ROW);
 			lv_obj_set_flex_align(statusCont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);

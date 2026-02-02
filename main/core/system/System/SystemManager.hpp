@@ -31,6 +31,12 @@ public:
 		return m_transparency_enabled_subject;
 	}
 	lv_subject_t& getWallpaperPathSubject() { return m_wallpaper_path_subject; }
+	lv_subject_t& getHotspotSsidSubject() { return m_hotspot_ssid_subject; }
+	lv_subject_t& getHotspotPasswordSubject() { return m_hotspot_password_subject; }
+	lv_subject_t& getHotspotChannelSubject() { return m_hotspot_channel_subject; }
+	lv_subject_t& getHotspotMaxConnSubject() { return m_hotspot_max_conn_subject; }
+	lv_subject_t& getHotspotHiddenSubject() { return m_hotspot_hidden_subject; }
+	lv_subject_t& getHotspotAuthSubject() { return m_hotspot_auth_subject; }
 
 private:
 
@@ -55,6 +61,17 @@ private:
 	lv_subject_t m_glass_enabled_subject;
 	lv_subject_t m_transparency_enabled_subject;
 	lv_subject_t m_wallpaper_path_subject;
+	lv_subject_t m_hotspot_ssid_subject;
+	lv_subject_t m_hotspot_password_subject;
+	lv_subject_t m_hotspot_channel_subject;
+	lv_subject_t m_hotspot_max_conn_subject;
+	lv_subject_t m_hotspot_hidden_subject;
+	lv_subject_t m_hotspot_auth_subject;
+
+	void loadSettings();
+	void saveSettings();
+	void triggerSave();
+	lv_timer_t* m_save_timer = nullptr;
 };
 
 } // namespace System

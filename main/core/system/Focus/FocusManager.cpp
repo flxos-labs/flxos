@@ -1,4 +1,6 @@
 #include "FocusManager.hpp"
+#include "../../ui/theming/LayoutConstants/LayoutConstants.hpp"
+#include "../../ui/theming/UiConstants/UiConstants.hpp"
 #include "core/common/Logger.hpp"
 #include <string_view>
 
@@ -59,7 +61,7 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 			needs_update = true;
 		}
 
-		if (lv_obj_get_style_border_width(win, LV_PART_MAIN) != lv_dpx(2)) {
+		if (lv_obj_get_style_border_width(win, LV_PART_MAIN) != lv_dpx(UiConstants::BORDER_FOCUS)) {
 			needs_update = true;
 		}
 
@@ -84,13 +86,13 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 
 		if (is_active) {
 			lv_obj_add_state(child, LV_STATE_FOCUSED);
-			lv_obj_set_style_border_width(child, lv_dpx(2), 0);
+			lv_obj_set_style_border_width(child, lv_dpx(UiConstants::BORDER_FOCUS), 0);
 			lv_obj_set_style_border_opa(child, LV_OPA_COVER, 0);
 			if (dock_btn && lv_obj_is_valid(dock_btn))
 				lv_obj_add_state(dock_btn, LV_STATE_CHECKED);
 		} else {
 			lv_obj_remove_state(child, LV_STATE_FOCUSED);
-			lv_obj_set_style_border_width(child, lv_dpx(1), 0);
+			lv_obj_set_style_border_width(child, lv_dpx(UiConstants::BORDER_DEFAULT), 0);
 			lv_obj_set_style_border_opa(child, LV_OPA_40, 0);
 			if (dock_btn && lv_obj_is_valid(dock_btn))
 				lv_obj_remove_state(dock_btn, LV_STATE_CHECKED);

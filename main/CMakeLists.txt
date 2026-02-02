@@ -3,7 +3,7 @@ file(GLOB_RECURSE SRCS *.cpp)
 # Register the main component
 idf_component_register(SRCS ${SRCS}
     INCLUDE_DIRS "." "hal/display" "hal/os" "core/common" "core/ui/components"
-    PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event esp_netif lwip nvs_flash esp_system heap esp_timer freertos
+    PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event esp_netif lwip nvs_flash esp_system heap esp_timer freertos json
     REQUIRES LovyanGFX lvgl dhcpserver
 )
 

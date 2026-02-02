@@ -13,16 +13,31 @@ ThemeConfig GetConfig(ThemeType type) {
 		case ThemeType::HYPRLAND:
 			cfg.primary = lv_palette_main(LV_PALETTE_CYAN);
 			cfg.secondary = lv_palette_main(LV_PALETTE_PINK);
+			cfg.surface = lv_palette_darken(LV_PALETTE_GREY, 4);
+			cfg.on_primary = lv_color_white();
+			cfg.text_primary = lv_color_white();
+			cfg.text_secondary = lv_palette_lighten(LV_PALETTE_GREY, 2);
+			cfg.error = lv_palette_main(LV_PALETTE_RED);
 			cfg.dark = true;
 			break;
 		case ThemeType::MATERIAL:
 			cfg.primary = lv_palette_main(LV_PALETTE_INDIGO);
 			cfg.secondary = lv_palette_main(LV_PALETTE_AMBER);
+			cfg.surface = lv_color_white();
+			cfg.on_primary = lv_color_white();
+			cfg.text_primary = lv_palette_darken(LV_PALETTE_GREY, 4);
+			cfg.text_secondary = lv_palette_main(LV_PALETTE_GREY);
+			cfg.error = lv_palette_main(LV_PALETTE_RED);
 			cfg.dark = false;
 			break;
 		default:
 			cfg.primary = lv_palette_main(LV_PALETTE_CYAN);
 			cfg.secondary = lv_palette_main(LV_PALETTE_PINK);
+			cfg.surface = lv_palette_darken(LV_PALETTE_GREY, 4);
+			cfg.on_primary = lv_color_white();
+			cfg.text_primary = lv_color_white();
+			cfg.text_secondary = lv_palette_lighten(LV_PALETTE_GREY, 2);
+			cfg.error = lv_palette_main(LV_PALETTE_RED);
 			cfg.dark = true;
 			break;
 	}

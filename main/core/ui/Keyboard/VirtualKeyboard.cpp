@@ -1,4 +1,5 @@
 #include "VirtualKeyboard.hpp"
+#include "../theming/LayoutConstants/LayoutConstants.hpp"
 #include "core/common/Logger.hpp"
 #include <string_view>
 
@@ -22,7 +23,7 @@ void VirtualKeyboard::init() {
 	m_keyboard = lv_keyboard_create(lv_layer_top());
 
 	// Set size to half screen or appropriate size
-	lv_obj_set_size(m_keyboard, lv_pct(100), lv_pct(40));
+	lv_obj_set_size(m_keyboard, lv_pct(100), lv_pct(LayoutConstants::KEYBOARD_HEIGHT_PCT));
 
 	// Align to bottom
 	lv_obj_align(m_keyboard, LV_ALIGN_BOTTOM_MID, 0, 0);

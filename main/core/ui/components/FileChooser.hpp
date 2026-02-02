@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/ui/theming/LayoutConstants/LayoutConstants.hpp"
 #include "lvgl.h"
 #include <cstring>
 #include <dirent.h>
@@ -37,7 +38,7 @@ private:
 
 	void createUI() {
 		m_dialog = lv_obj_create(lv_layer_top());
-		lv_obj_set_size(m_dialog, lv_pct(90), lv_pct(80));
+		lv_obj_set_size(m_dialog, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT));
 		lv_obj_center(m_dialog);
 		lv_obj_set_flex_flow(m_dialog, LV_FLEX_FLOW_COLUMN);
 

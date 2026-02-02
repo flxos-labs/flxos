@@ -3,6 +3,9 @@
 
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
+#include "core/system/System/SystemManager.hpp"
+#include "core/ui/theming/LayoutConstants/LayoutConstants.hpp"
+#include "core/ui/theming/UiConstants/UiConstants.hpp"
 #include "lvgl.h"
 #include <functional>
 #include <string>
@@ -96,7 +99,7 @@ private:
 		lv_obj_set_style_border_width(content, 0, 0);
 		lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
 		lv_obj_set_flex_align(content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-		lv_obj_set_style_pad_ver(content, lv_dpx(10), 0);
+		lv_obj_set_style_pad_ver(content, lv_dpx(LayoutConstants::PAD_CONTAINER), 0);
 
 		lv_obj_t* confBtn = lv_button_create(content);
 		lv_obj_set_width(confBtn, lv_pct(100));
@@ -120,11 +123,11 @@ private:
 
 		lv_obj_t* usageHeader = lv_label_create(content);
 		lv_label_set_text(usageHeader, "Data Usage:");
-		lv_obj_set_style_margin_top(usageHeader, lv_dpx(15), 0);
+		lv_obj_set_style_margin_top(usageHeader, lv_dpx(LayoutConstants::MARGIN_Section), 0);
 
 		lv_obj_t* usageCont = lv_obj_create(content);
 		lv_obj_set_size(usageCont, lv_pct(100), LV_SIZE_CONTENT);
-		lv_obj_set_style_pad_all(usageCont, lv_dpx(5), 0);
+		lv_obj_set_style_pad_all(usageCont, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 		lv_obj_set_flex_flow(usageCont, LV_FLEX_FLOW_COLUMN);
 
 		lv_obj_t* uptimeLabel = lv_label_create(usageCont);
@@ -221,7 +224,7 @@ private:
 
 		lv_obj_t* clientsHeader = lv_label_create(content);
 		lv_label_set_text(clientsHeader, "Connected Clients (0):");
-		lv_obj_set_style_margin_top(clientsHeader, lv_dpx(15), 0);
+		lv_obj_set_style_margin_top(clientsHeader, lv_dpx(LayoutConstants::MARGIN_Section), 0);
 
 		lv_subject_add_observer_obj(
 			&ConnectivityManager::getInstance().getHotspotClientsSubject(),
@@ -237,7 +240,7 @@ private:
 		m_clientsCont = lv_obj_create(content);
 		lv_obj_set_size(m_clientsCont, lv_pct(100), LV_SIZE_CONTENT);
 		lv_obj_set_flex_flow(m_clientsCont, LV_FLEX_FLOW_COLUMN);
-		lv_obj_set_style_pad_all(m_clientsCont, lv_dpx(5), 0);
+		lv_obj_set_style_pad_all(m_clientsCont, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 
 		if (m_refreshTimer == nullptr) {
 			m_refreshTimer = lv_timer_create(
@@ -256,7 +259,7 @@ private:
 						for (const auto& client: clients) {
 							lv_obj_t* item = lv_obj_create(instance->m_clientsCont);
 							lv_obj_set_size(item, lv_pct(100), LV_SIZE_CONTENT);
-							lv_obj_set_style_pad_all(item, lv_dpx(5), 0);
+							lv_obj_set_style_pad_all(item, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 							lv_obj_set_flex_flow(item, LV_FLEX_FLOW_COLUMN);
 
 							lv_obj_t* name_label = lv_label_create(item);
@@ -331,27 +334,31 @@ private:
 		lv_obj_set_flex_grow(content, 1);
 		lv_obj_set_style_border_width(content, 0, 0);
 		lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
-		lv_obj_set_style_pad_all(content, lv_dpx(10), 0);
+		lv_obj_set_style_pad_all(content, lv_dpx(LayoutConstants::PAD_CONTAINER), 0);
 
 		lv_obj_t* ssidLabel = lv_label_create(content);
 		lv_label_set_text(ssidLabel, "Network Name (SSID):");
 		m_ssidTa = lv_textarea_create(content);
 		lv_textarea_set_one_line(m_ssidTa, true);
-		lv_textarea_set_text(m_ssidTa, "ESP32-Hotspot");
+
+		const char* saved_ssid = (const char*)lv_subject_get_pointer(&SystemManager::getInstance().getHotspotSsidSubject());
+		lv_textarea_set_text(m_ssidTa, saved_ssid ? saved_ssid : "ESP32-Hotspot");
 		lv_obj_set_width(m_ssidTa, lv_pct(100));
 
 		lv_obj_t* passLabel = lv_label_create(content);
 		lv_label_set_text(passLabel, "Password (min 8 chars):");
-		lv_obj_set_style_margin_top(passLabel, lv_dpx(10), 0);
+		lv_obj_set_style_margin_top(passLabel, lv_dpx(UiConstants::PAD_LARGE), 0);
 		m_passwordTa = lv_textarea_create(content);
 		lv_textarea_set_one_line(m_passwordTa, true);
 		lv_textarea_set_password_mode(m_passwordTa, true);
-		lv_textarea_set_text(m_passwordTa, "12345678");
+
+		const char* saved_pass = (const char*)lv_subject_get_pointer(&SystemManager::getInstance().getHotspotPasswordSubject());
+		lv_textarea_set_text(m_passwordTa, saved_pass ? saved_pass : "12345678");
 		lv_obj_set_width(m_passwordTa, lv_pct(100));
 
 		lv_obj_t* advLabel = lv_label_create(content);
 		lv_label_set_text(advLabel, "Advanced Settings:");
-		lv_obj_set_style_margin_top(advLabel, lv_dpx(15), 0);
+		lv_obj_set_style_margin_top(advLabel, lv_dpx(LayoutConstants::MARGIN_Section), 0);
 
 		// Channel
 		lv_obj_t* channelCont = lv_obj_create(content);
@@ -364,7 +371,9 @@ private:
 		lv_label_set_text(channelLabel, "WiFi Channel:");
 		m_channelDropdown = lv_dropdown_create(channelCont);
 		lv_dropdown_set_options(m_channelDropdown, "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13");
-		lv_obj_set_width(m_channelDropdown, lv_dpx(80));
+		int saved_chan = lv_subject_get_int(&SystemManager::getInstance().getHotspotChannelSubject());
+		if (saved_chan >= 1 && saved_chan <= 13) lv_dropdown_set_selected(m_channelDropdown, saved_chan - 1);
+		lv_obj_set_width(m_channelDropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_WIDTH_SMALL));
 		lv_dropdown_set_dir(m_channelDropdown, LV_DIR_LEFT);
 
 		// Max Connections
@@ -377,16 +386,17 @@ private:
 		lv_obj_t* maxConnLabel = lv_label_create(maxConnCont);
 		lv_label_set_text(maxConnLabel, "Max Connections:");
 		lv_obj_t* sliderCont = lv_obj_create(maxConnCont);
-		lv_obj_set_size(sliderCont, lv_pct(50), LV_SIZE_CONTENT);
+		lv_obj_set_size(sliderCont, lv_pct(LayoutConstants::SLIDER_CONT_WIDTH_PCT), LV_SIZE_CONTENT);
 		lv_obj_set_style_pad_all(sliderCont, 0, 0);
 		lv_obj_set_style_border_width(sliderCont, 0, 0);
 		lv_obj_set_flex_flow(sliderCont, LV_FLEX_FLOW_COLUMN);
 		m_maxConnSlider = lv_slider_create(sliderCont);
 		lv_slider_set_range(m_maxConnSlider, 1, 10);
-		lv_slider_set_value(m_maxConnSlider, 4, LV_ANIM_OFF);
+		int saved_max = lv_subject_get_int(&SystemManager::getInstance().getHotspotMaxConnSubject());
+		lv_slider_set_value(m_maxConnSlider, saved_max > 0 ? saved_max : 4, LV_ANIM_OFF);
 		lv_obj_set_width(m_maxConnSlider, lv_pct(100));
 		lv_obj_t* maxConnValLabel = lv_label_create(sliderCont);
-		lv_label_set_text(maxConnValLabel, "4");
+		lv_label_set_text_fmt(maxConnValLabel, "%d", saved_max > 0 ? saved_max : 4);
 		lv_obj_set_style_text_align(maxConnValLabel, LV_TEXT_ALIGN_CENTER, 0);
 		lv_obj_set_width(maxConnValLabel, lv_pct(100));
 		lv_obj_add_event_cb(
@@ -409,6 +419,8 @@ private:
 		lv_obj_t* hiddenLabel = lv_label_create(hiddenCont);
 		lv_label_set_text(hiddenLabel, "Hide SSID:");
 		m_hiddenSwitch = lv_switch_create(hiddenCont);
+		if (lv_subject_get_int(&SystemManager::getInstance().getHotspotHiddenSubject()))
+			lv_obj_add_state(m_hiddenSwitch, LV_STATE_CHECKED);
 
 		// Internet Sharing (NAT)
 		lv_obj_t* natCont = lv_obj_create(content);
@@ -435,8 +447,8 @@ private:
 		lv_label_set_text(secLabel, "Security:");
 		m_securityDropdown = lv_dropdown_create(secCont);
 		lv_dropdown_set_options(m_securityDropdown, "Open\nWPA2 PSK\nWPA3 PSK\nWPA2/WPA3");
-		lv_dropdown_set_selected(m_securityDropdown, 1);
-		lv_obj_set_width(m_securityDropdown, lv_dpx(125));
+		lv_dropdown_set_selected(m_securityDropdown, lv_subject_get_int(&SystemManager::getInstance().getHotspotAuthSubject()));
+		lv_obj_set_width(m_securityDropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_WIDTH_LARGE));
 		lv_dropdown_set_dir(m_securityDropdown, LV_DIR_LEFT);
 
 		// TX Power
@@ -449,7 +461,7 @@ private:
 		lv_obj_t* txLabel = lv_label_create(txCont);
 		lv_label_set_text(txLabel, "TX Power:");
 		lv_obj_t* txSliderCont = lv_obj_create(txCont);
-		lv_obj_set_size(txSliderCont, lv_pct(50), LV_SIZE_CONTENT);
+		lv_obj_set_size(txSliderCont, lv_pct(LayoutConstants::SLIDER_CONT_WIDTH_PCT), LV_SIZE_CONTENT);
 		lv_obj_set_style_pad_all(txSliderCont, 0, 0);
 		lv_obj_set_style_border_width(txSliderCont, 0, 0);
 		lv_obj_set_flex_flow(txSliderCont, LV_FLEX_FLOW_COLUMN);
@@ -497,9 +509,7 @@ private:
 	}
 
 	void saveAndApply() {
-		if (ConnectivityManager::getInstance().isHotspotEnabled()) {
-			applyHotspotSettings();
-		}
+		applyHotspotSettings();
 		showMainPage();
 	}
 
@@ -534,15 +544,33 @@ private:
 			return;
 		}
 
+		// Save to system settings (triggers auto-save)
+		// We do this BEFORE starting, so settings are saved even if hotspot is off
+		static char ssid_buf[33];
+		static char pass_buf[65];
+		strncpy(ssid_buf, ssid, sizeof(ssid_buf) - 1);
+		strncpy(pass_buf, pass, sizeof(pass_buf) - 1);
+
+		lv_subject_set_pointer(&SystemManager::getInstance().getHotspotSsidSubject(), ssid_buf);
+		lv_subject_set_pointer(&SystemManager::getInstance().getHotspotPasswordSubject(), pass_buf);
+		lv_subject_set_int(&SystemManager::getInstance().getHotspotChannelSubject(), channel);
+		lv_subject_set_int(&SystemManager::getInstance().getHotspotMaxConnSubject(), max_conn);
+		lv_subject_set_int(&SystemManager::getInstance().getHotspotHiddenSubject(), hidden ? 1 : 0);
+		lv_subject_set_int(&SystemManager::getInstance().getHotspotAuthSubject(), auth_idx);
+
 		ConnectivityManager::getInstance().setHotspotNatEnabled(nat_enabled);
 		HotspotManager::getInstance().setAutoShutdownTimeout(
 			lv_obj_has_state(m_autoShutdownSwitch, LV_STATE_CHECKED) ? 300 : 0
 		);
-		esp_err_t err = ConnectivityManager::getInstance().startHotspot(
-			ssid, pass, channel, max_conn, hidden, auth, tx_power
-		);
-		if (err != ESP_OK) {
-			lv_obj_remove_state(m_hotspotSwitch, LV_STATE_CHECKED);
+
+		// Only start/restart if the switch is ON
+		if (lv_obj_has_state(m_hotspotSwitch, LV_STATE_CHECKED)) {
+			esp_err_t err = ConnectivityManager::getInstance().startHotspot(
+				ssid, pass, channel, max_conn, hidden, auth, tx_power
+			);
+			if (err != ESP_OK) {
+				lv_obj_remove_state(m_hotspotSwitch, LV_STATE_CHECKED);
+			}
 		}
 	}
 

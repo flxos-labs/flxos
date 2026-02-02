@@ -1,4 +1,5 @@
 #include "SystemInfoApp.hpp"
+#include "../../ui/theming/LayoutConstants/LayoutConstants.hpp"
 #include "../../ui/theming/UiConstants/UiConstants.hpp"
 #include "core/common/Logger.hpp"
 #include "core/services/systeminfo/SystemInfoService.hpp"
@@ -13,7 +14,7 @@ namespace System {
 namespace Apps {
 
 SystemInfoApp::SystemInfoApp()
-	: m_tabview(nullptr), m_uptime_label(nullptr), m_chip_label(nullptr), m_idf_label(nullptr), m_heap_label(nullptr), m_heap_bar(nullptr), m_psram_label(nullptr), m_psram_bar(nullptr), m_wifi_status_label(nullptr), m_wifi_ssid_label(nullptr), m_wifi_ip_label(nullptr), m_wifi_mac_label(nullptr), m_wifi_rssi_label(nullptr), m_tasks_table(nullptr), m_last_update(0) {}
+	: m_tabview(nullptr), m_uptime_label(nullptr), m_chip_label(nullptr), m_idf_label(nullptr), m_battery_label(nullptr), m_heap_label(nullptr), m_heap_bar(nullptr), m_psram_label(nullptr), m_psram_bar(nullptr), m_storage_system_label(nullptr), m_storage_system_bar(nullptr), m_storage_data_label(nullptr), m_storage_data_bar(nullptr), m_wifi_status_label(nullptr), m_wifi_ssid_label(nullptr), m_wifi_ip_label(nullptr), m_wifi_mac_label(nullptr), m_wifi_rssi_label(nullptr), m_tasks_table(nullptr), m_last_update(0) {}
 
 void SystemInfoApp::onStart() {
 	Log::info(TAG, "App started");
@@ -32,10 +33,15 @@ void SystemInfoApp::onStop() {
 	m_uptime_label = nullptr;
 	m_chip_label = nullptr;
 	m_idf_label = nullptr;
+	m_battery_label = nullptr;
 	m_heap_label = nullptr;
 	m_heap_bar = nullptr;
 	m_psram_label = nullptr;
 	m_psram_bar = nullptr;
+	m_storage_system_label = nullptr;
+	m_storage_system_bar = nullptr;
+	m_storage_data_label = nullptr;
+	m_storage_data_bar = nullptr;
 	m_wifi_status_label = nullptr;
 	m_wifi_ssid_label = nullptr;
 	m_wifi_ip_label = nullptr;
@@ -95,7 +101,11 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 
 	// Chip Info
 	m_chip_label = lv_label_create(tab);
-	lv_label_set_text_fmt(m_chip_label, "Chip: %s\nCores: %d\nRevision: %d\nFeatures: %s", stats.chipModel.c_str(), stats.cores, stats.revision, stats.features.c_str());
+	lv_label_set_text_fmt(m_chip_label, "Chip: %s\nCores: %d\nRevision: %d\nFreq: %lu MHz\nFeatures: %s", stats.chipModel.c_str(), stats.cores, stats.revision, stats.cpuFreqMhz, stats.features.c_str());
+
+	// Battery
+	m_battery_label = lv_label_create(tab);
+	lv_label_set_text(m_battery_label, "Battery: --");
 
 	// Uptime
 	m_uptime_label = lv_label_create(tab);
@@ -116,7 +126,7 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	lv_label_set_text(bar_label, "Heap Usage:");
 
 	m_heap_bar = lv_bar_create(tab);
-	lv_obj_set_size(m_heap_bar, lv_pct(90), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+	lv_obj_set_size(m_heap_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 	lv_bar_set_range(m_heap_bar, 0, 100);
 	lv_bar_set_value(m_heap_bar, 0, LV_ANIM_OFF);
 
@@ -130,13 +140,37 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 		lv_label_set_text(psram_bar_label, "PSRAM Usage:");
 
 		m_psram_bar = lv_bar_create(tab);
-		lv_obj_set_size(m_psram_bar, lv_pct(90), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+		lv_obj_set_size(m_psram_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 		lv_bar_set_range(m_psram_bar, 0, 100);
 		lv_bar_set_value(m_psram_bar, 0, LV_ANIM_OFF);
 	} else {
 		lv_label_set_text(m_psram_label, "PSRAM: Not available");
 		m_psram_bar = nullptr;
 	}
+
+	// Storage Section
+	lv_obj_t* separator = lv_obj_create(tab);
+	lv_obj_set_size(separator, lv_pct(100), 1);
+	lv_obj_set_style_bg_color(separator, lv_color_hex(0x888888), 0);
+	lv_obj_set_style_bg_opa(separator, LV_OPA_50, 0);
+
+	lv_obj_t* storage_header = lv_label_create(tab);
+	lv_label_set_text(storage_header, "Storage");
+	lv_obj_set_style_text_font(storage_header, &lv_font_montserrat_14, 0); // Assuming font usage
+
+	// System Partition
+	m_storage_system_label = lv_label_create(tab);
+	lv_label_set_text(m_storage_system_label, "System: --");
+	m_storage_system_bar = lv_bar_create(tab);
+	lv_obj_set_size(m_storage_system_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+	lv_bar_set_range(m_storage_system_bar, 0, 100);
+
+	// Data Partition
+	m_storage_data_label = lv_label_create(tab);
+	lv_label_set_text(m_storage_data_label, "Data: --");
+	m_storage_data_bar = lv_bar_create(tab);
+	lv_obj_set_size(m_storage_data_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+	lv_bar_set_range(m_storage_data_bar, 0, 100);
 }
 
 void SystemInfoApp::createNetworkTab(lv_obj_t* tab) {
@@ -193,7 +227,8 @@ void SystemInfoApp::createTasksTab(lv_obj_t* tab) {
 void SystemInfoApp::updateInfo() {
 	Log::verbose(TAG, "Refreshing system stats...");
 	// Get system stats
-	auto sysStats = Services::SystemInfoService::getInstance().getSystemStats();
+	auto& service = Services::SystemInfoService::getInstance(); // Use reference for convenience
+	auto sysStats = service.getSystemStats();
 
 	// Update uptime
 	if (m_uptime_label) {
@@ -204,23 +239,44 @@ void SystemInfoApp::updateInfo() {
 		lv_label_set_text_fmt(m_uptime_label, "Uptime: %02d:%02d:%02d", h, m, s);
 	}
 
+	// Update Battery
+	if (m_battery_label) {
+		auto batStats = service.getBatteryStats();
+		lv_label_set_text_fmt(m_battery_label, "Battery: %d%% %s", batStats.level, batStats.isCharging ? "(Charging)" : "");
+	}
+
 	// Update heap info
 	if (m_heap_label && m_heap_bar) {
-		auto memStats = Services::SystemInfoService::getInstance().getMemoryStats();
+		auto memStats = service.getMemoryStats();
 
-		lv_label_set_text_fmt(m_heap_label, "Total: %s\nUsed: %s\nFree: %s\nMin Free: %s", Services::SystemInfoService::formatBytes(memStats.totalHeap).c_str(), Services::SystemInfoService::formatBytes(memStats.usedHeap).c_str(), Services::SystemInfoService::formatBytes(memStats.freeHeap).c_str(), Services::SystemInfoService::formatBytes(memStats.minFreeHeap).c_str());
+		lv_label_set_text_fmt(m_heap_label, "Total: %s\nUsed: %s\nFree: %s\nMin Free: %s\nLargest Free Block: %s", service.formatBytes(memStats.totalHeap).c_str(), service.formatBytes(memStats.usedHeap).c_str(), service.formatBytes(memStats.freeHeap).c_str(), service.formatBytes(memStats.minFreeHeap).c_str(), service.formatBytes(memStats.largestFreeBlock).c_str());
 
 		lv_bar_set_value(m_heap_bar, memStats.usagePercent, LV_ANIM_ON);
 
 		if (memStats.hasPsram && m_psram_label && m_psram_bar) {
-			lv_label_set_text_fmt(m_psram_label, "PSRAM Total: %s\nUsed: %s\nFree: %s", Services::SystemInfoService::formatBytes(memStats.totalPsram).c_str(), Services::SystemInfoService::formatBytes(memStats.usedPsram).c_str(), Services::SystemInfoService::formatBytes(memStats.freePsram).c_str());
+			lv_label_set_text_fmt(m_psram_label, "PSRAM Total: %s\nUsed: %s\nFree: %s", service.formatBytes(memStats.totalPsram).c_str(), service.formatBytes(memStats.usedPsram).c_str(), service.formatBytes(memStats.freePsram).c_str());
 			lv_bar_set_value(m_psram_bar, memStats.usagePercentPsram, LV_ANIM_ON);
+		}
+	}
+
+	// Update Storage info
+	if (m_storage_system_label && m_storage_data_label) {
+		auto storageStats = service.getStorageStats();
+		for (const auto& stat: storageStats) {
+			int usage = (stat.totalBytes > 0) ? (stat.usedBytes * 100 / stat.totalBytes) : 0;
+			if (stat.name == "System") {
+				lv_label_set_text_fmt(m_storage_system_label, "System: %s / %s", service.formatBytes(stat.usedBytes).c_str(), service.formatBytes(stat.totalBytes).c_str());
+				lv_bar_set_value(m_storage_system_bar, usage, LV_ANIM_ON);
+			} else if (stat.name == "Data") {
+				lv_label_set_text_fmt(m_storage_data_label, "Data: %s / %s", service.formatBytes(stat.usedBytes).c_str(), service.formatBytes(stat.totalBytes).c_str());
+				lv_bar_set_value(m_storage_data_bar, usage, LV_ANIM_ON);
+			}
 		}
 	}
 
 	// Update WiFi info
 	if (m_wifi_status_label) {
-		auto wifiStats = Services::SystemInfoService::getInstance().getWiFiStats();
+		auto wifiStats = service.getWiFiStats();
 		lv_label_set_text_fmt(m_wifi_status_label, "WiFi: %s", wifiStats.connected ? "Connected" : "Disconnected");
 
 		if (wifiStats.connected && m_wifi_ssid_label && m_wifi_ip_label && m_wifi_rssi_label) {
@@ -236,7 +292,7 @@ void SystemInfoApp::updateInfo() {
 
 	// Update tasks table
 	if (m_tasks_table) {
-		auto tasks = Services::SystemInfoService::getInstance().getTaskList();
+		auto tasks = service.getTaskList();
 		lv_table_set_row_count(m_tasks_table, tasks.size() + 1);
 
 		for (size_t i = 0; i < tasks.size(); ++i) {

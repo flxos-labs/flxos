@@ -7,6 +7,11 @@ enum class ThemeType { HYPRLAND,
 struct ThemeConfig {
 	lv_color_t primary;
 	lv_color_t secondary;
+	lv_color_t surface;
+	lv_color_t on_primary;
+	lv_color_t text_primary;
+	lv_color_t text_secondary;
+	lv_color_t error;
 	bool dark;
 	lv_theme_apply_cb_t apply_cb;
 };
