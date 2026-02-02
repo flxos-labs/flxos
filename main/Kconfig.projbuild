@@ -42,6 +42,18 @@ menu "Hardware Configuration"
                 prompt "Panel Driver"
                 default FLXOS_DISPLAY_ILI9341
 
+                config FLXOS_DISPLAY_AMOLED
+                    bool "AMOLED"
+                config FLXOS_DISPLAY_CO5300
+                    bool "CO5300"
+                config FLXOS_DISPLAY_GC9A01
+                    bool "GC9A01 (Round)"
+                config FLXOS_DISPLAY_GDEW0154D67
+                    bool "GDEW0154D67 (E-Paper)"
+                config FLXOS_DISPLAY_GDEW0154M09
+                    bool "GDEW0154M09 (E-Paper)"
+                config FLXOS_DISPLAY_HUB75
+                    bool "HUB75 (LED Matrix)"
                 config FLXOS_DISPLAY_ILI9163
                     bool "ILI9163"
                 config FLXOS_DISPLAY_ILI9225
@@ -56,14 +68,36 @@ menu "Hardware Configuration"
                     bool "ILI9486"
                 config FLXOS_DISPLAY_ILI9488
                     bool "ILI9488"
-                config FLXOS_DISPLAY_ST7735
-                    bool "ST7735"
-                config FLXOS_DISPLAY_ST7789
-                    bool "ST7789"
-                config FLXOS_DISPLAY_ST7796
-                    bool "ST7796"
-                config FLXOS_DISPLAY_GC9A01
-                    bool "GC9A01 (Round)"
+                config FLXOS_DISPLAY_ILI9806
+                    bool "ILI9806"
+                config FLXOS_DISPLAY_IT8951
+                    bool "IT8951 (E-Paper Controller)"
+                config FLXOS_DISPLAY_M5HDMI
+                    bool "M5HDMI (M5Stack)"
+                config FLXOS_DISPLAY_M5UnitGLASS
+                    bool "M5UnitGLASS (M5Stack)"
+                config FLXOS_DISPLAY_M5UnitLCD
+                    bool "M5UnitLCD (M5Stack)"
+                config FLXOS_DISPLAY_NT35510
+                    bool "NT35510"
+                config FLXOS_DISPLAY_NV3041A
+                    bool "NV3041A"
+                config FLXOS_DISPLAY_R61529
+                    bool "R61529"
+                config FLXOS_DISPLAY_RA8875
+                    bool "RA8875"
+                config FLXOS_DISPLAY_RM67162
+                    bool "RM67162 (AMOLED)"
+                config FLXOS_DISPLAY_RM68120
+                    bool "RM68120"
+                config FLXOS_DISPLAY_RM690B0
+                    bool "RM690B0 (AMOLED)"
+                config FLXOS_DISPLAY_S6D04K1
+                    bool "S6D04K1"
+                config FLXOS_DISPLAY_SH8601Z
+                    bool "SH8601Z (AMOLED)"
+                config FLXOS_DISPLAY_SharpLCD
+                    bool "Sharp Memory LCD"
                 config FLXOS_DISPLAY_SSD1306
                     bool "SSD1306 (OLED)"
                 config FLXOS_DISPLAY_SSD1327
@@ -74,12 +108,16 @@ menu "Hardware Configuration"
                     bool "SSD1351 (OLED)"
                 config FLXOS_DISPLAY_SSD1963
                     bool "SSD1963"
-                config FLXOS_DISPLAY_NT35510
-                    bool "NT35510"
-                config FLXOS_DISPLAY_RM68120
-                    bool "RM68120"
-                config FLXOS_DISPLAY_RA8875
-                    bool "RA8875"
+                config FLXOS_DISPLAY_ST7735
+                    bool "ST7735"
+                config FLXOS_DISPLAY_ST7789
+                    bool "ST7789"
+                config FLXOS_DISPLAY_ST7789P3
+                    bool "ST7789P3"
+                config FLXOS_DISPLAY_ST7796
+                    bool "ST7796"
+                config FLXOS_DISPLAY_ST77961
+                    bool "ST77961"
             endchoice
 
             config FLXOS_DISPLAY_INVERT
@@ -91,68 +129,192 @@ menu "Hardware Configuration"
                 default n
         endmenu
 
-        menu "Manual Pin Configuration"
-            config FLXOS_SPI_HOST
-                int "SPI Host (1=SPI2, 2=SPI3)"
-                range 1 2
-                default 1
-
-            config FLXOS_SPI_MODE
-                int "SPI Mode (0-3)"
-                range 0 3
-                default 0
+        menu "Display Bus Configuration"
+            choice FLXOS_DISPLAY_BUS
+                prompt "Display Bus Type"
+                default FLXOS_BUS_SPI
                 help
-                    SPI mode: 0 (CPOL=0,CPHA=0), 1 (CPOL=0,CPHA=1), 2 (CPOL=1,CPHA=0), 3 (CPOL=1,CPHA=1)
+                    Select the bus type for the display connection.
 
-            config FLXOS_SPI_FREQ_WRITE
-                int "SPI Write Frequency (Hz)"
-                default 40000000
-                help
-                    Default is 40MHz. Some displays support up to 80MHz.
+                config FLXOS_BUS_SPI
+                    bool "SPI"
+                config FLXOS_BUS_I2C
+                    bool "I2C"
+                config FLXOS_BUS_PARALLEL8
+                    bool "8-bit Parallel"
+                config FLXOS_BUS_PARALLEL16
+                    bool "16-bit Parallel (ESP32-S2/S3)"
+            endchoice
 
-            config FLXOS_SPI_FREQ_READ
-                int "SPI Read Frequency (Hz)"
-                default 16000000
+            if FLXOS_BUS_SPI
+                menu "SPI Bus Settings"
+                    config FLXOS_SPI_HOST
+                        int "SPI Host (1=SPI2, 2=SPI3)"
+                        range 1 2
+                        default 1
 
-            config FLXOS_SPI_3WIRE
-                bool "Use 3-Wire SPI (no MISO)"
-                default n
+                    config FLXOS_SPI_MODE
+                        int "SPI Mode (0-3)"
+                        range 0 3
+                        default 0
+                        help
+                            SPI mode: 0 (CPOL=0,CPHA=0), 1 (CPOL=0,CPHA=1), 2 (CPOL=1,CPHA=0), 3 (CPOL=1,CPHA=1)
 
-            config FLXOS_SPI_DMA_CHANNEL
-                int "SPI DMA Channel (0=auto)"
-                range 0 2
-                default 0
-                help
-                    0 = SPI_DMA_CH_AUTO, 1 = SPI_DMA_CH1, 2 = SPI_DMA_CH2
+                    config FLXOS_SPI_FREQ_WRITE
+                        int "SPI Write Frequency (Hz)"
+                        default 40000000
+                        help
+                            Default is 40MHz. Some displays support up to 80MHz.
 
-            config FLXOS_PIN_SCLK
-                int "SPI SCLK Pin"
-                default 12
+                    config FLXOS_SPI_FREQ_READ
+                        int "SPI Read Frequency (Hz)"
+                        default 16000000
 
-            config FLXOS_PIN_MOSI
-                int "SPI MOSI Pin"
-                default 11
+                    config FLXOS_SPI_3WIRE
+                        bool "Use 3-Wire SPI (no MISO)"
+                        default n
 
-            config FLXOS_PIN_MISO
-                int "SPI MISO Pin (-1 to disable)"
-                default 7
+                    config FLXOS_SPI_DMA_CHANNEL
+                        int "SPI DMA Channel (0=auto)"
+                        range 0 2
+                        default 0
+                        help
+                            0 = SPI_DMA_CH_AUTO, 1 = SPI_DMA_CH1, 2 = SPI_DMA_CH2
 
-            config FLXOS_PIN_CS
-                int "Display CS Pin"
-                default 10
+                    config FLXOS_PIN_SCLK
+                        int "SPI SCLK Pin"
+                        default 12
 
-            config FLXOS_PIN_DC
-                int "Display DC Pin"
-                default 9
+                    config FLXOS_PIN_MOSI
+                        int "SPI MOSI Pin"
+                        default 11
 
-            config FLXOS_PIN_RST
-                int "Display Reset Pin (-1 to disable)"
-                default 15
+                    config FLXOS_PIN_MISO
+                        int "SPI MISO Pin (-1 to disable)"
+                        default 7
 
-            config FLXOS_PIN_BUSY
-                int "Display Busy Pin (-1 to disable)"
-                default -1
+                    config FLXOS_PIN_DC
+                        int "Display DC Pin"
+                        default 9
+                endmenu
+            endif
 
+            if FLXOS_BUS_I2C
+                menu "I2C Bus Settings"
+                    config FLXOS_I2C_PORT
+                        int "I2C Port (0 or 1)"
+                        range 0 1
+                        default 0
+
+                    config FLXOS_I2C_FREQ
+                        int "I2C Frequency (Hz)"
+                        default 400000
+                        help
+                            Standard: 100000, Fast: 400000, Fast Plus: 1000000
+
+                    config FLXOS_I2C_ADDR
+                        hex "I2C Device Address"
+                        default 0x3C
+                        help
+                            Common addresses: 0x3C or 0x3D for SSD1306
+
+                    config FLXOS_PIN_I2C_SDA
+                        int "I2C SDA Pin"
+                        default 21
+
+                    config FLXOS_PIN_I2C_SCL
+                        int "I2C SCL Pin"
+                        default 22
+                endmenu
+            endif
+
+            if FLXOS_BUS_PARALLEL8 || FLXOS_BUS_PARALLEL16
+                menu "Parallel Bus Settings"
+                    config FLXOS_PARALLEL_FREQ
+                        int "Parallel Bus Frequency (Hz)"
+                        default 16000000
+
+                    config FLXOS_PIN_WR
+                        int "Write Strobe (WR) Pin"
+                        default 4
+
+                    config FLXOS_PIN_RD
+                        int "Read Strobe (RD) Pin (-1 to disable)"
+                        default -1
+
+                    config FLXOS_PIN_DC
+                        int "Data/Command (DC) Pin"
+                        default 2
+
+                    config FLXOS_PIN_D0
+                        int "Data Pin D0"
+                        default 15
+                    config FLXOS_PIN_D1
+                        int "Data Pin D1"
+                        default 13
+                    config FLXOS_PIN_D2
+                        int "Data Pin D2"
+                        default 12
+                    config FLXOS_PIN_D3
+                        int "Data Pin D3"
+                        default 14
+                    config FLXOS_PIN_D4
+                        int "Data Pin D4"
+                        default 27
+                    config FLXOS_PIN_D5
+                        int "Data Pin D5"
+                        default 25
+                    config FLXOS_PIN_D6
+                        int "Data Pin D6"
+                        default 33
+                    config FLXOS_PIN_D7
+                        int "Data Pin D7"
+                        default 32
+                endmenu
+            endif
+
+            if FLXOS_BUS_PARALLEL16
+                menu "Parallel 16-bit Extended Pins"
+                    config FLXOS_PIN_D8
+                        int "Data Pin D8"
+                        default 21
+                    config FLXOS_PIN_D9
+                        int "Data Pin D9"
+                        default 22
+                    config FLXOS_PIN_D10
+                        int "Data Pin D10"
+                        default 23
+                    config FLXOS_PIN_D11
+                        int "Data Pin D11"
+                        default 19
+                    config FLXOS_PIN_D12
+                        int "Data Pin D12"
+                        default 18
+                    config FLXOS_PIN_D13
+                        int "Data Pin D13"
+                        default 5
+                    config FLXOS_PIN_D14
+                        int "Data Pin D14"
+                        default 17
+                    config FLXOS_PIN_D15
+                        int "Data Pin D15"
+                        default 16
+                endmenu
+            endif
+
+            menu "Common Display Pins"
+                config FLXOS_PIN_CS
+                    int "Display CS Pin (-1 to disable)"
+                    default 10
+
+                config FLXOS_PIN_RST
+                    int "Display Reset Pin (-1 to disable)"
+                    default 15
+
+                config FLXOS_PIN_BUSY
+                    int "Display Busy Pin (-1 to disable)"
+                    default -1
+            endmenu
             menu "Advanced Panel Settings"
                 config FLXOS_PANEL_OFFSET_X
                     int "Panel X Offset"
@@ -243,8 +405,12 @@ menu "Hardware Configuration"
                         bool "GSLx680 (I2C)"
                     config FLXOS_TOUCH_NS2009
                         bool "NS2009 (I2C)"
+                    config FLXOS_TOUCH_RA8875
+                        bool "RA8875 (Integrated)"
                     config FLXOS_TOUCH_STMPE610
                         bool "STMPE610 (I2C)"
+                    config FLXOS_TOUCH_TT21xxx
+                        bool "TT21xxx (I2C)"
                 endchoice
 
                 menu "Touch Pin Configuration"
@@ -271,25 +437,25 @@ menu "Hardware Configuration"
                 menu "Touch Calibration"
                     config FLXOS_TOUCH_X_MIN
                         int "Touch X Minimum"
-                        default 0
+                        default 3800
                         help
                             Minimum raw X coordinate value
 
                     config FLXOS_TOUCH_X_MAX
                         int "Touch X Maximum"
-                        default 0
+                        default 200
                         help
                             Maximum raw X coordinate value (0 = use display width)
 
                     config FLXOS_TOUCH_Y_MIN
                         int "Touch Y Minimum"
-                        default 0
+                        default 200
                         help
                             Minimum raw Y coordinate value
 
                     config FLXOS_TOUCH_Y_MAX
                         int "Touch Y Maximum"
-                        default 0
+                        default 3800
                         help
                             Maximum raw Y coordinate value (0 = use display height)
 

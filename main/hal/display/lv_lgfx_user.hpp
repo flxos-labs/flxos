@@ -7,7 +7,19 @@
 // ============================================================================
 // Display Panel Type Selection (from Kconfig)
 // ============================================================================
-#if defined(CONFIG_FLXOS_DISPLAY_ILI9163)
+#if defined(CONFIG_FLXOS_DISPLAY_AMOLED)
+#define LGFX_PANEL_TYPE lgfx::Panel_AMOLED
+#elif defined(CONFIG_FLXOS_DISPLAY_CO5300)
+#define LGFX_PANEL_TYPE lgfx::Panel_CO5300
+#elif defined(CONFIG_FLXOS_DISPLAY_GC9A01)
+#define LGFX_PANEL_TYPE lgfx::Panel_GC9A01
+#elif defined(CONFIG_FLXOS_DISPLAY_GDEW0154D67)
+#define LGFX_PANEL_TYPE lgfx::Panel_GDEW0154D67
+#elif defined(CONFIG_FLXOS_DISPLAY_GDEW0154M09)
+#define LGFX_PANEL_TYPE lgfx::Panel_GDEW0154M09
+#elif defined(CONFIG_FLXOS_DISPLAY_HUB75)
+#define LGFX_PANEL_TYPE lgfx::Panel_HUB75
+#elif defined(CONFIG_FLXOS_DISPLAY_ILI9163)
 #define LGFX_PANEL_TYPE lgfx::Panel_ILI9163
 #elif defined(CONFIG_FLXOS_DISPLAY_ILI9225)
 #define LGFX_PANEL_TYPE lgfx::Panel_ILI9225
@@ -21,14 +33,36 @@
 #define LGFX_PANEL_TYPE lgfx::Panel_ILI9486
 #elif defined(CONFIG_FLXOS_DISPLAY_ILI9488)
 #define LGFX_PANEL_TYPE lgfx::Panel_ILI9488
-#elif defined(CONFIG_FLXOS_DISPLAY_ST7735)
-#define LGFX_PANEL_TYPE lgfx::Panel_ST7735
-#elif defined(CONFIG_FLXOS_DISPLAY_ST7789)
-#define LGFX_PANEL_TYPE lgfx::Panel_ST7789
-#elif defined(CONFIG_FLXOS_DISPLAY_ST7796)
-#define LGFX_PANEL_TYPE lgfx::Panel_ST7796
-#elif defined(CONFIG_FLXOS_DISPLAY_GC9A01)
-#define LGFX_PANEL_TYPE lgfx::Panel_GC9A01
+#elif defined(CONFIG_FLXOS_DISPLAY_ILI9806)
+#define LGFX_PANEL_TYPE lgfx::Panel_ILI9806
+#elif defined(CONFIG_FLXOS_DISPLAY_IT8951)
+#define LGFX_PANEL_TYPE lgfx::Panel_IT8951
+#elif defined(CONFIG_FLXOS_DISPLAY_M5HDMI)
+#define LGFX_PANEL_TYPE lgfx::Panel_M5HDMI
+#elif defined(CONFIG_FLXOS_DISPLAY_M5UnitGLASS)
+#define LGFX_PANEL_TYPE lgfx::Panel_M5UnitGLASS
+#elif defined(CONFIG_FLXOS_DISPLAY_M5UnitLCD)
+#define LGFX_PANEL_TYPE lgfx::Panel_M5UnitLCD
+#elif defined(CONFIG_FLXOS_DISPLAY_NT35510)
+#define LGFX_PANEL_TYPE lgfx::Panel_NT35510
+#elif defined(CONFIG_FLXOS_DISPLAY_NV3041A)
+#define LGFX_PANEL_TYPE lgfx::Panel_NV3041A
+#elif defined(CONFIG_FLXOS_DISPLAY_R61529)
+#define LGFX_PANEL_TYPE lgfx::Panel_R61529
+#elif defined(CONFIG_FLXOS_DISPLAY_RA8875)
+#define LGFX_PANEL_TYPE lgfx::Panel_RA8875
+#elif defined(CONFIG_FLXOS_DISPLAY_RM67162)
+#define LGFX_PANEL_TYPE lgfx::Panel_RM67162
+#elif defined(CONFIG_FLXOS_DISPLAY_RM68120)
+#define LGFX_PANEL_TYPE lgfx::Panel_RM68120
+#elif defined(CONFIG_FLXOS_DISPLAY_RM690B0)
+#define LGFX_PANEL_TYPE lgfx::Panel_RM690B0
+#elif defined(CONFIG_FLXOS_DISPLAY_S6D04K1)
+#define LGFX_PANEL_TYPE lgfx::Panel_S6D04K1
+#elif defined(CONFIG_FLXOS_DISPLAY_SH8601Z)
+#define LGFX_PANEL_TYPE lgfx::Panel_SH8601Z
+#elif defined(CONFIG_FLXOS_DISPLAY_SharpLCD)
+#define LGFX_PANEL_TYPE lgfx::Panel_SharpLCD
 #elif defined(CONFIG_FLXOS_DISPLAY_SSD1306)
 #define LGFX_PANEL_TYPE lgfx::Panel_SSD1306
 #elif defined(CONFIG_FLXOS_DISPLAY_SSD1327)
@@ -39,12 +73,16 @@
 #define LGFX_PANEL_TYPE lgfx::Panel_SSD1351
 #elif defined(CONFIG_FLXOS_DISPLAY_SSD1963)
 #define LGFX_PANEL_TYPE lgfx::Panel_SSD1963
-#elif defined(CONFIG_FLXOS_DISPLAY_NT35510)
-#define LGFX_PANEL_TYPE lgfx::Panel_NT35510
-#elif defined(CONFIG_FLXOS_DISPLAY_RM68120)
-#define LGFX_PANEL_TYPE lgfx::Panel_RM68120
-#elif defined(CONFIG_FLXOS_DISPLAY_RA8875)
-#define LGFX_PANEL_TYPE lgfx::Panel_RA8875
+#elif defined(CONFIG_FLXOS_DISPLAY_ST7735)
+#define LGFX_PANEL_TYPE lgfx::Panel_ST7735
+#elif defined(CONFIG_FLXOS_DISPLAY_ST7789)
+#define LGFX_PANEL_TYPE lgfx::Panel_ST7789
+#elif defined(CONFIG_FLXOS_DISPLAY_ST7789P3)
+#define LGFX_PANEL_TYPE lgfx::Panel_ST7789P3
+#elif defined(CONFIG_FLXOS_DISPLAY_ST7796)
+#define LGFX_PANEL_TYPE lgfx::Panel_ST7796
+#elif defined(CONFIG_FLXOS_DISPLAY_ST77961)
+#define LGFX_PANEL_TYPE lgfx::Panel_ST77961
 #endif
 
 // ============================================================================
@@ -72,24 +110,50 @@
 #elif defined(CONFIG_FLXOS_TOUCH_NS2009)
 #define LGFX_TOUCH_TYPE lgfx::Touch_NS2009
 #define LGFX_TOUCH_IS_I2C 1
+#elif defined(CONFIG_FLXOS_TOUCH_RA8875)
+#define LGFX_TOUCH_TYPE lgfx::Touch_RA8875
+#define LGFX_TOUCH_IS_I2C 1
 #elif defined(CONFIG_FLXOS_TOUCH_STMPE610)
 #define LGFX_TOUCH_TYPE lgfx::Touch_STMPE610
+#define LGFX_TOUCH_IS_I2C 1
+#elif defined(CONFIG_FLXOS_TOUCH_TT21xxx)
+#define LGFX_TOUCH_TYPE lgfx::Touch_TT21xxx
 #define LGFX_TOUCH_IS_I2C 1
 #endif
 #endif
 
 // ============================================================================
-// SPI Host Selection
+// Bus Type Selection
 // ============================================================================
+#if defined(CONFIG_FLXOS_BUS_SPI)
+#define LGFX_BUS_TYPE lgfx::Bus_SPI
+#elif defined(CONFIG_FLXOS_BUS_I2C)
+#define LGFX_BUS_TYPE lgfx::Bus_I2C
+#elif defined(CONFIG_FLXOS_BUS_PARALLEL8)
+#define LGFX_BUS_TYPE lgfx::Bus_Parallel8
+#elif defined(CONFIG_FLXOS_BUS_PARALLEL16)
+#define LGFX_BUS_TYPE lgfx::Bus_Parallel16
+#else
+#define LGFX_BUS_TYPE lgfx::Bus_SPI
+#endif
+
+// ============================================================================
+// SPI Host Selection (for SPI bus and SPI touch controllers)
+// ============================================================================
+#if defined(CONFIG_FLXOS_SPI_HOST)
 #if CONFIG_FLXOS_SPI_HOST == 1
 #define LGFX_SPI_HOST SPI2_HOST
 #else
 #define LGFX_SPI_HOST SPI3_HOST
 #endif
+#else
+#define LGFX_SPI_HOST SPI2_HOST
+#endif
 
 // ============================================================================
-// DMA Channel Selection
+// DMA Channel Selection (for SPI)
 // ============================================================================
+#if defined(CONFIG_FLXOS_SPI_DMA_CHANNEL)
 #if CONFIG_FLXOS_SPI_DMA_CHANNEL == 0
 #define LGFX_DMA_CHANNEL SPI_DMA_CH_AUTO
 #elif CONFIG_FLXOS_SPI_DMA_CHANNEL == 1
@@ -97,13 +161,16 @@
 #else
 #define LGFX_DMA_CHANNEL SPI_DMA_CH2
 #endif
+#else
+#define LGFX_DMA_CHANNEL SPI_DMA_CH_AUTO
+#endif
 
 // ============================================================================
 // LovyanGFX Configuration Class
 // ============================================================================
 class LGFX : public lgfx::LGFX_Device {
 	LGFX_PANEL_TYPE _panel_instance;
-	lgfx::Bus_SPI _bus_instance;
+	LGFX_BUS_TYPE _bus_instance;
 	lgfx::Light_PWM _light_instance;
 #if defined(CONFIG_FLXOS_TOUCH_ENABLED)
 	LGFX_TOUCH_TYPE _touch_instance;
@@ -113,8 +180,10 @@ public:
 
 	LGFX(void) {
 		// ====================================================================
-		// SPI Bus Configuration
+		// Bus Configuration
 		// ====================================================================
+#if defined(CONFIG_FLXOS_BUS_SPI)
+		// SPI Bus Configuration
 		{
 			auto cfg = _bus_instance.config();
 			cfg.spi_host = LGFX_SPI_HOST;
@@ -135,6 +204,49 @@ public:
 			_bus_instance.config(cfg);
 			_panel_instance.setBus(&_bus_instance);
 		}
+#elif defined(CONFIG_FLXOS_BUS_I2C)
+		// I2C Bus Configuration
+		{
+			auto cfg = _bus_instance.config();
+			cfg.i2c_port = CONFIG_FLXOS_I2C_PORT;
+			cfg.freq_write = CONFIG_FLXOS_I2C_FREQ;
+			cfg.freq_read = CONFIG_FLXOS_I2C_FREQ;
+			cfg.pin_sda = CONFIG_FLXOS_PIN_I2C_SDA;
+			cfg.pin_scl = CONFIG_FLXOS_PIN_I2C_SCL;
+			cfg.i2c_addr = CONFIG_FLXOS_I2C_ADDR;
+			_bus_instance.config(cfg);
+			_panel_instance.setBus(&_bus_instance);
+		}
+#elif defined(CONFIG_FLXOS_BUS_PARALLEL8) || defined(CONFIG_FLXOS_BUS_PARALLEL16)
+		// Parallel Bus Configuration
+		{
+			auto cfg = _bus_instance.config();
+			cfg.freq_write = CONFIG_FLXOS_PARALLEL_FREQ;
+			cfg.pin_wr = CONFIG_FLXOS_PIN_WR;
+			cfg.pin_rd = CONFIG_FLXOS_PIN_RD;
+			cfg.pin_rs = CONFIG_FLXOS_PIN_DC;
+			cfg.pin_d0 = CONFIG_FLXOS_PIN_D0;
+			cfg.pin_d1 = CONFIG_FLXOS_PIN_D1;
+			cfg.pin_d2 = CONFIG_FLXOS_PIN_D2;
+			cfg.pin_d3 = CONFIG_FLXOS_PIN_D3;
+			cfg.pin_d4 = CONFIG_FLXOS_PIN_D4;
+			cfg.pin_d5 = CONFIG_FLXOS_PIN_D5;
+			cfg.pin_d6 = CONFIG_FLXOS_PIN_D6;
+			cfg.pin_d7 = CONFIG_FLXOS_PIN_D7;
+#if defined(CONFIG_FLXOS_BUS_PARALLEL16)
+			cfg.pin_d8 = CONFIG_FLXOS_PIN_D8;
+			cfg.pin_d9 = CONFIG_FLXOS_PIN_D9;
+			cfg.pin_d10 = CONFIG_FLXOS_PIN_D10;
+			cfg.pin_d11 = CONFIG_FLXOS_PIN_D11;
+			cfg.pin_d12 = CONFIG_FLXOS_PIN_D12;
+			cfg.pin_d13 = CONFIG_FLXOS_PIN_D13;
+			cfg.pin_d14 = CONFIG_FLXOS_PIN_D14;
+			cfg.pin_d15 = CONFIG_FLXOS_PIN_D15;
+#endif
+			_bus_instance.config(cfg);
+			_panel_instance.setBus(&_bus_instance);
+		}
+#endif
 
 		// ====================================================================
 		// Panel Configuration
