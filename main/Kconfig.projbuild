@@ -41,7 +41,7 @@ menu "Hardware Configuration"
             choice FLXOS_DISPLAY_DRIVER
                 prompt "Panel Driver"
                 default FLXOS_DISPLAY_ILI9341
-                
+
                 config FLXOS_DISPLAY_ILI9163
                     bool "ILI9163"
                 config FLXOS_DISPLAY_ILI9225
@@ -97,6 +97,13 @@ menu "Hardware Configuration"
                 range 1 2
                 default 1
 
+            config FLXOS_SPI_MODE
+                int "SPI Mode (0-3)"
+                range 0 3
+                default 0
+                help
+                    SPI mode: 0 (CPOL=0,CPHA=0), 1 (CPOL=0,CPHA=1), 2 (CPOL=1,CPHA=0), 3 (CPOL=1,CPHA=1)
+
             config FLXOS_SPI_FREQ_WRITE
                 int "SPI Write Frequency (Hz)"
                 default 40000000
@@ -106,42 +113,112 @@ menu "Hardware Configuration"
             config FLXOS_SPI_FREQ_READ
                 int "SPI Read Frequency (Hz)"
                 default 16000000
-                
+
+            config FLXOS_SPI_3WIRE
+                bool "Use 3-Wire SPI (no MISO)"
+                default n
+
+            config FLXOS_SPI_DMA_CHANNEL
+                int "SPI DMA Channel (0=auto)"
+                range 0 2
+                default 0
+                help
+                    0 = SPI_DMA_CH_AUTO, 1 = SPI_DMA_CH1, 2 = SPI_DMA_CH2
+
             config FLXOS_PIN_SCLK
                 int "SPI SCLK Pin"
                 default 12
-            
+
             config FLXOS_PIN_MOSI
                 int "SPI MOSI Pin"
                 default 11
-            
+
             config FLXOS_PIN_MISO
-                int "SPI MISO Pin"
+                int "SPI MISO Pin (-1 to disable)"
                 default 7
-            
+
             config FLXOS_PIN_CS
                 int "Display CS Pin"
                 default 10
-            
+
             config FLXOS_PIN_DC
                 int "Display DC Pin"
                 default 9
-            
+
             config FLXOS_PIN_RST
-                int "Display Reset Pin"
+                int "Display Reset Pin (-1 to disable)"
                 default 15
 
-            config FLXOS_PIN_BCKL
-                int "Backlight Pin"
-                default 17
-            
-            config FLXOS_BCKL_FREQ
-                int "Backlight PWM Frequency (Hz)"
-                default 20000
+            config FLXOS_PIN_BUSY
+                int "Display Busy Pin (-1 to disable)"
+                default -1
 
-            config FLXOS_BCKL_PWM_CHANNEL
-                int "Backlight PWM Channel"
-                default 7
+            menu "Advanced Panel Settings"
+                config FLXOS_PANEL_OFFSET_X
+                    int "Panel X Offset"
+                    default 0
+                    help
+                        Horizontal offset for displays with non-zero start position
+
+                config FLXOS_PANEL_OFFSET_Y
+                    int "Panel Y Offset"
+                    default 0
+                    help
+                        Vertical offset for displays with non-zero start position
+
+                config FLXOS_PANEL_OFFSET_ROTATION
+                    int "Panel Rotation Offset"
+                    default 0
+                    help
+                        Additional rotation offset for panel alignment
+
+                config FLXOS_DUMMY_READ_PIXEL
+                    int "Dummy Read Pixel Count"
+                    default 8
+                    help
+                        Number of dummy pixels to read before actual data
+
+                config FLXOS_DUMMY_READ_BITS
+                    int "Dummy Read Bits"
+                    default 1
+                    help
+                        Number of dummy bits to read
+
+                config FLXOS_PANEL_READABLE
+                    bool "Panel Supports Reading"
+                    default y
+                    help
+                        Enable if the panel supports reading pixel data back
+
+                config FLXOS_PANEL_DLEN_16BIT
+                    bool "Use 16-bit Data Length"
+                    default n
+
+                config FLXOS_BUS_SHARED
+                    bool "SPI Bus is Shared"
+                    default y
+                    help
+                        Enable if multiple devices share the same SPI bus
+            endmenu
+
+            menu "Backlight Configuration"
+                config FLXOS_PIN_BCKL
+                    int "Backlight Pin (-1 to disable)"
+                    default 17
+
+                config FLXOS_BCKL_INVERT
+                    bool "Invert Backlight PWM"
+                    default n
+
+                config FLXOS_BCKL_FREQ
+                    int "Backlight PWM Frequency (Hz)"
+                    default 20000
+
+                config FLXOS_BCKL_PWM_CHANNEL
+                    int "Backlight PWM Channel"
+                    range 0 15
+                    default 7
+            endmenu
 
             config FLXOS_TOUCH_ENABLED
                 bool "Enable Touch"
@@ -151,7 +228,7 @@ menu "Hardware Configuration"
                 choice FLXOS_TOUCH_DRIVER
                     prompt "Touch Driver"
                     default FLXOS_TOUCH_XPT2046
-                    
+
                     config FLXOS_TOUCH_XPT2046
                         bool "XPT2046 (SPI)"
                     config FLXOS_TOUCH_FT5x06
@@ -170,24 +247,88 @@ menu "Hardware Configuration"
                         bool "STMPE610 (I2C)"
                 endchoice
 
-                config FLXOS_PIN_TOUCH_CS
-                    int "Touch CS Pin (SPI only)"
-                    default 8
-                    depends on FLXOS_TOUCH_XPT2046
-                
-                config FLXOS_PIN_TOUCH_SCL
-                    int "Touch I2C SCL Pin"
-                    default 12
-                    depends on !FLXOS_TOUCH_XPT2046 && !FLXOS_TOUCH_RA8875
+                menu "Touch Pin Configuration"
+                    config FLXOS_PIN_TOUCH_CS
+                        int "Touch CS Pin (SPI only)"
+                        default 8
+                        depends on FLXOS_TOUCH_XPT2046
 
-                config FLXOS_PIN_TOUCH_SDA
-                    int "Touch I2C SDA Pin"
-                    default 11
-                    depends on !FLXOS_TOUCH_XPT2046 && !FLXOS_TOUCH_RA8875
+                    config FLXOS_PIN_TOUCH_SCL
+                        int "Touch I2C SCL Pin"
+                        default 12
+                        depends on !FLXOS_TOUCH_XPT2046 && !FLXOS_TOUCH_RA8875
 
-                config FLXOS_PIN_TOUCH_INT
-                    int "Touch INT Pin"
-                    default 16
+                    config FLXOS_PIN_TOUCH_SDA
+                        int "Touch I2C SDA Pin"
+                        default 11
+                        depends on !FLXOS_TOUCH_XPT2046 && !FLXOS_TOUCH_RA8875
+
+                    config FLXOS_PIN_TOUCH_INT
+                        int "Touch INT Pin (-1 to disable)"
+                        default 16
+                endmenu
+
+                menu "Touch Calibration"
+                    config FLXOS_TOUCH_X_MIN
+                        int "Touch X Minimum"
+                        default 0
+                        help
+                            Minimum raw X coordinate value
+
+                    config FLXOS_TOUCH_X_MAX
+                        int "Touch X Maximum"
+                        default 0
+                        help
+                            Maximum raw X coordinate value (0 = use display width)
+
+                    config FLXOS_TOUCH_Y_MIN
+                        int "Touch Y Minimum"
+                        default 0
+                        help
+                            Minimum raw Y coordinate value
+
+                    config FLXOS_TOUCH_Y_MAX
+                        int "Touch Y Maximum"
+                        default 0
+                        help
+                            Maximum raw Y coordinate value (0 = use display height)
+
+                    config FLXOS_TOUCH_OFFSET_ROTATION
+                        int "Touch Rotation Offset"
+                        default 0
+                        help
+                            Additional rotation offset for touch alignment
+                endmenu
+
+                menu "Touch Advanced Settings"
+                    config FLXOS_TOUCH_SPI_FREQ
+                        int "Touch SPI Frequency (Hz)"
+                        default 1000000
+                        depends on FLXOS_TOUCH_XPT2046
+                        help
+                            SPI frequency for touch controller (typically 1MHz)
+
+                    config FLXOS_TOUCH_I2C_PORT
+                        int "Touch I2C Port"
+                        range 0 1
+                        default 0
+                        depends on !FLXOS_TOUCH_XPT2046
+                        help
+                            I2C port number (0 or 1)
+
+                    config FLXOS_TOUCH_I2C_FREQ
+                        int "Touch I2C Frequency (Hz)"
+                        default 400000
+                        depends on !FLXOS_TOUCH_XPT2046
+                        help
+                            I2C frequency for touch controller (typically 400kHz)
+
+                    config FLXOS_TOUCH_BUS_SHARED
+                        bool "Touch Bus is Shared"
+                        default y
+                        help
+                            Enable if touch controller shares bus with other devices
+                endmenu
             endif
         endmenu
     endif
