@@ -5,7 +5,7 @@
 #include <sdkconfig.h>
 
 // ============================================================================
-// Display Panel Type Selection (from Kconfig)
+// Display Panel Type Selection
 // ============================================================================
 #if defined(CONFIG_FLXOS_DISPLAY_AMOLED)
 #define LGFX_PANEL_TYPE lgfx::Panel_AMOLED
@@ -83,10 +83,14 @@
 #define LGFX_PANEL_TYPE lgfx::Panel_ST7796
 #elif defined(CONFIG_FLXOS_DISPLAY_ST77961)
 #define LGFX_PANEL_TYPE lgfx::Panel_ST77961
+#else
+// Fallback: If AutoDetect is selected or no driver matches,
+// define a dummy type to ensure compilation of the LGFX class.
+#define LGFX_PANEL_TYPE lgfx::Panel_ILI9341
 #endif
 
 // ============================================================================
-// Touch Controller Type Selection (from Kconfig)
+// Touch Controller Type Selection
 // ============================================================================
 #if defined(CONFIG_FLXOS_TOUCH_ENABLED)
 #if defined(CONFIG_FLXOS_TOUCH_XPT2046)
@@ -138,7 +142,7 @@
 #endif
 
 // ============================================================================
-// SPI Host Selection (for SPI bus and SPI touch controllers)
+// SPI Host Selection (ESP32 Specific)
 // ============================================================================
 #if defined(CONFIG_FLXOS_SPI_HOST)
 #if CONFIG_FLXOS_SPI_HOST == 1
@@ -151,7 +155,7 @@
 #endif
 
 // ============================================================================
-// DMA Channel Selection (for SPI)
+// DMA Channel Selection
 // ============================================================================
 #if defined(CONFIG_FLXOS_SPI_DMA_CHANNEL)
 #if CONFIG_FLXOS_SPI_DMA_CHANNEL == 0
@@ -183,7 +187,7 @@ public:
 		// Bus Configuration
 		// ====================================================================
 #if defined(CONFIG_FLXOS_BUS_SPI)
-		// SPI Bus Configuration
+		// SPI Bus
 		{
 			auto cfg = _bus_instance.config();
 			cfg.spi_host = LGFX_SPI_HOST;
@@ -205,7 +209,7 @@ public:
 			_panel_instance.setBus(&_bus_instance);
 		}
 #elif defined(CONFIG_FLXOS_BUS_I2C)
-		// I2C Bus Configuration
+		// I2C Bus
 		{
 			auto cfg = _bus_instance.config();
 			cfg.i2c_port = CONFIG_FLXOS_I2C_PORT;
@@ -218,7 +222,7 @@ public:
 			_panel_instance.setBus(&_bus_instance);
 		}
 #elif defined(CONFIG_FLXOS_BUS_PARALLEL8) || defined(CONFIG_FLXOS_BUS_PARALLEL16)
-		// Parallel Bus Configuration
+		// Parallel Bus
 		{
 			auto cfg = _bus_instance.config();
 			cfg.freq_write = CONFIG_FLXOS_PARALLEL_FREQ;
@@ -340,19 +344,25 @@ public:
 			cfg.offset_rotation = CONFIG_FLXOS_TOUCH_OFFSET_ROTATION;
 
 #if defined(LGFX_TOUCH_IS_SPI)
-			// SPI Touch Controller (XPT2046)
+			// SPI Touch Controller (e.g., XPT2046)
 			cfg.spi_host = LGFX_SPI_HOST;
 			cfg.freq = CONFIG_FLXOS_TOUCH_SPI_FREQ;
 			cfg.pin_sclk = CONFIG_FLXOS_PIN_SCLK;
 			cfg.pin_mosi = CONFIG_FLXOS_PIN_MOSI;
 			cfg.pin_miso = CONFIG_FLXOS_PIN_MISO;
 			cfg.pin_cs = CONFIG_FLXOS_PIN_TOUCH_CS;
+
 #elif defined(LGFX_TOUCH_IS_I2C)
 			// I2C Touch Controller
 			cfg.i2c_port = CONFIG_FLXOS_TOUCH_I2C_PORT;
 			cfg.freq = CONFIG_FLXOS_TOUCH_I2C_FREQ;
+
+			// NOTE: RA8875 internal touch does not use external I2C pins.
+			// Only assign pins if NOT RA8875 to avoid undefined macro errors.
+#if !defined(CONFIG_FLXOS_TOUCH_RA8875)
 			cfg.pin_scl = CONFIG_FLXOS_PIN_TOUCH_SCL;
 			cfg.pin_sda = CONFIG_FLXOS_PIN_TOUCH_SDA;
+#endif
 #endif
 			_touch_instance.config(cfg);
 			_panel_instance.setTouch(&_touch_instance);
