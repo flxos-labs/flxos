@@ -1,6 +1,6 @@
 #include "Launcher.hpp"
-#include "../../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../../theming/StyleUtils.hpp"
+#include "../../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../../theming/ui_constants/UiConstants.hpp"
 #include "core/apps/AppManager.hpp"
 
@@ -43,7 +43,6 @@ void Launcher::create() {
 	for (auto& app: apps) {
 		lv_obj_t* btn = lv_button_create(m_list);
 		lv_obj_set_size(btn, lv_pct(100), LV_SIZE_CONTENT);
-		lv_obj_set_style_bg_opa(btn, 0, 0);
 		lv_obj_set_style_border_width(btn, 0, 0);
 		lv_obj_set_style_shadow_width(btn, 0, 0);
 		lv_obj_set_style_pad_all(btn, lv_dpx(UiConstants::PAD_SMALL), 0);

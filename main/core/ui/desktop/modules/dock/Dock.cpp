@@ -1,6 +1,6 @@
 #include "Dock.hpp"
-#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/StyleUtils.hpp"
+#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
 
 namespace UI::Modules {

@@ -1,6 +1,6 @@
 #include "QuickAccessPanel.hpp"
-#include "../../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../../theming/StyleUtils.hpp"
+#include "../../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../../theming/theme_engine/ThemeEngine.hpp"
 #include "../../../theming/ui_constants/UiConstants.hpp"
 #include "core/system/display/DisplayManager.hpp"
@@ -109,7 +109,6 @@ void QuickAccessPanel::create() {
 
 		lv_obj_t* slider = lv_slider_create(slider_cont);
 		lv_obj_set_flex_grow(slider, 1);
-		lv_obj_set_height(slider, lv_pct(LayoutConstants::SLIDER_HEIGHT_PCT));
 		lv_slider_set_range(slider, 0, 255);
 		lv_slider_bind_value(
 			slider, &System::DisplayManager::getInstance().getBrightnessSubject()

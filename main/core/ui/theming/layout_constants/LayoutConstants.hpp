@@ -18,10 +18,6 @@ static constexpr int DOCK_BTN_WIDTH_PCT = 13;
 static constexpr int DOCK_BTN_HEIGHT_PCT = 85;
 static constexpr int DOCK_BTN_HEIGHT_SMALL_PCT = 80;
 
-// Element Specific Sizes (Percentages)
-static constexpr int SLIDER_HEIGHT_PCT = 70;
-static constexpr int SLIDER_CONT_WIDTH_PCT = 50;
-
 // Fixed Pixel Sizes (Logic Units - use with lv_dpx)
 static constexpr int SIZE_TOUCH_TARGET = 30;
 static constexpr int SIZE_DROPDOWN_WIDTH_SMALL = 80;

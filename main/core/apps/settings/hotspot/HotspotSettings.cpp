@@ -378,7 +378,7 @@ void HotspotSettings::createConfigPage() {
 	lv_obj_t* maxConnLabel = lv_label_create(maxConnCont);
 	lv_label_set_text(maxConnLabel, "Max Connections:");
 	lv_obj_t* sliderCont = lv_obj_create(maxConnCont);
-	lv_obj_set_size(sliderCont, lv_pct(LayoutConstants::SLIDER_CONT_WIDTH_PCT), LV_SIZE_CONTENT);
+	lv_obj_set_size(sliderCont, lv_pct(100), LV_SIZE_CONTENT);
 	lv_obj_set_style_pad_all(sliderCont, 0, 0);
 	lv_obj_set_style_border_width(sliderCont, 0, 0);
 	lv_obj_set_flex_flow(sliderCont, LV_FLEX_FLOW_COLUMN);
@@ -453,7 +453,7 @@ void HotspotSettings::createConfigPage() {
 	lv_obj_t* txLabel = lv_label_create(txCont);
 	lv_label_set_text(txLabel, "TX Power:");
 	lv_obj_t* txSliderCont = lv_obj_create(txCont);
-	lv_obj_set_size(txSliderCont, lv_pct(LayoutConstants::SLIDER_CONT_WIDTH_PCT), LV_SIZE_CONTENT);
+	lv_obj_set_size(txSliderCont, lv_pct(100), LV_SIZE_CONTENT);
 	lv_obj_set_style_pad_all(txSliderCont, 0, 0);
 	lv_obj_set_style_border_width(txSliderCont, 0, 0);
 	lv_obj_set_flex_flow(txSliderCont, LV_FLEX_FLOW_COLUMN);

@@ -2,8 +2,8 @@
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/notification/NotificationManager.hpp"
 #include "core/system/system_core/SystemManager.hpp"
-#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/StyleUtils.hpp"
+#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include <ctime>

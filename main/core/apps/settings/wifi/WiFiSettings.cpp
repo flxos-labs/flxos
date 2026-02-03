@@ -30,10 +30,8 @@ void WiFiSettings::show() {
 		// Config Button
 		lv_obj_t* configBtn = lv_button_create(header);
 		lv_obj_set_size(configBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-		lv_obj_set_style_bg_opa(configBtn, 0, 0);
 		lv_obj_t* configIcon = lv_image_create(configBtn);
 		lv_image_set_src(configIcon, LV_SYMBOL_SETTINGS);
-		lv_obj_set_style_text_color(configIcon, lv_color_hex(0xFFFFFF), 0);
 		lv_obj_add_event_cb(
 			configBtn,
 			[](lv_event_t* e) {

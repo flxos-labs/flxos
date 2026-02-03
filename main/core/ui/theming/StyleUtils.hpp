@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ui_constants/UiConstants.hpp"
 #include "core/system/theme/ThemeManager.hpp"
 #include "lvgl.h"
+#include "ui_constants/UiConstants.hpp"
 
 namespace UI {
 namespace StyleUtils {
