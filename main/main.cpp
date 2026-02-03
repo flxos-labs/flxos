@@ -21,13 +21,6 @@ extern "C" void app_main(void) {
 	Log::info(TAG, "Sending welcome notification");
 	System::NotificationManager::getInstance().addNotification("Welcome", "FlxOS initialized successfully!", "System", LV_SYMBOL_OK, 1);
 
-	// Test notifications
-	for (int i = 0; i < 10; ++i) {
-		std::string title = "Notification " + std::to_string(i + 1);
-		std::string msg = "This is test notification #" + std::to_string(i + 1) + " for testing scrolling.";
-		System::NotificationManager::getInstance().addNotification(title, msg, "TestApp", LV_SYMBOL_TINT, 1);
-	}
-
 	Log::info(TAG, "Starting GuiTask...");
 	GuiTask* guiTask = new GuiTask();
 	guiTask->start();

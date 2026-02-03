@@ -49,6 +49,7 @@ A comprehensive task table for FlxOS development, organized by priority and cate
 | 1.9 | Crash Dump & Logging | ⏳ | P2 | ⭐⭐ | 1.3 | Persistent crash logs |
 | 1.10 | Plugin/Extension System | 💡 | P3 | ⭐⭐⭐⭐⭐ | 1.1 | Dynamic app loading |
 | 1.11 | Backend Service Layer | ✅ | P1 | ⭐⭐⭐ | - | Decoupled UI from system logic |
+| 1.12 | Headless Mode | ✅ | P1 | ⭐⭐ | - | Run without display/GUI hardware |
 
 ---
 
@@ -58,7 +59,7 @@ A comprehensive task table for FlxOS development, organized by priority and cate
 |---|------|--------|----------|------------|--------------|-------|
 | 2.1 | WiFi Station Mode | ✅ | P0 | ⭐⭐⭐ | - | Connect to networks |
 | 2.2 | WiFi Scanning | ✅ | P0 | ⭐⭐ | 2.1 | Network discovery |
-| 2.3 | WiFi Hotspot (SoftAP) | ✅ | P1 | ⭐⭐⭐ | 2.1 | Create hotspot with NAT |
+| 2.3 | WiFi Hotspot (SoftAP) | ✅ | P1 | ⭐⭐⭐ | 2.1 | Create hotspot with NAT & NVS persistence |
 | 2.4 | Bluetooth Enable/Disable | ✅ | P1 | ⭐⭐ | - | Basic BT control |
 | 2.5 | Bluetooth Device Pairing | ⏳ | P2 | ⭐⭐⭐ | 2.4 | Pair with BT devices |
 | 2.6 | Bluetooth File Transfer | 💡 | P3 | ⭐⭐⭐⭐ | 2.5 | OBEX support |
@@ -80,7 +81,7 @@ A comprehensive task table for FlxOS development, organized by priority and cate
 | 3.5 | Wallpaper Support | ✅ | P2 | ⭐⭐ | 3.1 | Custom backgrounds |
 | 3.6 | Notification System | ✅ | P1 | ⭐⭐⭐ | 3.1 | Toast/popup notifications |
 | 3.7 | Lock Screen | ⏳ | P1 | ⭐⭐⭐ | 3.1 | PIN/pattern lock |
-| 3.8 | Status Bar Widgets | ⏳ | P2 | ⭐⭐ | 3.1 | Battery, WiFi icons |
+| 3.8 | Status Bar Widgets | 🔄 | P2 | ⭐⭐ | 3.1 | Battery, WiFi icons (WiFi icon active) |
 | 3.9 | Gesture Support | ⏳ | P2 | ⭐⭐⭐ | 3.1 | Swipe, pinch, long-press |
 | 3.10 | Animation System | 💡 | P3 | ⭐⭐⭐ | 3.1 | App transitions, effects |
 | 3.11 | Multi-language (i18n) | 💡 | P3 | ⭐⭐⭐ | 3.1 | Localization support |
@@ -96,7 +97,7 @@ A comprehensive task table for FlxOS development, organized by priority and cate
 | 4.2 | Files App | ✅ | P0 | ⭐⭐⭐ | 1.1 | File browser |
 | 4.3 | WiFi Settings | ✅ | P0 | ⭐⭐ | 2.1, 4.1 | Network management |
 | 4.4 | Display Settings | ✅ | P0 | ⭐⭐ | 3.4, 4.1 | Brightness, rotation |
-| 4.5 | Hotspot Settings | ✅ | P1 | ⭐⭐ | 2.3, 4.1 | AP configuration |
+| 4.5 | Hotspot Settings | ✅ | P1 | ⭐⭐ | 2.3, 4.1 | AP configuration with persistence |
 | 4.6 | Bluetooth Settings | ✅ | P1 | ⭐⭐ | 2.4, 4.1 | BT management |
 | 4.7 | Calculator App | ⏳ | P2 | ⭐⭐ | 1.1 | Basic calculator |
 | 4.8 | Clock/Alarm App | ⏳ | P2 | ⭐⭐ | 1.1 | Time, alarms, timer |
@@ -118,7 +119,7 @@ A comprehensive task table for FlxOS development, organized by priority and cate
 |---|------|--------|----------|------------|--------------|-------|
 | 5.1 | Internal Flash (FAT) | ✅ | P0 | ⭐⭐⭐ | - | Wear-leveling support |
 | 5.2 | SD Card Support | ✅ | P0 | ⭐⭐ | - | External storage |
-| 5.3 | Settings Persistence | ✅ | P0 | ⭐⭐ | 5.1 | NVS storage |
+| 5.3 | Settings Persistence | ✅ | P0 | ⭐⭐ | 5.1 | NVS & JSON storage |
 | 5.4 | File Compression | ⏳ | P2 | ⭐⭐⭐ | 5.1 | ZIP/GZIP support |
 | 5.5 | Cloud Sync | 💡 | P3 | ⭐⭐⭐⭐ | 2.1, 5.1 | Sync to cloud storage |
 | 5.6 | Encrypted Storage | 💡 | P3 | ⭐⭐⭐⭐ | 5.1 | Secure file storage |
@@ -130,8 +131,8 @@ A comprehensive task table for FlxOS development, organized by priority and cate
 
 | # | Task | Status | Priority | Complexity | Dependencies | Notes |
 |---|------|--------|----------|------------|--------------|-------|
-| 6.1 | Display HAL | ✅ | P0 | ⭐⭐⭐ | - | LovyanGFX integration |
-| 6.2 | Touch HAL | ✅ | P0 | ⭐⭐ | 6.1 | Touch input handling |
+| 6.1 | Display HAL | ✅ | P0 | ⭐⭐⭐ | - | LovyanGFX integration (30+ drivers supported) |
+| 6.2 | Touch HAL | ✅ | P0 | ⭐⭐ | 6.1 | Universal Touch support (XPT, GT911, FTxx, etc.) |
 | 6.3 | GPIO HAL | ⏳ | P2 | ⭐⭐ | - | Button/LED control |
 | 6.4 | I2C HAL | ⏳ | P2 | ⭐⭐ | - | Sensor integration |
 | 6.5 | SPI HAL | ⏳ | P2 | ⭐⭐ | - | Peripheral expansion |
@@ -187,12 +188,13 @@ A comprehensive task table for FlxOS development, organized by priority and cate
 - [x] Core system framework
 - [x] Window Manager
 - [x] Settings & Files apps
-- [x] WiFi & Hotspot
+- [x] WiFi & Hotspot (with persistence)
 - [x] Theme system
 - [x] Display rotation
 - [x] Notification System
 - [x] System Info App
-- [x] Backend Service Layer
+- [x] Backend Service Layer (with Headless Mode)
+- [x] Comprehensive HAL support (30+ Display Drivers)
 
 ### v1.0.0 Beta (Target)
 | Task | Priority | Status |
@@ -260,19 +262,20 @@ Based on the current state of FlxOS, here are the recommended next tasks in prio
 
 | Category | Completed | In Progress | Planned | Total |
 |----------|-----------|-------------|---------|-------|
-| Core System | 6 | 0 | 5 | 11 |
+| Core System | 8 | 0 | 4 | 12 |
 | Connectivity | 5 | 0 | 5 | 10 |
-| User Interface | 6 | 0 | 6 | 12 |
+| User Interface | 6 | 1 | 5 | 12 |
 | Applications | 7 | 0 | 10 | 17 |
 | Storage | 3 | 0 | 4 | 7 |
 | HAL | 2 | 0 | 6 | 8 |
 | Security | 0 | 0 | 5 | 5 |
 | Testing | 1 | 0 | 5 | 6 |
 | Documentation | 2 | 0 | 6 | 8 |
-| **Total** | **32** | **0** | **52** | **84** |
+| **Total** | **34** | **1** | **50** | **85** |
 
-**Overall Progress: 38%** █████████░░░░░░░░░░░░░░░
+**Overall Progress: 41%** ██████████░░░░░░░░░░░░░░
+*Note: Calculation based on (Completed + (0.5 * In Progress)) / Total*
 
 ---
 
-*Last Updated: 2026-01-31*
+*Last Updated: 2026-02-03*
