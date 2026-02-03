@@ -1,6 +1,13 @@
 #pragma once
 
 #include "lvgl.h"
+#include "modules/Dock/Dock.hpp"
+#include "modules/Launcher/Launcher.hpp"
+#include "modules/NotificationPanel/NotificationPanel.hpp"
+#include "modules/QuickAccessPanel/QuickAccessPanel.hpp"
+#include "modules/StatusBar/StatusBar.hpp"
+#include "modules/SwipeManager/SwipeManager.hpp"
+#include <memory>
 #include <string>
 
 class DE {
@@ -16,9 +23,6 @@ public:
 	void openApp(const std::string& packageName);
 	void closeApp(const std::string& packageName);
 
-	// UI Utilities
-	static lv_obj_t* create_dock_btn(lv_obj_t* parent, const char* icon, int32_t w, int32_t h);
-
 private:
 
 	lv_obj_t* screen;
@@ -26,42 +30,27 @@ private:
 	lv_obj_t* wallpaper_img;
 	lv_obj_t* wallpaper_icon;
 	lv_obj_t* window_container;
+	std::unique_ptr<UI::Modules::StatusBar> m_statusBarModule;
 	lv_obj_t* status_bar;
+	std::unique_ptr<UI::Modules::Dock> m_dockModule;
 	lv_obj_t* dock;
-	lv_obj_t* time_label;
-	lv_obj_t* theme_label;
+	std::unique_ptr<UI::Modules::Launcher> m_launcherModule;
 	lv_obj_t* launcher;
+	std::unique_ptr<UI::Modules::QuickAccessPanel> m_quickAccessPanelModule;
 	lv_obj_t* quick_access_panel;
+	std::unique_ptr<UI::Modules::NotificationPanel> m_notificationPanelModule;
 	lv_obj_t* notification_panel;
 	lv_obj_t* notification_list;
 	lv_obj_t* clear_all_btn;
 	lv_obj_t* greetings;
 	lv_obj_t* app_container;
-	lv_obj_t* swipe_trigger_zone;
+	std::unique_ptr<UI::Modules::SwipeManager> m_swipeManagerModule;
 
-	// Swipe tracking state
-	int32_t swipe_start_y;
-	bool swipe_active;
-
-	void create_status_bar();
-	void create_dock();
-	void create_launcher();
-	void create_quick_access_panel();
-	void create_notification_panel();
 	void update_notification_list();
 	void realign_panels();
 	void configure_panel_style(lv_obj_t* panel);
-	void create_swipe_trigger_zone();
 
-	static void on_start_click(lv_event_t* e);
-	static void on_up_click(lv_event_t* e);
-	static void on_clear_notifications_click(lv_event_t* e);
+	void on_start_click();
+	void on_up_click();
 	static void on_app_click(lv_event_t* e);
-	static void on_notification_close_click(lv_event_t* e);
-	static void on_swipe_zone_press(lv_event_t* e);
-	static void on_swipe_zone_pressing(lv_event_t* e);
-	static void on_swipe_zone_release(lv_event_t* e);
-	static void on_notif_panel_press(lv_event_t* e);
-	static void on_notif_panel_pressing(lv_event_t* e);
-	static void on_notif_panel_release(lv_event_t* e);
 };

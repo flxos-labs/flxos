@@ -69,6 +69,14 @@ inline void add_back_button_event_cb(lv_obj_t* btn, std::function<void()>* onBac
 	);
 }
 
+inline void add_switch_item(lv_obj_t* list, const char* text, lv_subject_t* subject) {
+	lv_obj_t* btn = lv_list_add_button(list, nullptr, text);
+	lv_obj_t* sw = lv_switch_create(btn);
+	lv_obj_add_flag(sw, LV_OBJ_FLAG_EVENT_BUBBLE);
+	lv_obj_align(sw, LV_ALIGN_RIGHT_MID, 0, 0);
+	lv_obj_bind_checked(sw, subject);
+}
+
 } // namespace Settings
 } // namespace Apps
 } // namespace System

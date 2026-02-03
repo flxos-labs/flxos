@@ -8,6 +8,9 @@ set(CORE_SRCS
     "core/services/filesystem/FileSystemService.cpp"
     "core/services/systeminfo/SystemInfoService.cpp"
     "core/system/System/SystemManager.cpp"
+    "core/system/Settings/SettingsManager.cpp"
+    "core/system/Display/DisplayManager.cpp"
+    "core/system/Theme/ThemeManager.cpp"
     "core/system/Time/TimeManager.cpp"
     "core/tasks/TaskManager.cpp"
     "core/tasks/resource_monitor/ResourceMonitorTask.cpp"
@@ -18,6 +21,12 @@ message(STATUS "FlxOS Main: CONFIG_FLXOS_HEADLESS_MODE is '${CONFIG_FLXOS_HEADLE
 if(NOT CONFIG_FLXOS_HEADLESS_MODE)
     list(APPEND CORE_SRCS
         "core/tasks/gui/GuiTask.cpp"
+        "core/ui/DE/modules/StatusBar/StatusBar.cpp"
+        "core/ui/DE/modules/Dock/Dock.cpp"
+        "core/ui/DE/modules/NotificationPanel/NotificationPanel.cpp"
+        "core/ui/DE/modules/QuickAccessPanel/QuickAccessPanel.cpp"
+        "core/ui/DE/modules/Launcher/Launcher.cpp"
+        "core/ui/DE/modules/SwipeManager/SwipeManager.cpp"
         "core/ui/DE/DE.cpp"
         "core/ui/DE/wm/WM.cpp"
         "core/ui/Keyboard/VirtualKeyboard.cpp"
@@ -26,6 +35,8 @@ if(NOT CONFIG_FLXOS_HEADLESS_MODE)
         "core/apps/AppManager.cpp"
         "core/apps/files/FilesApp.cpp"
         "core/apps/system_info/SystemInfoApp.cpp"
+        "core/apps/settings/wifi/WiFiSettings.cpp"
+        "core/apps/settings/hotspot/HotspotSettings.cpp"
         "core/system/Focus/FocusManager.cpp"
         "core/system/Notification/NotificationManager.cpp"
     )

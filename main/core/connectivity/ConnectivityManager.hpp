@@ -74,6 +74,15 @@ public:
 	Observable<int32_t>& getHotspotUptimeSubject() { return m_hotspot_uptime_subject; }
 	Observable<int32_t>& getBluetoothEnabledObservable() { return m_bluetooth_enabled_subject; }
 
+	// Config Settings (Persisted)
+	StringObservable& getHotspotSsidObservable() { return m_hotspot_ssid_subject; }
+	StringObservable& getHotspotPasswordObservable() { return m_hotspot_password_subject; }
+	Observable<int32_t>& getHotspotChannelObservable() { return m_hotspot_channel_subject; }
+	Observable<int32_t>& getHotspotMaxConnObservable() { return m_hotspot_max_conn_subject; }
+	Observable<int32_t>& getHotspotHiddenObservable() { return m_hotspot_hidden_subject; }
+	Observable<int32_t>& getHotspotAuthObservable() { return m_hotspot_auth_subject; }
+	Observable<int32_t>& getWiFiAutostartObservable() { return m_wifi_autostart_subject; }
+
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// GUI-only: LVGL subject accessors (for use with lv_subject_add_observer)
 	lv_subject_t& getWiFiEnabledSubject() { return *m_wifi_enabled_bridge->getSubject(); }
@@ -89,6 +98,14 @@ public:
 	lv_subject_t& getHotspotDownloadSpeedLvglSubject() { return *m_hotspot_download_speed_bridge->getSubject(); }
 	lv_subject_t& getHotspotUptimeLvglSubject() { return *m_hotspot_uptime_bridge->getSubject(); }
 	lv_subject_t& getBluetoothEnabledSubject() { return *m_bluetooth_enabled_bridge->getSubject(); }
+
+	lv_subject_t& getHotspotSsidSubject() { return *m_hotspot_ssid_bridge->getSubject(); }
+	lv_subject_t& getHotspotPasswordSubject() { return *m_hotspot_password_bridge->getSubject(); }
+	lv_subject_t& getHotspotChannelSubject() { return *m_hotspot_channel_bridge->getSubject(); }
+	lv_subject_t& getHotspotMaxConnSubject() { return *m_hotspot_max_conn_bridge->getSubject(); }
+	lv_subject_t& getHotspotHiddenSubject() { return *m_hotspot_hidden_bridge->getSubject(); }
+	lv_subject_t& getHotspotAuthSubject() { return *m_hotspot_auth_bridge->getSubject(); }
+	lv_subject_t& getWiFiAutostartSubject() { return *m_wifi_autostart_bridge->getSubject(); }
 #endif
 
 private:
@@ -113,6 +130,15 @@ private:
 	Observable<int32_t> m_hotspot_uptime_subject {0};
 	Observable<int32_t> m_bluetooth_enabled_subject {0};
 
+	// Config Settings (Persisted)
+	StringObservable m_hotspot_ssid_subject {"ESP32-Hotspot"};
+	StringObservable m_hotspot_password_subject {"12345678"};
+	Observable<int32_t> m_hotspot_channel_subject {1};
+	Observable<int32_t> m_hotspot_max_conn_subject {4};
+	Observable<int32_t> m_hotspot_hidden_subject {0};
+	Observable<int32_t> m_hotspot_auth_subject {1};
+	Observable<int32_t> m_wifi_autostart_subject {0};
+
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// LVGL bridges (initialized in initGuiBridges)
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_enabled_bridge;
@@ -128,6 +154,14 @@ private:
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_download_speed_bridge;
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_uptime_bridge;
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_bluetooth_enabled_bridge;
+
+	std::unique_ptr<LvglStringObserverBridge> m_hotspot_ssid_bridge;
+	std::unique_ptr<LvglStringObserverBridge> m_hotspot_password_bridge;
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_channel_bridge;
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_max_conn_bridge;
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_hidden_bridge;
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_auth_bridge;
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_autostart_bridge;
 #endif
 
 	bool m_is_init = false;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "UiConstants/UiConstants.hpp"
-#include "core/system/System/SystemManager.hpp"
+#include "core/system/Theme/ThemeManager.hpp"
 #include "lvgl.h"
 
 namespace UI {
@@ -12,12 +12,12 @@ static inline void apply_glass(lv_obj_t* obj, int32_t blur) {
 
 	// Add observer for Glass Enabled
 	lv_subject_add_observer_obj(
-		&System::SystemManager::getInstance().getGlassEnabledSubject(),
+		&System::ThemeManager::getInstance().getGlassEnabledSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			lv_obj_t* target = lv_observer_get_target_obj(observer);
 			int32_t b = (intptr_t)lv_observer_get_user_data(observer);
 			bool glass_enabled = lv_subject_get_int(subject);
-			bool transp_enabled = lv_subject_get_int(&System::SystemManager::getInstance().getTransparencyEnabledSubject());
+			bool transp_enabled = lv_subject_get_int(&System::ThemeManager::getInstance().getTransparencyEnabledSubject());
 
 			if (glass_enabled && transp_enabled) {
 				lv_obj_set_style_blur_backdrop(target, true, 0);
@@ -32,7 +32,7 @@ static inline void apply_glass(lv_obj_t* obj, int32_t blur) {
 
 	// Add observer for Transparency Enabled
 	lv_subject_add_observer_obj(
-		&System::SystemManager::getInstance().getTransparencyEnabledSubject(),
+		&System::ThemeManager::getInstance().getTransparencyEnabledSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			lv_obj_t* target = lv_observer_get_target_obj(observer);
 			int32_t b = (intptr_t)lv_observer_get_user_data(observer);
@@ -42,7 +42,7 @@ static inline void apply_glass(lv_obj_t* obj, int32_t blur) {
 				lv_obj_set_style_bg_opa(target, UiConstants::OPA_GLASS_BG, 0);
 
 				// Re-check glass status to re-enable blur if needed
-				bool glass_enabled = lv_subject_get_int(&System::SystemManager::getInstance().getGlassEnabledSubject());
+				bool glass_enabled = lv_subject_get_int(&System::ThemeManager::getInstance().getGlassEnabledSubject());
 
 				if (glass_enabled) {
 					lv_obj_set_style_blur_backdrop(target, true, 0);

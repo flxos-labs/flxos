@@ -2,7 +2,9 @@
 #include <cstring>
 
 #include "core/apps/settings/SettingsCommon.hpp"
+#include "core/system/Display/DisplayManager.hpp"
 #include "core/system/System/SystemManager.hpp"
+#include "core/system/Theme/ThemeManager.hpp"
 #include "core/ui/components/FileChooser.hpp"
 #include "core/ui/theming/ThemeEngine/ThemeEngine.hpp"
 #include "lvgl.h"
@@ -34,7 +36,7 @@ public:
 			lv_obj_set_flex_grow(slider, 1);
 			lv_slider_set_range(slider, 0, 255);
 			lv_slider_bind_value(
-				slider, &SystemManager::getInstance().getBrightnessSubject()
+				slider, &DisplayManager::getInstance().getBrightnessSubject()
 			);
 
 			lv_obj_t* themeBtn = add_list_btn(m_list, LV_SYMBOL_IMAGE, "Theme");
@@ -46,7 +48,7 @@ public:
 			lv_label_set_text(themeLabel, Themes::ToString(ThemeEngine::get_current_theme()));
 
 			lv_subject_add_observer_obj(
-				&SystemManager::getInstance().getThemeSubject(),
+				&ThemeManager::getInstance().getThemeSubject(),
 				[](lv_observer_t* observer, lv_subject_t* subject) {
 					lv_obj_t* label = lv_observer_get_target_obj(observer);
 					if (label) {
@@ -58,7 +60,7 @@ public:
 			);
 
 			lv_obj_add_subject_toggle_event(
-				themeValBtn, &SystemManager::getInstance().getThemeSubject(),
+				themeValBtn, &ThemeManager::getInstance().getThemeSubject(),
 				LV_EVENT_CLICKED
 			);
 
@@ -69,11 +71,11 @@ public:
 			lv_obj_set_size(rotValBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 			lv_obj_t* rotLabel = lv_label_create(rotValBtn);
 			lv_label_bind_text(
-				rotLabel, &SystemManager::getInstance().getRotationSubject(), "%d°"
+				rotLabel, &DisplayManager::getInstance().getRotationSubject(), "%d°"
 			);
 
 			lv_subject_increment_dsc_t* rot_dsc = lv_obj_add_subject_increment_event(
-				rotValBtn, &SystemManager::getInstance().getRotationSubject(),
+				rotValBtn, &DisplayManager::getInstance().getRotationSubject(),
 				LV_EVENT_CLICKED, 90
 			);
 			lv_obj_set_subject_increment_event_min_value(rotValBtn, rot_dsc, 0);
@@ -83,14 +85,14 @@ public:
 			lv_obj_t* fpsBtn = add_list_btn(m_list, LV_SYMBOL_PLAY, "Show FPS");
 			lv_obj_set_flex_grow(lv_obj_get_child(fpsBtn, 1), 1);
 			lv_obj_t* fpsSw = lv_switch_create(fpsBtn);
-			lv_obj_bind_checked(fpsSw, &SystemManager::getInstance().getShowFpsSubject());
+			lv_obj_bind_checked(fpsSw, &DisplayManager::getInstance().getShowFpsSubject());
 
 			lv_obj_t* wpBtn =
 				add_list_btn(m_list, LV_SYMBOL_IMAGE, "Enable Wallpaper");
 			lv_obj_set_flex_grow(lv_obj_get_child(wpBtn, 1), 1);
 			lv_obj_t* wpSw = lv_switch_create(wpBtn);
 			lv_obj_bind_checked(
-				wpSw, &SystemManager::getInstance().getWallpaperEnabledSubject()
+				wpSw, &ThemeManager::getInstance().getWallpaperEnabledSubject()
 			);
 
 			lv_obj_t* chooseWpBtn =
@@ -101,7 +103,7 @@ public:
 			lv_label_set_text(wpValLabel, "");
 
 			lv_subject_add_observer_obj(
-				&SystemManager::getInstance().getWallpaperPathSubject(),
+				&ThemeManager::getInstance().getWallpaperPathSubject(),
 				[](lv_observer_t* observer, lv_subject_t* subject) {
 					lv_obj_t* label = lv_observer_get_target_obj(observer);
 					const char* path = (const char*)lv_subject_get_pointer(subject);
@@ -130,13 +132,13 @@ public:
 			update_chooser_state(
 				chooseWpBtn,
 				lv_subject_get_int(
-					&SystemManager::getInstance().getWallpaperEnabledSubject()
+					&ThemeManager::getInstance().getWallpaperEnabledSubject()
 				)
 			);
 
 			// Observer for changes
 			lv_subject_add_observer_obj(
-				&SystemManager::getInstance().getWallpaperEnabledSubject(),
+				&ThemeManager::getInstance().getWallpaperEnabledSubject(),
 				[](lv_observer_t* observer, lv_subject_t* subject) {
 					lv_obj_t* btn = lv_observer_get_target_obj(observer);
 					int32_t val = lv_subject_get_int(subject);
@@ -160,7 +162,7 @@ public:
 								sizeof(path_buf) - 1
 							);
 							lv_subject_set_pointer(
-								&SystemManager::getInstance()
+								&ThemeManager::getInstance()
 									 .getWallpaperPathSubject(),
 								path_buf
 							);
@@ -177,7 +179,7 @@ public:
 			lv_obj_t* transpSw = lv_switch_create(transpBtn);
 			lv_obj_bind_checked(
 				transpSw,
-				&SystemManager::getInstance().getTransparencyEnabledSubject()
+				&ThemeManager::getInstance().getTransparencyEnabledSubject()
 			);
 
 			lv_obj_t* glassBtn =
@@ -185,12 +187,12 @@ public:
 			lv_obj_set_flex_grow(lv_obj_get_child(glassBtn, 1), 1);
 			lv_obj_t* glassSw = lv_switch_create(glassBtn);
 			lv_obj_bind_checked(
-				glassSw, &SystemManager::getInstance().getGlassEnabledSubject()
+				glassSw, &ThemeManager::getInstance().getGlassEnabledSubject()
 			);
 
 			// observer to disable glass setting if transparency is off
 			lv_subject_add_observer_obj(
-				&SystemManager::getInstance().getTransparencyEnabledSubject(),
+				&ThemeManager::getInstance().getTransparencyEnabledSubject(),
 				[](lv_observer_t* observer, lv_subject_t* subject) {
 					lv_obj_t* glassSw = lv_observer_get_target_obj(observer);
 					lv_obj_t* glassBtn = lv_obj_get_parent(glassSw);

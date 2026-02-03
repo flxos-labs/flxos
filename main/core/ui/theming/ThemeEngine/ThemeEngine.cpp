@@ -1,6 +1,6 @@
 #include "ThemeEngine.hpp"
 #include "core/common/Logger.hpp"
-#include "core/system/System/SystemManager.hpp"
+#include "core/system/Theme/ThemeManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include <map>
 #include <string_view>
@@ -51,7 +51,7 @@ void ThemeEngine::cycle_theme() {
 			break;
 	}
 	GuiTask::lock();
-	lv_subject_set_int(&System::SystemManager::getInstance().getThemeSubject(), (int32_t)next);
+	lv_subject_set_int(&System::ThemeManager::getInstance().getThemeSubject(), (int32_t)next);
 	GuiTask::unlock();
 }
 

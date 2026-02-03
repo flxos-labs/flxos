@@ -1,0 +1,120 @@
+#include "QuickAccessPanel.hpp"
+#include "../../../theming/LayoutConstants/LayoutConstants.hpp"
+#include "../../../theming/StyleUtils.hpp"
+#include "../../../theming/ThemeEngine/ThemeEngine.hpp"
+#include "../../../theming/UiConstants/UiConstants.hpp"
+#include "core/system/Display/DisplayManager.hpp"
+#include "core/system/System/SystemManager.hpp"
+#include "core/system/Theme/ThemeManager.hpp"
+
+namespace UI::Modules {
+
+QuickAccessPanel::QuickAccessPanel(lv_obj_t* parent, lv_obj_t* dock)
+	: m_parent(parent), m_dock(dock) {
+	create();
+}
+
+void QuickAccessPanel::create() {
+	m_panel = lv_obj_create(m_parent);
+	// configure_panel_style logic:
+	lv_obj_set_size(m_panel, lv_pct(LayoutConstants::PANEL_WIDTH_PCT), lv_pct(LayoutConstants::PANEL_HEIGHT_PCT));
+	lv_obj_set_style_pad_all(m_panel, 0, 0);
+	lv_obj_set_style_radius(m_panel, lv_dpx(UiConstants::RADIUS_LARGE), 0);
+	lv_obj_set_style_border_width(m_panel, 0, 0);
+	lv_obj_add_flag(m_panel, LV_OBJ_FLAG_FLOATING);
+	lv_obj_add_flag(m_panel, LV_OBJ_FLAG_HIDDEN);
+	UI::StyleUtils::apply_glass(m_panel, lv_dpx(UiConstants::GLASS_BLUR_SMALL));
+
+	lv_obj_align_to(m_panel, m_dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(UiConstants::OFFSET_TINY));
+	lv_obj_set_flex_flow(m_panel, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(m_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+	lv_obj_t* label = lv_label_create(m_panel);
+	lv_label_set_text(label, "Quick Access");
+	lv_obj_set_width(label, lv_pct(100));
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
+
+	lv_obj_t* toggles_cont = lv_obj_create(m_panel);
+	lv_obj_remove_style_all(toggles_cont);
+	lv_obj_set_size(toggles_cont, lv_pct(100), LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(toggles_cont, LV_FLEX_FLOW_ROW_WRAP);
+	lv_obj_set_flex_align(toggles_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+	lv_obj_t* theme_cont = lv_obj_create(toggles_cont);
+	lv_obj_remove_style_all(theme_cont);
+	lv_obj_set_size(theme_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(theme_cont, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(theme_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+	lv_obj_t* theme_btn = lv_button_create(theme_cont);
+	lv_obj_set_size(theme_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_style_radius(theme_btn, LV_RADIUS_CIRCLE, 0);
+	lv_obj_t* theme_icon = lv_image_create(theme_btn);
+	lv_image_set_src(theme_icon, LV_SYMBOL_IMAGE);
+	lv_obj_center(theme_icon);
+
+	m_themeLabel = lv_label_create(theme_cont);
+	lv_label_set_text(m_themeLabel, Themes::ToString(ThemeEngine::get_current_theme()));
+
+	lv_subject_add_observer_obj(
+		&System::ThemeManager::getInstance().getThemeSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			lv_obj_t* lbl = lv_observer_get_target_obj(observer);
+			if (lbl) {
+				int32_t v = lv_subject_get_int(subject);
+				lv_label_set_text(lbl, Themes::ToString((ThemeType)v));
+			}
+		},
+		m_themeLabel, nullptr
+	);
+
+	lv_obj_add_subject_toggle_event(
+		theme_btn, &System::ThemeManager::getInstance().getThemeSubject(),
+		LV_EVENT_CLICKED
+	);
+
+	lv_obj_t* rot_cont = lv_obj_create(toggles_cont);
+	lv_obj_remove_style_all(rot_cont);
+	lv_obj_set_size(rot_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(rot_cont, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(rot_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+	lv_obj_t* rot_btn = lv_button_create(rot_cont);
+	lv_obj_set_size(rot_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_style_radius(rot_btn, LV_RADIUS_CIRCLE, 0);
+	lv_obj_t* rot_icon = lv_image_create(rot_btn);
+	lv_image_set_src(rot_icon, LV_SYMBOL_REFRESH);
+	lv_obj_center(rot_icon);
+
+	lv_obj_t* rot_label = lv_label_create(rot_cont);
+	lv_label_bind_text(rot_label, &System::DisplayManager::getInstance().getRotationSubject(), "%d°");
+
+	lv_subject_increment_dsc_t* rot_dsc = lv_obj_add_subject_increment_event(
+		rot_btn, &System::DisplayManager::getInstance().getRotationSubject(),
+		LV_EVENT_CLICKED, 90
+	);
+	lv_obj_set_subject_increment_event_min_value(rot_btn, rot_dsc, 0);
+	lv_obj_set_subject_increment_event_max_value(rot_btn, rot_dsc, 270);
+	lv_obj_set_subject_increment_event_rollover(rot_btn, rot_dsc, true);
+
+	{
+		lv_obj_t* slider_cont = lv_obj_create(m_panel);
+		lv_obj_remove_style_all(slider_cont);
+		lv_obj_set_size(slider_cont, lv_pct(100), LV_SIZE_CONTENT);
+		lv_obj_set_flex_flow(slider_cont, LV_FLEX_FLOW_ROW);
+		lv_obj_set_flex_align(slider_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+		lv_obj_t* icon = lv_image_create(slider_cont);
+		lv_image_set_src(icon, LV_SYMBOL_SETTINGS);
+
+		lv_obj_t* slider = lv_slider_create(slider_cont);
+		lv_obj_set_flex_grow(slider, 1);
+		lv_obj_set_height(slider, lv_pct(LayoutConstants::SLIDER_HEIGHT_PCT));
+		lv_slider_set_range(slider, 0, 255);
+		lv_slider_bind_value(
+			slider, &System::DisplayManager::getInstance().getBrightnessSubject()
+		);
+	}
+}
+
+} // namespace UI::Modules

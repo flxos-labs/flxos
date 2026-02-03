@@ -4,7 +4,6 @@
 
 #include "esp_console.h"
 #include "esp_system.h"
-#include "linenoise/linenoise.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -29,10 +28,10 @@ static int cmd_sysinfo(int argc, char** argv) {
 	printf("Chip Model:     %s\n", sysStats.chipModel.c_str());
 	printf("Chip Revision:  %d\n", sysStats.revision);
 	printf("CPU Cores:      %d\n", sysStats.cores);
-	printf("CPU Frequency:  %lu MHz\n", sysStats.cpuFreqMhz);
-	printf("PSRAM Size:     %lu KB\n", memStats.totalPsram / 1024);
-	printf("Free Heap:      %lu bytes\n", memStats.freeHeap);
-	printf("Min Free Heap:  %lu bytes\n", memStats.minFreeHeap);
+	printf("CPU Frequency:  %u MHz\n", (unsigned int)sysStats.cpuFreqMhz);
+	printf("PSRAM Size:     %u KB\n", (unsigned int)(memStats.totalPsram / 1024));
+	printf("Free Heap:      %u bytes\n", (unsigned int)memStats.freeHeap);
+	printf("Min Free Heap:  %u bytes\n", (unsigned int)memStats.minFreeHeap);
 	printf("IDF Version:    %s\n", sysStats.idfVersion.c_str());
 	printf("================================\n\n");
 
@@ -45,9 +44,9 @@ static int cmd_heap(int argc, char** argv) {
 	auto memStats = sysInfo.getMemoryStats();
 
 	printf("\n=== Heap Memory ===\n");
-	printf("Free Heap:      %lu bytes\n", memStats.freeHeap);
-	printf("Min Free Heap:  %lu bytes (all-time low)\n", memStats.minFreeHeap);
-	printf("Total Heap:     %lu bytes\n", memStats.totalHeap);
+	printf("Free Heap:      %u bytes\n", (unsigned int)memStats.freeHeap);
+	printf("Min Free Heap:  %u bytes (all-time low)\n", (unsigned int)memStats.minFreeHeap);
+	printf("Total Heap:     %u bytes\n", (unsigned int)memStats.totalHeap);
 	printf("===================\n\n");
 
 	return 0;
@@ -80,54 +79,25 @@ static int cmd_reboot(int argc, char** argv) {
 	return 0; // Never reached
 }
 
+#define REGISTER_CLI_CMD(name, help_text, handler)       \
+	{                                                    \
+		const esp_console_cmd_t cmd = {                  \
+			.command = name,                             \
+			.help = help_text,                           \
+			.hint = nullptr,                             \
+			.func = handler,                             \
+			.argtable = nullptr,                         \
+			.func_w_context = nullptr,                   \
+			.context = nullptr                           \
+		};                                               \
+		ESP_ERROR_CHECK(esp_console_cmd_register(&cmd)); \
+	}
+
 void CliService::registerCommands() {
-	// sysinfo command
-	const esp_console_cmd_t sysinfo_cmd = {
-		.command = "sysinfo",
-		.help = "Display system information",
-		.hint = nullptr,
-		.func = &cmd_sysinfo,
-		.argtable = nullptr,
-		.func_w_context = nullptr,
-		.context = nullptr
-	};
-	ESP_ERROR_CHECK(esp_console_cmd_register(&sysinfo_cmd));
-
-	// heap command
-	const esp_console_cmd_t heap_cmd = {
-		.command = "heap",
-		.help = "Display heap memory statistics",
-		.hint = nullptr,
-		.func = &cmd_heap,
-		.argtable = nullptr,
-		.func_w_context = nullptr,
-		.context = nullptr
-	};
-	ESP_ERROR_CHECK(esp_console_cmd_register(&heap_cmd));
-
-	// uptime command
-	const esp_console_cmd_t uptime_cmd = {
-		.command = "uptime",
-		.help = "Display system uptime",
-		.hint = nullptr,
-		.func = &cmd_uptime,
-		.argtable = nullptr,
-		.func_w_context = nullptr,
-		.context = nullptr
-	};
-	ESP_ERROR_CHECK(esp_console_cmd_register(&uptime_cmd));
-
-	// reboot command
-	const esp_console_cmd_t reboot_cmd = {
-		.command = "reboot",
-		.help = "Restart the system",
-		.hint = nullptr,
-		.func = &cmd_reboot,
-		.argtable = nullptr,
-		.func_w_context = nullptr,
-		.context = nullptr
-	};
-	ESP_ERROR_CHECK(esp_console_cmd_register(&reboot_cmd));
+	REGISTER_CLI_CMD("sysinfo", "Display system information", &cmd_sysinfo);
+	REGISTER_CLI_CMD("heap", "Display heap memory statistics", &cmd_heap);
+	REGISTER_CLI_CMD("uptime", "Display system uptime", &cmd_uptime);
+	REGISTER_CLI_CMD("reboot", "Restart the system", &cmd_reboot);
 
 	Log::info(TAG, "Registered CLI commands: sysinfo, heap, uptime, reboot");
 }

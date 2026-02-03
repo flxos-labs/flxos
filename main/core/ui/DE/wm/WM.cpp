@@ -4,9 +4,12 @@
 #include "core/common/Logger.hpp"
 
 #include "../DE.hpp"
+#include "../modules/Dock/Dock.hpp"
 #include "core/apps/AppManager.hpp"
+#include "core/system/Display/DisplayManager.hpp"
 #include "core/system/Focus/FocusManager.hpp"
 #include "core/system/System/SystemManager.hpp"
+#include "core/system/Theme/ThemeManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include <algorithm>
 #include <string_view>
@@ -41,7 +44,7 @@ void WM::init(lv_obj_t* window_container, lv_obj_t* app_container, lv_obj_t* scr
 
 	// Register rotation observer to update layout on display orientation changes
 	lv_subject_add_observer(
-		&System::SystemManager::getInstance().getRotationSubject(),
+		&System::DisplayManager::getInstance().getRotationSubject(),
 		on_rotation_change,
 		nullptr
 	);
@@ -87,7 +90,7 @@ void WM::openApp(const std::string& packageName) {
 
 	const char* iconSymbol = (const char*)app->getIcon();
 	lv_obj_t* dock_btn =
-		DE::create_dock_btn(m_appContainer, iconSymbol, lv_pct(UiConstants::SIZE_DOCK_ICON_PCT), lv_pct(LayoutConstants::LIST_HEIGHT_PCT));
+		UI::Modules::Dock::create_dock_btn(m_appContainer, iconSymbol, lv_pct(UiConstants::SIZE_DOCK_ICON_PCT), lv_pct(LayoutConstants::LIST_HEIGHT_PCT));
 
 	// Dock button state styles:
 	// Default (Minimized): Transparent
@@ -99,7 +102,7 @@ void WM::openApp(const std::string& packageName) {
 
 	// Add observer for transparency
 	lv_subject_add_observer_obj(
-		&System::SystemManager::getInstance().getTransparencyEnabledSubject(),
+		&System::ThemeManager::getInstance().getTransparencyEnabledSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			lv_obj_t* btn = lv_observer_get_target_obj(observer);
 			bool enabled = lv_subject_get_int(subject);
