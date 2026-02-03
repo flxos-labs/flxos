@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/apps/AppManager.hpp"
-#include "core/services/systeminfo/SystemInfoService.hpp"
+#include "core/services/system_info/SystemInfoService.hpp"
 #include "lvgl.h"
 #include <vector>
 

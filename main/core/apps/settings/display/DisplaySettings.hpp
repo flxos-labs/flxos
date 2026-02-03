@@ -2,11 +2,11 @@
 #include <cstring>
 
 #include "core/apps/settings/SettingsCommon.hpp"
-#include "core/system/Display/DisplayManager.hpp"
-#include "core/system/System/SystemManager.hpp"
-#include "core/system/Theme/ThemeManager.hpp"
+#include "core/system/display/DisplayManager.hpp"
+#include "core/system/system_core/SystemManager.hpp"
+#include "core/system/theme/ThemeManager.hpp"
 #include "core/ui/components/FileChooser.hpp"
-#include "core/ui/theming/ThemeEngine/ThemeEngine.hpp"
+#include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #include "lvgl.h"
 #include <functional>
 

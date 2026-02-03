@@ -1,7 +1,7 @@
 #include "AppManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
-#include "core/ui/DE/DE.hpp"
+#include "core/ui/desktop/Desktop.hpp"
 #include "files/FilesApp.hpp"
 #include "freertos/semphr.h"
 #include "settings/SettingsApp.hpp"
@@ -195,7 +195,7 @@ bool AppManager::stopApp(std::shared_ptr<App> app, bool closeUI) {
 		notifyAppStopped(pkg);
 		if (closeUI) {
 			GuiTask::lock();
-			DE::getInstance().closeApp(pkg);
+			Desktop::getInstance().closeApp(pkg);
 			GuiTask::unlock();
 		}
 	}

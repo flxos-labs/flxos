@@ -1,8 +1,8 @@
 #include "core/common/Logger.hpp"
-#include "core/system/System/SystemManager.hpp"
+#include "core/system/system_core/SystemManager.hpp"
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-#include "core/system/Notification/NotificationManager.hpp"
+#include "core/system/notification/NotificationManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #endif
 

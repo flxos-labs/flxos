@@ -1,8 +1,8 @@
 #include "GuiTask.hpp"
 #include "core/common/Logger.hpp"
-#include "core/system/System/SystemManager.hpp"
-#include "core/ui/DE/DE.hpp"
-#include "core/ui/theming/ThemeEngine/ThemeEngine.hpp"
+#include "core/system/system_core/SystemManager.hpp"
+#include "core/ui/desktop/Desktop.hpp"
+#include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
 #include <string_view>
@@ -68,7 +68,7 @@ void GuiTask::run(void*) {
 	display_init();
 	ThemeEngine::init();
 	System::SystemManager::getInstance().initGuiState();
-	DE::getInstance().init();
+	Desktop::getInstance().init();
 	unlock();
 
 	Log::info(TAG, "GUI task loop started");

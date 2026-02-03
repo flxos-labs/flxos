@@ -2,9 +2,9 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/hotspot/HotspotManager.hpp"
-#include "core/system/System/SystemManager.hpp"
-#include "core/ui/theming/LayoutConstants/LayoutConstants.hpp"
-#include "core/ui/theming/UiConstants/UiConstants.hpp"
+#include "core/system/system_core/SystemManager.hpp"
+#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
+#include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include "esp_wifi.h"
 
 namespace System {

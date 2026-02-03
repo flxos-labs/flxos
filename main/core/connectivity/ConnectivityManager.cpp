@@ -1,7 +1,7 @@
 #include "ConnectivityManager.hpp"
 #include "bluetooth/BluetoothManager.hpp"
 #include "core/common/Logger.hpp"
-#include "core/system/Settings/SettingsManager.hpp"
+#include "core/system/settings/SettingsManager.hpp"
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"

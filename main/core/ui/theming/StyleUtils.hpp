@@ -1,7 +1,7 @@
 #pragma once
 
-#include "UiConstants/UiConstants.hpp"
-#include "core/system/Theme/ThemeManager.hpp"
+#include "ui_constants/UiConstants.hpp"
+#include "core/system/theme/ThemeManager.hpp"
 #include "lvgl.h"
 
 namespace UI {

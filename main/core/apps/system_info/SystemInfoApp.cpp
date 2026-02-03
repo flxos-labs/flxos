@@ -1,8 +1,8 @@
 #include "SystemInfoApp.hpp"
-#include "../../ui/theming/LayoutConstants/LayoutConstants.hpp"
-#include "../../ui/theming/UiConstants/UiConstants.hpp"
+#include "../../ui/theming/layout_constants/LayoutConstants.hpp"
+#include "../../ui/theming/ui_constants/UiConstants.hpp"
 #include "core/common/Logger.hpp"
-#include "core/services/systeminfo/SystemInfoService.hpp"
+#include "core/services/system_info/SystemInfoService.hpp"
 #include "esp_timer.h"
 #include <algorithm>
 #include <string_view>

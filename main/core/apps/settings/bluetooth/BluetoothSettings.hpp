@@ -3,7 +3,7 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/bluetooth/BluetoothManager.hpp"
-#include "core/ui/theming/UiConstants/UiConstants.hpp"
+#include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include "lvgl.h"
 #include <functional>
 

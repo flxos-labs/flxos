@@ -1,7 +1,7 @@
 #include "FilesApp.hpp"
 #include "core/common/Logger.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
-#include "core/ui/theming/LayoutConstants/LayoutConstants.hpp"
+#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "esp_timer.h"
 #include "freertos/task.h"
 #include <cstring>

@@ -1,6 +1,6 @@
 #include "CliService.hpp"
 #include "core/common/Logger.hpp"
-#include "core/services/systeminfo/SystemInfoService.hpp"
+#include "core/services/system_info/SystemInfoService.hpp"
 
 #include "esp_console.h"
 #include "esp_system.h"

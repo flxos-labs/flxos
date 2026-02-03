@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/ui/theming/LayoutConstants/LayoutConstants.hpp"
+#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "lvgl.h"
 #include <cstring>
 #include <dirent.h>
