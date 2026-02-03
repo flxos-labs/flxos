@@ -1,6 +1,5 @@
 #include "BluetoothManager.hpp"
 #include "core/common/Logger.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
 #include <string_view>
 
 static constexpr std::string_view TAG = "BluetoothManager";
@@ -12,7 +11,7 @@ BluetoothManager& BluetoothManager::getInstance() {
 	return instance;
 }
 
-esp_err_t BluetoothManager::init(lv_subject_t* enabled_subject) {
+esp_err_t BluetoothManager::init(Observable<int32_t>* enabled_subject) {
 	Log::info(TAG, "Initializing Bluetooth Manager...");
 	m_enabled_subject = enabled_subject;
 	m_is_init = true;
@@ -21,20 +20,14 @@ esp_err_t BluetoothManager::init(lv_subject_t* enabled_subject) {
 
 esp_err_t BluetoothManager::enable(bool enable) {
 	Log::info(TAG, "Bluetooth %s", enable ? "enabling" : "disabling");
-	GuiTask::lock();
+	m_is_enabled = enable;
 	if (m_enabled_subject)
-		lv_subject_set_int(m_enabled_subject, enable ? 1 : 0);
-	GuiTask::unlock();
+		m_enabled_subject->set(enable ? 1 : 0);
 	return ESP_OK;
 }
 
 bool BluetoothManager::isEnabled() const {
-	GuiTask::lock();
-	bool enabled = false;
-	if (m_enabled_subject)
-		enabled = lv_subject_get_int(m_enabled_subject) != 0;
-	GuiTask::unlock();
-	return enabled;
+	return m_is_enabled;
 }
 
 } // namespace System

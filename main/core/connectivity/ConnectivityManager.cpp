@@ -1,7 +1,6 @@
 #include "ConnectivityManager.hpp"
 #include "bluetooth/BluetoothManager.hpp"
 #include "core/common/Logger.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
@@ -28,22 +27,7 @@ esp_err_t ConnectivityManager::init() {
 	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-	GuiTask::lock();
-	lv_subject_init_int(&m_wifi_enabled_subject, 0);
-	lv_subject_init_int(&m_wifi_status_subject, 0);
-	lv_subject_init_int(&m_wifi_connected_subject, 0);
-	lv_subject_init_string(&m_wifi_ssid_subject, m_wifi_ssid_buffer, m_wifi_ssid_prev_buffer, sizeof(m_wifi_ssid_buffer), "Disconnected");
-	lv_subject_init_string(&m_wifi_ip_subject, m_wifi_ip_buffer, m_wifi_ip_prev_buffer, sizeof(m_wifi_ip_buffer), "0.0.0.0");
-	lv_subject_init_int(&m_hotspot_enabled_subject, 0);
-	lv_subject_init_int(&m_hotspot_clients_subject, 0);
-	lv_subject_init_int(&m_hotspot_usage_sent_subject, 0);
-	lv_subject_init_int(&m_hotspot_usage_received_subject, 0);
-	lv_subject_init_int(&m_hotspot_upload_speed_subject, 0);
-	lv_subject_init_int(&m_hotspot_download_speed_subject, 0);
-	lv_subject_init_int(&m_hotspot_uptime_subject, 0);
-	lv_subject_init_int(&m_bluetooth_enabled_subject, 0);
-	GuiTask::unlock();
-
+	// Initialize sub-managers with observable references
 	WiFiManager::getInstance().init(&m_wifi_connected_subject, &m_wifi_ssid_subject, &m_wifi_ip_subject, &m_wifi_status_subject);
 	HotspotManager::getInstance().init(&m_hotspot_enabled_subject, &m_hotspot_clients_subject);
 	BluetoothManager::getInstance().init(&m_bluetooth_enabled_subject);
@@ -53,6 +37,25 @@ esp_err_t ConnectivityManager::init() {
 	Log::info(TAG, "ConnectivityManager initialized");
 	return ESP_OK;
 }
+
+#if !CONFIG_FLXOS_HEADLESS_MODE
+void ConnectivityManager::initGuiBridges() {
+	Log::info(TAG, "Initializing LVGL bridges for connectivity...");
+	m_wifi_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_enabled_subject);
+	m_wifi_status_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_status_subject);
+	m_wifi_connected_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_connected_subject);
+	m_wifi_ssid_bridge = std::make_unique<LvglStringObserverBridge>(m_wifi_ssid_subject);
+	m_wifi_ip_bridge = std::make_unique<LvglStringObserverBridge>(m_wifi_ip_subject);
+	m_hotspot_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_enabled_subject);
+	m_hotspot_clients_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_clients_subject);
+	m_hotspot_usage_sent_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_usage_sent_subject);
+	m_hotspot_usage_received_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_usage_received_subject);
+	m_hotspot_upload_speed_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_upload_speed_subject);
+	m_hotspot_download_speed_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_download_speed_subject);
+	m_hotspot_uptime_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_uptime_subject);
+	m_bluetooth_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_bluetooth_enabled_subject);
+}
+#endif
 
 esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode) {
 	std::lock_guard<std::recursive_mutex> lock(m_wifi_mutex);
@@ -93,9 +96,7 @@ esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
 	Log::info(TAG, "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
 	esp_err_t err = WiFiManager::getInstance().setEnabled(enabled);
 	if (err == ESP_OK) {
-		GuiTask::lock();
-		lv_subject_set_int(&m_wifi_enabled_subject, enabled ? 1 : 0);
-		GuiTask::unlock();
+		m_wifi_enabled_subject.set(enabled ? 1 : 0);
 	}
 	return err;
 }

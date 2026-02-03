@@ -1,9 +1,9 @@
 #pragma once
 
+#include "core/common/Observable.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
-#include "lvgl.h"
 #include <functional>
 #include <vector>
 
@@ -24,7 +24,7 @@ public:
 
 	static WiFiManager& getInstance();
 
-	esp_err_t init(lv_subject_t* connected_subject, lv_subject_t* ssid_subject, lv_subject_t* ip_subject, lv_subject_t* status_subject);
+	esp_err_t init(Observable<int32_t>* connected_subject, StringObservable* ssid_subject, StringObservable* ip_subject, Observable<int32_t>* status_subject);
 	esp_err_t connect(const char* ssid, const char* password);
 	esp_err_t disconnect();
 	bool isConnected() const;
@@ -52,10 +52,10 @@ private:
 	static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 	static void ip_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
-	lv_subject_t* m_connected_subject = nullptr;
-	lv_subject_t* m_ssid_subject = nullptr;
-	lv_subject_t* m_ip_subject = nullptr;
-	lv_subject_t* m_status_subject = nullptr;
+	Observable<int32_t>* m_connected_subject = nullptr;
+	StringObservable* m_ssid_subject = nullptr;
+	StringObservable* m_ip_subject = nullptr;
+	Observable<int32_t>* m_status_subject = nullptr;
 
 	bool m_is_init = false;
 	bool m_is_enabled = false;

@@ -8,6 +8,14 @@ menu "Hardware Configuration"
 			Disables LovyanGFX, LVGL, and all UI components.
 			Useful for headless deployments, testing, and CI/CD.
 
+	config FLXOS_CLI_ENABLED
+		bool "Enable CLI (Command Line Interface)"
+		default y
+		help
+			Enable interactive command-line interface via serial console.
+			Provides system commands like sysinfo, heap, uptime, reboot.
+			Works in both headless and GUI modes.
+
 	if !FLXOS_HEADLESS_MODE
 
 		config FLXOS_DISPLAY_WIDTH

@@ -2,7 +2,6 @@
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/wifi/WiFiManager.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
 #include "esp_timer.h"
 #include "esp_wifi.h"
 #include <cstring>
@@ -143,7 +142,7 @@ std::vector<HotspotManager::ClientInfo> HotspotManager::getConnectedClients() {
 	return m_clients;
 }
 
-esp_err_t HotspotManager::init(lv_subject_t* enabled_subject, lv_subject_t* client_count_subject) {
+esp_err_t HotspotManager::init(Observable<int32_t>* enabled_subject, Observable<int32_t>* client_count_subject) {
 	if (m_is_init)
 		return ESP_OK;
 
@@ -191,11 +190,11 @@ uint32_t HotspotManager::getUptime() const {
 }
 
 void HotspotManager::startUsageTimer() {
-	// Create timer to update usage subjects (every 2 seconds)
-	// This must be called AFTER lv_init()
-	GuiTask::lock();
-	lv_timer_create(
-		[](lv_timer_t* t) {
+	// Create timer to update usage (every 2 seconds)
+	// Uses esp_timer instead of lv_timer for headless compatibility
+	esp_timer_handle_t timer;
+	esp_timer_create_args_t timer_args = {
+		.callback = [](void* arg) {
 			HotspotManager& self = HotspotManager::getInstance();
 			if (self.isEnabled()) {
 				uint64_t now = esp_timer_get_time();
@@ -216,21 +215,23 @@ void HotspotManager::startUsageTimer() {
 				self.m_last_bytes_sent = self.m_bytes_sent;
 				self.m_last_bytes_received = self.m_bytes_received;
 
-				GuiTask::lock();
 				auto& cm = ConnectivityManager::getInstance();
-				lv_subject_set_int(&cm.getHotspotUsageSentSubject(), (int32_t)(self.getBytesSent() / 1024));
-				lv_subject_set_int(&cm.getHotspotUsageReceivedSubject(), (int32_t)(self.getBytesReceived() / 1024));
-				lv_subject_set_int(&cm.getHotspotUploadSpeedSubject(), (int32_t)(self.getUploadSpeed() / 1024));
-				lv_subject_set_int(&cm.getHotspotDownloadSpeedSubject(), (int32_t)(self.getDownloadSpeed() / 1024));
-				lv_subject_set_int(&cm.getHotspotUptimeSubject(), (int32_t)self.getUptime());
-				GuiTask::unlock();
+				cm.getHotspotUsageSentSubject().set((int32_t)(self.getBytesSent() / 1024));
+				cm.getHotspotUsageReceivedSubject().set((int32_t)(self.getBytesReceived() / 1024));
+				cm.getHotspotUploadSpeedSubject().set((int32_t)(self.getUploadSpeed() / 1024));
+				cm.getHotspotDownloadSpeedSubject().set((int32_t)(self.getDownloadSpeed() / 1024));
+				cm.getHotspotUptimeSubject().set((int32_t)self.getUptime());
 
 				self.checkAutoShutdown();
 			}
 		},
-		2000, nullptr
-	);
-	GuiTask::unlock();
+		.arg = nullptr,
+		.dispatch_method = ESP_TIMER_TASK,
+		.name = "hotspot_usage",
+		.skip_unhandled_events = true,
+	};
+	esp_timer_create(&timer_args, &timer);
+	esp_timer_start_periodic(timer, 2000000); // 2 seconds in microseconds
 }
 
 void HotspotManager::checkAutoShutdown() {
@@ -413,10 +414,8 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 			}
 		}
 
-		GuiTask::lock();
 		if (self->m_enabled_subject)
-			lv_subject_set_int(self->m_enabled_subject, 1);
-		GuiTask::unlock();
+			self->m_enabled_subject->set(1);
 	} else if (event_id == WIFI_EVENT_AP_STOP) {
 		Log::info(TAG, "Hotspot AP stopped");
 		{
@@ -425,12 +424,10 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 			self->m_clients.clear();
 			self->m_last_client_time = 0;
 		}
-		GuiTask::lock();
 		if (self->m_client_count_subject)
-			lv_subject_set_int(self->m_client_count_subject, 0);
+			self->m_client_count_subject->set(0);
 		if (self->m_enabled_subject)
-			lv_subject_set_int(self->m_enabled_subject, 0);
-		GuiTask::unlock();
+			self->m_enabled_subject->set(0);
 	} else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
 		wifi_event_ap_staconnected_t* event =
 			(wifi_event_ap_staconnected_t*)event_data;
@@ -449,10 +446,8 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 			self->m_last_client_time = 0; // Reset shutdown timer
 		}
 
-		GuiTask::lock();
 		if (self->m_client_count_subject)
-			lv_subject_set_int(self->m_client_count_subject, self->m_client_count);
-		GuiTask::unlock();
+			self->m_client_count_subject->set(self->m_client_count);
 	} else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
 		wifi_event_ap_stadisconnected_t* event =
 			(wifi_event_ap_stadisconnected_t*)event_data;
@@ -474,10 +469,8 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 			}
 		}
 
-		GuiTask::lock();
 		if (self->m_client_count_subject)
-			lv_subject_set_int(self->m_client_count_subject, self->m_client_count);
-		GuiTask::unlock();
+			self->m_client_count_subject->set(self->m_client_count);
 	}
 }
 

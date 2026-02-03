@@ -133,7 +133,7 @@ private:
 		lv_obj_t* uptimeLabel = lv_label_create(usageCont);
 		lv_label_set_text(uptimeLabel, "Uptime: 0s");
 		lv_subject_add_observer_obj(
-			&ConnectivityManager::getInstance().getHotspotUptimeSubject(),
+			&ConnectivityManager::getInstance().getHotspotUptimeLvglSubject(),
 			[](lv_observer_t* o, lv_subject_t* s) {
 				lv_obj_t* label = lv_observer_get_target_obj(o);
 				int32_t sec = lv_subject_get_int(s);
@@ -153,7 +153,7 @@ private:
 		lv_obj_t* downSpeedLabel = lv_label_create(usageCont);
 		lv_label_set_text(downSpeedLabel, "Download: 0 KB/s");
 		lv_subject_add_observer_obj(
-			&ConnectivityManager::getInstance().getHotspotDownloadSpeedSubject(),
+			&ConnectivityManager::getInstance().getHotspotDownloadSpeedLvglSubject(),
 			[](lv_observer_t* o, lv_subject_t* s) {
 				lv_obj_t* label = lv_observer_get_target_obj(o);
 				int32_t kb = lv_subject_get_int(s);
@@ -168,7 +168,7 @@ private:
 		lv_obj_t* upSpeedLabel = lv_label_create(usageCont);
 		lv_label_set_text(upSpeedLabel, "Upload: 0 KB/s");
 		lv_subject_add_observer_obj(
-			&ConnectivityManager::getInstance().getHotspotUploadSpeedSubject(),
+			&ConnectivityManager::getInstance().getHotspotUploadSpeedLvglSubject(),
 			[](lv_observer_t* o, lv_subject_t* s) {
 				lv_obj_t* label = lv_observer_get_target_obj(o);
 				int32_t kb = lv_subject_get_int(s);
@@ -183,7 +183,7 @@ private:
 		lv_obj_t* sentLabel = lv_label_create(usageCont);
 		lv_label_set_text(sentLabel, "Sent: 0 KB");
 		lv_subject_add_observer_obj(
-			&ConnectivityManager::getInstance().getHotspotUsageSentSubject(),
+			&ConnectivityManager::getInstance().getHotspotUsageSentLvglSubject(),
 			[](lv_observer_t* o, lv_subject_t* s) {
 				lv_obj_t* label = lv_observer_get_target_obj(o);
 				int32_t kb = lv_subject_get_int(s);
@@ -198,7 +198,7 @@ private:
 		lv_obj_t* recvLabel = lv_label_create(usageCont);
 		lv_label_set_text(recvLabel, "Received: 0 KB");
 		lv_subject_add_observer_obj(
-			&ConnectivityManager::getInstance().getHotspotUsageReceivedSubject(),
+			&ConnectivityManager::getInstance().getHotspotUsageReceivedLvglSubject(),
 			[](lv_observer_t* o, lv_subject_t* s) {
 				lv_obj_t* label = lv_observer_get_target_obj(o);
 				int32_t kb = lv_subject_get_int(s);

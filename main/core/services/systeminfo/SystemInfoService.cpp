@@ -165,8 +165,7 @@ WiFiStats SystemInfoService::getWiFiStats() {
 		}
 
 		// Retrieve IP address from ConnectivityManager
-		lv_subject_t& ipSubject = ConnectivityManager::getInstance().getWiFiIpSubject();
-		const char* ip = lv_subject_get_string(&ipSubject);
+		const char* ip = ConnectivityManager::getInstance().getWiFiIpObservable().get();
 		stats.ipAddress = ip ? std::string(ip) : "0.0.0.0";
 	}
 

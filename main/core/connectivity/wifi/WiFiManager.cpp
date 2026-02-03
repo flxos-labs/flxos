@@ -2,7 +2,6 @@
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/Time/TimeManager.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
 #include "esp_netif.h"
 #include "esp_wifi.h"
 #include <cstring>
@@ -17,7 +16,7 @@ WiFiManager& WiFiManager::getInstance() {
 	return instance;
 }
 
-esp_err_t WiFiManager::init(lv_subject_t* connected_subject, lv_subject_t* ssid_subject, lv_subject_t* ip_subject, lv_subject_t* status_subject) {
+esp_err_t WiFiManager::init(Observable<int32_t>* connected_subject, StringObservable* ssid_subject, StringObservable* ip_subject, Observable<int32_t>* status_subject) {
 	if (m_is_init)
 		return ESP_OK;
 
@@ -170,14 +169,10 @@ esp_err_t WiFiManager::scan(ScanCallback callback) {
 }
 
 bool WiFiManager::isConnected() const {
-	GuiTask::lock();
 	if (!m_connected_subject) {
-		GuiTask::unlock();
 		return false;
 	}
-	bool connected = lv_subject_get_int(m_connected_subject) != 0;
-	GuiTask::unlock();
-	return connected;
+	return m_connected_subject->get() != 0;
 }
 
 int8_t WiFiManager::getRssi() const {
@@ -189,11 +184,9 @@ int8_t WiFiManager::getRssi() const {
 }
 
 void WiFiManager::setStatus(WiFiStatus status) {
-	GuiTask::lock();
 	if (m_status_subject) {
-		lv_subject_set_int(m_status_subject, static_cast<int>(status));
+		m_status_subject->set(static_cast<int>(status));
 	}
-	GuiTask::unlock();
 }
 
 void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
@@ -208,14 +201,12 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 			(wifi_event_sta_disconnected_t*)event_data;
 		Log::warn(TAG, "STA disconnected, reason: %d", event->reason);
 
-		GuiTask::lock();
 		if (self->m_connected_subject)
-			lv_subject_set_int(self->m_connected_subject, 0);
+			self->m_connected_subject->set(0);
 		if (self->m_ssid_subject)
-			lv_subject_copy_string(self->m_ssid_subject, "Disconnected");
+			self->m_ssid_subject->set("Disconnected");
 		if (self->m_ip_subject)
-			lv_subject_copy_string(self->m_ip_subject, "0.0.0.0");
-		GuiTask::unlock();
+			self->m_ip_subject->set("0.0.0.0");
 
 		bool is_auth_failure =
 			(event->reason == WIFI_REASON_AUTH_EXPIRE ||
@@ -248,10 +239,8 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 		wifi_event_sta_connected_t* event =
 			(wifi_event_sta_connected_t*)event_data;
 		Log::info(TAG, "STA connected to SSID: %s", (char*)event->ssid);
-		GuiTask::lock();
 		if (self->m_ssid_subject)
-			lv_subject_copy_string(self->m_ssid_subject, (char*)event->ssid);
-		GuiTask::unlock();
+			self->m_ssid_subject->set((char*)event->ssid);
 	} else if (event_id == WIFI_EVENT_SCAN_DONE) {
 		uint16_t ap_count = 0;
 		esp_wifi_scan_get_ap_num(&ap_count);
@@ -285,12 +274,10 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t event_base, int32
 		esp_ip4addr_ntoa(&event->ip_info.ip, ip_str, sizeof(ip_str));
 		Log::info(TAG, "Got IP: %s", ip_str);
 
-		GuiTask::lock();
 		if (self->m_ip_subject)
-			lv_subject_copy_string(self->m_ip_subject, ip_str);
+			self->m_ip_subject->set(ip_str);
 		if (self->m_connected_subject)
-			lv_subject_set_int(self->m_connected_subject, 1);
-		GuiTask::unlock();
+			self->m_connected_subject->set(1);
 
 		self->m_retry_count = 0;
 		self->setStatus(WiFiStatus::CONNECTED);

@@ -31,6 +31,13 @@ if(NOT CONFIG_FLXOS_HEADLESS_MODE)
     )
 endif()
 
+# CLI sources (when enabled)
+if(CONFIG_FLXOS_CLI_ENABLED)
+    list(APPEND CORE_SRCS
+        "core/services/cli/CliService.cpp"
+    )
+endif()
+
 # Set include directories based on mode
 if(CONFIG_FLXOS_HEADLESS_MODE)
     set(INCLUDE_DIRS "." "hal/os" "core/common")
@@ -40,14 +47,17 @@ else()
     set(COMPONENT_REQUIRES LovyanGFX lvgl dhcpserver)
 endif()
 
+# Add console component when CLI is enabled
+if(CONFIG_FLXOS_CLI_ENABLED)
+    list(APPEND COMPONENT_REQUIRES console)
+endif()
+
 # Register the main component
 idf_component_register(SRCS ${CORE_SRCS}
     INCLUDE_DIRS ${INCLUDE_DIRS}
-    PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event esp_netif lwip nvs_flash esp_system heap esp_timer freertos json
+    PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event esp_netif lwip nvs_flash esp_system heap esp_timer freertos json console
     REQUIRES ${COMPONENT_REQUIRES}
 )
-
-
 
 # LVGL configuration (only in GUI mode)
 if(NOT CONFIG_FLXOS_HEADLESS_MODE)

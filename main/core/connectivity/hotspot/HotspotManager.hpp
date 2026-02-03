@@ -1,9 +1,9 @@
 #pragma once
 
+#include "core/common/Observable.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_wifi_types.h"
-#include "lvgl.h"
 extern "C" {
 #include "dhcpserver/dhcpserver_hostname.h"
 }
@@ -18,7 +18,7 @@ public:
 
 	static HotspotManager& getInstance();
 
-	esp_err_t init(lv_subject_t* enabled_subject, lv_subject_t* client_count_subject);
+	esp_err_t init(Observable<int32_t>* enabled_subject, Observable<int32_t>* client_count_subject);
 	esp_err_t start(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);
 	esp_err_t stop();
 	bool isEnabled() const;
@@ -76,8 +76,8 @@ private:
 
 	static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
-	lv_subject_t* m_enabled_subject = nullptr;
-	lv_subject_t* m_client_count_subject = nullptr;
+	Observable<int32_t>* m_enabled_subject = nullptr;
+	Observable<int32_t>* m_client_count_subject = nullptr;
 
 	bool m_is_init = false;
 	bool m_nat_enabled = true;
