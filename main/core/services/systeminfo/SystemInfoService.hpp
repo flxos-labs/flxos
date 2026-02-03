@@ -1,7 +1,10 @@
 #pragma once
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace System {
@@ -16,6 +19,12 @@ struct SystemStats {
 	std::string features;
 	uint64_t uptimeSeconds;
 	uint32_t cpuFreqMhz;
+	std::string bootReason;
+	std::string buildDate;
+	int displayResX;
+	int displayResY;
+	int displayBpp;
+	std::string colorFormat;
 };
 
 struct MemoryStats {
@@ -61,6 +70,7 @@ struct TaskInfo {
 	int basePriority;
 	int coreID;
 	uint32_t runtime; // Runtime counter
+	float cpuUsagePercent;
 };
 
 class SystemInfoService {
@@ -112,6 +122,14 @@ private:
 	SystemInfoService& operator=(const SystemInfoService&) = delete;
 
 	std::string getChipModel();
+	std::string getResetReason();
+
+	struct TaskTrackingInfo {
+		uint32_t lastRuntime;
+		uint32_t lastTimestamp;
+	};
+	std::unordered_map<TaskHandle_t, TaskTrackingInfo> m_taskTracking;
+	uint32_t m_lastTotalRuntime = 0;
 };
 
 } // namespace Services

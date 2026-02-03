@@ -3,6 +3,7 @@
 #include "core/apps/AppManager.hpp"
 #include "core/services/systeminfo/SystemInfoService.hpp"
 #include "lvgl.h"
+#include <vector>
 
 namespace System {
 namespace Apps {
@@ -34,6 +35,8 @@ private:
 	lv_obj_t* m_chip_label;
 	lv_obj_t* m_idf_label;
 	lv_obj_t* m_battery_label;
+	std::vector<lv_obj_t*> m_cpu_bars;
+	std::vector<lv_obj_t*> m_cpu_labels;
 
 	// Memory tab labels
 	lv_obj_t* m_heap_label;

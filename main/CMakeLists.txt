@@ -47,15 +47,13 @@ else()
     set(COMPONENT_REQUIRES LovyanGFX lvgl dhcpserver)
 endif()
 
-# Add console component when CLI is enabled
-if(CONFIG_FLXOS_CLI_ENABLED)
-    list(APPEND COMPONENT_REQUIRES console)
-endif()
+# Console is always included because Kconfig values aren't reliably available during first CMake pass
+set(PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event esp_netif lwip nvs_flash esp_system heap esp_timer freertos json console)
 
 # Register the main component
 idf_component_register(SRCS ${CORE_SRCS}
     INCLUDE_DIRS ${INCLUDE_DIRS}
-    PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event esp_netif lwip nvs_flash esp_system heap esp_timer freertos json console
+    PRIV_REQUIRES ${PRIV_REQUIRES}
     REQUIRES ${COMPONENT_REQUIRES}
 )
 

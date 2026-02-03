@@ -9,8 +9,7 @@
 #include "esp_vfs_fat.h"
 #include "esp_wifi.h"
 #include "freertos/task.h"
-#include <iomanip>
-#include <sstream>
+#include <cstdio>
 #include <string_view>
 
 static constexpr std::string_view TAG = "SystemInfo";
@@ -54,6 +53,8 @@ SystemStats SystemInfoService::getSystemStats() {
 	stats.flxosVersion = FLXOS_VERSION;
 	stats.idfVersion = esp_get_idf_version();
 	stats.chipModel = getChipModel();
+	stats.bootReason = getResetReason();
+	stats.buildDate = __DATE__ " " __TIME__;
 
 	esp_chip_info_t chip_info;
 	esp_chip_info(&chip_info);
@@ -61,19 +62,80 @@ SystemStats SystemInfoService::getSystemStats() {
 	stats.revision = chip_info.revision;
 	stats.cpuFreqMhz = CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ;
 
-	// Build features string
-	std::stringstream features;
+	// Build features string (avoid stringstream allocation)
+	stats.features.clear();
+	stats.features.reserve(16);
 	if (chip_info.features & CHIP_FEATURE_WIFI_BGN)
-		features << "WiFi ";
+		stats.features += "WiFi ";
 	if (chip_info.features & CHIP_FEATURE_BT)
-		features << "BT ";
+		stats.features += "BT ";
 	if (chip_info.features & CHIP_FEATURE_BLE)
-		features << "BLE";
-	stats.features = features.str();
+		stats.features += "BLE";
 
 	// Get uptime
 	int64_t uptime_us = esp_timer_get_time();
 	stats.uptimeSeconds = uptime_us / 1000000;
+
+	// Display Info
+	stats.displayResX = 0;
+	stats.displayResY = 0;
+	stats.displayBpp = 0;
+	stats.colorFormat = "Unknown";
+#if !CONFIG_FLXOS_HEADLESS_MODE
+	lv_display_t* disp = lv_display_get_default();
+	if (disp) {
+		stats.displayResX = lv_display_get_horizontal_resolution(disp);
+		stats.displayResY = lv_display_get_vertical_resolution(disp);
+		lv_color_format_t cf = lv_display_get_color_format(disp);
+
+		switch (cf) {
+			case LV_COLOR_FORMAT_RGB565:
+				stats.colorFormat = "RGB565";
+				stats.displayBpp = 16;
+				break;
+			case LV_COLOR_FORMAT_RGB565A8:
+				stats.colorFormat = "RGB565A8";
+				stats.displayBpp = 24;
+				break;
+			case LV_COLOR_FORMAT_RGB888:
+				stats.colorFormat = "RGB888";
+				stats.displayBpp = 24;
+				break;
+			case LV_COLOR_FORMAT_XRGB8888:
+				stats.colorFormat = "XRGB8888";
+				stats.displayBpp = 32;
+				break;
+			case LV_COLOR_FORMAT_ARGB8888:
+				stats.colorFormat = "ARGB8888";
+				stats.displayBpp = 32;
+				break;
+
+			// Swapped formats
+			case LV_COLOR_FORMAT_RGB565_SWAPPED:
+				stats.colorFormat = "RGB565 (Swapped)";
+				stats.displayBpp = 16;
+				break;
+
+			// Others
+			case LV_COLOR_FORMAT_L8:
+				stats.colorFormat = "L8 (Grayscale)";
+				stats.displayBpp = 8;
+				break;
+			case LV_COLOR_FORMAT_A8:
+				stats.colorFormat = "A8 (Alpha)";
+				stats.displayBpp = 8;
+				break;
+			case LV_COLOR_FORMAT_I8:
+				stats.colorFormat = "I8 (Indexed)";
+				stats.displayBpp = 8;
+				break;
+
+			default:
+				stats.colorFormat = "Format " + std::to_string((int)cf);
+				break;
+		}
+	}
+#endif
 
 	return stats;
 }
@@ -180,12 +242,26 @@ std::vector<TaskInfo> SystemInfoService::getTaskList(size_t maxTasks) {
 		return tasks;
 	}
 
-	TaskStatus_t* task_array = new TaskStatus_t[task_count];
+	// Use stack allocation for small task counts, heap for larger
+	constexpr size_t STACK_TASK_LIMIT = 32;
+	TaskStatus_t stack_array[STACK_TASK_LIMIT];
+	TaskStatus_t* task_array = (task_count <= STACK_TASK_LIMIT) ? stack_array : new TaskStatus_t[task_count];
+
 	uint32_t total_runtime;
 	task_count = uxTaskGetSystemState(task_array, task_count, &total_runtime);
 
 	// Limit to maxTasks if specified
 	size_t count = (maxTasks == 0 || task_count < maxTasks) ? task_count : maxTasks;
+
+	uint32_t runtime_delta = total_runtime - m_lastTotalRuntime;
+	m_lastTotalRuntime = total_runtime;
+
+	// Cache core count (static, never changes)
+	static int cores = []() {
+		esp_chip_info_t chip_info;
+		esp_chip_info(&chip_info);
+		return chip_info.cores;
+	}();
 
 	for (size_t i = 0; i < count; i++) {
 		TaskInfo info;
@@ -196,45 +272,99 @@ std::vector<TaskInfo> SystemInfoService::getTaskList(size_t maxTasks) {
 		info.coreID = (int)task_array[i].xCoreID;
 		info.runtime = task_array[i].ulRunTimeCounter;
 
+		// Calculate CPU usage
+		if (runtime_delta > 0) {
+			TaskHandle_t handle = task_array[i].xHandle;
+			auto it = m_taskTracking.find(handle);
+			if (it != m_taskTracking.end()) {
+				uint32_t task_runtime_delta = info.runtime - it->second.lastRuntime;
+
+				// Safeguard against counter wrap or task restart (deletion/creation with same name)
+				if (task_runtime_delta > runtime_delta) {
+					task_runtime_delta = 0;
+				}
+
+				// Calculate Usage: (TaskDelta / TotalDelta) * 100 * Cores
+				// This normalizes 100% to be one fully loaded core
+				info.cpuUsagePercent = ((float)task_runtime_delta * 100.0f / (float)runtime_delta) * cores;
+			} else {
+				info.cpuUsagePercent = 0.0f;
+			}
+			m_taskTracking[handle] = {info.runtime, (uint32_t)esp_timer_get_time()};
+		} else {
+			info.cpuUsagePercent = 0.0f;
+		}
+
 		switch (task_array[i].eCurrentState) {
 			case eRunning:
-				info.state = "Running";
+				info.state = "RUN";
 				break;
 			case eReady:
-				info.state = "Ready";
+				info.state = "RDY";
 				break;
 			case eBlocked:
-				info.state = "Blocked";
+				info.state = "BLK";
 				break;
 			case eSuspended:
-				info.state = "Suspend";
+				info.state = "SUS";
 				break;
 			case eDeleted:
-				info.state = "Deleted";
+				info.state = "DEL";
 				break;
 			default:
-				info.state = "Invalid";
+				info.state = "INV";
 				break;
 		}
 
 		tasks.push_back(info);
 	}
 
-	delete[] task_array;
+	// Only delete if we used heap allocation
+	if (task_count > STACK_TASK_LIMIT) {
+		delete[] task_array;
+	}
 
 	return tasks;
 }
 
 std::string SystemInfoService::formatBytes(uint32_t bytes) {
-	std::stringstream ss;
+	char buffer[32];
 	if (bytes < 1024) {
-		ss << bytes << " B";
+		snprintf(buffer, sizeof(buffer), "%lu B", (unsigned long)bytes);
 	} else if (bytes < 1024 * 1024) {
-		ss << std::fixed << std::setprecision(2) << (bytes / 1024.0) << " KB";
+		snprintf(buffer, sizeof(buffer), "%.2f KB", bytes / 1024.0);
 	} else {
-		ss << std::fixed << std::setprecision(2) << (bytes / (1024.0 * 1024.0)) << " MB";
+		snprintf(buffer, sizeof(buffer), "%.2f MB", bytes / (1024.0 * 1024.0));
 	}
-	return ss.str();
+	return std::string(buffer);
+}
+
+std::string SystemInfoService::getResetReason() {
+	esp_reset_reason_t reason = esp_reset_reason();
+	switch (reason) {
+		case ESP_RST_POWERON:
+			return "Power On";
+		case ESP_RST_EXT:
+			return "External Pin";
+		case ESP_RST_SW:
+			return "Software Reset";
+		case ESP_RST_PANIC:
+			return "Exception/Panic";
+		case ESP_RST_INT_WDT:
+			return "Interrupt WDT";
+		case ESP_RST_TASK_WDT:
+			return "Task WDT";
+		case ESP_RST_WDT:
+			return "Other WDT";
+		case ESP_RST_DEEPSLEEP:
+			return "Deep Sleep Wakeup";
+		case ESP_RST_BROWNOUT:
+			return "Brownout";
+		case ESP_RST_SDIO:
+			return "SDIO Reset";
+		default:
+			return "Unknown";
+	}
 }
 
 } // namespace Services
