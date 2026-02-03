@@ -1,23 +1,23 @@
 #include "SystemManager.hpp"
-#include "../../../hal/display/lv_lgfx_user.hpp"
 #include "cJSON.h"
-#include "core/apps/AppManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/tasks/TaskManager.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
 #include "core/tasks/resource_monitor/ResourceMonitorTask.hpp"
-#include "core/ui/theming/ThemeEngine/ThemeEngine.hpp"
 #include "esp_vfs_fat.h"
 #include "nvs_flash.h"
-#include "src/debugging/sysmon/lv_sysmon.h"
 #include <cstring>
 #include <stdio.h>
 #include <string_view>
 #include <sys/stat.h>
 #include <unistd.h>
 
-static constexpr std::string_view TAG = "SystemManager";
+#if !CONFIG_FLXOS_HEADLESS_MODE
+#include "../../../hal/display/lv_lgfx_user.hpp"
+#include "core/apps/AppManager.hpp"
+#include "core/tasks/gui/GuiTask.hpp"
+#include "core/ui/theming/ThemeEngine/ThemeEngine.hpp"
+#include "src/debugging/sysmon/lv_sysmon.h"
 
 // Internal struct from lv_lovyan_gfx.cpp
 #if LV_USE_LOVYAN_GFX
@@ -25,6 +25,9 @@ typedef struct {
 	LGFX* tft;
 } lv_lovyan_gfx_t;
 #endif
+#endif
+
+static constexpr std::string_view TAG = "SystemManager";
 
 namespace System {
 SystemManager& SystemManager::getInstance() {
@@ -58,6 +61,7 @@ esp_err_t SystemManager::initHardware() {
 	return ESP_OK;
 }
 
+#if !CONFIG_FLXOS_HEADLESS_MODE
 esp_err_t SystemManager::initGuiState() {
 
 	ConnectivityManager::getInstance().init();
@@ -175,6 +179,7 @@ esp_err_t SystemManager::initGuiState() {
 
 	return ESP_OK;
 }
+#endif
 
 void SystemManager::mount_storage_helper(const char* p, const char* l, wl_handle_t* h, bool f) {
 	Log::info(TAG, "Mounting %s...", p);
@@ -192,6 +197,7 @@ void SystemManager::mount_storage_helper(const char* p, const char* l, wl_handle
 	}
 }
 
+#if !CONFIG_FLXOS_HEADLESS_MODE
 void SystemManager::triggerSave() {
 	if (m_save_timer) {
 		lv_timer_reset(m_save_timer);
@@ -298,5 +304,6 @@ void SystemManager::saveSettings() {
 	}
 	cJSON_Delete(json);
 }
+#endif
 
 } // namespace System

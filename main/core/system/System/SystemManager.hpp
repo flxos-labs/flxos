@@ -1,8 +1,11 @@
 #pragma once
 
 #include "esp_err.h"
-#include "lvgl.h"
 #include "wear_levelling.h"
+
+#if !CONFIG_FLXOS_HEADLESS_MODE
+#include "lvgl.h"
+#endif
 
 namespace System {
 class SystemManager {
@@ -11,13 +14,17 @@ public:
 	static SystemManager& getInstance();
 
 	esp_err_t initHardware();
+
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	esp_err_t initGuiState();
+#endif
 
 	wl_handle_t getSystemWlHandle() const { return m_wl_handle_system; }
 	wl_handle_t getDataWlHandle() const { return m_wl_handle_data; }
 
 	bool isSafeMode() const { return m_isSafeMode; }
 
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	lv_subject_t& getBrightnessSubject() { return m_brightness_subject; }
 	lv_subject_t& getThemeSubject() { return m_theme_subject; }
 	lv_subject_t& getRotationSubject() { return m_rotation_subject; }
@@ -37,6 +44,7 @@ public:
 	lv_subject_t& getHotspotMaxConnSubject() { return m_hotspot_max_conn_subject; }
 	lv_subject_t& getHotspotHiddenSubject() { return m_hotspot_hidden_subject; }
 	lv_subject_t& getHotspotAuthSubject() { return m_hotspot_auth_subject; }
+#endif
 
 private:
 
@@ -52,6 +60,7 @@ private:
 	wl_handle_t m_wl_handle_data = WL_INVALID_HANDLE;
 	bool m_isSafeMode = false;
 
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	lv_subject_t m_brightness_subject;
 	lv_subject_t m_theme_subject;
 	lv_subject_t m_rotation_subject;
@@ -72,6 +81,7 @@ private:
 	void saveSettings();
 	void triggerSave();
 	lv_timer_t* m_save_timer = nullptr;
+#endif
 };
 
 } // namespace System
