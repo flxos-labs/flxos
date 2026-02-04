@@ -73,6 +73,7 @@ void ConnectivityManager::initGuiBridges() {
 	m_hotspot_usage_sent_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_usage_sent_subject);
 	m_hotspot_usage_received_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_usage_received_subject);
 	m_hotspot_download_speed_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_download_speed_subject);
+	m_hotspot_upload_speed_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_upload_speed_subject);
 	m_hotspot_uptime_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_uptime_subject);
 	m_bluetooth_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_bluetooth_enabled_subject);
 
@@ -86,7 +87,7 @@ void ConnectivityManager::initGuiBridges() {
 }
 #endif
 
-esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode) {
+esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode, bool auto_start) {
 	std::lock_guard<std::recursive_mutex> lock(m_wifi_mutex);
 
 	wifi_mode_t current_mode;
@@ -96,7 +97,10 @@ esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode) {
 	}
 
 	if (err != ESP_ERR_WIFI_NOT_INIT && current_mode == mode) {
-		return esp_wifi_start(); // Ensure it's started even if mode is same
+		if (auto_start) {
+			return esp_wifi_start(); // Ensure it's started
+		}
+		return ESP_OK;
 	}
 
 	Log::info(TAG, "Setting WiFi mode: %d", (int)mode);
@@ -106,7 +110,10 @@ esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode) {
 		return err;
 	}
 
-	return esp_wifi_start();
+	if (auto_start) {
+		return esp_wifi_start();
+	}
+	return ESP_OK;
 }
 
 esp_err_t ConnectivityManager::connectWiFi(const char* s, const char* p) {

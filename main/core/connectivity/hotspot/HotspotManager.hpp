@@ -24,7 +24,7 @@ public:
 	static bool isEnabled();
 	int getClientCount() const;
 
-	esp_err_t setNatEnabled(bool enabled);
+	esp_err_t setNatEnabled(bool enabled, bool syncDns = false);
 	bool isNatEnabled() const { return m_nat_enabled; }
 
 	uint64_t getBytesSent() const { return m_bytes_sent; }

@@ -1,6 +1,7 @@
 #include "NotificationManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/lv_observer.h"
+#include "core/tasks/gui/GuiTask.hpp"
 #include "esp_timer.h"
 #include <algorithm>
 #include <cstddef>
@@ -114,11 +115,13 @@ void NotificationManager::updateSubjects() {
 	// If called from other tasks, we might need a mutex or dispatch to UI task.
 	// For now, assuming these simply update integer values.
 
+	GuiTask::lock();
 	lv_subject_set_int(&m_unread_count_subject, (int32_t)getUnreadCount());
 
 	// Toggle or increment update subject to signal list change
 	int const current = lv_subject_get_int(&m_update_subject);
 	lv_subject_set_int(&m_update_subject, current + 1);
+	GuiTask::unlock();
 }
 
 } // namespace System

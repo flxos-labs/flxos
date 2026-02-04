@@ -174,22 +174,8 @@ esp_err_t HotspotManager::init(Observable<int32_t>* enabled_subject, Observable<
 	WiFiManager::getInstance().setOnGotIPCallback([this]() {
 		initByteCounter(); // Ensure byte counter is initialized when STA is ready
 		if (m_nat_enabled && isEnabled()) {
-			// Re-apply NAT settings to ensure everything is synced with the new
-			// uplink IP
-			setNatEnabled(true);
-
-			// Sync DNS from STA to AP
-			esp_netif_dns_info_t dns;
-			esp_netif_t* sta_netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
-			esp_netif_t* ap_netif = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
-			if (sta_netif && ap_netif) {
-				if (esp_netif_get_dns_info(sta_netif, ESP_NETIF_DNS_MAIN, &dns) ==
-					ESP_OK) {
-					esp_netif_dhcps_stop(ap_netif);
-					esp_netif_set_dns_info(ap_netif, ESP_NETIF_DNS_MAIN, &dns);
-					esp_netif_dhcps_start(ap_netif);
-				}
-			}
+			// Re-apply NAT settings with DNS sync in one consolidated DHCP restart
+			setNatEnabled(true, true);
 		}
 	});
 
@@ -300,7 +286,8 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 		target_mode = WIFI_MODE_AP;
 	}
 
-	esp_err_t err = ConnectivityManager::getInstance().setWifiMode(target_mode);
+	// Don't auto-start yet - wait until config is applied to avoid recurrence of AP_STOP event
+	esp_err_t err = ConnectivityManager::getInstance().setWifiMode(target_mode, false);
 	if (err != ESP_OK) {
 		return err;
 	}
@@ -311,6 +298,12 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 	}
 
 	esp_wifi_set_max_tx_power(max_tx_power);
+
+	// Now start WiFi explicitly
+	err = esp_wifi_start();
+	if (err != ESP_OK) {
+		return err;
+	}
 
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
@@ -367,7 +360,7 @@ int HotspotManager::getClientCount() const {
 	return m_client_count;
 }
 
-esp_err_t HotspotManager::setNatEnabled(bool enabled) {
+esp_err_t HotspotManager::setNatEnabled(bool enabled, bool syncDns) {
 	m_nat_enabled = enabled;
 	esp_netif_t* ap_netif = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
 	if (!ap_netif) {
@@ -381,15 +374,25 @@ esp_err_t HotspotManager::setNatEnabled(bool enabled) {
 		// Enable NAPT
 		ip_napt_enable(ip_info.ip.addr, 1);
 
-		// Configure DHCP server to offer DNS
+		// Configure DHCP server - do ONE stop, configure all options, then ONE start
 		esp_netif_dhcps_stop(ap_netif);
 		dhcps_offer_t dhcps_dns_value = OFFER_DNS;
 		esp_netif_dhcps_option(ap_netif, ESP_NETIF_OP_SET, ESP_NETIF_DOMAIN_NAME_SERVER, &dhcps_dns_value, sizeof(dhcps_dns_value));
 
-		// Set a default DNS server (Google DNS) in case STA hasn't synced one yet
+		// Try to sync DNS from STA, fallback to Google DNS
 		esp_netif_dns_info_t dns;
-		dns.ip.type = ESP_IPADDR_TYPE_V4;
-		dns.ip.u_addr.ip4.addr = esp_ip4addr_aton("8.8.8.8");
+		bool dnsSynced = false;
+		if (syncDns) {
+			esp_netif_t* sta_netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+			if (sta_netif && esp_netif_get_dns_info(sta_netif, ESP_NETIF_DNS_MAIN, &dns) == ESP_OK && dns.ip.u_addr.ip4.addr != 0) {
+				dnsSynced = true;
+			}
+		}
+		if (!dnsSynced) {
+			// Set fallback DNS (Google DNS)
+			dns.ip.type = ESP_IPADDR_TYPE_V4;
+			dns.ip.u_addr.ip4.addr = esp_ip4addr_aton("8.8.8.8");
+		}
 		esp_netif_set_dns_info(ap_netif, ESP_NETIF_DNS_MAIN, &dns);
 		esp_netif_dhcps_start(ap_netif);
 
@@ -415,20 +418,8 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 		self->initApHook();
 
 		if (self->m_nat_enabled) {
-			self->setNatEnabled(true);
-
-			// Sync DNS from STA to AP
-			esp_netif_dns_info_t dns;
-			esp_netif_t* sta_netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
-			esp_netif_t* ap_netif = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
-			if (sta_netif && ap_netif) {
-				if (esp_netif_get_dns_info(sta_netif, ESP_NETIF_DNS_MAIN, &dns) ==
-					ESP_OK) {
-					esp_netif_dhcps_stop(ap_netif);
-					esp_netif_set_dns_info(ap_netif, ESP_NETIF_DNS_MAIN, &dns);
-					esp_netif_dhcps_start(ap_netif);
-				}
-			}
+			// Setup NAT and sync DNS in one consolidated DHCP restart
+			self->setNatEnabled(true, true);
 		}
 
 		if (self->m_enabled_subject) {

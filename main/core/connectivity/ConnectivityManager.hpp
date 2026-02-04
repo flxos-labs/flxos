@@ -28,7 +28,7 @@ public:
 #endif
 
 	// Mode management
-	esp_err_t setWifiMode(wifi_mode_t mode);
+	esp_err_t setWifiMode(wifi_mode_t mode, bool auto_start = true);
 	std::recursive_mutex& getWifiMutex() { return m_wifi_mutex; }
 
 	// WiFi Station

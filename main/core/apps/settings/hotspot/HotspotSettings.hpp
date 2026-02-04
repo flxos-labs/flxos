@@ -42,6 +42,7 @@ private:
 	lv_obj_t* m_configTitle = nullptr;
 	lv_timer_t* m_refreshTimer = nullptr;
 	std::function<void()> m_onBack {};
+	bool m_ignore_events = false;
 };
 
 } // namespace System::Apps::Settings

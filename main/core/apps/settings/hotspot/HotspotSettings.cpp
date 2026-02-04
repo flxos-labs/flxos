@@ -9,6 +9,7 @@
 #include "core/lv_obj_style_gen.h"
 #include "core/lv_obj_tree.h"
 #include "core/lv_observer.h"
+#include "core/tasks/gui/GuiTask.hpp"
 #include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include "display/lv_display.h"
@@ -89,16 +90,30 @@ void HotspotSettings::createMainPage() {
 	lv_obj_set_flex_grow(title, 1);
 
 	m_hotspotSwitch = lv_switch_create(header);
-	lv_obj_bind_checked(
-		m_hotspotSwitch,
-		&ConnectivityManager::getInstance().getHotspotEnabledSubject()
+	lv_subject_add_observer_obj(
+		&ConnectivityManager::getInstance().getHotspotEnabledSubject(),
+		[](lv_observer_t* o, lv_subject_t* s) {
+			auto* sw = lv_observer_get_target_obj(o);
+			auto* instance = (HotspotSettings*)lv_observer_get_user_data(o);
+			bool enabled = lv_subject_get_int(s);
+
+			instance->m_ignore_events = true;
+			if (enabled) lv_obj_add_state(sw, LV_STATE_CHECKED);
+			else
+				lv_obj_remove_state(sw, LV_STATE_CHECKED);
+			instance->m_ignore_events = false;
+		},
+		m_hotspotSwitch, this
 	);
 
 	lv_obj_add_event_cb(
 		m_hotspotSwitch,
 		[](lv_event_t* e) {
-			auto* sw = lv_event_get_target_obj(e);
 			auto* instance = (HotspotSettings*)lv_event_get_user_data(e);
+			if (instance->m_ignore_events) {
+				return;
+			}
+			auto* sw = lv_event_get_target_obj(e);
 			if (lv_obj_has_state(sw, LV_STATE_CHECKED)) {
 				instance->applyHotspotSettings();
 			} else {
@@ -573,12 +588,14 @@ void HotspotSettings::applyHotspotSettings() {
 	strncpy(ssid_buf, ssid, sizeof(ssid_buf) - 1);
 	strncpy(pass_buf, pass, sizeof(pass_buf) - 1);
 
+	GuiTask::lock();
 	lv_subject_set_pointer(&ConnectivityManager::getInstance().getHotspotSsidSubject(), ssid_buf);
 	lv_subject_set_pointer(&ConnectivityManager::getInstance().getHotspotPasswordSubject(), pass_buf);
 	lv_subject_set_int(&ConnectivityManager::getInstance().getHotspotChannelSubject(), channel);
 	lv_subject_set_int(&ConnectivityManager::getInstance().getHotspotMaxConnSubject(), max_conn);
 	lv_subject_set_int(&ConnectivityManager::getInstance().getHotspotHiddenSubject(), hidden ? 1 : 0);
 	lv_subject_set_int(&ConnectivityManager::getInstance().getHotspotAuthSubject(), auth_idx);
+	GuiTask::unlock();
 
 	ConnectivityManager::getInstance().setHotspotNatEnabled(nat_enabled);
 	HotspotManager::getInstance().setAutoShutdownTimeout(

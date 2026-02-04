@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/tasks/gui/GuiTask.hpp"
 #include "lvgl.h"
 
 namespace System {
@@ -25,7 +26,9 @@ public:
 		observable.subscribe([this](const T& value) {
 			if (!m_updating) {
 				m_updating = true;
+				GuiTask::lock();
 				lv_subject_set_int(&m_subject, static_cast<int32_t>(value));
+				GuiTask::unlock();
 				m_updating = false;
 			}
 		});
@@ -65,7 +68,9 @@ public:
 			if (!m_updating) {
 				m_updating = true;
 				m_buffer = value ? value : "";
+				GuiTask::lock();
 				lv_subject_set_pointer(&m_subject, (void*)m_buffer.c_str());
+				GuiTask::unlock();
 				m_updating = false;
 			}
 		});
