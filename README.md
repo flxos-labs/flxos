@@ -40,17 +40,19 @@ Whether you're building a smart home controller, industrial HMI, or a custom IoT
 FlxOS/
 ├── main/
 │   ├── core/
-│   │   ├── apps/           # Application modules (Settings, Files, etc.)
-│   │   ├── common/         # Shared utilities and helpers
-│   │   ├── connectivity/   # Wi-Fi, networking, and IoT features
-│   │   ├── services/       # System background services (FileSystem, SystemInfo)
-│   │   ├── system/         # System managers (Focus, Notification, Time)
-│   │   ├── tasks/          # FreeRTOS task definitions
-│   │   └── ui/             # Desktop environment and window manager
-│   └── hal/                # Hardware Abstraction Layer
-├── components/             # External libraries and custom components
+│   │   ├── apps/           # Application modules (Settings, Files, System Info, etc.)
+│   │   ├── common/         # Shared utilities, helpers, and base classes
+│   │   ├── connectivity/   # Wi-Fi, networking, and connectivity features
+│   │   ├── services/       # Background system services (File System, System Info, CLI)
+│   │   ├── system/         # Core system managers (Theme, Display, Time, Focus)
+│   │   ├── tasks/          # FreeRTOS task definitions and management
+│   │   └── ui/             # Desktop environment, window manager, and UI components
+│   ├── hal/                # Hardware Abstraction Layer (Display, OS abstractions)
+│   └── main.cpp            # Entry point
+├── components/             # External libraries and custom ESP-IDF components
 ├── assets/                 # Static resources (images, fonts)
-└── scripts/                # Build and utility scripts
+├── scripts/                # Build, deployment, and utility scripts
+└── ...                     # Configuration and partition files
 ```
 
 ## 🚀 Getting Started
