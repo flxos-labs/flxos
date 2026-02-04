@@ -1,0 +1,7 @@
+=== Clang-Tidy Summary ===
+Date: Wed Feb  4 04:40:44 PM IST 2026
+
+Total Warnings: 1536
+Total Errors: 75
+
+Details in: /home/akash/flxos/reports/clang_tidy_report.txt

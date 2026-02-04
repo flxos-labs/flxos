@@ -52,6 +52,10 @@ private:
 	static void on_rotation_change(lv_observer_t* observer, lv_subject_t* subject);
 
 	// Window management helpers
+	bool activateIfOpen(const std::string& packageName);
+	lv_obj_t* createAndConfigureAppButton(lv_obj_t* win, System::Apps::App* app);
+	void setupWindowHeader(lv_obj_t* win, System::Apps::App* app);
+
 	void closeWindow_internal(lv_obj_t* w);
 	lv_obj_t* findWindowByPackage(const std::string& packageName) const;
 	static lv_obj_t* getWindowFromHeaderBtn(lv_event_t* e);

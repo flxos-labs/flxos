@@ -17,5 +17,6 @@
         "--query-driver=**",
         "--compile-commands-dir=/home/akash/OS/build"
     ],
-    "idf.flashType": "UART"
+    "idf.flashType": "UART",
+    "idf.currentSetup": "/home/akash/esp/v5.5.2/esp-idf"
 }
