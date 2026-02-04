@@ -1,0 +1,38 @@
+=== FlxOS Naming Convention Check ===
+
+⚠️  Naming Convention Issues (34):
+
+Classes/Structs (21):
+  core/connectivity/hotspot/HotspotManager.cpp:28: class/struct 'netif' should be PascalCase
+  core/connectivity/hotspot/HotspotManager.cpp:36: class/struct 'pbuf' should be PascalCase
+  core/connectivity/hotspot/HotspotManager.cpp:36: class/struct 'netif' should be PascalCase
+  core/connectivity/hotspot/HotspotManager.cpp:38: class/struct 'netif' should be PascalCase
+  core/connectivity/hotspot/HotspotManager.cpp:49: class/struct 'netif' should be PascalCase
+  core/connectivity/hotspot/HotspotManager.cpp:49: class/struct 'pbuf' should be PascalCase
+  core/connectivity/hotspot/HotspotManager.cpp:51: class/struct 'netif' should be PascalCase
+  core/connectivity/hotspot/HotspotManager.cpp:82: class/struct 'netif' should be PascalCase
+  core/system/time/TimeManager.cpp:18: class/struct 'timeval' should be PascalCase
+  core/system/time/TimeManager.cpp:22: class/struct 'tm' should be PascalCase
+
+Functions (11):
+  core/connectivity/hotspot/HotspotManager.cpp:36: function 'netif_input_hook' should be camelCase
+  core/connectivity/hotspot/HotspotManager.cpp:48: function 'netif_linkoutput_hook' should be camelCase
+  core/system/time/TimeManager.cpp:17: function 'time_sync_notification_cb' should be camelCase
+  core/common/Logger.hpp:45: function 'log_impl' should be camelCase
+  core/apps/settings/SettingsCommon.hpp:8: function 'add_list_btn' should be camelCase
+  core/apps/settings/SettingsCommon.hpp:16: function 'create_page_container' should be camelCase
+  core/apps/settings/SettingsCommon.hpp:25: function 'create_header' should be camelCase
+  core/apps/settings/SettingsCommon.hpp:50: function 'create_settings_list' should be camelCase
+  core/apps/settings/SettingsCommon.hpp:58: function 'add_back_button_event_cb' should be camelCase
+  core/apps/settings/SettingsCommon.hpp:71: function 'add_switch_item' should be camelCase
+  core/ui/theming/StyleUtils.hpp:8: function 'apply_glass' should be camelCase
+
+Constants/Macros (1):
+  hal/os/lv_os_custom.c:6: macro 'globals' should be UPPER_SNAKE_CASE
+
+Filenames (1):
+  hal/display/lv_lgfx_user.hpp: filename 'lv_lgfx_user' should be PascalCase
+
+=== Summary ===
+Files checked: 82
+Issues found: 34

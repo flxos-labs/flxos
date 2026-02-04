@@ -1,0 +1,37 @@
+=== FlxOS Include Dependency Analysis ===
+
+Building dependency graph...
+Analyzed 75 files
+
+Checking for circular dependencies...
+✅ No circular dependencies found!
+
+Checking include order and header guards...
+
+⚠️  Include Order Issues (158):
+  main.cpp:16: system include <string_view> after local include
+  hal/os/lv_os_custom.c:4: system include <string.h> after local include
+  core/connectivity/ConnectivityManager.hpp:8: system include <memory> after local include
+  core/connectivity/ConnectivityManager.hpp:9: system include <mutex> after local include
+  core/connectivity/ConnectivityManager.hpp:10: system include <string> after local include
+  core/connectivity/ConnectivityManager.hpp:11: system include <vector> after local include
+  core/connectivity/ConnectivityManager.cpp:13: system include <cstdint> after local include
+  core/connectivity/ConnectivityManager.cpp:14: system include <string_view> after local include
+  core/connectivity/hotspot/HotspotManager.cpp:14: system include <cstdint> after local include
+  core/connectivity/hotspot/HotspotManager.cpp:15: system include <cstring> after local include
+  core/connectivity/hotspot/HotspotManager.cpp:16: system include <string_view> after local include
+  core/connectivity/hotspot/HotspotManager.hpp:10: system include <mutex> after local include
+  core/connectivity/hotspot/HotspotManager.hpp:11: system include <string> after local include
+  core/connectivity/hotspot/HotspotManager.hpp:12: system include <vector> after local include
+  core/connectivity/wifi/WiFiManager.hpp:7: system include <functional> after local include
+  core/connectivity/wifi/WiFiManager.hpp:8: system include <vector> after local include
+  core/connectivity/wifi/WiFiManager.cpp:13: system include <cstdint> after local include
+  core/connectivity/wifi/WiFiManager.cpp:14: system include <cstring> after local include
+  core/connectivity/wifi/WiFiManager.cpp:15: system include <string_view> after local include
+  core/connectivity/bluetooth/BluetoothManager.cpp:5: system include <cstdint> after local include
+
+=== Summary ===
+Circular dependencies: 0
+Include order issues: 158
+Header guard issues: 0
+Total issues: 158

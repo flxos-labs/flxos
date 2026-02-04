@@ -1,0 +1,50 @@
+=== FlxOS Documentation Coverage Check ===
+
+⚠️  Files Without Headers (82):
+  main.cpp
+  hal/os/lv_os_custom.c
+  hal/display/lv_lgfx_user.hpp
+  core/connectivity/ConnectivityManager.hpp
+  core/connectivity/ConnectivityManager.cpp
+  core/connectivity/hotspot/HotspotManager.cpp
+  core/connectivity/hotspot/HotspotManager.hpp
+  core/connectivity/wifi/WiFiManager.hpp
+  core/connectivity/wifi/WiFiManager.cpp
+  core/connectivity/bluetooth/BluetoothManager.hpp
+
+📝 TODO/FIXME Comments (4):
+  TODO: 1, FIXME: 0, HACK/XXX: 3
+
+  Recent items:
+    [XXX] hal/display/lv_lgfx_user.hpp:105: )
+    [XXX] hal/display/lv_lgfx_user.hpp:123: )
+    [XXX] hal/display/lv_lgfx_user.hpp:124: 
+    [TODO] core/services/cli/CliService.cpp:413: Add confirmation?
+
+⚠️  Undocumented Public Functions (156):
+  core/connectivity/ConnectivityManager.hpp:32: 'getWifiMutex' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:49: 'getHotspotClientsList' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:63: 'getWiFiEnabledObservable' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:64: 'getWiFiStatusObservable' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:65: 'getWiFiConnectedObservable' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:66: 'getWiFiSsidObservable' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:67: 'getWiFiIpObservable' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:68: 'getHotspotEnabledObservable' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:69: 'getHotspotClientsObservable' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:70: 'getHotspotUsageSentSubject' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:71: 'getHotspotUsageReceivedSubject' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:72: 'getHotspotUploadSpeedSubject' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:73: 'getHotspotDownloadSpeedSubject' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:74: 'getHotspotUptimeSubject' lacks documentation
+  core/connectivity/ConnectivityManager.hpp:75: 'getBluetoothEnabledObservable' lacks documentation
+
+📁 Module README Status:
+  ✅ core/README.md
+  ❌ hal/README.md
+
+=== Summary ===
+Files checked: 82
+Files without headers: 82
+TODO/FIXME comments: 4
+Undocumented functions: 156
+Missing READMEs: 1

@@ -95,10 +95,14 @@ void Desktop::init() {
 					if (instance->m_wallpaper_icon) {
 						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 					}
-					if (instance->m_wallpaper_img == nullptr &&
-						instance->m_wallpaper != nullptr) {
+					if (instance->m_wallpaper_img == nullptr && instance->m_wallpaper != nullptr) {
 						instance->m_wallpaper_img = lv_image_create(instance->m_wallpaper);
-						lv_image_set_src(instance->m_wallpaper_img, "A:/data/m_wallpaper.jpg");
+						const char* path = (const char*)lv_subject_get_pointer(&System::ThemeManager::getInstance().getWallpaperPathSubject());
+						if (path && strlen(path) > 0) {
+							lv_image_set_src(instance->m_wallpaper_img, path);
+						} else {
+							lv_image_set_src(instance->m_wallpaper_img, "A:/data/wallpaper.jpg");
+						}
 						lv_obj_set_size(instance->m_wallpaper_img, lv_pct(100), lv_pct(100));
 						lv_obj_set_style_pad_all(instance->m_wallpaper_img, 0, 0);
 						lv_obj_set_style_border_width(instance->m_wallpaper_img, 0, 0);
@@ -113,6 +117,18 @@ void Desktop::init() {
 						lv_obj_delete(instance->m_wallpaper_img);
 						instance->m_wallpaper_img = nullptr;
 					}
+				}
+			},
+			this
+		);
+
+		lv_subject_add_observer(
+			&System::ThemeManager::getInstance().getWallpaperPathSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
+				const char* path = (const char*)lv_subject_get_pointer(subject);
+				if (instance->m_wallpaper_img && path && strlen(path) > 0) {
+					lv_image_set_src(instance->m_wallpaper_img, path);
 				}
 			},
 			this

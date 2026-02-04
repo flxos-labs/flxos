@@ -1,0 +1,132 @@
+# FlxOS Code Quality CI (Optimized)
+# Runs on every push and PR to check code quality
+
+name: Code Quality
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'main/**'
+      - '.clang-format'
+      - '.clang-tidy'
+      - 'scripts/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'main/**'
+      - '.clang-format'
+      - '.clang-tidy'
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Fast format check - runs first, fails fast
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            main
+            .clang-format
+
+      - name: Check formatting
+        run: |
+          find main -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h" | \
+          xargs clang-format --dry-run --Werror
+
+  # Combined Python checks - single job for all Python-based analysis
+  python-analysis:
+    name: Code Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run all Python checks
+        id: checks
+        run: |
+          mkdir -p reports
+
+          echo "=== Complexity Analysis ===" | tee reports/analysis.log
+          python3 scripts/analyze_complexity.py 2>&1 | tee -a reports/analysis.log || echo "complexity_failed=true" >> $GITHUB_OUTPUT
+
+          echo -e "\n=== Include Analysis ===" | tee -a reports/analysis.log
+          python3 scripts/analyze_includes.py 2>&1 | tee -a reports/analysis.log || echo "includes_failed=true" >> $GITHUB_OUTPUT
+
+          echo -e "\n=== Naming Check ===" | tee -a reports/analysis.log
+          python3 scripts/check_naming.py 2>&1 | tee -a reports/analysis.log || echo "naming_failed=true" >> $GITHUB_OUTPUT
+
+          echo -e "\n=== Documentation Check ===" | tee -a reports/analysis.log
+          python3 scripts/check_docs.py 2>&1 | tee -a reports/analysis.log || echo "docs_failed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Upload analysis reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-analysis-reports
+          path: reports/
+          retention-days: 14
+
+  # Summary job - only runs on PRs
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [format-check, python-analysis]
+    if: github.event_name == 'pull_request' && always()
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+
+      - name: Download reports
+        uses: actions/download-artifact@v4
+        with:
+          name: code-analysis-reports
+          path: reports/
+        continue-on-error: true
+
+      - name: Generate summary comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const formatStatus = '${{ needs.format-check.result }}' === 'success' ? '✅' : '❌';
+            const analysisStatus = '${{ needs.python-analysis.result }}' === 'success' ? '✅' : '⚠️';
+
+            let body = `## Code Quality Report\n\n`;
+            body += `| Check | Status |\n|-------|--------|\n`;
+            body += `| Format | ${formatStatus} |\n`;
+            body += `| Analysis | ${analysisStatus} |\n\n`;
+
+            if (fs.existsSync('reports/analysis.log')) {
+              const content = fs.readFileSync('reports/analysis.log', 'utf8');
+              // Extract summaries only
+              const summaryLines = content.split('\n')
+                .filter(l => l.includes('===') || l.includes('Summary') || l.includes('Issues') || l.includes('✅') || l.includes('⚠️'))
+                .slice(0, 30)
+                .join('\n');
+              body += `<details><summary>View Details</summary>\n\n\`\`\`\n${summaryLines}\n\`\`\`\n</details>`;
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

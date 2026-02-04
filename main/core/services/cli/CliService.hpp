@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esp_err.h"
+#include <string>
 
 namespace System {
 
@@ -27,6 +28,16 @@ public:
 	 */
 	bool isRunning() const { return m_running; }
 
+	/**
+	 * @brief Get current working directory
+	 */
+	const std::string& getCurrentDirectory() const { return m_currentDirectory; }
+
+	/**
+	 * @brief Set current working directory
+	 */
+	void setCurrentDirectory(const std::string& path) { m_currentDirectory = path; }
+
 private:
 
 	CliService() = default;
@@ -37,6 +48,7 @@ private:
 	static void registerCommands();
 
 	bool m_running = false;
+	std::string m_currentDirectory = "/";
 };
 
 } // namespace System

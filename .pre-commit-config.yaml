@@ -1,0 +1,54 @@
+# Pre-commit hooks for FlxOS code quality
+# Install: pip install pre-commit && pre-commit install
+
+repos:
+  # Format checking
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v18.1.8
+    hooks:
+      - id: clang-format
+        types_or: [c, c++]
+        args: [--style=file]
+        files: ^main/
+
+  # Basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        files: ^main/
+      - id: end-of-file-fixer
+        files: ^main/
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+        files: ^main/
+
+  # Local hooks for custom scripts
+  - repo: local
+    hooks:
+      - id: complexity-check
+        name: Complexity Analysis
+        entry: python3 scripts/analyze_complexity.py
+        language: system
+        pass_filenames: false
+        files: ^main/.*\.(cpp|hpp|c|h)$
+        stages: [pre-push]
+
+      - id: include-check
+        name: Include Dependencies
+        entry: python3 scripts/analyze_includes.py
+        language: system
+        pass_filenames: false
+        files: ^main/.*\.(cpp|hpp|c|h)$
+        stages: [pre-push]
+
+      - id: naming-check
+        name: Naming Conventions
+        entry: python3 scripts/check_naming.py
+        language: system
+        pass_filenames: false
+        files: ^main/.*\.(cpp|hpp|c|h)$
+        stages: [pre-push]
