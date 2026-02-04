@@ -29,7 +29,7 @@ static constexpr int SIZE_DROPDOWN_BTN_WIDTH = 40;
 static constexpr int ROTATION_90_DEG = 900;
 
 // Specific Margins/Paddings (Logic Units)
-static constexpr int MARGIN_Section = 15;
+static constexpr int MARGIN_SECTION = 15;
 static constexpr int PAD_CONTAINER = 10;
 
 } // namespace LayoutConstants

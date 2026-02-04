@@ -21,8 +21,8 @@ public:
 	esp_err_t init(Observable<int32_t>* enabled_subject, Observable<int32_t>* client_count_subject);
 	esp_err_t start(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);
 	esp_err_t stop();
-	bool isEnabled() const;
-	int getClientCount();
+	static bool isEnabled();
+	int getClientCount() const;
 
 	esp_err_t setNatEnabled(bool enabled);
 	bool isNatEnabled() const { return m_nat_enabled; }
@@ -48,16 +48,16 @@ public:
 	void processIncomingPacket(
 		void* p
 	); // Using void* to avoid pbuf header requirement in hpp
-	void startUsageTimer();
+	static void startUsageTimer();
 
 	struct ClientInfo {
-		uint8_t mac[6];
-		int aid;
-		std::string hostname;
-		std::string ip;
-		int8_t rssi;
-		uint32_t connected_duration; // Seconds
-		uint64_t connection_timestamp;
+		uint8_t mac[6] {};
+		int aid {};
+		std::string hostname {};
+		std::string ip {};
+		int8_t rssi {};
+		uint32_t connected_duration {}; // Seconds
+		uint64_t connection_timestamp {};
 	};
 	std::vector<ClientInfo> getConnectedClients();
 
@@ -99,9 +99,9 @@ private:
 	void* m_original_input = nullptr;
 	void* m_original_linkoutput = nullptr;
 
-	std::string m_current_ssid;
-	std::vector<ClientInfo> m_clients;
-	std::mutex m_mutex;
+	std::string m_current_ssid {};
+	std::vector<ClientInfo> m_clients {};
+	mutable std::mutex m_mutex {};
 };
 
 } // namespace System

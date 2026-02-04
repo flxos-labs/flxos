@@ -84,7 +84,7 @@ private:
 	lv_obj_t* m_activeWindow = nullptr;
 	lv_obj_t* m_notificationPanel = nullptr;
 
-	std::vector<lv_obj_t*> m_panels;
+	std::vector<lv_obj_t*> m_panels {};
 
 	static void on_global_press(lv_event_t* e);
 	static void on_global_release(lv_event_t* e);

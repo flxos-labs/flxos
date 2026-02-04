@@ -15,8 +15,8 @@ private:
 	VirtualKeyboard();
 	~VirtualKeyboard() = default;
 
-	lv_obj_t* m_keyboard;
-	lv_obj_t* m_current_ta;
+	lv_obj_t* m_keyboard {nullptr};
+	lv_obj_t* m_current_ta {nullptr};
 
 	static void on_ta_event(lv_event_t* e);
 	static void on_kb_event(lv_event_t* e);

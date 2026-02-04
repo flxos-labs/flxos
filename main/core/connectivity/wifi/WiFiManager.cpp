@@ -1,9 +1,16 @@
 #include "WiFiManager.hpp"
+#include "Observable.hpp"
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/time/TimeManager.hpp"
+#include "esp_err.h"
+#include "esp_event.h"
+#include "esp_event_base.h"
 #include "esp_netif.h"
+#include "esp_netif_types.h"
 #include "esp_wifi.h"
+#include "esp_wifi_types_generic.h"
+#include <cstdint>
 #include <cstring>
 #include <string_view>
 
@@ -17,8 +24,9 @@ WiFiManager& WiFiManager::getInstance() {
 }
 
 esp_err_t WiFiManager::init(Observable<int32_t>* connected_subject, StringObservable* ssid_subject, StringObservable* ip_subject, Observable<int32_t>* status_subject) {
-	if (m_is_init)
+	if (m_is_init) {
 		return ESP_OK;
+	}
 
 	Log::info(TAG, "Initializing WiFi manager...");
 
@@ -44,8 +52,9 @@ esp_err_t WiFiManager::init(Observable<int32_t>* connected_subject, StringObserv
 }
 
 esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
-	if (!m_is_enabled)
+	if (!m_is_enabled) {
 		return ESP_ERR_INVALID_STATE;
+	}
 
 	Log::info(TAG, "Connecting to SSID: %s", ssid);
 	m_should_reconnect = true;
@@ -97,8 +106,9 @@ esp_err_t WiFiManager::disconnect() {
 }
 
 esp_err_t WiFiManager::setEnabled(bool enabled) {
-	if (m_is_enabled == enabled)
+	if (m_is_enabled == enabled) {
 		return ESP_OK;
+	}
 
 	std::lock_guard<std::recursive_mutex> wifi_lock(
 		ConnectivityManager::getInstance().getWifiMutex()
@@ -107,7 +117,7 @@ esp_err_t WiFiManager::setEnabled(bool enabled) {
 	m_is_enabled = enabled;
 	wifi_mode_t current_mode;
 	esp_wifi_get_mode(&current_mode);
-	bool ap_enabled =
+	bool const ap_enabled =
 		(current_mode == WIFI_MODE_AP || current_mode == WIFI_MODE_APSTA);
 
 	if (!enabled) {
@@ -126,10 +136,12 @@ esp_err_t WiFiManager::setEnabled(bool enabled) {
 }
 
 esp_err_t WiFiManager::scan(ScanCallback callback) {
-	if (!m_is_enabled)
+	if (!m_is_enabled) {
 		return ESP_ERR_INVALID_STATE;
-	if (m_is_scanning)
+	}
+	if (m_is_scanning) {
 		return ESP_ERR_INVALID_STATE;
+	}
 
 	std::lock_guard<std::recursive_mutex> wifi_lock(
 		ConnectivityManager::getInstance().getWifiMutex()
@@ -175,7 +187,7 @@ bool WiFiManager::isConnected() const {
 	return m_connected_subject->get() != 0;
 }
 
-int8_t WiFiManager::getRssi() const {
+int8_t WiFiManager::getRssi() {
 	wifi_ap_record_t ap_info;
 	if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
 		return ap_info.rssi;
@@ -189,26 +201,30 @@ void WiFiManager::setStatus(WiFiStatus status) {
 	}
 }
 
-void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-	WiFiManager* self = static_cast<WiFiManager*>(arg);
+void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base*/, int32_t event_id, void* event_data) {
+	auto* self = static_cast<WiFiManager*>(arg);
 
 	if (event_id == WIFI_EVENT_STA_START) {
 		Log::debug(TAG, "STA started");
-		if (self->m_should_reconnect)
+		if (self->m_should_reconnect) {
 			esp_wifi_connect();
+		}
 	} else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
-		wifi_event_sta_disconnected_t* event =
+		auto* event =
 			(wifi_event_sta_disconnected_t*)event_data;
 		Log::warn(TAG, "STA disconnected, reason: %d", event->reason);
 
-		if (self->m_connected_subject)
+		if (self->m_connected_subject) {
 			self->m_connected_subject->set(0);
-		if (self->m_ssid_subject)
+		}
+		if (self->m_ssid_subject) {
 			self->m_ssid_subject->set("Disconnected");
-		if (self->m_ip_subject)
+		}
+		if (self->m_ip_subject) {
 			self->m_ip_subject->set("0.0.0.0");
+		}
 
-		bool is_auth_failure =
+		bool const is_auth_failure =
 			(event->reason == WIFI_REASON_AUTH_EXPIRE ||
 			 event->reason == WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT ||
 			 event->reason == WIFI_REASON_AUTH_FAIL ||
@@ -219,7 +235,7 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 			self->setStatus(WiFiStatus::AUTH_FAILED);
 		} else if (self->m_should_reconnect && self->m_retry_count < MAX_RETRIES) {
 			self->setStatus(WiFiStatus::CONNECTING);
-			esp_err_t err = esp_wifi_connect();
+			esp_err_t const err = esp_wifi_connect();
 			if (err == ESP_OK) {
 				self->m_retry_count++;
 			} else {
@@ -236,19 +252,19 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 			self->setStatus(WiFiStatus::DISCONNECTED);
 		}
 	} else if (event_id == WIFI_EVENT_STA_CONNECTED) {
-		wifi_event_sta_connected_t* event =
+		auto* event =
 			(wifi_event_sta_connected_t*)event_data;
 		Log::info(TAG, "STA connected to SSID: %s", (char*)event->ssid);
-		if (self->m_ssid_subject)
+		if (self->m_ssid_subject) {
 			self->m_ssid_subject->set((char*)event->ssid);
+		}
 	} else if (event_id == WIFI_EVENT_SCAN_DONE) {
 		uint16_t ap_count = 0;
 		esp_wifi_scan_get_ap_num(&ap_count);
 		Log::info(TAG, "Scan done, found %d APs", ap_count);
 		if (ap_count > 0) {
 			std::vector<wifi_ap_record_t> ap_records(ap_count);
-			esp_err_t err =
-				esp_wifi_scan_get_ap_records(&ap_count, ap_records.data());
+			esp_err_t err = esp_wifi_scan_get_ap_records(&ap_count, ap_records.data());
 			if (err == ESP_OK && self->m_scan_callback) {
 				self->m_scan_callback(ap_records);
 			} else if (self->m_scan_callback) {
@@ -265,19 +281,21 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int
 	}
 }
 
-void WiFiManager::ip_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-	WiFiManager* self = static_cast<WiFiManager*>(arg);
+void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, int32_t event_id, void* event_data) {
+	auto* self = static_cast<WiFiManager*>(arg);
 
 	if (event_id == IP_EVENT_STA_GOT_IP) {
-		ip_event_got_ip_t* event = (ip_event_got_ip_t*)event_data;
+		auto* event = (ip_event_got_ip_t*)event_data;
 		char ip_str[16];
 		esp_ip4addr_ntoa(&event->ip_info.ip, ip_str, sizeof(ip_str));
 		Log::info(TAG, "Got IP: %s", ip_str);
 
-		if (self->m_ip_subject)
+		if (self->m_ip_subject) {
 			self->m_ip_subject->set(ip_str);
-		if (self->m_connected_subject)
+		}
+		if (self->m_connected_subject) {
 			self->m_connected_subject->set(1);
+		}
 
 		self->m_retry_count = 0;
 		self->setStatus(WiFiStatus::CONNECTED);

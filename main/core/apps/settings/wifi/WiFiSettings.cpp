@@ -2,15 +2,36 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/wifi/WiFiManager.hpp"
-#include "core/system/system_core/SystemManager.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_event.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_style.h"
+#include "core/lv_obj_style_gen.h"
+#include "core/lv_obj_tree.h"
+#include "core/lv_observer.h"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
+#include "display/lv_display.h"
+#include "esp_err.h"
+#include "esp_wifi.h"
+#include "esp_wifi_types_generic.h"
+#include "font/lv_symbol_def.h"
+#include "layouts/flex/lv_flex.h"
+#include "misc/lv_area.h"
+#include "misc/lv_event.h"
+#include "misc/lv_timer.h"
+#include "misc/lv_types.h"
+#include "widgets/button/lv_button.h"
+#include "widgets/image/lv_image.h"
+#include "widgets/label/lv_label.h"
+#include "widgets/list/lv_list.h"
+#include "widgets/switch/lv_switch.h"
+#include "widgets/textarea/lv_textarea.h"
 #include <algorithm>
+#include <cstdint>
 
-namespace System {
-namespace Apps {
-namespace Settings {
+namespace System::Apps::Settings {
 
 WiFiSettings::WiFiSettings(lv_obj_t* parent, std::function<void()> onBack)
 	: m_parent(parent), m_onBack(onBack) {}
@@ -20,7 +41,7 @@ void WiFiSettings::show() {
 		m_container = create_page_container(m_parent);
 		lv_obj_set_style_pad_gap(m_container, 0, 0);
 
-		lv_obj_t* backBtn;
+		lv_obj_t* backBtn = nullptr;
 		lv_obj_t* header = create_header(m_container, "Wi-Fi", &backBtn);
 		add_back_button_event_cb(backBtn, &m_onBack);
 
@@ -52,7 +73,7 @@ void WiFiSettings::show() {
 			[](lv_event_t* e) {
 				auto* sw = lv_event_get_target_obj(e);
 				auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
-				bool enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
+				bool const enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
 				ConnectivityManager::getInstance().setWiFiEnabled(enabled);
 				if (!enabled) {
 					instance->m_isScanning = false;
@@ -109,8 +130,9 @@ void WiFiSettings::show() {
 		refreshScan();
 	} else {
 		lv_obj_remove_flag(m_container, LV_OBJ_FLAG_HIDDEN);
-		if (m_timer)
+		if (m_timer) {
 			lv_timer_resume(m_timer);
+		}
 		updateStatus();
 		refreshScan();
 	}
@@ -120,7 +142,7 @@ void WiFiSettings::showConfig() {
 	if (m_configContainer) return;
 
 	m_configContainer = create_page_container(m_parent);
-	lv_obj_t* backBtn;
+	lv_obj_t* backBtn = nullptr;
 	create_header(m_configContainer, "Wi-Fi Config", &backBtn);
 
 	lv_obj_add_event_cb(
@@ -149,8 +171,9 @@ void WiFiSettings::hideConfig() {
 }
 
 void WiFiSettings::refreshScan() {
-	if (m_list == nullptr || m_isScanning)
+	if (m_list == nullptr || m_isScanning) {
 		return;
+	}
 
 	// Clear list
 	lv_obj_clean(m_list);
@@ -188,7 +211,7 @@ void WiFiSettings::refreshScan() {
 
 			auto wifiClickCb = [](lv_event_t* e) {
 				auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
-				lv_obj_t* btn = (lv_obj_t*)lv_event_get_current_target(e);
+				auto* btn = (lv_obj_t*)lv_event_get_current_target(e);
 				const char* ssid = lv_list_get_button_text(instance->m_list, btn);
 
 				wifi_auth_mode_t authmode = WIFI_AUTH_OPEN;
@@ -234,18 +257,21 @@ void WiFiSettings::refreshScan() {
 }
 
 const char* WiFiSettings::getSignalIcon(int8_t rssi) {
-	if (rssi >= -50)
+	if (rssi >= -50) {
 		return LV_SYMBOL_WIFI;
-	if (rssi >= -70)
+	}
+	if (rssi >= -70) {
 		return LV_SYMBOL_WIFI; // Could use more granular icons if theme supports
+	}
 	return LV_SYMBOL_WIFI;
 }
 
 void WiFiSettings::updateStatus() {
-	if (m_statusLabel == nullptr)
+	if (m_statusLabel == nullptr) {
 		return;
+	}
 
-	System::WiFiStatus status = static_cast<System::WiFiStatus>(lv_subject_get_int(
+	auto const status = static_cast<System::WiFiStatus>(lv_subject_get_int(
 		&ConnectivityManager::getInstance().getWiFiStatusSubject()
 	));
 
@@ -283,8 +309,9 @@ void WiFiSettings::updateStatus() {
 }
 
 void WiFiSettings::showConnectScreen(const char* ssid) {
-	if (m_connectContainer != nullptr)
+	if (m_connectContainer != nullptr) {
 		return;
+	}
 
 	m_connectContainer = lv_obj_create(m_parent);
 	lv_obj_set_size(m_connectContainer, lv_pct(100), lv_pct(100));
@@ -385,6 +412,4 @@ void WiFiSettings::destroy() {
 	m_statusPrefixLabel = nullptr;
 }
 
-} // namespace Settings
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps::Settings

@@ -1,6 +1,9 @@
 #include "TimeManager.hpp"
 #include "core/common/Logger.hpp"
 #include "esp_sntp.h"
+#include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
+#include <cstdint>
 #include <string_view>
 
 static constexpr std::string_view TAG = "TimeManager";
@@ -12,7 +15,7 @@ TimeManager& TimeManager::getInstance() {
 	return instance;
 }
 
-static void time_sync_notification_cb(struct timeval* tv) {
+static void time_sync_notification_cb(struct timeval* /*tv*/) {
 	TimeManager::getInstance().updateSyncStatus(true);
 
 	time_t now = 0;
@@ -22,8 +25,9 @@ static void time_sync_notification_cb(struct timeval* tv) {
 }
 
 void TimeManager::init() {
-	if (m_is_init)
+	if (m_is_init) {
 		return;
+	}
 
 	esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
 	esp_sntp_setservername(0, "pool.ntp.org");
@@ -41,8 +45,9 @@ void TimeManager::init() {
 }
 
 void TimeManager::deinit() {
-	if (!m_is_init)
+	if (!m_is_init) {
 		return;
+	}
 
 	esp_sntp_stop();
 	m_is_init = false;
@@ -61,19 +66,20 @@ void TimeManager::syncTime() {
 }
 
 bool TimeManager::waitForSync(uint32_t timeout_ms) {
-	if (!m_is_init)
+	if (!m_is_init) {
 		init();
+	}
 
 	uint32_t waited = 0;
-	const uint32_t interval = 100;
+	const uint32_t INTERVAL = 100;
 
 	while (!m_is_synced && waited < timeout_ms) {
 		if (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
 			m_is_synced = true;
 			break;
 		}
-		vTaskDelay(pdMS_TO_TICKS(interval));
-		waited += interval;
+		vTaskDelay(pdMS_TO_TICKS(INTERVAL));
+		waited += INTERVAL;
 	}
 
 	if (!m_is_synced) {

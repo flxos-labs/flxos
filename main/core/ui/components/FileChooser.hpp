@@ -10,8 +10,7 @@
 #include <sys/stat.h>
 #include <vector>
 
-namespace System {
-namespace UI {
+namespace System::UI {
 
 class FileChooser {
 public:
@@ -23,10 +22,10 @@ public:
 
 private:
 
-	std::function<void(std::string)> m_callback;
-	std::string m_currentPath;
-	std::vector<std::string> m_extensions;
-	std::stack<std::string> m_history;
+	std::function<void(std::string)> m_callback {};
+	std::string m_currentPath {};
+	std::vector<std::string> m_extensions {};
+	std::stack<std::string> m_history {};
 
 	lv_obj_t* m_dialog = nullptr;
 	lv_obj_t* m_list = nullptr;
@@ -112,7 +111,7 @@ private:
 		close();
 	}
 
-	bool hasExtension(const std::string& fileName, const std::string& ext) {
+	static bool hasExtension(const std::string& fileName, const std::string& ext) {
 		if (fileName.length() < ext.length()) return false;
 		return fileName.compare(fileName.length() - ext.length(), ext.length(), ext) == 0;
 	}
@@ -144,7 +143,7 @@ private:
 		char fn[256];
 		while (lv_fs_dir_read(&dir, fn, sizeof(fn)) == LV_FS_RES_OK) {
 			if (fn[0] == '\0') break;
-			bool is_dir = (fn[0] == '/');
+			bool const is_dir = (fn[0] == '/');
 			const char* name = is_dir ? fn + 1 : fn;
 			if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) continue;
 
@@ -174,7 +173,7 @@ private:
 		lv_obj_add_event_cb(btn, [](lv_event_t* e) {
 			auto* self = (FileChooser*)lv_event_get_user_data(e);
 			lv_obj_t* btn = lv_event_get_target_obj(e);
-			bool isDir = (bool)(uintptr_t)lv_obj_get_user_data(btn);
+			bool const isDir = (bool)(uintptr_t)lv_obj_get_user_data(btn);
 			const char* name = lv_list_get_button_text(self->m_list, btn);
 
 			if (isDir) {
@@ -185,5 +184,4 @@ private:
 	}
 };
 
-} // namespace UI
-} // namespace System
+} // namespace System::UI

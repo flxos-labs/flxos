@@ -8,8 +8,8 @@ enum class ClipboardOp { NONE,
 						 CUT };
 
 struct ClipboardEntry {
-	std::string path;
-	bool isDir;
+	std::string path {};
+	bool isDir {};
 	ClipboardOp op;
 };
 

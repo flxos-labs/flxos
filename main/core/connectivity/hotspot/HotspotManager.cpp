@@ -1,13 +1,23 @@
 #include "HotspotManager.hpp"
+#include "Observable.hpp"
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/wifi/WiFiManager.hpp"
+#include "dhcpserver/dhcpserver_hostname.h"
+#include "esp_err.h"
+#include "esp_event.h"
+#include "esp_event_base.h"
+#include "esp_netif_ip_addr.h"
+#include "esp_netif_types.h"
 #include "esp_timer.h"
 #include "esp_wifi.h"
+#include <cstdint>
 #include <cstring>
 #include <string_view>
 
 #include "esp_netif.h"
+#include "esp_wifi_types_generic.h"
+#include "lwip/err.h"
 
 extern "C" {
 #include "lwip/lwip_napt.h"
@@ -25,26 +35,28 @@ namespace System {
 // Static hooks to capture traffic
 static err_t netif_input_hook(struct pbuf* p, struct netif* netif) {
 	HotspotManager& hm = HotspotManager::getInstance();
-	if (netif == (struct netif*)hm.getStaNetif() && p != NULL) {
+	if (netif == (struct netif*)hm.getStaNetif() && p != nullptr) {
 		hm.addBytesReceived(p->tot_len);
 	}
 
-	netif_input_fn original = (netif_input_fn)hm.getOriginalInput();
-	if (original)
+	auto original = (netif_input_fn)hm.getOriginalInput();
+	if (original) {
 		return original(p, netif);
+	}
 	return ERR_VAL;
 }
 
 static err_t netif_linkoutput_hook(struct netif* netif, struct pbuf* p) {
 	HotspotManager& hm = HotspotManager::getInstance();
-	if (netif == (struct netif*)hm.getStaNetif() && p != NULL) {
+	if (netif == (struct netif*)hm.getStaNetif() && p != nullptr) {
 		hm.addBytesSent(p->tot_len);
 	}
 
-	netif_linkoutput_fn original =
+	auto original =
 		(netif_linkoutput_fn)hm.getOriginalLinkoutput();
-	if (original)
+	if (original) {
 		return original(netif, p);
+	}
 	return ERR_IF;
 }
 
@@ -60,8 +72,9 @@ void HotspotManager::addBytesReceived(uint32_t bytes) {
 }
 
 void HotspotManager::initByteCounter() {
-	if (m_sta_netif != nullptr)
+	if (m_sta_netif != nullptr) {
 		return; // Already hooked
+	}
 
 	esp_netif_t* sta_netif_handle =
 		esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
@@ -103,13 +116,13 @@ std::vector<HotspotManager::ClientInfo> HotspotManager::getConnectedClients() {
 
 	// Refresh hostnames and IPs from custom dhcpserver
 	static dhcp_lease_info_t leases_buf[8];
-	int lease_count = dhcps_get_active_leases(leases_buf, 8);
+	int const lease_count = dhcps_get_active_leases(leases_buf, 8);
 
 	// Get STA list from WiFi driver for RSSI
 	wifi_sta_list_t sta_list;
 	esp_wifi_ap_get_sta_list(&sta_list);
 
-	uint64_t now = esp_timer_get_time() / 1000000;
+	uint64_t const now = esp_timer_get_time() / 1000000;
 
 	for (auto& client: m_clients) {
 		// Update IP and Hostname
@@ -143,14 +156,15 @@ std::vector<HotspotManager::ClientInfo> HotspotManager::getConnectedClients() {
 }
 
 esp_err_t HotspotManager::init(Observable<int32_t>* enabled_subject, Observable<int32_t>* client_count_subject) {
-	if (m_is_init)
+	if (m_is_init) {
 		return ESP_OK;
+	}
 
 	Log::info(TAG, "Initializing Hotspot manager...");
 	m_enabled_subject = enabled_subject;
 	m_client_count_subject = client_count_subject;
 
-	esp_err_t err = esp_event_handler_instance_register(
+	esp_err_t const err = esp_event_handler_instance_register(
 		WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, this, nullptr
 	);
 	if (err != ESP_OK) {
@@ -184,24 +198,25 @@ esp_err_t HotspotManager::init(Observable<int32_t>* enabled_subject, Observable<
 }
 
 uint32_t HotspotManager::getUptime() const {
-	if (!isEnabled() || m_start_time == 0)
+	if (!isEnabled() || m_start_time == 0) {
 		return 0;
+	}
 	return (uint32_t)((esp_timer_get_time() - m_start_time) / 1000000); // Seconds
 }
 
 void HotspotManager::startUsageTimer() {
 	// Create timer to update usage (every 2 seconds)
 	// Uses esp_timer instead of lv_timer for headless compatibility
-	esp_timer_handle_t timer;
-	esp_timer_create_args_t timer_args = {
-		.callback = [](void* arg) {
+	esp_timer_handle_t timer = nullptr;
+	esp_timer_create_args_t const timer_args = {
+		.callback = [](void* /*arg*/) {
 			HotspotManager& self = HotspotManager::getInstance();
 			if (self.isEnabled()) {
-				uint64_t now = esp_timer_get_time();
-				uint64_t dt_us = now - self.m_last_update_time;
+				uint64_t const now = esp_timer_get_time();
+				uint64_t const dt_us = now - self.m_last_update_time;
 
 				if (dt_us > 0 && self.m_last_update_time > 0) {
-					float dt_s = (float)dt_us / 1000000.0f;
+					float const dt_s = (float)dt_us / 1000000.0F;
 					self.m_upload_speed =
 						(uint32_t)((float)(self.m_bytes_sent - self.m_last_bytes_sent) /
 								   dt_s);
@@ -235,10 +250,11 @@ void HotspotManager::startUsageTimer() {
 }
 
 void HotspotManager::checkAutoShutdown() {
-	if (m_auto_shutdown_timeout == 0)
+	if (m_auto_shutdown_timeout == 0) {
 		return;
+	}
 
-	uint64_t now = esp_timer_get_time() / 1000000;
+	uint64_t const now = esp_timer_get_time() / 1000000;
 	if (m_client_count == 0 && m_last_client_time > 0) {
 		if ((now - m_last_client_time) >= m_auto_shutdown_timeout) {
 			Log::info(TAG, "Auto-shutdown triggered (no clients for %lu seconds)", m_auto_shutdown_timeout);
@@ -338,14 +354,15 @@ esp_err_t HotspotManager::stop() {
 	return err;
 }
 
-bool HotspotManager::isEnabled() const {
+bool HotspotManager::isEnabled() {
 	wifi_mode_t mode;
-	if (esp_wifi_get_mode(&mode) != ESP_OK)
+	if (esp_wifi_get_mode(&mode) != ESP_OK) {
 		return false;
+	}
 	return (mode == WIFI_MODE_AP || mode == WIFI_MODE_APSTA);
 }
 
-int HotspotManager::getClientCount() {
+int HotspotManager::getClientCount() const {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	return m_client_count;
 }
@@ -390,8 +407,8 @@ esp_err_t HotspotManager::setNatEnabled(bool enabled) {
 	return ESP_OK;
 }
 
-void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-	HotspotManager* self = static_cast<HotspotManager*>(arg);
+void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base*/, int32_t event_id, void* event_data) {
+	auto* self = static_cast<HotspotManager*>(arg);
 
 	if (event_id == WIFI_EVENT_AP_START) {
 		Log::info(TAG, "Hotspot AP started");
@@ -414,8 +431,9 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 			}
 		}
 
-		if (self->m_enabled_subject)
+		if (self->m_enabled_subject) {
 			self->m_enabled_subject->set(1);
+		}
 	} else if (event_id == WIFI_EVENT_AP_STOP) {
 		Log::info(TAG, "Hotspot AP stopped");
 		{
@@ -424,12 +442,14 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 			self->m_clients.clear();
 			self->m_last_client_time = 0;
 		}
-		if (self->m_client_count_subject)
+		if (self->m_client_count_subject) {
 			self->m_client_count_subject->set(0);
-		if (self->m_enabled_subject)
+		}
+		if (self->m_enabled_subject) {
 			self->m_enabled_subject->set(0);
+		}
 	} else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
-		wifi_event_ap_staconnected_t* event =
+		auto* event =
 			(wifi_event_ap_staconnected_t*)event_data;
 		Log::info(TAG, "Client connected to Hotspot, AID=%d", event->aid);
 
@@ -446,10 +466,11 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 			self->m_last_client_time = 0; // Reset shutdown timer
 		}
 
-		if (self->m_client_count_subject)
+		if (self->m_client_count_subject) {
 			self->m_client_count_subject->set(self->m_client_count);
+		}
 	} else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-		wifi_event_ap_stadisconnected_t* event =
+		auto* event =
 			(wifi_event_ap_stadisconnected_t*)event_data;
 		Log::info(TAG, "Client disconnected from Hotspot, AID=%d", event->aid);
 
@@ -462,15 +483,17 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t event_base, 
 					break;
 				}
 			}
-			if (self->m_client_count > 0)
+			if (self->m_client_count > 0) {
 				self->m_client_count--;
+			}
 			if (self->m_client_count == 0) {
 				self->m_last_client_time = esp_timer_get_time() / 1000000;
 			}
 		}
 
-		if (self->m_client_count_subject)
+		if (self->m_client_count_subject) {
 			self->m_client_count_subject->set(self->m_client_count);
+		}
 	}
 }
 

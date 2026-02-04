@@ -54,7 +54,7 @@ private:
 	Observable<int32_t> m_uptime_subject {0};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_uptime_bridge;
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_uptime_bridge {};
 #endif
 };
 

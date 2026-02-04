@@ -1,17 +1,15 @@
 #include "FileSystemService.hpp"
 #include "core/common/Logger.hpp"
-#include "lvgl.h"
+#include "misc/lv_fs.h"
 #include <cstring>
 #include <dirent.h>
-#include <string.h>
 #include <string_view>
 #include <sys/stat.h>
 #include <unistd.h>
 
 static constexpr std::string_view TAG = "FileSystem";
 
-namespace System {
-namespace Services {
+namespace System::Services {
 
 FileSystemService& FileSystemService::getInstance() {
 	static FileSystemService instance;
@@ -19,8 +17,9 @@ FileSystemService& FileSystemService::getInstance() {
 }
 
 std::string FileSystemService::toVfsPath(const std::string& lvPath) {
-	if (lvPath.substr(0, 2) == "A:")
+	if (lvPath.substr(0, 2) == "A:") {
 		return lvPath.substr(2);
+	}
 	return lvPath;
 }
 
@@ -57,15 +56,17 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 
 	char fn[256];
 	while (lv_fs_dir_read(&dir, fn, sizeof(fn)) == LV_FS_RES_OK) {
-		if (fn[0] == '\0')
+		if (fn[0] == '\0') {
 			break;
+		}
 
-		bool is_dir = (fn[0] == '/');
+		bool const is_dir = (fn[0] == '/');
 		const char* name = is_dir ? fn + 1 : fn;
 
 		// Skip . and ..
-		if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
+		if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
 			continue;
+		}
 
 		FileEntry entry;
 		entry.name = name;
@@ -75,7 +76,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 		// Get file size if it's a file
 		if (!is_dir) {
 			std::string fullPath = buildPath(toVfsPath(path), name);
-			struct stat st;
+			struct stat st {};
 			if (stat(fullPath.c_str(), &st) == 0) {
 				entry.size = st.st_size;
 			}
@@ -89,10 +90,11 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 }
 
 int FileSystemService::copyFile(const char* src, const char* dst, ProgressCallback callback) {
-	struct stat st;
+	struct stat st {};
 	long totalSize = 0;
-	if (stat(src, &st) == 0)
+	if (stat(src, &st) == 0) {
 		totalSize = st.st_size;
+	}
 
 	FILE* fsrc = fopen(src, "rb");
 	if (!fsrc) {
@@ -110,7 +112,7 @@ int FileSystemService::copyFile(const char* src, const char* dst, ProgressCallba
 	Log::info(TAG, "Copying file: %s -> %s (%ld bytes)", src, dst, totalSize);
 
 	char buf[4096];
-	size_t n;
+	size_t n = 0;
 	long copied = 0;
 
 	while ((n = fread(buf, 1, sizeof(buf), fsrc)) > 0) {
@@ -134,14 +136,15 @@ int FileSystemService::copyFile(const char* src, const char* dst, ProgressCallba
 }
 
 int FileSystemService::copyRecursive(const char* src, const char* dst, ProgressCallback callback) {
-	struct stat st;
+	struct stat st {};
 	if (stat(src, &st) != 0) {
 		return -1;
 	}
 
 	if (S_ISDIR(st.st_mode)) {
-		if (callback)
+		if (callback) {
 			callback(0, src);
+		}
 
 		if (::mkdir(dst, 0777) != 0 && errno != EEXIST) {
 			return -1;
@@ -152,12 +155,13 @@ int FileSystemService::copyRecursive(const char* src, const char* dst, ProgressC
 			return -1;
 		}
 
-		struct dirent* p;
+		struct dirent* p = nullptr;
 		int res = 0;
 
 		while ((p = readdir(d))) {
-			if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+			if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..")) {
 				continue;
+			}
 
 			std::string subSrc = buildPath(src, p->d_name);
 			std::string subDst = buildPath(dst, p->d_name);
@@ -197,43 +201,48 @@ int FileSystemService::removeRecursive(const char* path, ProgressCallback callba
 		return unlink(path);
 	}
 
-	struct dirent* p;
+	struct dirent* p = nullptr;
 	int r = 0;
 
 	while ((p = readdir(d))) {
-		if (callback)
+		if (callback) {
 			callback(0, path);
+		}
 
-		if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, ".."))
+		if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..")) {
 			continue;
+		}
 
 		std::string subPath = buildPath(path, p->d_name);
-		struct stat st;
+		struct stat st {};
 
 		if (stat(subPath.c_str(), &st) == 0) {
-			if (S_ISDIR(st.st_mode))
+			if (S_ISDIR(st.st_mode)) {
 				r = removeRecursive(subPath.c_str(), callback);
-			else
+			} else {
 				r = unlink(subPath.c_str());
+			}
 		} else {
 			r = -1;
 		}
 
-		if (r != 0)
+		if (r != 0) {
 			break;
+		}
 	}
 
 	closedir(d);
 
-	if (r == 0)
+	if (r == 0) {
 		r = rmdir(path);
+	}
 
 	return r;
 }
 
 bool FileSystemService::remove(const std::string& path, ProgressCallback callback) {
 
-	struct stat st;
+	struct stat st {};
 	if (stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
 		Log::info(TAG, "Removing directory: %s", path.c_str());
 		return removeRecursive(path.c_str(), callback) == 0;
@@ -258,5 +267,4 @@ bool FileSystemService::mkdir(const std::string& path) {
 	return false;
 }
 
-} // namespace Services
-} // namespace System
+} // namespace System::Services

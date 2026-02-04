@@ -3,9 +3,27 @@
 #include "../../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../../theming/theme_engine/ThemeEngine.hpp"
 #include "../../../theming/ui_constants/UiConstants.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_style.h"
+#include "core/lv_obj_style_gen.h"
+#include "core/lv_observer.h"
 #include "core/system/display/DisplayManager.hpp"
-#include "core/system/system_core/SystemManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
+#include "core/ui/theming/themes/Themes.hpp"
+#include "display/lv_display.h"
+#include "draw/lv_draw_rect.h"
+#include "font/lv_symbol_def.h"
+#include "layouts/flex/lv_flex.h"
+#include "misc/lv_area.h"
+#include "misc/lv_event.h"
+#include "misc/lv_text.h"
+#include "misc/lv_types.h"
+#include "widgets/button/lv_button.h"
+#include "widgets/image/lv_image.h"
+#include "widgets/label/lv_label.h"
+#include "widgets/slider/lv_slider.h"
+#include <cstdint>
 
 namespace UI::Modules {
 
@@ -61,7 +79,7 @@ void QuickAccessPanel::create() {
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			lv_obj_t* lbl = lv_observer_get_target_obj(observer);
 			if (lbl) {
-				int32_t v = lv_subject_get_int(subject);
+				int32_t const v = lv_subject_get_int(subject);
 				lv_label_set_text(lbl, Themes::ToString((ThemeType)v));
 			}
 		},

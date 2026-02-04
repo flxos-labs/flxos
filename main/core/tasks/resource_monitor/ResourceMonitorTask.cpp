@@ -1,8 +1,8 @@
 #include "ResourceMonitorTask.hpp"
 #include "core/common/Logger.hpp"
+#include "core/tasks/TaskManager.hpp"
 #include "esp_heap_caps.h"
-#include "esp_system.h"
-#include "esp_timer.h"
+#include "freertos/projdefs.h"
 #include "freertos/task.h"
 #include <string_view>
 
@@ -21,7 +21,7 @@ ResourceMonitorTask::Stats ResourceMonitorTask::getLatestStats() const {
 	return {m_freeHeap.load(), m_minFreeHeap.load(), m_freePsram.load(), m_uptimeSeconds.load()};
 }
 
-void ResourceMonitorTask::run(void* data) {
+void ResourceMonitorTask::run(void* /*data*/) {
 
 	setWatchdogTimeout(15000);
 

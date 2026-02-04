@@ -8,8 +8,7 @@
 #include "core/apps/settings/wifi/WiFiSettings.hpp"
 #include <memory>
 
-namespace System {
-namespace Apps {
+namespace System::Apps {
 class SettingsApp : public App {
 public:
 
@@ -83,7 +82,7 @@ private:
 			lv_obj_add_event_cb(
 				wifiBtn,
 				[](lv_event_t* e) {
-					SettingsApp* app = (SettingsApp*)lv_event_get_user_data(e);
+					auto* app = (SettingsApp*)lv_event_get_user_data(e);
 					app->showWiFiSettings();
 				},
 				LV_EVENT_CLICKED, this
@@ -96,7 +95,7 @@ private:
 			lv_obj_add_event_cb(
 				hotspotBtn,
 				[](lv_event_t* e) {
-					SettingsApp* app = (SettingsApp*)lv_event_get_user_data(e);
+					auto* app = (SettingsApp*)lv_event_get_user_data(e);
 					app->showHotspotSettings();
 				},
 				LV_EVENT_CLICKED, this
@@ -107,7 +106,7 @@ private:
 			lv_obj_add_event_cb(
 				btBtn,
 				[](lv_event_t* e) {
-					SettingsApp* app = (SettingsApp*)lv_event_get_user_data(e);
+					auto* app = (SettingsApp*)lv_event_get_user_data(e);
 					app->showBluetoothSettings();
 				},
 				LV_EVENT_CLICKED, this
@@ -119,7 +118,7 @@ private:
 			lv_obj_add_event_cb(
 				displayBtn,
 				[](lv_event_t* e) {
-					SettingsApp* app = (SettingsApp*)lv_event_get_user_data(e);
+					auto* app = (SettingsApp*)lv_event_get_user_data(e);
 					app->showDisplaySettings();
 				},
 				LV_EVENT_CLICKED, this
@@ -130,8 +129,9 @@ private:
 	}
 
 	void showWiFiSettings() {
-		if (m_mainList)
+		if (m_mainList) {
 			lv_obj_add_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
+		}
 
 		if (m_wifiSettings) {
 			m_wifiSettings->show();
@@ -139,8 +139,9 @@ private:
 	}
 
 	void showHotspotSettings() {
-		if (m_mainList)
+		if (m_mainList) {
 			lv_obj_add_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
+		}
 
 		if (m_hotspotSettings) {
 			m_hotspotSettings->show();
@@ -148,8 +149,9 @@ private:
 	}
 
 	void showBluetoothSettings() {
-		if (m_mainList)
+		if (m_mainList) {
 			lv_obj_add_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
+		}
 
 		if (m_bluetoothSettings) {
 			m_bluetoothSettings->show();
@@ -167,5 +169,4 @@ private:
 	}
 };
 
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps

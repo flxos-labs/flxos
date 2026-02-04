@@ -28,7 +28,7 @@ public:
 private:
 
 	WindowManager();
-	~WindowManager();
+	~WindowManager() override;
 
 	lv_obj_t* m_windowContainer;
 	lv_obj_t* m_appContainer;

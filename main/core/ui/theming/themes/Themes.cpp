@@ -1,13 +1,18 @@
 #include "Themes.hpp"
 #include "core/common/Logger.hpp"
+#include "core/lv_obj.h"
 #include "core/ui/keyboard/VirtualKeyboard.hpp"
+#include "misc/lv_color.h"
+#include "misc/lv_palette.h"
+#include "misc/lv_types.h"
+#include "widgets/textarea/lv_textarea.h"
 #include <string_view>
 
 static constexpr std::string_view TAG = "Themes";
 
 namespace Themes {
 ThemeConfig GetConfig(ThemeType type) {
-	ThemeConfig cfg;
+	ThemeConfig cfg {};
 	cfg.apply_cb = nullptr;
 	switch (type) {
 		case ThemeType::HYPRLAND:

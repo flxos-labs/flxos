@@ -4,13 +4,12 @@
 #include <string>
 #include <vector>
 
-namespace System {
-namespace Services {
+namespace System::Services {
 
 struct FileEntry {
-	std::string name;
-	bool isDirectory;
-	size_t size; // For files, 0 for directories
+	std::string name {};
+	bool isDirectory {};
+	size_t size {}; // For files, 0 for directories
 };
 
 using ProgressCallback = std::function<void(int percent, const char* currentPath)>;
@@ -87,5 +86,4 @@ private:
 	int removeRecursive(const char* path, ProgressCallback callback);
 };
 
-} // namespace Services
-} // namespace System
+} // namespace System::Services

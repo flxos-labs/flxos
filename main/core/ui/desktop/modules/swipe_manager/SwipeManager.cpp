@@ -1,7 +1,19 @@
 #include "SwipeManager.hpp"
+
 #include "../../../theming/ui_constants/UiConstants.hpp"
-#include "core/common/Logger.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_event.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_style.h"
 #include "core/system/focus/FocusManager.hpp"
+#include "display/lv_display.h"
+#include "indev/lv_indev.h"
+#include "lv_api_map_v8.h"
+#include "misc/lv_area.h"
+#include "misc/lv_event.h"
+#include "misc/lv_types.h"
+#include <algorithm>
+#include <cstdint>
 
 namespace UI::Modules {
 
@@ -47,8 +59,8 @@ void SwipeManager::on_swipe_zone_press(lv_event_t* e) {
 		self->m_swipeStartY = point.y;
 		self->m_swipeActive = true;
 
-		int32_t h = lv_display_get_vertical_resolution(nullptr);
-		int32_t statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
+		int32_t const h = lv_display_get_vertical_resolution(nullptr);
+		int32_t const statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
 		lv_obj_remove_flag(self->m_config.notificationPanel, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_move_foreground(self->m_config.notificationPanel);
 		lv_obj_set_y(self->m_config.notificationPanel, -h + statusBarHeight);
@@ -63,12 +75,12 @@ void SwipeManager::on_swipe_zone_pressing(lv_event_t* e) {
 	if (indev) {
 		lv_point_t point;
 		lv_indev_get_point(indev, &point);
-		int32_t h = lv_display_get_vertical_resolution(nullptr);
-		int32_t statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
-		int32_t diff = point.y - self->m_swipeStartY;
+		int32_t const h = lv_display_get_vertical_resolution(nullptr);
+		int32_t const statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
+		int32_t const diff = point.y - self->m_swipeStartY;
 
 		int32_t new_y = -h + statusBarHeight + diff;
-		if (new_y > statusBarHeight) new_y = statusBarHeight;
+		new_y = std::min(new_y, statusBarHeight);
 
 		lv_obj_set_y(self->m_config.notificationPanel, new_y);
 	}
@@ -78,9 +90,9 @@ void SwipeManager::on_swipe_zone_release(lv_event_t* e) {
 	auto* self = (SwipeManager*)lv_event_get_user_data(e);
 	if (!self || !self->m_swipeActive || !self->m_config.notificationPanel) return;
 
-	int32_t current_y = lv_obj_get_y(self->m_config.notificationPanel);
-	int32_t h = lv_display_get_vertical_resolution(nullptr);
-	int32_t statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
+	int32_t const current_y = lv_obj_get_y(self->m_config.notificationPanel);
+	int32_t const h = lv_display_get_vertical_resolution(nullptr);
+	int32_t const statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
 
 	if (current_y > -h + statusBarHeight + (h / 6)) {
 		lv_obj_set_y(self->m_config.notificationPanel, statusBarHeight);
@@ -113,13 +125,13 @@ void SwipeManager::on_notif_panel_pressing(lv_event_t* e) {
 	if (indev) {
 		lv_point_t point;
 		lv_indev_get_point(indev, &point);
-		int32_t h = lv_display_get_vertical_resolution(nullptr);
-		int32_t diff = point.y - self->m_swipeStartY;
+		int32_t const h = lv_display_get_vertical_resolution(nullptr);
+		int32_t const diff = point.y - self->m_swipeStartY;
 
-		int32_t statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
+		int32_t const statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
 		int32_t new_y = statusBarHeight + diff;
-		if (new_y > statusBarHeight) new_y = statusBarHeight;
-		if (new_y < -h + statusBarHeight) new_y = -h + statusBarHeight;
+		new_y = std::min(new_y, statusBarHeight);
+		new_y = std::max(new_y, -h + statusBarHeight);
 
 		lv_obj_set_y(self->m_config.notificationPanel, new_y);
 	}
@@ -129,9 +141,9 @@ void SwipeManager::on_notif_panel_release(lv_event_t* e) {
 	auto* self = (SwipeManager*)lv_event_get_user_data(e);
 	if (!self || !self->m_swipeActive || !self->m_config.notificationPanel) return;
 
-	int32_t current_y = lv_obj_get_y(self->m_config.notificationPanel);
-	int32_t h = lv_display_get_vertical_resolution(nullptr);
-	int32_t statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
+	int32_t const current_y = lv_obj_get_y(self->m_config.notificationPanel);
+	int32_t const h = lv_display_get_vertical_resolution(nullptr);
+	int32_t const statusBarHeight = lv_obj_get_height(self->m_config.statusBar);
 
 	if (current_y < statusBarHeight - (h / 6)) {
 		lv_obj_set_y(self->m_config.notificationPanel, -h + statusBarHeight);

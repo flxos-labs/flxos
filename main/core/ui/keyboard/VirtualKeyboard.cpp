@@ -1,6 +1,19 @@
 #include "VirtualKeyboard.hpp"
 #include "../theming/layout_constants/LayoutConstants.hpp"
 #include "core/common/Logger.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_event.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_scroll.h"
+#include "core/lv_obj_style.h"
+#include "display/lv_display.h"
+#include "lv_api_map_v8.h"
+#include "misc/lv_anim.h"
+#include "misc/lv_area.h"
+#include "misc/lv_event.h"
+#include "misc/lv_types.h"
+#include "widgets/keyboard/lv_keyboard.h"
+#include <cstddef>
 #include <string_view>
 
 static constexpr std::string_view TAG = "VirtualKeyboard";
@@ -10,12 +23,12 @@ VirtualKeyboard& VirtualKeyboard::getInstance() {
 	return instance;
 }
 
-VirtualKeyboard::VirtualKeyboard()
-	: m_keyboard(nullptr), m_current_ta(nullptr) {}
+VirtualKeyboard::VirtualKeyboard() {}
 
 void VirtualKeyboard::init() {
-	if (m_keyboard)
+	if (m_keyboard) {
 		return;
+	}
 
 	Log::info(TAG, "Initializing virtual keyboard...");
 
@@ -38,17 +51,18 @@ void VirtualKeyboard::init() {
 }
 
 void VirtualKeyboard::register_input_area(lv_obj_t* obj) {
-	if (!m_keyboard)
+	if (!m_keyboard) {
 		init();
+	}
 
 	// Add event callback to show/hide keyboard on focus
 	lv_obj_add_event_cb(obj, on_ta_event, LV_EVENT_ALL, this);
 }
 
 void VirtualKeyboard::on_ta_event(lv_event_t* e) {
-	VirtualKeyboard* vk = (VirtualKeyboard*)lv_event_get_user_data(e);
-	lv_event_code_t code = lv_event_get_code(e);
-	lv_obj_t* ta = (lv_obj_t*)lv_event_get_target(e);
+	auto* vk = (VirtualKeyboard*)lv_event_get_user_data(e);
+	lv_event_code_t const code = lv_event_get_code(e);
+	auto* ta = (lv_obj_t*)lv_event_get_target(e);
 
 	if (code == LV_EVENT_FOCUSED || code == LV_EVENT_CLICKED) {
 		// Show keyboard
@@ -65,14 +79,14 @@ void VirtualKeyboard::on_ta_event(lv_event_t* e) {
 	} else if (code == LV_EVENT_DEFOCUSED) {
 		if (vk->m_keyboard) {
 			Log::debug(TAG, "Hiding keyboard (defocused)");
-			lv_keyboard_set_textarea(vk->m_keyboard, NULL);
+			lv_keyboard_set_textarea(vk->m_keyboard, nullptr);
 			lv_obj_add_flag(vk->m_keyboard, LV_OBJ_FLAG_HIDDEN);
 			vk->m_current_ta = nullptr;
 		}
 	} else if (code == LV_EVENT_DELETE) {
 		if (vk->m_current_ta == ta) {
 			if (vk->m_keyboard) {
-				lv_keyboard_set_textarea(vk->m_keyboard, NULL);
+				lv_keyboard_set_textarea(vk->m_keyboard, nullptr);
 				lv_obj_add_flag(vk->m_keyboard, LV_OBJ_FLAG_HIDDEN);
 			}
 			vk->m_current_ta = nullptr;
@@ -81,8 +95,8 @@ void VirtualKeyboard::on_ta_event(lv_event_t* e) {
 }
 
 void VirtualKeyboard::on_kb_event(lv_event_t* e) {
-	VirtualKeyboard* vk = (VirtualKeyboard*)lv_event_get_user_data(e);
-	lv_event_code_t code = lv_event_get_code(e);
+	auto* vk = (VirtualKeyboard*)lv_event_get_user_data(e);
+	lv_event_code_t const code = lv_event_get_code(e);
 
 	if (code == LV_EVENT_READY || code == LV_EVENT_CANCEL) {
 		Log::debug(TAG, "Hiding keyboard (ready/cancel)");
@@ -90,7 +104,7 @@ void VirtualKeyboard::on_kb_event(lv_event_t* e) {
 		lv_obj_add_flag(vk->m_keyboard, LV_OBJ_FLAG_HIDDEN);
 		if (vk->m_current_ta) {
 			lv_obj_remove_state(vk->m_current_ta, LV_STATE_FOCUSED); // Optional: remove focus
-			lv_keyboard_set_textarea(vk->m_keyboard, NULL);
+			lv_keyboard_set_textarea(vk->m_keyboard, nullptr);
 			vk->m_current_ta = nullptr;
 		}
 	}

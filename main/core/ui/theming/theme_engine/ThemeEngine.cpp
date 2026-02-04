@@ -1,7 +1,17 @@
 #include "ThemeEngine.hpp"
 #include "core/common/Logger.hpp"
+#include "core/lv_obj_style.h"
+#include "core/lv_observer.h"
 #include "core/system/theme/ThemeManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
+#include "core/ui/theming/themes/Themes.hpp"
+#include "display/lv_display.h"
+#include "lv_conf_internal.h"
+#include "misc/lv_types.h"
+#include "themes/default/lv_theme_default.h"
+#include "themes/lv_theme.h"
+#include <cstddef>
+#include <cstdint>
 #include <map>
 #include <string_view>
 #include <vector>
@@ -23,8 +33,9 @@ void ThemeEngine::init() {
 
 void ThemeEngine::set_theme(ThemeType theme, lv_display_t* disp) {
 	GuiTask::lock();
-	if (!disp)
+	if (!disp) {
 		disp = lv_display_get_default();
+	}
 	if (!disp) {
 		GuiTask::unlock();
 		return;
@@ -59,8 +70,9 @@ void ThemeEngine::cleanup_previous_theme(lv_display_t* disp) {
 	if (engine_themes.count(disp)) {
 		auto& themes = engine_themes[disp];
 		for (auto it = themes.rbegin(); it != themes.rend(); ++it) {
-			if (*it == lv_theme_default_get())
+			if (*it == lv_theme_default_get()) {
 				continue;
+			}
 			lv_theme_delete(*it);
 		}
 		themes.clear();
@@ -70,14 +82,15 @@ void ThemeEngine::cleanup_previous_theme(lv_display_t* disp) {
 
 void ThemeEngine::apply_theme(ThemeType theme, lv_display_t* disp) {
 	GuiTask::lock();
-	if (!disp)
+	if (!disp) {
 		disp = lv_display_get_default();
+	}
 	if (!disp) {
 		GuiTask::unlock();
 		return;
 	}
 
-	ThemeConfig cfg = Themes::GetConfig(theme);
+	ThemeConfig const cfg = Themes::GetConfig(theme);
 	Log::debug(TAG, "Applying theme: %d (Dark: %s)", (int)theme, cfg.dark ? "Yes" : "No");
 	std::vector<lv_theme_t*> new_themes_vec;
 
@@ -104,6 +117,6 @@ void ThemeEngine::apply_theme(ThemeType theme, lv_display_t* disp) {
 
 	engine_themes[disp] = new_themes_vec;
 
-	lv_obj_report_style_change(NULL);
+	lv_obj_report_style_change(nullptr);
 	GuiTask::unlock();
 }

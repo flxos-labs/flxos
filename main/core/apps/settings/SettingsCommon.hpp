@@ -4,12 +4,10 @@
 #include "lvgl.h"
 #include <functional>
 
-namespace System {
-namespace Apps {
-namespace Settings {
+namespace System::Apps::Settings {
 
 inline lv_obj_t* add_list_btn(lv_obj_t* list, const char* symbol, const char* text) {
-	lv_obj_t* btn = lv_list_add_button(list, NULL, text);
+	lv_obj_t* btn = lv_list_add_button(list, nullptr, text);
 	lv_obj_t* img = lv_image_create(btn);
 	lv_image_set_src(img, symbol);
 	lv_obj_move_to_index(img, 0);
@@ -40,8 +38,9 @@ inline lv_obj_t* create_header(lv_obj_t* parent, const char* title_text, lv_obj_
 	lv_obj_t* backBtn = lv_button_create(header);
 	lv_obj_t* backLabel = lv_image_create(backBtn);
 	lv_image_set_src(backLabel, LV_SYMBOL_LEFT);
-	if (back_btn_out)
+	if (back_btn_out) {
 		*back_btn_out = backBtn;
+	}
 
 	lv_obj_t* title = lv_label_create(header);
 	lv_label_set_text(title, title_text);
@@ -62,8 +61,9 @@ inline void add_back_button_event_cb(lv_obj_t* btn, std::function<void()>* onBac
 		btn,
 		[](lv_event_t* e) {
 			auto* callback = (std::function<void()>*)lv_event_get_user_data(e);
-			if (callback && *callback)
+			if (callback && *callback) {
 				(*callback)();
+			}
 		},
 		LV_EVENT_CLICKED, onBack
 	);
@@ -77,6 +77,4 @@ inline void add_switch_item(lv_obj_t* list, const char* text, lv_subject_t* subj
 	lv_obj_bind_checked(sw, subject);
 }
 
-} // namespace Settings
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps::Settings

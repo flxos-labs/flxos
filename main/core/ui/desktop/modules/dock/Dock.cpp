@@ -1,7 +1,19 @@
 #include "Dock.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_style.h"
+#include "core/lv_obj_style_gen.h"
 #include "core/ui/theming/StyleUtils.hpp"
 #include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
+#include "display/lv_display.h"
+#include "font/lv_symbol_def.h"
+#include "layouts/flex/lv_flex.h"
+#include "misc/lv_area.h"
+#include "misc/lv_types.h"
+#include "widgets/button/lv_button.h"
+#include "widgets/image/lv_image.h"
+#include <cstdint>
 
 namespace UI::Modules {
 

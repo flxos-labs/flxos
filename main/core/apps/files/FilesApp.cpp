@@ -1,20 +1,48 @@
 #include "FilesApp.hpp"
+#include "ClipboardManager.hpp"
+#include "core/apps/settings/SettingsCommon.hpp"
 #include "core/common/Logger.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_event.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_style.h"
+#include "core/lv_obj_style_gen.h"
+#include "core/lv_obj_tree.h"
+#include "core/lv_refr.h"
 #include "core/services/filesystem/FileSystemService.hpp"
+#include "core/tasks/TaskManager.hpp"
 #include "core/ui/theming/layout_constants/LayoutConstants.hpp"
+#include "display/lv_display.h"
 #include "esp_timer.h"
+#include "font/lv_symbol_def.h"
+#include "freertos/projdefs.h"
 #include "freertos/task.h"
+#include "layouts/flex/lv_flex.h"
+#include "lv_api_map_v9_1.h"
+#include "misc/lv_anim.h"
+#include "misc/lv_area.h"
+#include "misc/lv_color.h"
+#include "misc/lv_event.h"
+#include "misc/lv_types.h"
+#include "widgets/bar/lv_bar.h"
+#include "widgets/button/lv_button.h"
+#include "widgets/dropdown/lv_dropdown.h"
+#include "widgets/image/lv_image.h"
+#include "widgets/label/lv_label.h"
+#include "widgets/list/lv_list.h"
+#include "widgets/msgbox/lv_msgbox.h"
+#include "widgets/textarea/lv_textarea.h"
+#include <cstdint>
 #include <cstring>
 #include <string_view>
 
 static constexpr std::string_view TAG = "FilesApp";
 
-namespace System {
-namespace Apps {
+namespace System::Apps {
 
 // Helper: Create a styled message box
 static void showMsgBox(const char* title, const char* text) {
-	lv_obj_t* mb = lv_msgbox_create(NULL);
+	lv_obj_t* mb = lv_msgbox_create(nullptr);
 	lv_obj_set_size(mb, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), LV_SIZE_CONTENT);
 	lv_obj_set_style_max_height(mb, lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT), 0);
 	lv_obj_center(mb);
@@ -45,7 +73,7 @@ void FilesApp::createUI(void* parent) {
 	lv_obj_add_event_cb(
 		homeBtn,
 		[](lv_event_t* e) {
-			FilesApp* app = (FilesApp*)lv_event_get_user_data(e);
+			auto* app = (FilesApp*)lv_event_get_user_data(e);
 			app->goHome();
 		},
 		LV_EVENT_CLICKED, this
@@ -60,7 +88,7 @@ void FilesApp::createUI(void* parent) {
 	lv_obj_add_event_cb(
 		mkdirBtn,
 		[](lv_event_t* e) {
-			FilesApp* app = (FilesApp*)lv_event_get_user_data(e);
+			auto* app = (FilesApp*)lv_event_get_user_data(e);
 			app->showInputDialog("New Folder", "", [app](std::string name) {
 				app->createFolder(name);
 			});
@@ -77,7 +105,7 @@ void FilesApp::createUI(void* parent) {
 	lv_obj_add_event_cb(
 		m_pasteBtn,
 		[](lv_event_t* e) {
-			FilesApp* app = (FilesApp*)lv_event_get_user_data(e);
+			auto* app = (FilesApp*)lv_event_get_user_data(e);
 			app->pasteItem();
 		},
 		LV_EVENT_CLICKED, this
@@ -90,7 +118,7 @@ void FilesApp::createUI(void* parent) {
 	lv_obj_add_event_cb(
 		m_backBtn,
 		[](lv_event_t* e) {
-			FilesApp* app = (FilesApp*)lv_event_get_user_data(e);
+			auto* app = (FilesApp*)lv_event_get_user_data(e);
 			app->goBack();
 		},
 		LV_EVENT_CLICKED, this
@@ -116,19 +144,21 @@ void FilesApp::onStop() {
 }
 
 void FilesApp::feedWatchdog() {
-	uint32_t now = (uint32_t)(esp_timer_get_time() / 1000);
+	auto const now = (uint32_t)(esp_timer_get_time() / 1000);
 	if (now - m_lastFeed >= 100) {
-		if (!m_guiTask)
+		if (!m_guiTask) {
 			m_guiTask = TaskManager::getInstance().getTask("gui_task");
-		if (m_guiTask)
+		}
+		if (m_guiTask) {
 			m_guiTask->heartbeat();
+		}
 		vTaskDelay(pdMS_TO_TICKS(1));
 		m_lastFeed = now;
 	}
 }
 
 void FilesApp::showProgressDialog(const char* title) {
-	m_progressMbox = lv_msgbox_create(NULL);
+	m_progressMbox = lv_msgbox_create(nullptr);
 	lv_obj_set_size(m_progressMbox, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), LV_SIZE_CONTENT);
 	lv_obj_set_style_max_height(m_progressMbox, lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT), 0);
 	lv_obj_center(m_progressMbox);
@@ -147,12 +177,13 @@ void FilesApp::showProgressDialog(const char* title) {
 	lv_bar_set_range(m_progressBar, 0, 100);
 	lv_bar_set_value(m_progressBar, 0, LV_ANIM_OFF);
 
-	lv_refr_now(NULL);
+	lv_refr_now(nullptr);
 }
 
 void FilesApp::updateProgress(int percent, const char* text) {
-	if (m_progressBar)
+	if (m_progressBar) {
 		lv_bar_set_value(m_progressBar, percent, LV_ANIM_OFF);
+	}
 	if (m_progressLabel && text) {
 		// Only show the filename part if it's a long path
 		const char* name = strrchr(text, '/');
@@ -160,9 +191,9 @@ void FilesApp::updateProgress(int percent, const char* text) {
 	}
 
 	static uint32_t last_refr = 0;
-	uint32_t now = (uint32_t)(esp_timer_get_time() / 1000);
+	auto const now = (uint32_t)(esp_timer_get_time() / 1000);
 	if (now - last_refr >= 50) {
-		lv_refr_now(NULL);
+		lv_refr_now(nullptr);
 		last_refr = now;
 	}
 }
@@ -177,8 +208,9 @@ void FilesApp::closeProgressDialog() {
 }
 
 void FilesApp::refreshList() {
-	if (!m_list)
+	if (!m_list) {
 		return;
+	}
 
 	lv_obj_clean(m_list);
 	lv_label_set_text(m_pathLabel, m_currentPath.c_str());
@@ -223,7 +255,7 @@ void FilesApp::addListItem(const std::string& name, bool isDir) {
 
 	lv_dropdown_set_options(dropdown, "Copy\nCut\nRename\nDelete");
 	lv_dropdown_set_text(dropdown, LV_SYMBOL_BARS);
-	lv_dropdown_set_symbol(dropdown, NULL);
+	lv_dropdown_set_symbol(dropdown, nullptr);
 	lv_dropdown_set_selected_highlight(dropdown, false);
 	lv_dropdown_set_dir(dropdown, LV_DIR_LEFT);
 
@@ -235,11 +267,11 @@ void FilesApp::addListItem(const std::string& name, bool isDir) {
 	lv_obj_add_event_cb(
 		dropdown,
 		[](lv_event_t* e) {
-			lv_event_code_t code = lv_event_get_code(e);
+			lv_event_code_t const code = lv_event_get_code(e);
 			if (code == LV_EVENT_CLICKED || code == LV_EVENT_PRESSED) {
 				lv_event_stop_bubbling(e);
 			} else if (code == LV_EVENT_VALUE_CHANGED) {
-				FilesApp* app = (FilesApp*)lv_event_get_user_data(e);
+				auto* app = (FilesApp*)lv_event_get_user_data(e);
 				lv_obj_t* obj = lv_event_get_target_obj(e);
 
 				char buf[32];
@@ -258,12 +290,12 @@ void FilesApp::addListItem(const std::string& name, bool isDir) {
 	lv_obj_add_event_cb(
 		btn,
 		[](lv_event_t* e) {
-			FilesApp* app = (FilesApp*)lv_event_get_user_data(e);
+			auto* app = (FilesApp*)lv_event_get_user_data(e);
 			lv_obj_t* btn = lv_event_get_target_obj(e);
-			lv_event_code_t code = lv_event_get_code(e);
+			lv_event_code_t const code = lv_event_get_code(e);
 
 			if (code == LV_EVENT_CLICKED) {
-				bool isDir = (bool)(uintptr_t)lv_obj_get_user_data(btn);
+				bool const isDir = (bool)(uintptr_t)lv_obj_get_user_data(btn);
 				const char* name = lv_list_get_button_text(app->m_list, btn);
 				if (isDir) {
 					Log::debug(TAG, "User clicked directory: %s", name);
@@ -291,7 +323,7 @@ void FilesApp::handleMenuAction(const std::string& action, const std::string& na
 			this->renameItem(name, newName);
 		});
 	} else if (action == "Delete") {
-		lv_obj_t* confirm = lv_msgbox_create(NULL);
+		lv_obj_t* confirm = lv_msgbox_create(nullptr);
 		lv_obj_set_size(confirm, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), LV_SIZE_CONTENT);
 		lv_obj_set_style_max_height(confirm, lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT), 0);
 		lv_obj_center(confirm);
@@ -303,17 +335,17 @@ void FilesApp::handleMenuAction(const std::string& action, const std::string& na
 		lv_msgbox_add_close_button(confirm);
 
 		struct ConfirmCtx {
-			FilesApp* app;
-			std::string name;
-			bool isDir;
-			lv_obj_t* mbox;
+			FilesApp* app {};
+			std::string name {};
+			bool isDir {};
+			lv_obj_t* mbox {};
 		};
-		ConfirmCtx* cctx = new ConfirmCtx {this, name, isDir, confirm};
+		auto* cctx = new ConfirmCtx {this, name, isDir, confirm};
 
 		lv_obj_add_event_cb(
 			btn_yes,
 			[](lv_event_t* e) {
-				ConfirmCtx* cc = (ConfirmCtx*)lv_event_get_user_data(e);
+				auto* cc = (ConfirmCtx*)lv_event_get_user_data(e);
 				cc->app->deleteItem(cc->name, cc->isDir);
 				lv_msgbox_close(cc->mbox);
 			},
@@ -335,7 +367,7 @@ void FilesApp::handleMenuAction(const std::string& action, const std::string& na
 }
 
 void FilesApp::showInputDialog(const char* title, const std::string& defaultVal, std::function<void(std::string)> cb) {
-	lv_obj_t* mbox = lv_msgbox_create(NULL);
+	lv_obj_t* mbox = lv_msgbox_create(nullptr);
 	lv_obj_set_size(mbox, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), LV_SIZE_CONTENT);
 	lv_obj_set_style_max_height(mbox, lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT), 0);
 	lv_obj_center(mbox);
@@ -351,16 +383,16 @@ void FilesApp::showInputDialog(const char* title, const std::string& defaultVal,
 	lv_msgbox_add_close_button(mbox);
 
 	struct InputCtx {
-		std::function<void(std::string)> cb;
-		lv_obj_t* ta;
-		lv_obj_t* mbox;
+		std::function<void(std::string)> cb {};
+		lv_obj_t* ta {};
+		lv_obj_t* mbox {};
 	};
-	InputCtx* ctx = new InputCtx {cb, ta, mbox};
+	auto* ctx = new InputCtx {cb, ta, mbox};
 
 	lv_obj_add_event_cb(
 		btn_ok,
 		[](lv_event_t* e) {
-			InputCtx* c = (InputCtx*)lv_event_get_user_data(e);
+			auto* c = (InputCtx*)lv_event_get_user_data(e);
 			std::string val = lv_textarea_get_text(c->ta);
 			c->cb(val);
 			lv_msgbox_close(c->mbox);
@@ -381,8 +413,9 @@ void FilesApp::showInputDialog(const char* title, const std::string& defaultVal,
 
 void FilesApp::pasteItem() {
 	auto& cb = ClipboardManager::getInstance();
-	if (!cb.hasContent())
+	if (!cb.hasContent()) {
 		return;
+	}
 
 	std::string srcPath = cb.get().path;
 	Log::info(TAG, "Pasting item from clipboard: %s", srcPath.c_str());
@@ -396,8 +429,9 @@ void FilesApp::pasteItem() {
 	}
 
 	if (cb.get().op == ClipboardOp::CUT) {
-		if (!Services::FileSystemService::getInstance().move(srcPath, destPath))
+		if (!Services::FileSystemService::getInstance().move(srcPath, destPath)) {
 			showMsgBox("Error", "Could not move item.");
+		}
 		cb.clear();
 	} else {
 		showProgressDialog("Copying");
@@ -407,14 +441,15 @@ void FilesApp::pasteItem() {
 			this->feedWatchdog();
 		};
 
-		if (!Services::FileSystemService::getInstance().copy(srcPath, destPath, progressCb))
+		if (!Services::FileSystemService::getInstance().copy(srcPath, destPath, progressCb)) {
 			showMsgBox("Error", "Copy failed.");
+		}
 		closeProgressDialog();
 	}
 	refreshList();
 }
 
-void FilesApp::deleteItem(const std::string& name, bool isDir) {
+void FilesApp::deleteItem(const std::string& name, bool /*isDir*/) {
 	std::string fullPath = Services::FileSystemService::buildPath(
 		Services::FileSystemService::toVfsPath(m_currentPath), name
 	);
@@ -428,31 +463,36 @@ void FilesApp::deleteItem(const std::string& name, bool isDir) {
 	bool success = Services::FileSystemService::getInstance().remove(fullPath, progressCb);
 	closeProgressDialog();
 
-	if (!success)
+	if (!success) {
 		showMsgBox("Error", "Could not delete item.");
+	}
 	refreshList();
 }
 
 void FilesApp::renameItem(const std::string& oldName, const std::string& newName) {
-	if (newName.empty() || oldName == newName)
+	if (newName.empty() || oldName == newName) {
 		return;
+	}
 	std::string basePath = Services::FileSystemService::toVfsPath(m_currentPath);
 	std::string oldPath = Services::FileSystemService::buildPath(basePath, oldName);
 	std::string newPath = Services::FileSystemService::buildPath(basePath, newName);
 	Log::info(TAG, "Renaming item: %s -> %s", oldName.c_str(), newName.c_str());
-	if (!Services::FileSystemService::getInstance().move(oldPath, newPath))
+	if (!Services::FileSystemService::getInstance().move(oldPath, newPath)) {
 		showMsgBox("Error", "Could not rename item.");
+	}
 	refreshList();
 }
 
 void FilesApp::createFolder(const std::string& name) {
-	if (name.empty())
+	if (name.empty()) {
 		return;
+	}
 	std::string fullPath = Services::FileSystemService::buildPath(
 		Services::FileSystemService::toVfsPath(m_currentPath), name
 	);
-	if (!Services::FileSystemService::getInstance().mkdir(fullPath))
+	if (!Services::FileSystemService::getInstance().mkdir(fullPath)) {
 		showMsgBox("Error", "Could not create folder.");
+	}
 	refreshList();
 }
 
@@ -481,5 +521,4 @@ void FilesApp::onFileClick(const std::string& name) {
 	showMsgBox("File Info", Services::FileSystemService::buildPath(m_currentPath, name).c_str());
 }
 
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps

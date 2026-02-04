@@ -5,13 +5,22 @@
 #include "../theming/ui_constants/UiConstants.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/common/Logger.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_event.h"
+#include "core/lv_obj_style_gen.h"
+#include "core/lv_observer.h"
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/focus/FocusManager.hpp"
-#include "core/system/notification/NotificationManager.hpp"
 #include "core/system/system_core/SystemManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
 
+#include "core/ui/theming/themes/Themes.hpp"
+#include "display/lv_display.h"
+#include "font/lv_symbol_def.h"
+#include "misc/lv_area.h"
+#include "misc/lv_event.h"
+#include "misc/lv_types.h"
+#include "widgets/image/lv_image.h"
 #include "window_manager/WindowManager.hpp"
 #include <ctime>
 #include <string_view>
@@ -24,44 +33,44 @@ Desktop& Desktop::getInstance() {
 }
 
 Desktop::Desktop()
-	: screen(nullptr), wallpaper(nullptr), wallpaper_img(nullptr),
-	  wallpaper_icon(nullptr), window_container(nullptr),
-	  m_statusBarModule(nullptr), status_bar(nullptr),
-	  m_dockModule(nullptr), dock(nullptr),
-	  m_launcherModule(nullptr), launcher(nullptr),
-	  m_quickAccessPanelModule(nullptr), quick_access_panel(nullptr),
-	  m_notificationPanelModule(nullptr), notification_panel(nullptr),
-	  notification_list(nullptr), clear_all_btn(nullptr), greetings(nullptr), app_container(nullptr),
+	: m_screen(nullptr), m_wallpaper(nullptr), m_wallpaper_img(nullptr),
+	  m_wallpaper_icon(nullptr), m_window_container(nullptr),
+	  m_statusBarModule(nullptr), m_status_bar(nullptr),
+	  m_dockModule(nullptr), m_dock(nullptr),
+	  m_launcherModule(nullptr), m_launcher(nullptr),
+	  m_quickAccessPanelModule(nullptr), m_quick_access_panel(nullptr),
+	  m_notificationPanelModule(nullptr), m_notification_panel(nullptr),
+	  m_notification_list(nullptr), m_clear_all_btn(nullptr), m_greetings(nullptr), m_app_container(nullptr),
 	  m_swipeManagerModule(nullptr) {}
 
-Desktop::~Desktop() {}
+Desktop::~Desktop() = default;
 
 void Desktop::init() {
 	Log::info(TAG, "Initializing Desktop Environment...");
-	screen = lv_obj_create(NULL);
-	lv_obj_remove_style_all(screen);
-	lv_obj_set_flex_flow(screen, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_flex_align(screen, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	m_screen = lv_obj_create(NULL);
+	lv_obj_remove_style_all(m_screen);
+	lv_obj_set_flex_flow(m_screen, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(m_screen, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-	lv_screen_load(screen);
+	lv_screen_load(m_screen);
 
-	ThemeConfig cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+	ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 
 	if (!System::SystemManager::getInstance().isSafeMode()) {
-		wallpaper = lv_obj_create(screen);
-		lv_obj_remove_style_all(wallpaper);
-		lv_obj_set_size(wallpaper, lv_pct(100), lv_pct(100));
+		m_wallpaper = lv_obj_create(m_screen);
+		lv_obj_remove_style_all(m_wallpaper);
+		lv_obj_set_size(m_wallpaper, lv_pct(100), lv_pct(100));
 
-		lv_obj_set_style_bg_color(wallpaper, cfg.primary, 0);
-		lv_obj_set_style_bg_opa(wallpaper, UiConstants::OPA_COVER, 0);
-		lv_obj_add_flag(wallpaper, LV_OBJ_FLAG_FLOATING);
-		lv_obj_move_background(wallpaper);
+		lv_obj_set_style_bg_color(m_wallpaper, cfg.primary, 0);
+		lv_obj_set_style_bg_opa(m_wallpaper, UiConstants::OPA_COVER, 0);
+		lv_obj_add_flag(m_wallpaper, LV_OBJ_FLAG_FLOATING);
+		lv_obj_move_background(m_wallpaper);
 
-		wallpaper_icon = lv_image_create(wallpaper);
-		lv_image_set_src(wallpaper_icon, LV_SYMBOL_IMAGE);
-		lv_obj_set_style_text_opa(wallpaper_icon, UiConstants::OPA_30, 0);
+		m_wallpaper_icon = lv_image_create(m_wallpaper);
+		lv_image_set_src(m_wallpaper_icon, LV_SYMBOL_IMAGE);
+		lv_obj_set_style_text_opa(m_wallpaper_icon, UiConstants::OPA_30, 0);
 
-		lv_obj_center(wallpaper_icon);
+		lv_obj_center(m_wallpaper_icon);
 
 		lv_subject_add_observer_obj(
 			&System::ThemeManager::getInstance().getThemeSubject(),
@@ -73,93 +82,95 @@ void Desktop::init() {
 					lv_obj_set_style_bg_color(wp, cfg.primary, 0);
 				}
 			},
-			wallpaper, nullptr
+			m_wallpaper, nullptr
 		);
 
 		lv_subject_add_observer(
 			&System::ThemeManager::getInstance().getWallpaperEnabledSubject(),
 			[](lv_observer_t* observer, lv_subject_t* subject) {
-				Desktop* instance = (Desktop*)lv_observer_get_user_data(observer);
-				bool enabled = lv_subject_get_int(subject);
+				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
+				bool const enabled = lv_subject_get_int(subject);
 
 				if (enabled) {
-					if (instance->wallpaper_icon)
-						lv_obj_add_flag(instance->wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-					if (instance->wallpaper_img == nullptr &&
-						instance->wallpaper != nullptr) {
-						instance->wallpaper_img = lv_image_create(instance->wallpaper);
-						lv_image_set_src(instance->wallpaper_img, "A:/data/wallpaper.jpg");
-						lv_obj_set_size(instance->wallpaper_img, lv_pct(100), lv_pct(100));
-						lv_obj_set_style_pad_all(instance->wallpaper_img, 0, 0);
-						lv_obj_set_style_border_width(instance->wallpaper_img, 0, 0);
-						lv_image_set_inner_align(instance->wallpaper_img, LV_IMAGE_ALIGN_COVER);
-						lv_obj_move_background(instance->wallpaper_img);
+					if (instance->m_wallpaper_icon) {
+						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+					}
+					if (instance->m_wallpaper_img == nullptr &&
+						instance->m_wallpaper != nullptr) {
+						instance->m_wallpaper_img = lv_image_create(instance->m_wallpaper);
+						lv_image_set_src(instance->m_wallpaper_img, "A:/data/m_wallpaper.jpg");
+						lv_obj_set_size(instance->m_wallpaper_img, lv_pct(100), lv_pct(100));
+						lv_obj_set_style_pad_all(instance->m_wallpaper_img, 0, 0);
+						lv_obj_set_style_border_width(instance->m_wallpaper_img, 0, 0);
+						lv_image_set_inner_align(instance->m_wallpaper_img, LV_IMAGE_ALIGN_COVER);
+						lv_obj_move_background(instance->m_wallpaper_img);
 					}
 				} else {
-					if (instance->wallpaper_icon)
-						lv_obj_remove_flag(instance->wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-					if (instance->wallpaper_img != nullptr) {
-						lv_obj_delete(instance->wallpaper_img);
-						instance->wallpaper_img = nullptr;
+					if (instance->m_wallpaper_icon) {
+						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+					}
+					if (instance->m_wallpaper_img != nullptr) {
+						lv_obj_delete(instance->m_wallpaper_img);
+						instance->m_wallpaper_img = nullptr;
 					}
 				}
 			},
 			this
 		);
-		lv_obj_set_style_bg_opa(screen, UiConstants::OPA_COVER, 0);
+		lv_obj_set_style_bg_opa(m_screen, UiConstants::OPA_COVER, 0);
 	}
 
-	m_statusBarModule = std::make_unique<UI::Modules::StatusBar>(screen);
-	status_bar = m_statusBarModule->getObj();
+	m_statusBarModule = std::make_unique<UI::Modules::StatusBar>(m_screen);
+	m_status_bar = m_statusBarModule->getObj();
 
-	window_container = lv_obj_create(screen);
-	lv_obj_remove_style_all(window_container);
-	lv_obj_remove_flag(window_container, LV_OBJ_FLAG_SCROLLABLE);
-	lv_obj_set_width(window_container, lv_pct(100));
-	lv_obj_set_flex_grow(window_container, 1);
+	m_window_container = lv_obj_create(m_screen);
+	lv_obj_remove_style_all(m_window_container);
+	lv_obj_remove_flag(m_window_container, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_set_width(m_window_container, lv_pct(100));
+	lv_obj_set_flex_grow(m_window_container, 1);
 
-	m_dockModule = std::make_unique<UI::Modules::Dock>(screen, UI::Modules::Dock::Callbacks {.onStartClick = [this]() { on_start_click(); }, .onUpClick = [this]() { on_up_click(); }});
-	dock = m_dockModule->getObj();
-	app_container = m_dockModule->getAppContainer();
+	m_dockModule = std::make_unique<UI::Modules::Dock>(m_screen, UI::Modules::Dock::Callbacks {.onStartClick = [this]() { on_start_click(); }, .onUpClick = [this]() { on_up_click(); }});
+	m_dock = m_dockModule->getObj();
+	m_app_container = m_dockModule->getAppContainer();
 
-	WindowManager::getInstance().init(window_container, app_container, screen, status_bar, dock);
+	WindowManager::getInstance().init(m_window_container, m_app_container, m_screen, m_status_bar, m_dock);
 
-	if (wallpaper) {
-		greetings = lv_label_create(wallpaper);
-		lv_label_set_text(greetings, "Hey !");
-		lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UiConstants::OFFSET_TINY), -lv_dpx(UiConstants::OFFSET_TINY));
+	if (m_wallpaper) {
+		m_greetings = lv_label_create(m_wallpaper);
+		lv_label_set_text(m_greetings, "Hey !");
+		lv_obj_align_to(m_greetings, m_dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UiConstants::OFFSET_TINY), -lv_dpx(UiConstants::OFFSET_TINY));
 	}
 
-	m_launcherModule = std::make_unique<UI::Modules::Launcher>(screen, dock, on_app_click, this);
-	launcher = m_launcherModule->getObj();
+	m_launcherModule = std::make_unique<UI::Modules::Launcher>(m_screen, m_dock, on_app_click, this);
+	m_launcher = m_launcherModule->getObj();
 
-	m_quickAccessPanelModule = std::make_unique<UI::Modules::QuickAccessPanel>(screen, dock);
-	quick_access_panel = m_quickAccessPanelModule->getObj();
+	m_quickAccessPanelModule = std::make_unique<UI::Modules::QuickAccessPanel>(m_screen, m_dock);
+	m_quick_access_panel = m_quickAccessPanelModule->getObj();
 
-	m_notificationPanelModule = std::make_unique<UI::Modules::NotificationPanel>(screen, status_bar);
-	notification_panel = m_notificationPanelModule->getObj();
-	notification_list = m_notificationPanelModule->getList();
+	m_notificationPanelModule = std::make_unique<UI::Modules::NotificationPanel>(m_screen, m_status_bar);
+	m_notification_panel = m_notificationPanelModule->getObj();
+	m_notification_list = m_notificationPanelModule->getList();
 
 	m_swipeManagerModule = std::make_unique<UI::Modules::SwipeManager>(UI::Modules::SwipeManager::Config {
-		.screen = screen,
-		.statusBar = status_bar,
-		.notificationPanel = notification_panel,
-		.notificationList = notification_list
+		.screen = m_screen,
+		.statusBar = m_status_bar,
+		.notificationPanel = m_notification_panel,
+		.notificationList = m_notification_list
 	});
 
 	// Register panels with FocusManager
-	System::FocusManager::getInstance().registerPanel(launcher);
-	System::FocusManager::getInstance().registerPanel(quick_access_panel);
-	System::FocusManager::getInstance().registerPanel(notification_panel);
-	System::FocusManager::getInstance().setNotificationPanel(notification_panel);
+	System::FocusManager::getInstance().registerPanel(m_launcher);
+	System::FocusManager::getInstance().registerPanel(m_quick_access_panel);
+	System::FocusManager::getInstance().registerPanel(m_notification_panel);
+	System::FocusManager::getInstance().setNotificationPanel(m_notification_panel);
 
 	lv_subject_add_observer(
 		&System::DisplayManager::getInstance().getRotationSubject(),
-		[](lv_observer_t* observer, lv_subject_t* subject) {
-			Desktop* instance = (Desktop*)lv_observer_get_user_data(observer);
-			if (instance && instance->screen) {
+		[](lv_observer_t* observer, lv_subject_t* /*subject*/) {
+			auto* instance = (Desktop*)lv_observer_get_user_data(observer);
+			if (instance && instance->m_screen) {
 				Log::info(TAG, "Realigning panels due to rotation");
-				lv_obj_update_layout(instance->screen);
+				lv_obj_update_layout(instance->m_screen);
 				instance->realign_panels();
 			}
 		},
@@ -179,43 +190,44 @@ void Desktop::configure_panel_style(lv_obj_t* panel) {
 }
 
 void Desktop::realign_panels() {
-	if (dock) {
-		if (launcher) {
-			lv_obj_align_to(launcher, dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(UiConstants::OFFSET_TINY));
+	if (m_dock) {
+		if (m_launcher) {
+			lv_obj_align_to(m_launcher, m_dock, LV_ALIGN_OUT_TOP_LEFT, 0, -lv_dpx(UiConstants::OFFSET_TINY));
 		}
-		if (quick_access_panel) {
-			lv_obj_align_to(quick_access_panel, dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(UiConstants::OFFSET_TINY));
+		if (m_quick_access_panel) {
+			lv_obj_align_to(m_quick_access_panel, m_dock, LV_ALIGN_OUT_TOP_RIGHT, 0, -lv_dpx(UiConstants::OFFSET_TINY));
 		}
-		if (greetings) {
-			lv_obj_align_to(greetings, dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UiConstants::OFFSET_TINY), -lv_dpx(UiConstants::OFFSET_TINY));
+		if (m_greetings) {
+			lv_obj_align_to(m_greetings, m_dock, LV_ALIGN_OUT_TOP_RIGHT, -lv_dpx(UiConstants::OFFSET_TINY), -lv_dpx(UiConstants::OFFSET_TINY));
 		}
-		if (notification_panel) {
-			lv_obj_align(notification_panel, LV_ALIGN_TOP_MID, 0, 0);
+		if (m_notification_panel) {
+			lv_obj_align(m_notification_panel, LV_ALIGN_TOP_MID, 0, 0);
 		}
 	}
 }
 
 void Desktop::on_start_click() {
-	if (launcher) {
+	if (m_launcher) {
 		realign_panels();
-		System::FocusManager::getInstance().togglePanel(launcher);
+		System::FocusManager::getInstance().togglePanel(m_launcher);
 	}
 }
 
 void Desktop::on_up_click() {
-	if (quick_access_panel) {
+	if (m_quick_access_panel) {
 		realign_panels();
-		System::FocusManager::getInstance().togglePanel(quick_access_panel);
+		System::FocusManager::getInstance().togglePanel(m_quick_access_panel);
 	}
 }
 
 void Desktop::on_app_click(lv_event_t* e) {
-	Desktop* d = (Desktop*)lv_event_get_user_data(e);
+	auto* d = (Desktop*)lv_event_get_user_data(e);
 	lv_obj_t* btn = lv_event_get_target_obj(e);
 
-	System::Apps::App* appPtr = (System::Apps::App*)lv_obj_get_user_data(btn);
-	if (!appPtr)
+	auto* appPtr = (System::Apps::App*)lv_obj_get_user_data(btn);
+	if (!appPtr) {
 		return;
+	}
 
 	std::string packageName = appPtr->getPackageName();
 

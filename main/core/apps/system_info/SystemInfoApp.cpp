@@ -2,20 +2,36 @@
 #include "../../ui/theming/layout_constants/LayoutConstants.hpp"
 #include "../../ui/theming/ui_constants/UiConstants.hpp"
 #include "core/common/Logger.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_style.h"
+#include "core/lv_obj_style_gen.h"
 #include "core/services/system_info/SystemInfoService.hpp"
+#include "display/lv_display.h"
 #include "esp_timer.h"
+#include "font/lv_font.h"
+#include "freertos/idf_additions.h"
+#include "layouts/flex/lv_flex.h"
+#include "misc/lv_anim.h"
+#include "misc/lv_area.h"
+#include "misc/lv_color.h"
+#include "misc/lv_types.h"
+#include "widgets/bar/lv_bar.h"
+#include "widgets/label/lv_label.h"
+#include "widgets/table/lv_table.h"
+#include "widgets/tabview/lv_tabview.h"
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <string_view>
 
 static constexpr std::string_view TAG = "SystemInfoApp";
 
 static constexpr uint32_t UPDATE_INTERVAL_MS = 1000;
 
-namespace System {
-namespace Apps {
+namespace System::Apps {
 
-SystemInfoApp::SystemInfoApp()
-	: m_tabview(nullptr), m_uptime_label(nullptr), m_chip_label(nullptr), m_idf_label(nullptr), m_battery_label(nullptr), m_heap_label(nullptr), m_heap_bar(nullptr), m_psram_label(nullptr), m_psram_bar(nullptr), m_storage_system_label(nullptr), m_storage_system_bar(nullptr), m_storage_data_label(nullptr), m_storage_data_bar(nullptr), m_wifi_status_label(nullptr), m_wifi_ssid_label(nullptr), m_wifi_ip_label(nullptr), m_wifi_mac_label(nullptr), m_wifi_rssi_label(nullptr), m_tasks_table(nullptr), m_last_update(0) {
+SystemInfoApp::SystemInfoApp() {
 	m_cpu_bars.clear();
 	m_cpu_labels.clear();
 }
@@ -58,7 +74,7 @@ void SystemInfoApp::onStop() {
 
 void SystemInfoApp::update() {
 	if (isActive() && m_tabview) {
-		uint32_t now = esp_timer_get_time() / 1000; // ms
+		uint32_t const now = esp_timer_get_time() / 1000; // ms
 		if (now - m_last_update >= UPDATE_INTERVAL_MS) {
 			updateInfo();
 			m_last_update = now;
@@ -67,7 +83,7 @@ void SystemInfoApp::update() {
 }
 
 void SystemInfoApp::createUI(void* parent) {
-	lv_obj_t* container = (lv_obj_t*)parent;
+	auto* container = (lv_obj_t*)parent;
 
 	// Create tabview
 	m_tabview = lv_tabview_create(container);
@@ -253,9 +269,9 @@ void SystemInfoApp::createTasksTab(lv_obj_t* tab) {
 
 	// Responsive column widths
 	lv_obj_update_layout(tab);
-	int32_t screen_w = lv_obj_get_width(tab);
+	int32_t const screen_w = lv_obj_get_width(tab);
 	// Use slightly less than full width to avoid potential scrollbar issues
-	int32_t w = screen_w - 5;
+	int32_t const w = screen_w - 5;
 
 	lv_table_set_column_width(m_tasks_table, 0, w * 0.08); // #
 	lv_table_set_column_width(m_tasks_table, 1, w * 0.28); // Name
@@ -282,10 +298,10 @@ void SystemInfoApp::updateInfo() {
 
 	// Update uptime
 	if (m_uptime_label) {
-		int uptime_s = sysStats.uptimeSeconds;
-		int h = uptime_s / 3600;
-		int m = (uptime_s % 3600) / 60;
-		int s = uptime_s % 60;
+		int const uptime_s = sysStats.uptimeSeconds;
+		int const h = uptime_s / 3600;
+		int const m = (uptime_s % 3600) / 60;
+		int const s = uptime_s % 60;
 		lv_label_set_text_fmt(m_uptime_label, "Uptime: %02d:%02d:%02d", h, m, s);
 	}
 
@@ -314,7 +330,7 @@ void SystemInfoApp::updateInfo() {
 
 	for (size_t i = 0; i < m_cpu_bars.size(); ++i) {
 		int usage = (int)core_usage[i];
-		if (usage > 100) usage = 100;
+		usage = std::min(usage, 100);
 		lv_bar_set_value(m_cpu_bars[i], usage, LV_ANIM_ON);
 		lv_label_set_text_fmt(m_cpu_labels[i], "Core %d: %d%%", (int)i, usage);
 	}
@@ -393,5 +409,4 @@ void SystemInfoApp::updateInfo() {
 	}
 }
 
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps

@@ -1,8 +1,26 @@
 #include "NotificationPanel.hpp"
 #include "../../../theming/StyleUtils.hpp"
+#include "../../../theming/layout_constants/LayoutConstants.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_event.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_style.h"
+#include "core/lv_obj_style_gen.h"
+#include "core/lv_obj_tree.h"
+#include "core/lv_observer.h"
 #include "core/system/notification/NotificationManager.hpp"
-#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
+#include "display/lv_display.h"
+#include "draw/lv_draw_rect.h"
+#include "font/lv_symbol_def.h"
+#include "layouts/flex/lv_flex.h"
+#include "lv_api_map_v9_1.h"
+#include "misc/lv_area.h"
+#include "misc/lv_event.h"
+#include "misc/lv_text.h"
+#include "misc/lv_types.h"
+#include "widgets/button/lv_button.h"
+#include "widgets/label/lv_label.h"
 #include <ctime>
 
 namespace UI::Modules {
@@ -53,7 +71,7 @@ void NotificationPanel::create() {
 
 	lv_subject_add_observer_obj(
 		&System::NotificationManager::getInstance().getUpdateSubject(),
-		[](lv_observer_t* observer, lv_subject_t* subject) {
+		[](lv_observer_t* observer, lv_subject_t* /*subject*/) {
 			auto* instance = (NotificationPanel*)lv_observer_get_user_data(observer);
 			if (instance) instance->update_list();
 		},
@@ -147,12 +165,12 @@ void NotificationPanel::update_list() {
 	}
 }
 
-void NotificationPanel::on_clear_click(lv_event_t* e) {
+void NotificationPanel::on_clear_click(lv_event_t* /*e*/) {
 	System::NotificationManager::getInstance().clearAll();
 }
 
 void NotificationPanel::on_close_notif_click(lv_event_t* e) {
-	lv_event_code_t code = lv_event_get_code(e);
+	lv_event_code_t const code = lv_event_get_code(e);
 	lv_obj_t* btn = lv_event_get_target_obj(e);
 	std::string* id = (std::string*)lv_obj_get_user_data(btn);
 

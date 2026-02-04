@@ -1,5 +1,8 @@
 #include "BluetoothManager.hpp"
+#include "Observable.hpp"
 #include "core/common/Logger.hpp"
+#include "esp_err.h"
+#include <cstdint>
 #include <string_view>
 
 static constexpr std::string_view TAG = "BluetoothManager";
@@ -21,8 +24,9 @@ esp_err_t BluetoothManager::init(Observable<int32_t>* enabled_subject) {
 esp_err_t BluetoothManager::enable(bool enable) {
 	Log::info(TAG, "Bluetooth %s", enable ? "enabling" : "disabling");
 	m_is_enabled = enable;
-	if (m_enabled_subject)
+	if (m_enabled_subject) {
 		m_enabled_subject->set(enable ? 1 : 0);
+	}
 	return ESP_OK;
 }
 

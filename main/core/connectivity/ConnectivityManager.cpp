@@ -2,11 +2,15 @@
 #include "bluetooth/BluetoothManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/system/settings/SettingsManager.hpp"
+#include "esp_err.h"
 #include "esp_event.h"
 #include "esp_netif.h"
 #include "esp_wifi.h"
+#include "esp_wifi_default.h"
+#include "esp_wifi_types_generic.h"
 #include "hotspot/HotspotManager.hpp"
 #include "wifi/WiFiManager.hpp"
+#include <cstdint>
 #include <string_view>
 
 static constexpr std::string_view TAG = "Connectivity";
@@ -18,14 +22,15 @@ ConnectivityManager& ConnectivityManager::getInstance() {
 }
 
 esp_err_t ConnectivityManager::init() {
-	if (m_is_init)
+	if (m_is_init) {
 		return ESP_OK;
+	}
 	Log::info(TAG, "Initializing networking stack...");
 	ESP_ERROR_CHECK(esp_netif_init());
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
 	esp_netif_create_default_wifi_sta();
 	esp_netif_create_default_wifi_ap();
-	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	wifi_init_config_t const cfg = WIFI_INIT_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
 	// Initialize sub-managers with observable references
@@ -110,7 +115,7 @@ esp_err_t ConnectivityManager::connectWiFi(const char* s, const char* p) {
 esp_err_t ConnectivityManager::disconnectWiFi() {
 	return WiFiManager::getInstance().disconnect();
 }
-bool ConnectivityManager::isWiFiConnected() const {
+bool ConnectivityManager::isWiFiConnected() {
 	return WiFiManager::getInstance().isConnected();
 }
 esp_err_t ConnectivityManager::scanWiFi(WiFiManager::ScanCallback callback) {
@@ -118,13 +123,13 @@ esp_err_t ConnectivityManager::scanWiFi(WiFiManager::ScanCallback callback) {
 }
 esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
 	Log::info(TAG, "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
-	esp_err_t err = WiFiManager::getInstance().setEnabled(enabled);
+	esp_err_t const err = WiFiManager::getInstance().setEnabled(enabled);
 	if (err == ESP_OK) {
 		m_wifi_enabled_subject.set(enabled ? 1 : 0);
 	}
 	return err;
 }
-bool ConnectivityManager::isWiFiEnabled() const {
+bool ConnectivityManager::isWiFiEnabled() {
 	return WiFiManager::getInstance().isEnabled();
 }
 esp_err_t ConnectivityManager::startHotspot(const char* s, const char* p, int c, int m, bool h, wifi_auth_mode_t auth, int8_t tx) {
@@ -135,7 +140,7 @@ esp_err_t ConnectivityManager::stopHotspot() {
 	Log::info(TAG, "Stopping Hotspot");
 	return HotspotManager::getInstance().stop();
 }
-bool ConnectivityManager::isHotspotEnabled() const {
+bool ConnectivityManager::isHotspotEnabled() {
 	return HotspotManager::getInstance().isEnabled();
 }
 std::vector<HotspotManager::ClientInfo>
@@ -145,7 +150,7 @@ ConnectivityManager::getHotspotClientsList() const {
 esp_err_t ConnectivityManager::enableBluetooth(bool e) {
 	return BluetoothManager::getInstance().enable(e);
 }
-bool ConnectivityManager::isBluetoothEnabled() const {
+bool ConnectivityManager::isBluetoothEnabled() {
 	return BluetoothManager::getInstance().isEnabled();
 }
 

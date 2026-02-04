@@ -6,9 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace System {
-namespace Apps {
-namespace Settings {
+namespace System::Apps::Settings {
 
 class WiFiSettings {
 public:
@@ -26,7 +24,7 @@ public:
 
 private:
 
-	const char* getSignalIcon(int8_t rssi);
+	static const char* getSignalIcon(int8_t rssi);
 
 	lv_obj_t* m_parent;
 	lv_obj_t* m_container = nullptr;
@@ -37,13 +35,11 @@ private:
 	lv_obj_t* m_statusLabel = nullptr;
 	lv_obj_t* m_statusPrefixLabel = nullptr;
 	lv_obj_t* m_passwordTa = nullptr;
-	std::string m_connectSsid;
+	std::string m_connectSsid {};
 	lv_timer_t* m_timer = nullptr;
 	bool m_isScanning = false;
-	std::function<void()> m_onBack;
-	std::vector<wifi_ap_record_t> m_scanResults;
+	std::function<void()> m_onBack {};
+	std::vector<wifi_ap_record_t> m_scanResults {};
 };
 
-} // namespace Settings
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps::Settings

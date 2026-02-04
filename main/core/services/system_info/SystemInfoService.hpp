@@ -7,24 +7,23 @@
 #include <unordered_map>
 #include <vector>
 
-namespace System {
-namespace Services {
+namespace System::Services {
 
 struct SystemStats {
-	std::string flxosVersion;
-	std::string idfVersion;
-	std::string chipModel;
-	int cores;
-	int revision;
-	std::string features;
-	uint64_t uptimeSeconds;
-	uint32_t cpuFreqMhz;
-	std::string bootReason;
-	std::string buildDate;
-	int displayResX;
-	int displayResY;
-	int displayBpp;
-	std::string colorFormat;
+	std::string flxosVersion {};
+	std::string idfVersion {};
+	std::string chipModel {};
+	int cores {};
+	int revision {};
+	std::string features {};
+	uint64_t uptimeSeconds {};
+	uint32_t cpuFreqMhz {};
+	std::string bootReason {};
+	std::string buildDate {};
+	int displayResX {};
+	int displayResY {};
+	int displayBpp {};
+	std::string colorFormat {};
 };
 
 struct MemoryStats {
@@ -42,10 +41,10 @@ struct MemoryStats {
 };
 
 struct StorageStats {
-	std::string name;
-	size_t totalBytes;
-	size_t usedBytes;
-	size_t freeBytes;
+	std::string name {};
+	size_t totalBytes {};
+	size_t usedBytes {};
+	size_t freeBytes {};
 };
 
 struct BatteryStats {
@@ -54,23 +53,23 @@ struct BatteryStats {
 };
 
 struct WiFiStats {
-	bool connected;
-	std::string ssid;
-	std::string ipAddress;
-	int8_t rssi;
-	std::string signalStrength; // "Excellent", "Good", "Fair", "Weak"
-	uint8_t mac[6];
+	bool connected {};
+	std::string ssid {};
+	std::string ipAddress {};
+	int8_t rssi {};
+	std::string signalStrength {}; // "Excellent", "Good", "Fair", "Weak"
+	uint8_t mac[6] {};
 };
 
 struct TaskInfo {
-	std::string name;
-	uint32_t stackHighWaterMark;
-	std::string state; // "Ready", "Running", "Blocked", "Suspended", "Deleted"
-	int currentPriority;
-	int basePriority;
-	int coreID;
-	uint32_t runtime; // Runtime counter
-	float cpuUsagePercent;
+	std::string name {};
+	uint32_t stackHighWaterMark {};
+	std::string state {}; // "Ready", "Running", "Blocked", "Suspended", "Deleted"
+	int currentPriority {};
+	int basePriority {};
+	int coreID {};
+	uint32_t runtime {}; // Runtime counter
+	float cpuUsagePercent {};
 };
 
 class SystemInfoService {
@@ -128,9 +127,8 @@ private:
 		uint32_t lastRuntime;
 		uint32_t lastTimestamp;
 	};
-	std::unordered_map<TaskHandle_t, TaskTrackingInfo> m_taskTracking;
+	std::unordered_map<TaskHandle_t, TaskTrackingInfo> m_taskTracking {};
 	uint32_t m_lastTotalRuntime = 0;
 };
 
-} // namespace Services
-} // namespace System
+} // namespace System::Services

@@ -28,7 +28,7 @@ public:
 	esp_err_t connect(const char* ssid, const char* password);
 	esp_err_t disconnect();
 	bool isConnected() const;
-	int8_t getRssi() const;
+	static int8_t getRssi();
 
 	esp_err_t setEnabled(bool enabled);
 	bool isEnabled() const { return m_is_enabled; }

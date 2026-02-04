@@ -5,14 +5,13 @@
 #include "lvgl.h"
 #include <vector>
 
-namespace System {
-namespace Apps {
+namespace System::Apps {
 
 class SystemInfoApp : public App {
 public:
 
 	SystemInfoApp();
-	virtual ~SystemInfoApp() = default;
+	~SystemInfoApp() override = default;
 
 	void onStart() override;
 	void onResume() override;
@@ -28,37 +27,37 @@ public:
 private:
 
 	// UI Elements
-	lv_obj_t* m_tabview;
+	lv_obj_t* m_tabview {nullptr};
 
 	// System tab labels
-	lv_obj_t* m_uptime_label;
-	lv_obj_t* m_chip_label;
-	lv_obj_t* m_idf_label;
-	lv_obj_t* m_battery_label;
-	std::vector<lv_obj_t*> m_cpu_bars;
-	std::vector<lv_obj_t*> m_cpu_labels;
+	lv_obj_t* m_uptime_label {nullptr};
+	lv_obj_t* m_chip_label {nullptr};
+	lv_obj_t* m_idf_label {nullptr};
+	lv_obj_t* m_battery_label {nullptr};
+	std::vector<lv_obj_t*> m_cpu_bars {};
+	std::vector<lv_obj_t*> m_cpu_labels {};
 
 	// Memory tab labels
-	lv_obj_t* m_heap_label;
-	lv_obj_t* m_heap_bar;
-	lv_obj_t* m_psram_label;
-	lv_obj_t* m_psram_bar;
+	lv_obj_t* m_heap_label {nullptr};
+	lv_obj_t* m_heap_bar {nullptr};
+	lv_obj_t* m_psram_label {nullptr};
+	lv_obj_t* m_psram_bar {nullptr};
 
 	// Storage
-	lv_obj_t* m_storage_system_label;
-	lv_obj_t* m_storage_system_bar;
-	lv_obj_t* m_storage_data_label;
-	lv_obj_t* m_storage_data_bar;
+	lv_obj_t* m_storage_system_label {nullptr};
+	lv_obj_t* m_storage_system_bar {nullptr};
+	lv_obj_t* m_storage_data_label {nullptr};
+	lv_obj_t* m_storage_data_bar {nullptr};
 
 	// Network tab labels
-	lv_obj_t* m_wifi_status_label;
-	lv_obj_t* m_wifi_ssid_label;
-	lv_obj_t* m_wifi_ip_label;
-	lv_obj_t* m_wifi_mac_label;
-	lv_obj_t* m_wifi_rssi_label;
+	lv_obj_t* m_wifi_status_label {nullptr};
+	lv_obj_t* m_wifi_ssid_label {nullptr};
+	lv_obj_t* m_wifi_ip_label {nullptr};
+	lv_obj_t* m_wifi_mac_label {nullptr};
+	lv_obj_t* m_wifi_rssi_label {nullptr};
 
 	// Tasks tab
-	lv_obj_t* m_tasks_table;
+	lv_obj_t* m_tasks_table {nullptr};
 
 	uint32_t m_last_update = 0;
 
@@ -70,5 +69,4 @@ private:
 	void createTasksTab(lv_obj_t* tab);
 };
 
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps

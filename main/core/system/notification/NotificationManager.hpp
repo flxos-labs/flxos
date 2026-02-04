@@ -10,14 +10,14 @@
 namespace System {
 
 struct Notification {
-	std::string id;
-	std::string title;
-	std::string message;
-	std::string appName;
-	const void* icon; // LVGL image source
-	int priority; // 0: Low, 1: Normal, 2: High
-	uint32_t timestamp;
-	bool isRead;
+	std::string id {};
+	std::string title {};
+	std::string message {};
+	std::string appName {};
+	const void* icon {}; // LVGL image source
+	int priority {}; // 0: Low, 1: Normal, 2: High
+	uint32_t timestamp {};
+	bool isRead {};
 };
 
 class NotificationManager {
@@ -52,10 +52,10 @@ private:
 	NotificationManager(const NotificationManager&) = delete;
 	NotificationManager& operator=(const NotificationManager&) = delete;
 
-	std::vector<Notification> m_notifications;
-	mutable std::mutex m_mutex;
-	lv_subject_t m_unread_count_subject;
-	lv_subject_t m_update_subject;
+	std::vector<Notification> m_notifications {};
+	mutable std::mutex m_mutex {};
+	lv_subject_t m_unread_count_subject {};
+	lv_subject_t m_update_subject {};
 
 	std::string generateId();
 	void updateSubjects();

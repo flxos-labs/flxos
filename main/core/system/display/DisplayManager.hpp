@@ -43,9 +43,9 @@ private:
 	Observable<int32_t> m_show_fps_subject {0};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_brightness_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_rotation_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_show_fps_bridge;
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_brightness_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_rotation_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_show_fps_bridge {};
 #endif
 
 	void applyBrightness(int32_t val);

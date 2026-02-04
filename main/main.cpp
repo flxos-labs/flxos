@@ -1,5 +1,7 @@
 #include "core/common/Logger.hpp"
 #include "core/system/system_core/SystemManager.hpp"
+#include "font/lv_symbol_def.h"
+#include "sdkconfig.h"
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "core/system/notification/NotificationManager.hpp"
@@ -10,7 +12,6 @@
 #include "core/services/cli/CliService.hpp"
 #endif
 
-#include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <string_view>
 
@@ -32,7 +33,7 @@ extern "C" void app_main(void) {
 	System::NotificationManager::getInstance().addNotification("Welcome", "FlxOS initialized successfully!", "System", LV_SYMBOL_OK, 1);
 
 	Log::info(TAG, "Starting GuiTask...");
-	GuiTask* guiTask = new GuiTask();
+	auto* guiTask = new GuiTask();
 	guiTask->start();
 #else
 	Log::info(TAG, "Running in headless mode - GUI disabled");

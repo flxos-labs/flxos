@@ -16,7 +16,7 @@ public:
 	void init();
 	void deinit();
 	void syncTime();
-	void setTimeZone(const char* tz);
+	static void setTimeZone(const char* tz);
 
 	bool isSynced() const { return m_is_synced; }
 	bool waitForSync(uint32_t timeout_ms = 10000);

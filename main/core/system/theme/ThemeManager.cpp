@@ -1,5 +1,7 @@
 #include "ThemeManager.hpp"
 #include "core/system/settings/SettingsManager.hpp"
+#include "core/ui/theming/themes/Themes.hpp"
+#include <cstdint>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "core/tasks/gui/GuiTask.hpp"

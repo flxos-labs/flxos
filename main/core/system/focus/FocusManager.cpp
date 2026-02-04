@@ -1,7 +1,20 @@
 #include "FocusManager.hpp"
-#include "../../ui/theming/layout_constants/LayoutConstants.hpp"
 #include "../../ui/theming/ui_constants/UiConstants.hpp"
 #include "core/common/Logger.hpp"
+#include "core/lv_group.h"
+#include "core/lv_obj.h"
+#include "core/lv_obj_event.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_style.h"
+#include "core/lv_obj_style_gen.h"
+#include "core/lv_obj_tree.h"
+#include "display/lv_display.h"
+#include "indev/lv_indev.h"
+#include "misc/lv_area.h"
+#include "misc/lv_color.h"
+#include "misc/lv_event.h"
+#include "misc/lv_types.h"
+#include <cstdint>
 #include <string_view>
 
 static constexpr std::string_view TAG = "FocusManager";
@@ -13,7 +26,7 @@ FocusManager& FocusManager::getInstance() {
 	return instance;
 }
 
-FocusManager::FocusManager() {}
+FocusManager::FocusManager() = default;
 
 void FocusManager::init(lv_obj_t* window_container, lv_obj_t* screen, lv_obj_t* status_bar, lv_obj_t* dock) {
 	m_windowContainer = window_container;
@@ -56,7 +69,7 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 		// Check if we really need to update (e.g. if dock button is missing checked state)
 		bool needs_update = false;
 
-		lv_obj_t* dock_btn = (lv_obj_t*)lv_obj_get_user_data(win);
+		auto* dock_btn = (lv_obj_t*)lv_obj_get_user_data(win);
 		if (dock_btn && lv_obj_is_valid(dock_btn) && !lv_obj_has_state(dock_btn, LV_STATE_CHECKED)) {
 			needs_update = true;
 		}
@@ -75,27 +88,30 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 	lv_obj_move_to_index(win, -1);
 
 	// Update states for all windows in the container
-	uint32_t cnt = lv_obj_get_child_count(m_windowContainer);
+	uint32_t const cnt = lv_obj_get_child_count(m_windowContainer);
 	for (uint32_t i = 0; i < cnt; i++) {
 		lv_obj_t* child = lv_obj_get_child(m_windowContainer, i);
-		if (!lv_obj_is_valid(child) || lv_obj_get_user_data(child) == nullptr)
+		if (!lv_obj_is_valid(child) || lv_obj_get_user_data(child) == nullptr) {
 			continue;
+		}
 
-		bool is_active = (child == win);
-		lv_obj_t* dock_btn = (lv_obj_t*)lv_obj_get_user_data(child);
+		bool const is_active = (child == win);
+		auto* dock_btn = (lv_obj_t*)lv_obj_get_user_data(child);
 
 		if (is_active) {
 			lv_obj_add_state(child, LV_STATE_FOCUSED);
 			lv_obj_set_style_border_width(child, lv_dpx(UiConstants::BORDER_FOCUS), 0);
 			lv_obj_set_style_border_opa(child, LV_OPA_COVER, 0);
-			if (dock_btn && lv_obj_is_valid(dock_btn))
+			if (dock_btn && lv_obj_is_valid(dock_btn)) {
 				lv_obj_add_state(dock_btn, LV_STATE_CHECKED);
+			}
 		} else {
 			lv_obj_remove_state(child, LV_STATE_FOCUSED);
 			lv_obj_set_style_border_width(child, lv_dpx(UiConstants::BORDER_DEFAULT), 0);
 			lv_obj_set_style_border_opa(child, LV_OPA_40, 0);
-			if (dock_btn && lv_obj_is_valid(dock_btn))
+			if (dock_btn && lv_obj_is_valid(dock_btn)) {
 				lv_obj_remove_state(dock_btn, LV_STATE_CHECKED);
+			}
 		}
 		lv_obj_invalidate(child);
 	}
@@ -158,7 +174,7 @@ void FocusManager::setNotificationPanel(lv_obj_t* panel) {
 }
 
 void FocusManager::on_global_press(lv_event_t* e) {
-	FocusManager* fm = (FocusManager*)lv_event_get_user_data(e);
+	auto* fm = (FocusManager*)lv_event_get_user_data(e);
 	if (!fm) return;
 
 	// Get touch point for swipe tracking
@@ -166,7 +182,7 @@ void FocusManager::on_global_press(lv_event_t* e) {
 	if (indev) {
 		lv_point_t point;
 		lv_indev_get_point(indev, &point);
-		int32_t screen_height = lv_display_get_vertical_resolution(lv_display_get_default());
+		int32_t const screen_height = lv_display_get_vertical_resolution(lv_display_get_default());
 		// Start tracking if touch started in top 15% of screen
 		if (point.y < screen_height / 7) {
 			fm->m_swipeStartY = point.y;
@@ -213,9 +229,9 @@ void FocusManager::on_global_press(lv_event_t* e) {
 }
 
 void FocusManager::on_focus_event(lv_event_t* e) {
-	FocusManager* fm = (FocusManager*)lv_event_get_user_data(e);
-	lv_obj_t* obj = (lv_obj_t*)lv_event_get_current_target(e);
-	lv_event_code_t code = lv_event_get_code(e);
+	auto* fm = (FocusManager*)lv_event_get_user_data(e);
+	auto* obj = (lv_obj_t*)lv_event_get_current_target(e);
+	lv_event_code_t const code = lv_event_get_code(e);
 
 	if (!fm || !obj) return;
 
@@ -241,14 +257,14 @@ void FocusManager::on_focus_event(lv_event_t* e) {
 }
 
 void FocusManager::on_global_release(lv_event_t* e) {
-	FocusManager* fm = (FocusManager*)lv_event_get_user_data(e);
+	auto* fm = (FocusManager*)lv_event_get_user_data(e);
 	if (!fm || !fm->m_swipeTracking || !fm->m_notificationPanel) return;
 
 	lv_indev_t* indev = lv_event_get_indev(e);
 	if (indev) {
 		lv_point_t point;
 		lv_indev_get_point(indev, &point);
-		int32_t delta = point.y - fm->m_swipeStartY;
+		int32_t const delta = point.y - fm->m_swipeStartY;
 
 		// Swipe down detected if moved at least 30 pixels down
 		if (delta > 30) {

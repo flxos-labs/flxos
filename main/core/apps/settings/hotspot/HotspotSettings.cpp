@@ -2,14 +2,36 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/hotspot/HotspotManager.hpp"
-#include "core/system/system_core/SystemManager.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_event.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_style.h"
+#include "core/lv_obj_style_gen.h"
+#include "core/lv_obj_tree.h"
+#include "core/lv_observer.h"
 #include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
-#include "esp_wifi.h"
+#include "display/lv_display.h"
+#include "esp_err.h"
+#include "esp_wifi_types_generic.h"
+#include "font/lv_symbol_def.h"
+#include "layouts/flex/lv_flex.h"
+#include "misc/lv_anim.h"
+#include "misc/lv_area.h"
+#include "misc/lv_event.h"
+#include "misc/lv_text.h"
+#include "misc/lv_timer.h"
+#include "misc/lv_types.h"
+#include "widgets/button/lv_button.h"
+#include "widgets/dropdown/lv_dropdown.h"
+#include "widgets/image/lv_image.h"
+#include "widgets/label/lv_label.h"
+#include "widgets/slider/lv_slider.h"
+#include "widgets/switch/lv_switch.h"
+#include "widgets/textarea/lv_textarea.h"
+#include <cstdint>
 
-namespace System {
-namespace Apps {
-namespace Settings {
+namespace System::Apps::Settings {
 
 HotspotSettings::HotspotSettings(lv_obj_t* parent, std::function<void()> onBack)
 	: m_parent(parent), m_onBack(onBack) {}
@@ -29,8 +51,9 @@ void HotspotSettings::show() {
 }
 
 void HotspotSettings::hide() {
-	if (m_container)
+	if (m_container) {
 		lv_obj_add_flag(m_container, LV_OBJ_FLAG_HIDDEN);
+	}
 }
 
 void HotspotSettings::destroy() {
@@ -58,7 +81,7 @@ void HotspotSettings::destroy() {
 void HotspotSettings::createMainPage() {
 	m_mainPage = create_page_container(m_container);
 
-	lv_obj_t* backBtn;
+	lv_obj_t* backBtn = nullptr;
 	lv_obj_t* header = create_header(m_mainPage, "Hotspot", &backBtn);
 	add_back_button_event_cb(backBtn, &m_onBack);
 
@@ -115,7 +138,7 @@ void HotspotSettings::createMainPage() {
 
 	lv_obj_t* usageHeader = lv_label_create(content);
 	lv_label_set_text(usageHeader, "Data Usage:");
-	lv_obj_set_style_margin_top(usageHeader, lv_dpx(LayoutConstants::MARGIN_Section), 0);
+	lv_obj_set_style_margin_top(usageHeader, lv_dpx(LayoutConstants::MARGIN_SECTION), 0);
 
 	lv_obj_t* usageCont = lv_obj_create(content);
 	lv_obj_set_size(usageCont, lv_pct(100), LV_SIZE_CONTENT);
@@ -128,16 +151,17 @@ void HotspotSettings::createMainPage() {
 		&ConnectivityManager::getInstance().getHotspotUptimeLvglSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
-			int32_t sec = lv_subject_get_int(s);
-			int h = sec / 3600;
-			int m = (sec % 3600) / 60;
-			int r = sec % 60;
-			if (h > 0)
+			int32_t const sec = lv_subject_get_int(s);
+			int const h = sec / 3600;
+			int const m = (sec % 3600) / 60;
+			int const r = sec % 60;
+			if (h > 0) {
 				lv_label_set_text_fmt(label, "Uptime: %dh %dm %ds", h, m, r);
-			else if (m > 0)
+			} else if (m > 0) {
 				lv_label_set_text_fmt(label, "Uptime: %dm %ds", m, r);
-			else
+			} else {
 				lv_label_set_text_fmt(label, "Uptime: %ds", r);
+			}
 		},
 		uptimeLabel, nullptr
 	);
@@ -148,11 +172,12 @@ void HotspotSettings::createMainPage() {
 		&ConnectivityManager::getInstance().getHotspotDownloadSpeedLvglSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
-			int32_t kb = lv_subject_get_int(s);
-			if (kb > 1024)
-				lv_label_set_text_fmt(label, "Download: %.2f MB/s", (float)kb / 1024.0f);
-			else
+			int32_t const kb = lv_subject_get_int(s);
+			if (kb > 1024) {
+				lv_label_set_text_fmt(label, "Download: %.2f MB/s", (float)kb / 1024.0F);
+			} else {
 				lv_label_set_text_fmt(label, "Download: %d KB/s", (int)kb);
+			}
 		},
 		downSpeedLabel, nullptr
 	);
@@ -163,11 +188,12 @@ void HotspotSettings::createMainPage() {
 		&ConnectivityManager::getInstance().getHotspotUploadSpeedLvglSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
-			int32_t kb = lv_subject_get_int(s);
-			if (kb > 1024)
-				lv_label_set_text_fmt(label, "Upload: %.2f MB/s", (float)kb / 1024.0f);
-			else
+			int32_t const kb = lv_subject_get_int(s);
+			if (kb > 1024) {
+				lv_label_set_text_fmt(label, "Upload: %.2f MB/s", (float)kb / 1024.0F);
+			} else {
 				lv_label_set_text_fmt(label, "Upload: %d KB/s", (int)kb);
+			}
 		},
 		upSpeedLabel, nullptr
 	);
@@ -178,11 +204,12 @@ void HotspotSettings::createMainPage() {
 		&ConnectivityManager::getInstance().getHotspotUsageSentLvglSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
-			int32_t kb = lv_subject_get_int(s);
-			if (kb > 1024)
-				lv_label_set_text_fmt(label, "Sent: %.2f MB", (float)kb / 1024.0f);
-			else
+			int32_t const kb = lv_subject_get_int(s);
+			if (kb > 1024) {
+				lv_label_set_text_fmt(label, "Sent: %.2f MB", (float)kb / 1024.0F);
+			} else {
 				lv_label_set_text_fmt(label, "Sent: %d KB", (int)kb);
+			}
 		},
 		sentLabel, nullptr
 	);
@@ -193,11 +220,12 @@ void HotspotSettings::createMainPage() {
 		&ConnectivityManager::getInstance().getHotspotUsageReceivedLvglSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
-			int32_t kb = lv_subject_get_int(s);
-			if (kb > 1024)
-				lv_label_set_text_fmt(label, "Received: %.2f MB", (float)kb / 1024.0f);
-			else
+			int32_t const kb = lv_subject_get_int(s);
+			if (kb > 1024) {
+				lv_label_set_text_fmt(label, "Received: %.2f MB", (float)kb / 1024.0F);
+			} else {
 				lv_label_set_text_fmt(label, "Received: %d KB", (int)kb);
+			}
 		},
 		recvLabel, nullptr
 	);
@@ -208,7 +236,7 @@ void HotspotSettings::createMainPage() {
 	lv_label_set_text(resetLabel, "Reset Usage");
 	lv_obj_add_event_cb(
 		resetUsageBtn,
-		[](lv_event_t* e) {
+		[](lv_event_t* /*e*/) {
 			HotspotManager::getInstance().resetUsage();
 		},
 		LV_EVENT_CLICKED, nullptr
@@ -216,7 +244,7 @@ void HotspotSettings::createMainPage() {
 
 	lv_obj_t* clientsHeader = lv_label_create(content);
 	lv_label_set_text(clientsHeader, "Connected Clients (0):");
-	lv_obj_set_style_margin_top(clientsHeader, lv_dpx(LayoutConstants::MARGIN_Section), 0);
+	lv_obj_set_style_margin_top(clientsHeader, lv_dpx(LayoutConstants::MARGIN_SECTION), 0);
 
 	lv_subject_add_observer_obj(
 		&ConnectivityManager::getInstance().getHotspotClientsSubject(),
@@ -239,8 +267,9 @@ void HotspotSettings::createMainPage() {
 			[](lv_timer_t* t) {
 				auto* instance = (HotspotSettings*)lv_timer_get_user_data(t);
 				if (!instance->m_clientsCont ||
-					lv_obj_has_flag(instance->m_mainPage, LV_OBJ_FLAG_HIDDEN))
+					lv_obj_has_flag(instance->m_mainPage, LV_OBJ_FLAG_HIDDEN)) {
 					return;
+				}
 
 				lv_obj_clean(instance->m_clientsCont);
 				auto clients =
@@ -292,7 +321,7 @@ void HotspotSettings::createConfigPage() {
 	m_configPage = create_page_container(m_container);
 	lv_obj_add_flag(m_configPage, LV_OBJ_FLAG_HIDDEN);
 
-	lv_obj_t* backBtn;
+	lv_obj_t* backBtn = nullptr;
 	lv_obj_t* header =
 		create_header(m_configPage, "Configure Hotspot", &backBtn);
 	lv_obj_set_size(backBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -350,7 +379,7 @@ void HotspotSettings::createConfigPage() {
 
 	lv_obj_t* advLabel = lv_label_create(content);
 	lv_label_set_text(advLabel, "Advanced Settings:");
-	lv_obj_set_style_margin_top(advLabel, lv_dpx(LayoutConstants::MARGIN_Section), 0);
+	lv_obj_set_style_margin_top(advLabel, lv_dpx(LayoutConstants::MARGIN_SECTION), 0);
 
 	// Channel
 	lv_obj_t* channelCont = lv_obj_create(content);
@@ -363,7 +392,7 @@ void HotspotSettings::createConfigPage() {
 	lv_label_set_text(channelLabel, "WiFi Channel:");
 	m_channelDropdown = lv_dropdown_create(channelCont);
 	lv_dropdown_set_options(m_channelDropdown, "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13");
-	int saved_chan = lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotChannelSubject());
+	int const saved_chan = lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotChannelSubject());
 	if (saved_chan >= 1 && saved_chan <= 13) lv_dropdown_set_selected(m_channelDropdown, saved_chan - 1);
 	lv_obj_set_width(m_channelDropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_WIDTH_SMALL));
 	lv_dropdown_set_dir(m_channelDropdown, LV_DIR_LEFT);
@@ -384,7 +413,7 @@ void HotspotSettings::createConfigPage() {
 	lv_obj_set_flex_flow(sliderCont, LV_FLEX_FLOW_COLUMN);
 	m_maxConnSlider = lv_slider_create(sliderCont);
 	lv_slider_set_range(m_maxConnSlider, 1, 10);
-	int saved_max = lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotMaxConnSubject());
+	int const saved_max = lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotMaxConnSubject());
 	lv_slider_set_value(m_maxConnSlider, saved_max > 0 ? saved_max : 4, LV_ANIM_OFF);
 	lv_obj_set_width(m_maxConnSlider, lv_pct(100));
 	lv_obj_t* maxConnValLabel = lv_label_create(sliderCont);
@@ -395,7 +424,7 @@ void HotspotSettings::createConfigPage() {
 		m_maxConnSlider,
 		[](lv_event_t* e) {
 			lv_obj_t* slider = lv_event_get_target_obj(e);
-			lv_obj_t* label = (lv_obj_t*)lv_event_get_user_data(e);
+			auto* label = (lv_obj_t*)lv_event_get_user_data(e);
 			lv_label_set_text_fmt(label, "%d", (int)lv_slider_get_value(slider));
 		},
 		LV_EVENT_VALUE_CHANGED, maxConnValLabel
@@ -411,8 +440,9 @@ void HotspotSettings::createConfigPage() {
 	lv_obj_t* hiddenLabel = lv_label_create(hiddenCont);
 	lv_label_set_text(hiddenLabel, "Hide SSID:");
 	m_hiddenSwitch = lv_switch_create(hiddenCont);
-	if (lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotHiddenSubject()))
+	if (lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotHiddenSubject())) {
 		lv_obj_add_state(m_hiddenSwitch, LV_STATE_CHECKED);
+	}
 
 	// Internet Sharing (NAT)
 	lv_obj_t* natCont = lv_obj_create(content);
@@ -469,7 +499,7 @@ void HotspotSettings::createConfigPage() {
 		m_txPowerSlider,
 		[](lv_event_t* e) {
 			lv_obj_t* slider = lv_event_get_target_obj(e);
-			lv_obj_t* label = (lv_obj_t*)lv_event_get_user_data(e);
+			auto* label = (lv_obj_t*)lv_event_get_user_data(e);
 			lv_label_set_text_fmt(label, "%d", (int)lv_slider_get_value(slider));
 		},
 		LV_EVENT_VALUE_CHANGED, txValLabel
@@ -508,23 +538,24 @@ void HotspotSettings::saveAndApply() {
 void HotspotSettings::applyHotspotSettings() {
 	const char* ssid = lv_textarea_get_text(m_ssidTa);
 	const char* pass = lv_textarea_get_text(m_passwordTa);
-	int channel = lv_dropdown_get_selected(m_channelDropdown) + 1;
-	int max_conn = (int)lv_slider_get_value(m_maxConnSlider);
-	bool hidden = lv_obj_has_state(m_hiddenSwitch, LV_STATE_CHECKED);
-	bool nat_enabled = lv_obj_has_state(m_natSwitch, LV_STATE_CHECKED);
+	int const channel = lv_dropdown_get_selected(m_channelDropdown) + 1;
+	int const max_conn = (int)lv_slider_get_value(m_maxConnSlider);
+	bool const hidden = lv_obj_has_state(m_hiddenSwitch, LV_STATE_CHECKED);
+	bool const nat_enabled = lv_obj_has_state(m_natSwitch, LV_STATE_CHECKED);
 
 	wifi_auth_mode_t auth = WIFI_AUTH_WPA2_PSK;
-	int auth_idx = lv_dropdown_get_selected(m_securityDropdown);
-	if (auth_idx == 0)
+	int const auth_idx = lv_dropdown_get_selected(m_securityDropdown);
+	if (auth_idx == 0) {
 		auth = WIFI_AUTH_OPEN;
-	else if (auth_idx == 1)
+	} else if (auth_idx == 1) {
 		auth = WIFI_AUTH_WPA2_PSK;
-	else if (auth_idx == 2)
+	} else if (auth_idx == 2) {
 		auth = WIFI_AUTH_WPA3_PSK;
-	else if (auth_idx == 3)
+	} else if (auth_idx == 3) {
 		auth = WIFI_AUTH_WPA2_WPA3_PSK;
+	}
 
-	int8_t tx_power = (int8_t)lv_slider_get_value(m_txPowerSlider);
+	auto const tx_power = (int8_t)lv_slider_get_value(m_txPowerSlider);
 
 	if (strlen(ssid) == 0) {
 		lv_obj_remove_state(m_hotspotSwitch, LV_STATE_CHECKED);
@@ -556,7 +587,7 @@ void HotspotSettings::applyHotspotSettings() {
 
 	// Only start/restart if the switch is ON
 	if (lv_obj_has_state(m_hotspotSwitch, LV_STATE_CHECKED)) {
-		esp_err_t err = ConnectivityManager::getInstance().startHotspot(
+		esp_err_t const err = ConnectivityManager::getInstance().startHotspot(
 			ssid, pass, channel, max_conn, hidden, auth, tx_power
 		);
 		if (err != ESP_OK) {
@@ -565,6 +596,4 @@ void HotspotSettings::applyHotspotSettings() {
 	}
 }
 
-} // namespace Settings
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps::Settings

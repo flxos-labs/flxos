@@ -1,10 +1,24 @@
 #include "GuiTask.hpp"
 #include "core/common/Logger.hpp"
+#include "core/lv_group.h"
 #include "core/system/system_core/SystemManager.hpp"
+#include "core/tasks/TaskManager.hpp"
 #include "core/ui/desktop/Desktop.hpp"
 #include "core/ui/theming/theme_engine/ThemeEngine.hpp"
+#include "display/lv_display.h"
 #include "esp_heap_caps.h"
 #include "esp_timer.h"
+#include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
+#include "libs/fsdrv/lv_fsdrv.h"
+#include "lv_init.h"
+#include "misc/lv_timer.h"
+#include "misc/lv_types.h"
+#include "portmacro.h"
+#include "sdkconfig.h"
+#include "tick/lv_tick.h"
+#include <cstddef>
+#include <cstdint>
 #include <string_view>
 
 static constexpr std::string_view TAG = "GuiTask";
@@ -13,25 +27,28 @@ static constexpr std::string_view TAG = "GuiTask";
 SemaphoreHandle_t GuiTask::xGuiSemaphore = nullptr;
 
 GuiTask::GuiTask() : System::Task("gui_task", 20 * 1024, 5, 1) {
-	if (!xGuiSemaphore)
+	if (!xGuiSemaphore) {
 		xGuiSemaphore = xSemaphoreCreateRecursiveMutex();
+	}
 }
 
 void GuiTask::lock() {
-	if (xGuiSemaphore)
+	if (xGuiSemaphore) {
 		xSemaphoreTakeRecursive(xGuiSemaphore, portMAX_DELAY);
+	}
 }
 void GuiTask::unlock() {
-	if (xGuiSemaphore)
+	if (xGuiSemaphore) {
 		xSemaphoreGiveRecursive(xGuiSemaphore);
+	}
 }
 
 void GuiTask::display_init() {
 	lv_init();
 	lv_fs_stdio_init();
-	const uint32_t sz =
+	const uint32_t SZ =
 		CONFIG_FLXOS_DISPLAY_WIDTH * CONFIG_FLXOS_DISPLAY_HEIGHT / 10 * 2;
-	void* buf = heap_caps_malloc(sz, MALLOC_CAP_DMA);
+	void* buf = heap_caps_malloc(SZ, MALLOC_CAP_DMA);
 	if (!buf) {
 	} else {
 	}
@@ -44,11 +61,11 @@ void GuiTask::display_init() {
 #endif
 
 	lv_display_t* disp = lv_lovyan_gfx_create(
-		CONFIG_FLXOS_DISPLAY_WIDTH, CONFIG_FLXOS_DISPLAY_HEIGHT, buf, sz, touch_en
+		CONFIG_FLXOS_DISPLAY_WIDTH, CONFIG_FLXOS_DISPLAY_HEIGHT, buf, SZ, touch_en
 	);
 	if (!disp) {
 		Log::error(TAG, "Failed to create display driver!");
-		vTaskDelete(NULL);
+		vTaskDelete(nullptr);
 		return;
 	}
 	Log::info("GuiTask", "Display initialized: %dx%d", CONFIG_FLXOS_DISPLAY_WIDTH, CONFIG_FLXOS_DISPLAY_HEIGHT);
@@ -62,7 +79,7 @@ void GuiTask::display_init() {
 	lv_tick_set_cb([]() { return (uint32_t)(esp_timer_get_time() / 1000); });
 }
 
-void GuiTask::run(void*) {
+void GuiTask::run(void* /*data*/) {
 	lock();
 	Log::info(TAG, "Initializing GUI components...");
 	display_init();
@@ -77,7 +94,7 @@ void GuiTask::run(void*) {
 	while (true) {
 		heartbeat();
 		lock();
-		uint32_t delay = lv_timer_handler();
+		uint32_t const delay = lv_timer_handler();
 		unlock();
 		vTaskDelay(pdMS_TO_TICKS(delay));
 	}

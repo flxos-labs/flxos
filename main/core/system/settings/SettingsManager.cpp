@@ -1,8 +1,11 @@
 #include "SettingsManager.hpp"
+#include "Observable.hpp"
 #include "cJSON.h"
 #include "core/common/Logger.hpp"
-#include <stdio.h>
-#include <stdlib.h>
+#include "esp_timer.h"
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -20,8 +23,8 @@ SettingsManager& SettingsManager::getInstance() {
 void SettingsManager::init() {
 	if (m_is_init) return;
 
-	esp_timer_create_args_t timer_args = {
-		.callback = [](void* arg) {
+	esp_timer_create_args_t const timer_args = {
+		.callback = [](void* /*arg*/) {
 			SettingsManager::getInstance().saveSettings();
 		},
 		.arg = nullptr,
@@ -128,8 +131,9 @@ void SettingsManager::saveSettings() {
 			Log::info(TAG, "Settings saved successfully");
 
 			// Also update cache
-			if (m_json_cache)
+			if (m_json_cache) {
 				cJSON_Delete((cJSON*)m_json_cache);
+			}
 			m_json_cache = cJSON_Parse(str);
 		} else {
 			Log::error(TAG, "Failed to open settings file for writing");

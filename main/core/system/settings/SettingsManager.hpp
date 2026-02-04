@@ -38,7 +38,7 @@ private:
 		void* observable;
 	};
 
-	std::map<std::string, Setting> m_registeredSettings;
+	std::map<std::string, Setting> m_registeredSettings {};
 	void* m_json_cache = nullptr; // cJSON*
 
 	esp_timer_handle_t m_save_timer = nullptr;

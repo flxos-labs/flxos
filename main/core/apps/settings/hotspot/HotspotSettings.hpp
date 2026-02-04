@@ -4,9 +4,7 @@
 #include <functional>
 #include <string>
 
-namespace System {
-namespace Apps {
-namespace Settings {
+namespace System::Apps::Settings {
 
 class HotspotSettings {
 public:
@@ -43,9 +41,7 @@ private:
 	lv_obj_t* m_clientsCont = nullptr;
 	lv_obj_t* m_configTitle = nullptr;
 	lv_timer_t* m_refreshTimer = nullptr;
-	std::function<void()> m_onBack;
+	std::function<void()> m_onBack {};
 };
 
-} // namespace Settings
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps::Settings

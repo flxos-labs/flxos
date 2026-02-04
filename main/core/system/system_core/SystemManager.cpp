@@ -1,5 +1,4 @@
 #include "SystemManager.hpp"
-#include "cJSON.h"
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/display/DisplayManager.hpp"
@@ -7,12 +6,14 @@
 #include "core/system/theme/ThemeManager.hpp"
 #include "core/tasks/TaskManager.hpp"
 #include "core/tasks/resource_monitor/ResourceMonitorTask.hpp"
-#include "esp_timer.h"
+#include "esp_err.h"
 #include "esp_vfs_fat.h"
+#include "nvs.h"
 #include "nvs_flash.h"
+#include "sdkconfig.h"
+#include "wear_levelling.h"
 #include <cstring>
 #include <memory>
-#include <stdio.h>
 #include <string_view>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -93,7 +94,7 @@ esp_err_t SystemManager::initGuiState() {
 
 void SystemManager::mount_storage_helper(const char* p, const char* l, wl_handle_t* h, bool f) {
 	Log::info(TAG, "Mounting %s...", p);
-	esp_vfs_fat_mount_config_t cfg = {
+	esp_vfs_fat_mount_config_t const cfg = {
 		.format_if_mount_failed = f,
 		.max_files = 5,
 		.allocation_unit_size = CONFIG_WL_SECTOR_SIZE,

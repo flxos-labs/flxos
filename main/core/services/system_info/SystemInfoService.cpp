@@ -1,14 +1,23 @@
 #include "SystemInfoService.hpp"
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
+#include "display/lv_display.h"
 #include "esp_chip_info.h"
+#include "esp_err.h"
 #include "esp_heap_caps.h"
+#include "esp_idf_version.h"
 #include "esp_mac.h"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "esp_vfs_fat.h"
 #include "esp_wifi.h"
+#include "esp_wifi_types_generic.h"
 #include "freertos/task.h"
+#include "misc/lv_color.h"
+#include "misc/lv_types.h"
+#include "portmacro.h"
+#include "sdkconfig.h"
+#include <cstdint>
 #include <cstdio>
 #include <string_view>
 
@@ -16,8 +25,7 @@ static constexpr std::string_view TAG = "SystemInfo";
 
 static constexpr const char* FLXOS_VERSION = "0.1.0-alpha";
 
-namespace System {
-namespace Services {
+namespace System::Services {
 
 SystemInfoService& SystemInfoService::getInstance() {
 	static SystemInfoService instance;
@@ -65,15 +73,18 @@ SystemStats SystemInfoService::getSystemStats() {
 	// Build features string (avoid stringstream allocation)
 	stats.features.clear();
 	stats.features.reserve(16);
-	if (chip_info.features & CHIP_FEATURE_WIFI_BGN)
+	if (chip_info.features & CHIP_FEATURE_WIFI_BGN) {
 		stats.features += "WiFi ";
-	if (chip_info.features & CHIP_FEATURE_BT)
+	}
+	if (chip_info.features & CHIP_FEATURE_BT) {
 		stats.features += "BT ";
-	if (chip_info.features & CHIP_FEATURE_BLE)
+	}
+	if (chip_info.features & CHIP_FEATURE_BLE) {
 		stats.features += "BLE";
+	}
 
 	// Get uptime
-	int64_t uptime_us = esp_timer_get_time();
+	int64_t const uptime_us = esp_timer_get_time();
 	stats.uptimeSeconds = uptime_us / 1000000;
 
 	// Display Info
@@ -86,7 +97,7 @@ SystemStats SystemInfoService::getSystemStats() {
 	if (disp) {
 		stats.displayResX = lv_display_get_horizontal_resolution(disp);
 		stats.displayResY = lv_display_get_vertical_resolution(disp);
-		lv_color_format_t cf = lv_display_get_color_format(disp);
+		lv_color_format_t const cf = lv_display_get_color_format(disp);
 
 		switch (cf) {
 			case LV_COLOR_FORMAT_RGB565:
@@ -141,7 +152,7 @@ SystemStats SystemInfoService::getSystemStats() {
 }
 
 MemoryStats SystemInfoService::getMemoryStats() {
-	MemoryStats stats;
+	MemoryStats stats {};
 
 	stats.freeHeap = esp_get_free_heap_size();
 	stats.minFreeHeap = esp_get_minimum_free_heap_size();
@@ -170,7 +181,8 @@ std::vector<StorageStats> SystemInfoService::getStorageStats() {
 
 	// Helper lambda to get stats for a path
 	auto addStats = [&](const std::string& name, const char* path) {
-		uint64_t total = 0, free = 0;
+		uint64_t total = 0;
+		uint64_t free = 0;
 		if (esp_vfs_fat_info(path, &total, &free) == ESP_OK) {
 			StorageStats stats;
 			stats.name = name;
@@ -188,7 +200,7 @@ std::vector<StorageStats> SystemInfoService::getStorageStats() {
 }
 
 BatteryStats SystemInfoService::getBatteryStats() {
-	BatteryStats stats;
+	BatteryStats stats {};
 	// Placeholder: Assume full battery and not charging for now
 	stats.level = 100;
 	stats.isCharging = false;
@@ -216,14 +228,15 @@ WiFiStats SystemInfoService::getWiFiStats() {
 			stats.rssi = ap_info.rssi;
 
 			// Determine signal strength
-			if (stats.rssi > -50)
+			if (stats.rssi > -50) {
 				stats.signalStrength = "Excellent";
-			else if (stats.rssi > -60)
+			} else if (stats.rssi > -60) {
 				stats.signalStrength = "Good";
-			else if (stats.rssi > -70)
+			} else if (stats.rssi > -70) {
 				stats.signalStrength = "Fair";
-			else
+			} else {
 				stats.signalStrength = "Weak";
+			}
 		}
 
 		// Retrieve IP address from ConnectivityManager
@@ -247,17 +260,17 @@ std::vector<TaskInfo> SystemInfoService::getTaskList(size_t maxTasks) {
 	TaskStatus_t stack_array[STACK_TASK_LIMIT];
 	TaskStatus_t* task_array = (task_count <= STACK_TASK_LIMIT) ? stack_array : new TaskStatus_t[task_count];
 
-	uint32_t total_runtime;
+	uint32_t total_runtime = 0;
 	task_count = uxTaskGetSystemState(task_array, task_count, &total_runtime);
 
 	// Limit to maxTasks if specified
-	size_t count = (maxTasks == 0 || task_count < maxTasks) ? task_count : maxTasks;
+	size_t const count = (maxTasks == 0 || task_count < maxTasks) ? task_count : maxTasks;
 
-	uint32_t runtime_delta = total_runtime - m_lastTotalRuntime;
+	uint32_t const runtime_delta = total_runtime - m_lastTotalRuntime;
 	m_lastTotalRuntime = total_runtime;
 
 	// Cache core count (static, never changes)
-	static int cores = []() {
+	static int const cores = []() {
 		esp_chip_info_t chip_info;
 		esp_chip_info(&chip_info);
 		return chip_info.cores;
@@ -286,13 +299,13 @@ std::vector<TaskInfo> SystemInfoService::getTaskList(size_t maxTasks) {
 
 				// Calculate Usage: (TaskDelta / TotalDelta) * 100 * Cores
 				// This normalizes 100% to be one fully loaded core
-				info.cpuUsagePercent = ((float)task_runtime_delta * 100.0f / (float)runtime_delta) * cores;
+				info.cpuUsagePercent = ((float)task_runtime_delta * 100.0F / (float)runtime_delta) * cores;
 			} else {
-				info.cpuUsagePercent = 0.0f;
+				info.cpuUsagePercent = 0.0F;
 			}
 			m_taskTracking[handle] = {info.runtime, (uint32_t)esp_timer_get_time()};
 		} else {
-			info.cpuUsagePercent = 0.0f;
+			info.cpuUsagePercent = 0.0F;
 		}
 
 		switch (task_array[i].eCurrentState) {
@@ -340,7 +353,7 @@ std::string SystemInfoService::formatBytes(uint32_t bytes) {
 }
 
 std::string SystemInfoService::getResetReason() {
-	esp_reset_reason_t reason = esp_reset_reason();
+	esp_reset_reason_t const reason = esp_reset_reason();
 	switch (reason) {
 		case ESP_RST_POWERON:
 			return "Power On";
@@ -367,5 +380,4 @@ std::string SystemInfoService::getResetReason() {
 	}
 }
 
-} // namespace Services
-} // namespace System
+} // namespace System::Services

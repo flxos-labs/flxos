@@ -28,15 +28,17 @@ public:
 	void requestStop() { m_stopRequested = true; }
 	void suspend() {
 		TaskHandle_t h = m_handle.load();
-		if (h)
+		if (h) {
 			vTaskSuspend(h);
+		}
 	}
 	void resume() {
 		TaskHandle_t h = m_handle.load();
-		if (h)
+		if (h) {
 			vTaskResume(h);
+		}
 	}
-	void join();
+	void join() const;
 
 	bool shouldStop() const { return m_stopRequested.load(); }
 
@@ -68,7 +70,7 @@ protected:
 private:
 
 	static void taskEntry(void* param);
-	std::string m_name;
+	std::string m_name {};
 	uint32_t m_stackSize;
 	UBaseType_t m_priority;
 	BaseType_t m_coreId;
@@ -91,7 +93,7 @@ public:
 
 	void initWatchdog(uint32_t checkIntervalMs = 1000);
 	void checkTasks(uint64_t nowMs);
-	bool checkHeapIntegrity();
+	static bool checkHeapIntegrity();
 
 	void printTasks();
 
@@ -104,8 +106,8 @@ private:
 
 	static void watchdogTaskEntry(void* param);
 
-	std::vector<Task*> m_tasks;
-	std::mutex m_mutex;
+	std::vector<Task*> m_tasks {};
+	std::mutex m_mutex {};
 	TaskHandle_t m_watchdogTaskHandle = nullptr;
 	uint32_t m_checkIntervalMs = 1000;
 };

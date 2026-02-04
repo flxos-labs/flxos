@@ -13,8 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace System {
-namespace Apps {
+namespace System::Apps {
 
 class FilesApp : public App {
 public:
@@ -65,5 +64,4 @@ private:
 	void onFileClick(const std::string& name);
 };
 
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps

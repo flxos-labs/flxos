@@ -7,9 +7,7 @@
 #include "lvgl.h"
 #include <functional>
 
-namespace System {
-namespace Apps {
-namespace Settings {
+namespace System::Apps::Settings {
 
 class BluetoothSettings {
 public:
@@ -22,7 +20,7 @@ public:
 			m_container = create_page_container(m_parent);
 			lv_obj_set_style_pad_gap(m_container, 0, 0);
 
-			lv_obj_t* backBtn;
+			lv_obj_t* backBtn = nullptr;
 			lv_obj_t* header = create_header(m_container, "Bluetooth", &backBtn);
 			add_back_button_event_cb(backBtn, &m_onBack);
 
@@ -40,7 +38,7 @@ public:
 				[](lv_event_t* e) {
 					auto* sw = lv_event_get_target_obj(e);
 					auto* instance = (BluetoothSettings*)lv_event_get_user_data(e);
-					bool enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
+					bool const enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
 					BluetoothManager::getInstance().enable(enabled);
 					instance->refresh();
 				},
@@ -88,8 +86,9 @@ public:
 	}
 
 	void startScan() {
-		if (!BluetoothManager::getInstance().isEnabled())
+		if (!BluetoothManager::getInstance().isEnabled()) {
 			return;
+		}
 		lv_obj_clean(m_list);
 		lv_list_add_text(m_list, "Scanning for devices...");
 		lv_label_set_text(m_statusLabel, "Scanning...");
@@ -113,11 +112,12 @@ public:
 	}
 
 	void refresh() {
-		if (m_list == nullptr)
+		if (m_list == nullptr) {
 			return;
+		}
 		lv_obj_clean(m_list);
 
-		bool enabled = BluetoothManager::getInstance().isEnabled();
+		bool const enabled = BluetoothManager::getInstance().isEnabled();
 		lv_label_set_text(m_statusLabel, enabled ? "Ready" : "Disabled");
 
 		if (enabled) {
@@ -150,9 +150,7 @@ private:
 	lv_obj_t* m_list = nullptr;
 	lv_obj_t* m_btSwitch = nullptr;
 	lv_obj_t* m_statusLabel = nullptr;
-	std::function<void()> m_onBack;
+	std::function<void()> m_onBack {};
 };
 
-} // namespace Settings
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps::Settings

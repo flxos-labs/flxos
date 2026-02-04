@@ -45,7 +45,7 @@ public:
 private:
 
 	Observable<T>& m_observable;
-	lv_subject_t m_subject;
+	lv_subject_t m_subject {};
 	bool m_updating = false; // Prevent infinite update loops
 };
 
@@ -86,8 +86,8 @@ public:
 private:
 
 	StringObservable& m_observable;
-	lv_subject_t m_subject;
-	std::string m_buffer; // Keep string alive
+	lv_subject_t m_subject {};
+	std::string m_buffer {}; // Keep string alive
 	bool m_updating = false; // Prevent infinite update loops
 };
 

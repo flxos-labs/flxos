@@ -34,30 +34,30 @@ public:
 	// WiFi Station
 	esp_err_t connectWiFi(const char* ssid, const char* password);
 	esp_err_t disconnectWiFi();
-	bool isWiFiConnected() const;
+	bool isWiFiConnected();
 	esp_err_t scanWiFi(WiFiManager::ScanCallback callback);
 	esp_err_t setWiFiEnabled(bool enabled);
-	bool isWiFiEnabled() const;
+	bool isWiFiEnabled();
 
 	// WiFi Hotspot (SoftAP)
 	esp_err_t startHotspot(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);
 	esp_err_t stopHotspot();
-	void startHotspotUsageTimer() {
+	static void startHotspotUsageTimer() {
 		HotspotManager::getInstance().startUsageTimer();
 	}
-	bool isHotspotEnabled() const;
+	bool isHotspotEnabled();
 	std::vector<HotspotManager::ClientInfo> getHotspotClientsList() const;
 
-	esp_err_t setHotspotNatEnabled(bool enabled) {
+	static esp_err_t setHotspotNatEnabled(bool enabled) {
 		return HotspotManager::getInstance().setNatEnabled(enabled);
 	}
-	bool isHotspotNatEnabled() const {
+	static bool isHotspotNatEnabled() {
 		return HotspotManager::getInstance().isNatEnabled();
 	}
 
 	// Bluetooth
 	esp_err_t enableBluetooth(bool enable);
-	bool isBluetoothEnabled() const;
+	bool isBluetoothEnabled();
 
 	// Observable subjects (headless-compatible getters)
 	Observable<int32_t>& getWiFiEnabledObservable() { return m_wifi_enabled_subject; }
@@ -141,31 +141,31 @@ private:
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// LVGL bridges (initialized in initGuiBridges)
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_enabled_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_status_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_connected_bridge;
-	std::unique_ptr<LvglStringObserverBridge> m_wifi_ssid_bridge;
-	std::unique_ptr<LvglStringObserverBridge> m_wifi_ip_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_enabled_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_clients_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_usage_sent_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_usage_received_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_upload_speed_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_download_speed_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_uptime_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_bluetooth_enabled_bridge;
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_enabled_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_status_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_connected_bridge {};
+	std::unique_ptr<LvglStringObserverBridge> m_wifi_ssid_bridge {};
+	std::unique_ptr<LvglStringObserverBridge> m_wifi_ip_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_enabled_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_clients_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_usage_sent_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_usage_received_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_upload_speed_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_download_speed_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_uptime_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_bluetooth_enabled_bridge {};
 
-	std::unique_ptr<LvglStringObserverBridge> m_hotspot_ssid_bridge;
-	std::unique_ptr<LvglStringObserverBridge> m_hotspot_password_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_channel_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_max_conn_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_hidden_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_auth_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_autostart_bridge;
+	std::unique_ptr<LvglStringObserverBridge> m_hotspot_ssid_bridge {};
+	std::unique_ptr<LvglStringObserverBridge> m_hotspot_password_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_channel_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_max_conn_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_hidden_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_auth_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_autostart_bridge {};
 #endif
 
 	bool m_is_init = false;
-	std::recursive_mutex m_wifi_mutex;
+	std::recursive_mutex m_wifi_mutex {};
 };
 
 } // namespace System

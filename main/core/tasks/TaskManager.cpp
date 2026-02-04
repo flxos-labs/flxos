@@ -1,8 +1,17 @@
 #include "TaskManager.hpp"
+#include "FreeRTOSConfig.h"
 #include "core/common/Logger.hpp"
+#include "esp_err.h"
+#include "esp_heap_caps.h"
+#include "esp_system.h"
 #include "esp_task_wdt.h"
 #include "esp_timer.h"
+#include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
+#include "portmacro.h"
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <string_view>
 
 static constexpr std::string_view TASK_TAG = "Task";
@@ -24,16 +33,16 @@ Task::~Task() {
 
 bool Task::start(void* data) {
 	TaskHandle_t expected = nullptr;
-	if (!m_handle.compare_exchange_strong(expected, (TaskHandle_t)1))
+	if (!m_handle.compare_exchange_strong(expected, (TaskHandle_t)1)) {
 		return false;
+	}
 
 	m_data = data;
 	m_stopRequested = false;
 	m_lastHeartbeat = getMillis();
 
 	TaskHandle_t handle = nullptr;
-	BaseType_t res =
-		(m_coreId == tskNO_AFFINITY)
+	BaseType_t res = (m_coreId == tskNO_AFFINITY)
 		? xTaskCreate(taskEntry, m_name.c_str(), m_stackSize, this, m_priority, &handle)
 		: xTaskCreatePinnedToCore(taskEntry, m_name.c_str(), m_stackSize, this, m_priority, &handle, m_coreId);
 
@@ -62,7 +71,7 @@ void Task::stop() {
 	}
 }
 
-void Task::join() {
+void Task::join() const {
 	while (isRunning()) {
 		vTaskDelay(pdMS_TO_TICKS(10));
 	}
@@ -78,7 +87,7 @@ void Task::taskEntry(void* param) {
 			// OR stop() was called and got nullptr because we exchanged it first.
 			// But we are the task itself, so if we call vTaskDelete(NULL) it's fine.
 		}
-		vTaskDelete(NULL);
+		vTaskDelete(nullptr);
 	}
 }
 
@@ -109,7 +118,7 @@ Task* TaskManager::getTask(const std::string& name) {
 void TaskManager::initWatchdog(uint32_t interval) {
 	m_checkIntervalMs = interval;
 
-	esp_task_wdt_config_t twdt_config = {
+	esp_task_wdt_config_t const twdt_config = {
 		.timeout_ms = interval * 3, // Hardware timeout 3x software check
 		.idle_core_mask = (1 << portNUM_PROCESSORS) - 1,
 		.trigger_panic = true,
@@ -122,7 +131,7 @@ void TaskManager::initWatchdog(uint32_t interval) {
 	Log::info(TM_TAG, "Watchdog initialized with %d ms interval", (int)interval);
 
 	if (!m_watchdogTaskHandle) {
-		BaseType_t res = xTaskCreatePinnedToCore(
+		BaseType_t const res = xTaskCreatePinnedToCore(
 			watchdogTaskEntry, "tm_watchdog", 3072, this, configMAX_PRIORITIES - 1,
 			&m_watchdogTaskHandle, 0
 		);
@@ -132,8 +141,8 @@ void TaskManager::initWatchdog(uint32_t interval) {
 }
 
 void TaskManager::watchdogTaskEntry(void* p) {
-	TaskManager* tm = static_cast<TaskManager*>(p);
-	esp_task_wdt_add(NULL); // Add this task to TWDT
+	auto* tm = static_cast<TaskManager*>(p);
+	esp_task_wdt_add(nullptr); // Add this task to TWDT
 	while (true) {
 		tm->checkTasks(getMillis());
 		if (!tm->checkHeapIntegrity()) {
@@ -162,7 +171,7 @@ void TaskManager::checkTasks(uint64_t now) {
 }
 
 bool TaskManager::checkHeapIntegrity() {
-	bool ok = heap_caps_check_integrity_all(true);
+	bool const ok = heap_caps_check_integrity_all(true);
 	if (!ok) {
 	}
 	return ok;

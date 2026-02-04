@@ -95,8 +95,8 @@ private:
 
 	T m_value;
 	T m_prev_value;
-	std::vector<Callback> m_observers;
-	mutable std::mutex m_mutex;
+	std::vector<Callback> m_observers {};
+	mutable std::mutex m_mutex {};
 };
 
 /**
@@ -153,10 +153,10 @@ private:
 		}
 	}
 
-	std::string m_value;
-	std::string m_prev_value;
-	std::vector<Callback> m_observers;
-	mutable std::mutex m_mutex;
+	std::string m_value {};
+	std::string m_prev_value {};
+	std::vector<Callback> m_observers {};
+	mutable std::mutex m_mutex {};
 };
 
 } // namespace System

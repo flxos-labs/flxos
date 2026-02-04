@@ -5,8 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace System {
-namespace Apps {
+namespace System::Apps {
 
 // Observer interface for app state changes
 class AppStateObserver {
@@ -78,9 +77,9 @@ private:
 	AppManager(const AppManager&) = delete;
 	AppManager& operator=(const AppManager&) = delete;
 
-	std::shared_ptr<App> m_currentApp;
+	std::shared_ptr<App> m_currentApp {};
 	std::vector<std::shared_ptr<App>> m_apps;
-	std::vector<AppStateObserver*> m_observers;
+	std::vector<AppStateObserver*> m_observers {};
 
 	void* m_mutex = nullptr;
 	void* m_executor = nullptr;
@@ -90,5 +89,4 @@ private:
 	void notifyAppStopped(const std::string& packageName);
 };
 
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps

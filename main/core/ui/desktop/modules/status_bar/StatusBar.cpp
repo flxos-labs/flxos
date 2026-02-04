@@ -1,11 +1,28 @@
 #include "StatusBar.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
+#include "core/lv_obj.h"
+#include "core/lv_obj_pos.h"
+#include "core/lv_obj_scroll.h"
+#include "core/lv_obj_style.h"
+#include "core/lv_obj_style_gen.h"
+#include "core/lv_obj_tree.h"
+#include "core/lv_observer.h"
 #include "core/system/notification/NotificationManager.hpp"
 #include "core/system/system_core/SystemManager.hpp"
 #include "core/ui/theming/StyleUtils.hpp"
 #include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "core/ui/theming/theme_engine/ThemeEngine.hpp"
+#include "core/ui/theming/themes/Themes.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
+#include "display/lv_display.h"
+#include "font/lv_symbol_def.h"
+#include "layouts/flex/lv_flex.h"
+#include "misc/lv_area.h"
+#include "misc/lv_timer.h"
+#include "misc/lv_types.h"
+#include "widgets/image/lv_image.h"
+#include "widgets/label/lv_label.h"
+#include <cstdint>
 #include <ctime>
 
 namespace UI::Modules {
@@ -42,7 +59,7 @@ void StatusBar::create() {
 	if (System::SystemManager::getInstance().isSafeMode()) {
 		lv_obj_t* safe_img = lv_image_create(left_group);
 		lv_image_set_src(safe_img, LV_SYMBOL_WARNING);
-		ThemeConfig cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+		ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 		lv_obj_set_style_image_recolor(safe_img, cfg.error, 0);
 		lv_obj_set_style_image_recolor_opa(safe_img, UiConstants::OPA_COVER, 0);
 
@@ -60,13 +77,13 @@ void StatusBar::create() {
 	lv_obj_center(wifi_slash);
 	lv_obj_add_flag(wifi_slash, LV_OBJ_FLAG_HIDDEN);
 
-	lv_observer_cb_t wifi_update_cb = [](lv_observer_t* observer, lv_subject_t* subject) {
+	lv_observer_cb_t wifi_update_cb = [](lv_observer_t* observer, lv_subject_t* /*subject*/) {
 		lv_obj_t* cont = lv_observer_get_target_obj(observer);
 		lv_obj_t* icon = lv_obj_get_child(cont, 0);
 		lv_obj_t* slash = lv_obj_get_child(cont, 1);
 
-		bool connected = lv_subject_get_int(&System::ConnectivityManager::getInstance().getWiFiConnectedSubject()) != 0;
-		bool enabled = lv_subject_get_int(&System::ConnectivityManager::getInstance().getWiFiEnabledSubject()) != 0;
+		bool const connected = lv_subject_get_int(&System::ConnectivityManager::getInstance().getWiFiConnectedSubject()) != 0;
+		bool const enabled = lv_subject_get_int(&System::ConnectivityManager::getInstance().getWiFiEnabledSubject()) != 0;
 
 		if (connected) {
 			lv_obj_set_style_opa(icon, UiConstants::OPA_COVER, 0);
@@ -136,7 +153,7 @@ void StatusBar::create() {
 		&System::ConnectivityManager::getInstance().getHotspotClientsSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			lv_obj_t* label = lv_observer_get_target_obj(observer);
-			int32_t clients = lv_subject_get_int(subject);
+			int32_t const clients = lv_subject_get_int(subject);
 			if (clients > 0) {
 				lv_label_set_text_fmt(label, "%d", (int)clients);
 			} else {
@@ -191,7 +208,7 @@ void StatusBar::create() {
 			lv_obj_t* badge = lv_obj_get_child(btn, 1);
 			lv_obj_t* icon = lv_obj_get_child(btn, 0);
 
-			int32_t count = lv_subject_get_int(subject);
+			int32_t const count = lv_subject_get_int(subject);
 			if (count > 0) {
 				lv_label_set_text_fmt(badge, "%d", (int)count);
 				lv_obj_set_style_image_opa(icon, UiConstants::OPA_COVER, 0);
@@ -215,7 +232,7 @@ void StatusBar::create() {
 
 	m_timer = lv_timer_create(
 		[](lv_timer_t* t) {
-			lv_obj_t* label = (lv_obj_t*)lv_timer_get_user_data(t);
+			auto* label = (lv_obj_t*)lv_timer_get_user_data(t);
 			time_t now;
 			struct tm timeinfo;
 			time(&now);

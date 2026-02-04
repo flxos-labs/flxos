@@ -25,26 +25,26 @@ public:
 
 private:
 
-	lv_obj_t* screen;
-	lv_obj_t* wallpaper;
-	lv_obj_t* wallpaper_img;
-	lv_obj_t* wallpaper_icon;
-	lv_obj_t* window_container;
-	std::unique_ptr<UI::Modules::StatusBar> m_statusBarModule;
-	lv_obj_t* status_bar;
-	std::unique_ptr<UI::Modules::Dock> m_dockModule;
-	lv_obj_t* dock;
-	std::unique_ptr<UI::Modules::Launcher> m_launcherModule;
-	lv_obj_t* launcher;
-	std::unique_ptr<UI::Modules::QuickAccessPanel> m_quickAccessPanelModule;
-	lv_obj_t* quick_access_panel;
-	std::unique_ptr<UI::Modules::NotificationPanel> m_notificationPanelModule;
-	lv_obj_t* notification_panel;
-	lv_obj_t* notification_list;
-	lv_obj_t* clear_all_btn;
-	lv_obj_t* greetings;
-	lv_obj_t* app_container;
-	std::unique_ptr<UI::Modules::SwipeManager> m_swipeManagerModule;
+	lv_obj_t* m_screen {};
+	lv_obj_t* m_wallpaper {};
+	lv_obj_t* m_wallpaper_img {};
+	lv_obj_t* m_wallpaper_icon {};
+	lv_obj_t* m_window_container {};
+	std::unique_ptr<UI::Modules::StatusBar> m_statusBarModule {};
+	lv_obj_t* m_status_bar {};
+	std::unique_ptr<UI::Modules::Dock> m_dockModule {};
+	lv_obj_t* m_dock {};
+	std::unique_ptr<UI::Modules::Launcher> m_launcherModule {};
+	lv_obj_t* m_launcher {};
+	std::unique_ptr<UI::Modules::QuickAccessPanel> m_quickAccessPanelModule {};
+	lv_obj_t* m_quick_access_panel {};
+	std::unique_ptr<UI::Modules::NotificationPanel> m_notificationPanelModule {};
+	lv_obj_t* m_notification_panel {};
+	lv_obj_t* m_notification_list {};
+	lv_obj_t* m_clear_all_btn {};
+	lv_obj_t* m_greetings {};
+	lv_obj_t* m_app_container {};
+	std::unique_ptr<UI::Modules::SwipeManager> m_swipeManagerModule {};
 
 	void update_notification_list();
 	void realign_panels();

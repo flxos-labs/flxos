@@ -1,7 +1,10 @@
 #include "NotificationManager.hpp"
 #include "core/common/Logger.hpp"
+#include "core/lv_observer.h"
 #include "esp_timer.h"
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <sstream>
 #include <string_view>
 
@@ -114,7 +117,7 @@ void NotificationManager::updateSubjects() {
 	lv_subject_set_int(&m_unread_count_subject, (int32_t)getUnreadCount());
 
 	// Toggle or increment update subject to signal list change
-	int current = lv_subject_get_int(&m_update_subject);
+	int const current = lv_subject_get_int(&m_update_subject);
 	lv_subject_set_int(&m_update_subject, current + 1);
 }
 

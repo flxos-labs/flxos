@@ -1,9 +1,13 @@
 #include "AppManager.hpp"
 #include "core/common/Logger.hpp"
+#include "core/tasks/TaskManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "core/ui/desktop/Desktop.hpp"
 #include "files/FilesApp.hpp"
+#include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
 #include "freertos/semphr.h"
+#include "portmacro.h"
 #include "settings/SettingsApp.hpp"
 #include "system_info/SystemInfoApp.hpp"
 
@@ -17,7 +21,7 @@ public:
 
 protected:
 
-	void run(void*) override {
+	void run(void* /*data*/) override {
 		setWatchdogTimeout(10000);
 		while (true) {
 			heartbeat();
@@ -31,7 +35,7 @@ AppManager& AppManager::getInstance() {
 	static AppManager instance;
 	return instance;
 }
-AppManager::AppManager() { m_mutex = xSemaphoreCreateMutex(); }
+AppManager::AppManager() : m_mutex(xSemaphoreCreateMutex()) {}
 
 void AppManager::init() {
 	Log::info("AppManager", "Initializing AppManager...");

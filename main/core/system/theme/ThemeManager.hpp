@@ -50,14 +50,14 @@ private:
 	StringObservable m_wallpaper_path_subject {""};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_theme_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_glass_enabled_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_transparency_enabled_bridge;
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wallpaper_enabled_bridge;
-	std::unique_ptr<LvglStringObserverBridge> m_wallpaper_path_bridge;
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_theme_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_glass_enabled_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_transparency_enabled_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_wallpaper_enabled_bridge {};
+	std::unique_ptr<LvglStringObserverBridge> m_wallpaper_path_bridge {};
 #endif
 
-	void applyTheme(int32_t theme);
+	static void applyTheme(int32_t theme);
 };
 
 } // namespace System

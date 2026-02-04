@@ -10,9 +10,7 @@
 #include "lvgl.h"
 #include <functional>
 
-namespace System {
-namespace Apps {
-namespace Settings {
+namespace System::Apps::Settings {
 
 class DisplaySettings {
 public:
@@ -24,7 +22,7 @@ public:
 		if (m_container == nullptr) {
 			m_container = create_page_container(m_parent);
 
-			lv_obj_t* backBtn;
+			lv_obj_t* backBtn = nullptr;
 			create_header(m_container, "Display", &backBtn);
 			add_back_button_event_cb(backBtn, &m_onBack);
 
@@ -52,7 +50,7 @@ public:
 				[](lv_observer_t* observer, lv_subject_t* subject) {
 					lv_obj_t* label = lv_observer_get_target_obj(observer);
 					if (label) {
-						int32_t v = lv_subject_get_int(subject);
+						int32_t const v = lv_subject_get_int(subject);
 						lv_label_set_text(label, Themes::ToString((ThemeType)v));
 					}
 				},
@@ -141,7 +139,7 @@ public:
 				&ThemeManager::getInstance().getWallpaperEnabledSubject(),
 				[](lv_observer_t* observer, lv_subject_t* subject) {
 					lv_obj_t* btn = lv_observer_get_target_obj(observer);
-					int32_t val = lv_subject_get_int(subject);
+					int32_t const val = lv_subject_get_int(subject);
 					if (val) {
 						lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
 					} else {
@@ -153,7 +151,7 @@ public:
 
 			lv_obj_add_event_cb(
 				chooseWpBtn,
-				[](lv_event_t* e) {
+				[](lv_event_t* /*e*/) {
 					UI::FileChooser::show(
 						[](std::string path) {
 							static char path_buf[256];
@@ -196,7 +194,7 @@ public:
 				[](lv_observer_t* observer, lv_subject_t* subject) {
 					lv_obj_t* glassSw = lv_observer_get_target_obj(observer);
 					lv_obj_t* glassBtn = lv_obj_get_parent(glassSw);
-					int32_t enabled = lv_subject_get_int(subject);
+					int32_t const enabled = lv_subject_get_int(subject);
 					if (enabled) {
 						lv_obj_remove_state(glassBtn, LV_STATE_DISABLED);
 						lv_obj_remove_state(glassSw, LV_STATE_DISABLED);
@@ -230,9 +228,7 @@ private:
 	lv_obj_t* m_parent;
 	lv_obj_t* m_container = nullptr;
 	lv_obj_t* m_list = nullptr;
-	std::function<void()> m_onBack;
+	std::function<void()> m_onBack {};
 };
 
-} // namespace Settings
-} // namespace Apps
-} // namespace System
+} // namespace System::Apps::Settings

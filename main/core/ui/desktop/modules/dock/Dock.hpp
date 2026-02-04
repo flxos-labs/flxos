@@ -8,8 +8,8 @@ class Dock {
 public:
 
 	struct Callbacks {
-		std::function<void()> onStartClick;
-		std::function<void()> onUpClick;
+		std::function<void()> onStartClick {};
+		std::function<void()> onUpClick {};
 	};
 
 	Dock(lv_obj_t* parent, Callbacks callbacks);

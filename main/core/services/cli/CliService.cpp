@@ -3,7 +3,11 @@
 #include "core/services/system_info/SystemInfoService.hpp"
 
 #include "esp_console.h"
+#include "esp_err.h"
 #include "esp_system.h"
+#include "esp_timer.h"
+#include "freertos/idf_additions.h"
+#include "freertos/projdefs.h"
 
 #include <cstdint>
 #include <cstdio>
@@ -19,7 +23,7 @@ CliService& CliService::getInstance() {
 }
 
 // Command: sysinfo - Display system information
-static int cmd_sysinfo(int argc, char** argv) {
+static int cmd_sysinfo(int /*argc*/, char** /*argv*/) {
 	auto& sysInfo = Services::SystemInfoService::getInstance();
 	auto sysStats = sysInfo.getSystemStats();
 	auto memStats = sysInfo.getMemoryStats();
@@ -39,7 +43,7 @@ static int cmd_sysinfo(int argc, char** argv) {
 }
 
 // Command: heap - Display heap memory statistics
-static int cmd_heap(int argc, char** argv) {
+static int cmd_heap(int /*argc*/, char** /*argv*/) {
 	auto& sysInfo = Services::SystemInfoService::getInstance();
 	auto memStats = sysInfo.getMemoryStats();
 
@@ -53,14 +57,14 @@ static int cmd_heap(int argc, char** argv) {
 }
 
 // Command: uptime - Display system uptime
-static int cmd_uptime(int argc, char** argv) {
-	int64_t uptime_us = esp_timer_get_time();
-	int64_t uptime_sec = uptime_us / 1000000;
+static int cmd_uptime(int /*argc*/, char** /*argv*/) {
+	int64_t const uptime_us = esp_timer_get_time();
+	int64_t const uptime_sec = uptime_us / 1000000;
 
-	int days = uptime_sec / 86400;
-	int hours = (uptime_sec % 86400) / 3600;
-	int minutes = (uptime_sec % 3600) / 60;
-	int seconds = uptime_sec % 60;
+	int const days = uptime_sec / 86400;
+	int const hours = (uptime_sec % 86400) / 3600;
+	int const minutes = (uptime_sec % 3600) / 60;
+	int const seconds = uptime_sec % 60;
 
 	printf("\nUptime: ");
 	if (days > 0) {
@@ -72,7 +76,7 @@ static int cmd_uptime(int argc, char** argv) {
 }
 
 // Command: reboot - Restart the system
-static int cmd_reboot(int argc, char** argv) {
+static int cmd_reboot(int /*argc*/, char** /*argv*/) {
 	printf("\nRebooting system...\n");
 	vTaskDelay(pdMS_TO_TICKS(500)); // Brief delay for message to flush
 	esp_restart();
@@ -82,10 +86,10 @@ static int cmd_reboot(int argc, char** argv) {
 #define REGISTER_CLI_CMD(name, help_text, handler)       \
 	{                                                    \
 		const esp_console_cmd_t cmd = {                  \
-			.command = name,                             \
-			.help = help_text,                           \
+			.command = (name),                           \
+			.help = (help_text),                         \
 			.hint = nullptr,                             \
-			.func = handler,                             \
+			.func = (handler),                           \
 			.argtable = nullptr,                         \
 			.func_w_context = nullptr,                   \
 			.context = nullptr                           \
@@ -122,7 +126,7 @@ esp_err_t CliService::init() {
 	registerCommands();
 
 	// Configure UART for console
-	esp_console_dev_uart_config_t uart_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
+	esp_console_dev_uart_config_t const uart_config = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
 	ESP_ERROR_CHECK(esp_console_new_repl_uart(&uart_config, &repl_config, &repl));
 
 	// Start REPL

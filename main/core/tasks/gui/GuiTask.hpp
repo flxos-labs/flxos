@@ -7,7 +7,7 @@ class GuiTask : public System::Task {
 public:
 
 	GuiTask();
-	virtual ~GuiTask() = default;
+	~GuiTask() override = default;
 
 	static void lock();
 	static void unlock();
@@ -18,6 +18,6 @@ protected:
 
 private:
 
-	void display_init();
+	static void display_init();
 	static SemaphoreHandle_t xGuiSemaphore;
 };

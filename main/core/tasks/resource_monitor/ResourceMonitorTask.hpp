@@ -25,7 +25,7 @@ protected:
 private:
 
 	ResourceMonitorTask();
-	virtual ~ResourceMonitorTask() = default;
+	~ResourceMonitorTask() override = default;
 	ResourceMonitorTask(const ResourceMonitorTask&) = delete;
 	ResourceMonitorTask& operator=(const ResourceMonitorTask&) = delete;
 

@@ -34,7 +34,7 @@ private:
 	CliService(const CliService&) = delete;
 	CliService& operator=(const CliService&) = delete;
 
-	void registerCommands();
+	static void registerCommands();
 
 	bool m_running = false;
 };
