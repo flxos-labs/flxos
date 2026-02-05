@@ -1,8 +1,8 @@
 === FlxOS Naming Convention Check ===
 
-⚠️  Naming Convention Issues (34):
+⚠️  Naming Convention Issues (37):
 
-Classes/Structs (21):
+Classes/Structs (22):
   core/connectivity/hotspot/HotspotManager.cpp:28: class/struct 'netif' should be PascalCase
   core/connectivity/hotspot/HotspotManager.cpp:36: class/struct 'pbuf' should be PascalCase
   core/connectivity/hotspot/HotspotManager.cpp:36: class/struct 'netif' should be PascalCase
@@ -14,7 +14,7 @@ Classes/Structs (21):
   core/system/time/TimeManager.cpp:18: class/struct 'timeval' should be PascalCase
   core/system/time/TimeManager.cpp:22: class/struct 'tm' should be PascalCase
 
-Functions (11):
+Functions (13):
   core/connectivity/hotspot/HotspotManager.cpp:36: function 'netif_input_hook' should be camelCase
   core/connectivity/hotspot/HotspotManager.cpp:48: function 'netif_linkoutput_hook' should be camelCase
   core/system/time/TimeManager.cpp:17: function 'time_sync_notification_cb' should be camelCase
@@ -25,6 +25,8 @@ Functions (11):
   core/apps/settings/SettingsCommon.hpp:50: function 'create_settings_list' should be camelCase
   core/apps/settings/SettingsCommon.hpp:58: function 'add_back_button_event_cb' should be camelCase
   core/apps/settings/SettingsCommon.hpp:71: function 'add_switch_item' should be camelCase
+  core/ui/LvglObserverBridge.hpp:47: function 'async_cb' should be camelCase
+  core/ui/LvglObserverBridge.hpp:105: function 'async_cb' should be camelCase
   core/ui/theming/StyleUtils.hpp:8: function 'apply_glass' should be camelCase
 
 Constants/Macros (1):
@@ -34,5 +36,5 @@ Filenames (1):
   hal/display/lv_lgfx_user.hpp: filename 'lv_lgfx_user' should be PascalCase
 
 === Summary ===
-Files checked: 82
-Issues found: 34
+Files checked: 84
+Issues found: 37

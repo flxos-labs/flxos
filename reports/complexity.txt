@@ -2,52 +2,52 @@
 
 ⚠️  Complexity Issues Found:
 
-  core/apps/settings/hotspot/HotspotSettings.cpp:264: function 'if' has nesting depth 5 (max: 4)
-  core/apps/settings/hotspot/HotspotSettings.cpp:319: function 'HotspotSettings::createConfigPage' is 203 lines (max: 80)
-  core/apps/settings/hotspot/HotspotSettings.cpp:80: function 'HotspotSettings::createMainPage' has cyclomatic complexity 23 (max: 15)
-  core/apps/settings/hotspot/HotspotSettings.cpp:80: function 'HotspotSettings::createMainPage' has nesting depth 6 (max: 4)
-  core/apps/settings/hotspot/HotspotSettings.cpp:80: function 'HotspotSettings::createMainPage' is 239 lines (max: 80)
+  core/apps/settings/hotspot/HotspotSettings.cpp:279: function 'if' has nesting depth 5 (max: 4)
+  core/apps/settings/hotspot/HotspotSettings.cpp:334: function 'HotspotSettings::createConfigPage' is 203 lines (max: 80)
+  core/apps/settings/hotspot/HotspotSettings.cpp:81: function 'HotspotSettings::createMainPage' has cyclomatic complexity 25 (max: 15)
+  core/apps/settings/hotspot/HotspotSettings.cpp:81: function 'HotspotSettings::createMainPage' has nesting depth 6 (max: 4)
+  core/apps/settings/hotspot/HotspotSettings.cpp:81: function 'HotspotSettings::createMainPage' is 253 lines (max: 80)
   core/apps/settings/wifi/WiFiSettings.cpp:172: function 'WiFiSettings::refreshScan' has nesting depth 5 (max: 4)
   core/apps/settings/wifi/WiFiSettings.cpp:172: function 'WiFiSettings::refreshScan' is 86 lines (max: 80)
   core/apps/settings/wifi/WiFiSettings.cpp:38: function 'WiFiSettings::show' is 102 lines (max: 80)
-  core/apps/system_info/SystemInfoApp.cpp:292: function 'SystemInfoApp::updateInfo' has cyclomatic complexity 38 (max: 15)
-  core/apps/system_info/SystemInfoApp.cpp:292: function 'SystemInfoApp::updateInfo' is 119 lines (max: 80)
-  core/connectivity/ConnectivityManager.cpp:135: function 'ConnectivityManager::startHotspot' has 7 parameters (max: 6)
+  core/apps/system_info/SystemInfoApp.cpp:294: function 'SystemInfoApp::updateInfo' has cyclomatic complexity 39 (max: 15)
+  core/apps/system_info/SystemInfoApp.cpp:294: function 'SystemInfoApp::updateInfo' is 123 lines (max: 80)
+  core/connectivity/ConnectivityManager.cpp:142: function 'ConnectivityManager::startHotspot' has 7 parameters (max: 6)
   core/connectivity/hotspot/HotspotManager.cpp:113: function 'HotspotManager::getConnectedClients' has nesting depth 5 (max: 4)
-  core/connectivity/hotspot/HotspotManager.cpp:157: function 'HotspotManager::init' has nesting depth 5 (max: 4)
-  core/connectivity/hotspot/HotspotManager.cpp:206: function 'HotspotManager::startUsageTimer' has nesting depth 5 (max: 4)
-  core/connectivity/hotspot/HotspotManager.cpp:265: function 'HotspotManager::start' has 7 parameters (max: 6)
-  core/connectivity/hotspot/HotspotManager.cpp:409: function 'HotspotManager::wifi_event_handler' has cyclomatic complexity 21 (max: 15)
-  core/connectivity/hotspot/HotspotManager.cpp:409: function 'HotspotManager::wifi_event_handler' has nesting depth 5 (max: 4)
-  core/connectivity/hotspot/HotspotManager.cpp:409: function 'HotspotManager::wifi_event_handler' is 90 lines (max: 80)
+  core/connectivity/hotspot/HotspotManager.cpp:192: function 'HotspotManager::startUsageTimer' has nesting depth 5 (max: 4)
+  core/connectivity/hotspot/HotspotManager.cpp:251: function 'HotspotManager::start' has 7 parameters (max: 6)
+  core/connectivity/hotspot/HotspotManager.cpp:412: function 'HotspotManager::wifi_event_handler' has cyclomatic complexity 18 (max: 15)
+  core/connectivity/hotspot/HotspotManager.cpp:412: function 'HotspotManager::wifi_event_handler' has nesting depth 5 (max: 4)
   core/connectivity/wifi/WiFiManager.cpp:203: function 'WiFiManager::wifi_event_handler' has cyclomatic complexity 32 (max: 15)
-  core/services/cli/CliService.cpp:214: function 'cmdWiFi' has cyclomatic complexity 26 (max: 15)
-  core/services/system_info/SystemInfoService.cpp:249: function 'SystemInfoService::getTaskList' has nesting depth 5 (max: 4)
-  core/services/system_info/SystemInfoService.cpp:249: function 'SystemInfoService::getTaskList' is 93 lines (max: 80)
-  core/services/system_info/SystemInfoService.cpp:57: function 'SystemInfoService::getSystemStats' is 96 lines (max: 80)
+  core/services/cli/CliService.cpp:215: function 'cmdWiFi' has cyclomatic complexity 26 (max: 15)
+  core/services/system_info/SystemInfoService.cpp:109: function 'SystemInfoService::getSystemStats' is 96 lines (max: 80)
+  core/services/system_info/SystemInfoService.cpp:337: function 'SystemInfoService::getTaskList' has nesting depth 5 (max: 4)
+  core/services/system_info/SystemInfoService.cpp:337: function 'SystemInfoService::getTaskList' is 93 lines (max: 80)
   core/system/focus/FocusManager.cpp:175: function 'FocusManager::on_global_press' has cyclomatic complexity 17 (max: 15)
   core/system/focus/FocusManager.cpp:175: function 'FocusManager::on_global_press' has nesting depth 5 (max: 4)
   core/system/focus/FocusManager.cpp:62: function 'FocusManager::activateWindow' has cyclomatic complexity 17 (max: 15)
   core/tasks/TaskManager.cpp:155: function 'TaskManager::checkTasks' has nesting depth 5 (max: 4)
+  core/tasks/gui/GuiTask.cpp:87: function 'GuiTask::run' has nesting depth 5 (max: 4)
   core/ui/desktop/Desktop.cpp:47: function 'Desktop::init' has cyclomatic complexity 17 (max: 15)
   core/ui/desktop/Desktop.cpp:47: function 'Desktop::init' has nesting depth 6 (max: 4)
   core/ui/desktop/Desktop.cpp:47: function 'Desktop::init' is 150 lines (max: 80)
   core/ui/desktop/modules/quick_access_panel/QuickAccessPanel.cpp:34: function 'QuickAccessPanel::create' is 102 lines (max: 80)
-  core/ui/desktop/modules/status_bar/StatusBar.cpp:39: function 'StatusBar::create' is 206 lines (max: 80)
+  core/ui/desktop/modules/status_bar/StatusBar.cpp:40: function 'StatusBar::create' has cyclomatic complexity 18 (max: 15)
+  core/ui/desktop/modules/status_bar/StatusBar.cpp:40: function 'StatusBar::create' is 253 lines (max: 80)
 
 === Summary ===
-Files analyzed: 35
-Functions found: 501
+Files analyzed: 36
+Functions found: 523
 Issues found: 32
 
 === Top 10 Most Complex Functions ===
-  core/apps/system_info/SystemInfoApp.cpp:292 - SystemInfoApp::updateInfo: complexity=38, lines=119
+  core/apps/system_info/SystemInfoApp.cpp:294 - SystemInfoApp::updateInfo: complexity=39, lines=123
   core/connectivity/wifi/WiFiManager.cpp:203 - WiFiManager::wifi_event_handler: complexity=32, lines=80
-  core/services/cli/CliService.cpp:214 - cmdWiFi: complexity=26, lines=67
-  core/apps/settings/hotspot/HotspotSettings.cpp:80 - HotspotSettings::createMainPage: complexity=23, lines=239
-  core/connectivity/hotspot/HotspotManager.cpp:409 - HotspotManager::wifi_event_handler: complexity=21, lines=90
+  core/services/cli/CliService.cpp:215 - cmdWiFi: complexity=26, lines=67
+  core/apps/settings/hotspot/HotspotSettings.cpp:81 - HotspotSettings::createMainPage: complexity=25, lines=253
+  core/connectivity/hotspot/HotspotManager.cpp:412 - HotspotManager::wifi_event_handler: complexity=18, lines=78
+  core/ui/desktop/modules/status_bar/StatusBar.cpp:40 - StatusBar::create: complexity=18, lines=253
   core/system/focus/FocusManager.cpp:62 - FocusManager::activateWindow: complexity=17, lines=57
   core/system/focus/FocusManager.cpp:175 - FocusManager::on_global_press: complexity=17, lines=55
   core/ui/desktop/Desktop.cpp:47 - Desktop::init: complexity=17, lines=150
-  core/services/system_info/SystemInfoService.cpp:249 - SystemInfoService::getTaskList: complexity=15, lines=93
-  core/apps/settings/hotspot/HotspotSettings.cpp:264 - if: complexity=15, lines=54
+  core/connectivity/hotspot/HotspotManager.cpp:251 - HotspotManager::start: complexity=15, lines=68

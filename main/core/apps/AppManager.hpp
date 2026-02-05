@@ -20,8 +20,8 @@ public:
 
 	virtual ~App() = default;
 
-	virtual void onStart() {}
-	virtual void onResume() {}
+	virtual bool onStart() { return true; }
+	virtual bool onResume() { return true; }
 	virtual void onPause() {}
 	virtual void onStop() {}
 	virtual void update() {}

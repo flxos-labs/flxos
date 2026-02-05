@@ -1,6 +1,6 @@
 # FlxOS Code Quality Report
 
-Generated: Wed Feb  4 09:45:36 PM IST 2026
+Generated: Thu Feb  5 10:59:50 PM IST 2026
 
 ---
 
@@ -17,52 +17,52 @@ Generated: Wed Feb  4 09:45:36 PM IST 2026
 
 ⚠️  Complexity Issues Found:
 
-  core/apps/settings/hotspot/HotspotSettings.cpp:264: function 'if' has nesting depth 5 (max: 4)
-  core/apps/settings/hotspot/HotspotSettings.cpp:319: function 'HotspotSettings::createConfigPage' is 203 lines (max: 80)
-  core/apps/settings/hotspot/HotspotSettings.cpp:80: function 'HotspotSettings::createMainPage' has cyclomatic complexity 23 (max: 15)
-  core/apps/settings/hotspot/HotspotSettings.cpp:80: function 'HotspotSettings::createMainPage' has nesting depth 6 (max: 4)
-  core/apps/settings/hotspot/HotspotSettings.cpp:80: function 'HotspotSettings::createMainPage' is 239 lines (max: 80)
+  core/apps/settings/hotspot/HotspotSettings.cpp:279: function 'if' has nesting depth 5 (max: 4)
+  core/apps/settings/hotspot/HotspotSettings.cpp:334: function 'HotspotSettings::createConfigPage' is 203 lines (max: 80)
+  core/apps/settings/hotspot/HotspotSettings.cpp:81: function 'HotspotSettings::createMainPage' has cyclomatic complexity 25 (max: 15)
+  core/apps/settings/hotspot/HotspotSettings.cpp:81: function 'HotspotSettings::createMainPage' has nesting depth 6 (max: 4)
+  core/apps/settings/hotspot/HotspotSettings.cpp:81: function 'HotspotSettings::createMainPage' is 253 lines (max: 80)
   core/apps/settings/wifi/WiFiSettings.cpp:172: function 'WiFiSettings::refreshScan' has nesting depth 5 (max: 4)
   core/apps/settings/wifi/WiFiSettings.cpp:172: function 'WiFiSettings::refreshScan' is 86 lines (max: 80)
   core/apps/settings/wifi/WiFiSettings.cpp:38: function 'WiFiSettings::show' is 102 lines (max: 80)
-  core/apps/system_info/SystemInfoApp.cpp:292: function 'SystemInfoApp::updateInfo' has cyclomatic complexity 38 (max: 15)
-  core/apps/system_info/SystemInfoApp.cpp:292: function 'SystemInfoApp::updateInfo' is 119 lines (max: 80)
-  core/connectivity/ConnectivityManager.cpp:135: function 'ConnectivityManager::startHotspot' has 7 parameters (max: 6)
+  core/apps/system_info/SystemInfoApp.cpp:294: function 'SystemInfoApp::updateInfo' has cyclomatic complexity 39 (max: 15)
+  core/apps/system_info/SystemInfoApp.cpp:294: function 'SystemInfoApp::updateInfo' is 123 lines (max: 80)
+  core/connectivity/ConnectivityManager.cpp:142: function 'ConnectivityManager::startHotspot' has 7 parameters (max: 6)
   core/connectivity/hotspot/HotspotManager.cpp:113: function 'HotspotManager::getConnectedClients' has nesting depth 5 (max: 4)
-  core/connectivity/hotspot/HotspotManager.cpp:157: function 'HotspotManager::init' has nesting depth 5 (max: 4)
-  core/connectivity/hotspot/HotspotManager.cpp:206: function 'HotspotManager::startUsageTimer' has nesting depth 5 (max: 4)
-  core/connectivity/hotspot/HotspotManager.cpp:265: function 'HotspotManager::start' has 7 parameters (max: 6)
-  core/connectivity/hotspot/HotspotManager.cpp:409: function 'HotspotManager::wifi_event_handler' has cyclomatic complexity 21 (max: 15)
-  core/connectivity/hotspot/HotspotManager.cpp:409: function 'HotspotManager::wifi_event_handler' has nesting depth 5 (max: 4)
-  core/connectivity/hotspot/HotspotManager.cpp:409: function 'HotspotManager::wifi_event_handler' is 90 lines (max: 80)
+  core/connectivity/hotspot/HotspotManager.cpp:192: function 'HotspotManager::startUsageTimer' has nesting depth 5 (max: 4)
+  core/connectivity/hotspot/HotspotManager.cpp:251: function 'HotspotManager::start' has 7 parameters (max: 6)
+  core/connectivity/hotspot/HotspotManager.cpp:412: function 'HotspotManager::wifi_event_handler' has cyclomatic complexity 18 (max: 15)
+  core/connectivity/hotspot/HotspotManager.cpp:412: function 'HotspotManager::wifi_event_handler' has nesting depth 5 (max: 4)
   core/connectivity/wifi/WiFiManager.cpp:203: function 'WiFiManager::wifi_event_handler' has cyclomatic complexity 32 (max: 15)
-  core/services/cli/CliService.cpp:214: function 'cmdWiFi' has cyclomatic complexity 26 (max: 15)
-  core/services/system_info/SystemInfoService.cpp:249: function 'SystemInfoService::getTaskList' has nesting depth 5 (max: 4)
-  core/services/system_info/SystemInfoService.cpp:249: function 'SystemInfoService::getTaskList' is 93 lines (max: 80)
-  core/services/system_info/SystemInfoService.cpp:57: function 'SystemInfoService::getSystemStats' is 96 lines (max: 80)
+  core/services/cli/CliService.cpp:215: function 'cmdWiFi' has cyclomatic complexity 26 (max: 15)
+  core/services/system_info/SystemInfoService.cpp:109: function 'SystemInfoService::getSystemStats' is 96 lines (max: 80)
+  core/services/system_info/SystemInfoService.cpp:337: function 'SystemInfoService::getTaskList' has nesting depth 5 (max: 4)
+  core/services/system_info/SystemInfoService.cpp:337: function 'SystemInfoService::getTaskList' is 93 lines (max: 80)
   core/system/focus/FocusManager.cpp:175: function 'FocusManager::on_global_press' has cyclomatic complexity 17 (max: 15)
   core/system/focus/FocusManager.cpp:175: function 'FocusManager::on_global_press' has nesting depth 5 (max: 4)
   core/system/focus/FocusManager.cpp:62: function 'FocusManager::activateWindow' has cyclomatic complexity 17 (max: 15)
   core/tasks/TaskManager.cpp:155: function 'TaskManager::checkTasks' has nesting depth 5 (max: 4)
+  core/tasks/gui/GuiTask.cpp:87: function 'GuiTask::run' has nesting depth 5 (max: 4)
   core/ui/desktop/Desktop.cpp:47: function 'Desktop::init' has cyclomatic complexity 17 (max: 15)
   core/ui/desktop/Desktop.cpp:47: function 'Desktop::init' has nesting depth 6 (max: 4)
   core/ui/desktop/Desktop.cpp:47: function 'Desktop::init' is 150 lines (max: 80)
   core/ui/desktop/modules/quick_access_panel/QuickAccessPanel.cpp:34: function 'QuickAccessPanel::create' is 102 lines (max: 80)
-  core/ui/desktop/modules/status_bar/StatusBar.cpp:39: function 'StatusBar::create' is 206 lines (max: 80)
+  core/ui/desktop/modules/status_bar/StatusBar.cpp:40: function 'StatusBar::create' has cyclomatic complexity 18 (max: 15)
+  core/ui/desktop/modules/status_bar/StatusBar.cpp:40: function 'StatusBar::create' is 253 lines (max: 80)
 
 === Summary ===
-Files analyzed: 35
-Functions found: 501
+Files analyzed: 36
+Functions found: 523
 Issues found: 32
 
 === Top 10 Most Complex Functions ===
-  core/apps/system_info/SystemInfoApp.cpp:292 - SystemInfoApp::updateInfo: complexity=38, lines=119
+  core/apps/system_info/SystemInfoApp.cpp:294 - SystemInfoApp::updateInfo: complexity=39, lines=123
   core/connectivity/wifi/WiFiManager.cpp:203 - WiFiManager::wifi_event_handler: complexity=32, lines=80
-  core/services/cli/CliService.cpp:214 - cmdWiFi: complexity=26, lines=67
-  core/apps/settings/hotspot/HotspotSettings.cpp:80 - HotspotSettings::createMainPage: complexity=23, lines=239
-  core/connectivity/hotspot/HotspotManager.cpp:409 - HotspotManager::wifi_event_handler: complexity=21, lines=90
+  core/services/cli/CliService.cpp:215 - cmdWiFi: complexity=26, lines=67
+  core/apps/settings/hotspot/HotspotSettings.cpp:81 - HotspotSettings::createMainPage: complexity=25, lines=253
+  core/connectivity/hotspot/HotspotManager.cpp:412 - HotspotManager::wifi_event_handler: complexity=18, lines=78
+  core/ui/desktop/modules/status_bar/StatusBar.cpp:40 - StatusBar::create: complexity=18, lines=253
   core/system/focus/FocusManager.cpp:62 - FocusManager::activateWindow: complexity=17, lines=57
-  core/system/focus/FocusManager.cpp:175 - FocusManager::on_global_press: complexity=17, lines=55
 ```
 
 [Full report](/home/akash/flxos-labs/flxos/reports/complexity.txt)
@@ -75,14 +75,14 @@ Issues found: 32
 === FlxOS Include Dependency Analysis ===
 
 Building dependency graph...
-Analyzed 75 files
+Analyzed 77 files
 
 Checking for circular dependencies...
 ✅ No circular dependencies found!
 
 Checking include order and header guards...
 
-⚠️  Include Order Issues (158):
+⚠️  Include Order Issues (160):
   main.cpp:16: system include <string_view> after local include
   hal/os/lv_os_custom.c:4: system include <string.h> after local include
   core/connectivity/ConnectivityManager.hpp:8: system include <memory> after local include
@@ -106,9 +106,9 @@ Checking include order and header guards...
 
 === Summary ===
 Circular dependencies: 0
-Include order issues: 158
+Include order issues: 160
 Header guard issues: 0
-Total issues: 158
+Total issues: 160
 ```
 
 [Full report](/home/akash/flxos-labs/flxos/reports/includes.txt)
@@ -120,9 +120,9 @@ Total issues: 158
 ```
 === FlxOS Naming Convention Check ===
 
-⚠️  Naming Convention Issues (34):
+⚠️  Naming Convention Issues (37):
 
-Classes/Structs (21):
+Classes/Structs (22):
   core/connectivity/hotspot/HotspotManager.cpp:28: class/struct 'netif' should be PascalCase
   core/connectivity/hotspot/HotspotManager.cpp:36: class/struct 'pbuf' should be PascalCase
   core/connectivity/hotspot/HotspotManager.cpp:36: class/struct 'netif' should be PascalCase
@@ -134,7 +134,7 @@ Classes/Structs (21):
   core/system/time/TimeManager.cpp:18: class/struct 'timeval' should be PascalCase
   core/system/time/TimeManager.cpp:22: class/struct 'tm' should be PascalCase
 
-Functions (11):
+Functions (13):
   core/connectivity/hotspot/HotspotManager.cpp:36: function 'netif_input_hook' should be camelCase
   core/connectivity/hotspot/HotspotManager.cpp:48: function 'netif_linkoutput_hook' should be camelCase
   core/system/time/TimeManager.cpp:17: function 'time_sync_notification_cb' should be camelCase
@@ -145,6 +145,8 @@ Functions (11):
   core/apps/settings/SettingsCommon.hpp:50: function 'create_settings_list' should be camelCase
   core/apps/settings/SettingsCommon.hpp:58: function 'add_back_button_event_cb' should be camelCase
   core/apps/settings/SettingsCommon.hpp:71: function 'add_switch_item' should be camelCase
+  core/ui/LvglObserverBridge.hpp:47: function 'async_cb' should be camelCase
+  core/ui/LvglObserverBridge.hpp:105: function 'async_cb' should be camelCase
   core/ui/theming/StyleUtils.hpp:8: function 'apply_glass' should be camelCase
 
 Constants/Macros (1):
@@ -154,8 +156,8 @@ Filenames (1):
   hal/display/lv_lgfx_user.hpp: filename 'lv_lgfx_user' should be PascalCase
 
 === Summary ===
-Files checked: 82
-Issues found: 34
+Files checked: 84
+Issues found: 37
 ```
 
 [Full report](/home/akash/flxos-labs/flxos/reports/naming.txt)
@@ -167,7 +169,7 @@ Issues found: 34
 ```
 === FlxOS Documentation Coverage Check ===
 
-⚠️  Files Without Headers (82):
+⚠️  Files Without Headers (84):
   main.cpp
   hal/os/lv_os_custom.c
   hal/display/lv_lgfx_user.hpp
@@ -186,9 +188,9 @@ Issues found: 34
     [XXX] hal/display/lv_lgfx_user.hpp:105: )
     [XXX] hal/display/lv_lgfx_user.hpp:123: )
     [XXX] hal/display/lv_lgfx_user.hpp:124: 
-    [TODO] core/services/cli/CliService.cpp:413: Add confirmation?
+    [TODO] core/services/cli/CliService.cpp:414: Add confirmation?
 
-⚠️  Undocumented Public Functions (156):
+⚠️  Undocumented Public Functions (161):
   core/connectivity/ConnectivityManager.hpp:32: 'getWifiMutex' lacks documentation
   core/connectivity/ConnectivityManager.hpp:49: 'getHotspotClientsList' lacks documentation
   core/connectivity/ConnectivityManager.hpp:63: 'getWiFiEnabledObservable' lacks documentation
@@ -210,10 +212,10 @@ Issues found: 34
   ❌ hal/README.md
 
 === Summary ===
-Files checked: 82
-Files without headers: 82
+Files checked: 84
+Files without headers: 84
 TODO/FIXME comments: 4
-Undocumented functions: 156
+Undocumented functions: 161
 Missing READMEs: 1
 ```
 

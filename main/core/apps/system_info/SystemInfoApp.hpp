@@ -13,8 +13,8 @@ public:
 	SystemInfoApp();
 	~SystemInfoApp() override = default;
 
-	void onStart() override;
-	void onResume() override;
+	bool onStart() override;
+	bool onResume() override;
 	void onPause() override;
 	void createUI(void* parent) override;
 	void onStop() override;

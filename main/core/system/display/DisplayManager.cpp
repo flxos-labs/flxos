@@ -8,9 +8,6 @@
 
 #if LV_USE_LOVYAN_GFX
 #include "../../../hal/display/lv_lgfx_user.hpp"
-typedef struct {
-	LGFX* tft;
-} lv_lovyan_gfx_t;
 #endif
 #endif
 
@@ -60,7 +57,7 @@ void DisplayManager::applyBrightness(int32_t val) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	if (auto d = lv_display_get_default()) {
 #if LV_USE_LOVYAN_GFX
-		auto dsc = (lv_lovyan_gfx_t*)lv_display_get_driver_data(d);
+		auto dsc = (lv_lovyan_gfx_driver_data_t*)lv_display_get_driver_data(d);
 		if (dsc && dsc->tft)
 			dsc->tft->setBrightness((uint8_t)val);
 #endif

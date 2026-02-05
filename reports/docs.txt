@@ -1,6 +1,6 @@
 === FlxOS Documentation Coverage Check ===
 
-⚠️  Files Without Headers (82):
+⚠️  Files Without Headers (84):
   main.cpp
   hal/os/lv_os_custom.c
   hal/display/lv_lgfx_user.hpp
@@ -19,9 +19,9 @@
     [XXX] hal/display/lv_lgfx_user.hpp:105: )
     [XXX] hal/display/lv_lgfx_user.hpp:123: )
     [XXX] hal/display/lv_lgfx_user.hpp:124: 
-    [TODO] core/services/cli/CliService.cpp:413: Add confirmation?
+    [TODO] core/services/cli/CliService.cpp:414: Add confirmation?
 
-⚠️  Undocumented Public Functions (156):
+⚠️  Undocumented Public Functions (161):
   core/connectivity/ConnectivityManager.hpp:32: 'getWifiMutex' lacks documentation
   core/connectivity/ConnectivityManager.hpp:49: 'getHotspotClientsList' lacks documentation
   core/connectivity/ConnectivityManager.hpp:63: 'getWiFiEnabledObservable' lacks documentation
@@ -43,8 +43,8 @@
   ❌ hal/README.md
 
 === Summary ===
-Files checked: 82
-Files without headers: 82
+Files checked: 84
+Files without headers: 84
 TODO/FIXME comments: 4
-Undocumented functions: 156
+Undocumented functions: 161
 Missing READMEs: 1

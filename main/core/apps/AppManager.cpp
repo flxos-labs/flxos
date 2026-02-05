@@ -109,37 +109,32 @@ bool AppManager::startApp(std::shared_ptr<App> app) {
 	// Pause current app if exists
 	if (m_currentApp) {
 		Log::info("AppManager", "Pausing app: %s", m_currentApp->getPackageName().c_str());
-		try {
-			m_currentApp->onPause();
-		} catch (const std::exception& e) {
-			Log::error("AppManager", "Error pausing app: %s", e.what());
-		} catch (...) {
-			Log::error("AppManager", "Unknown error pausing app");
-		}
+		m_currentApp->onPause();
 	}
 
 	m_currentApp = app;
 	bool success = true;
 
-	// Start the new app with crash recovery
-	try {
-		if (!m_currentApp->isActive()) {
-			Log::info("AppManager", "Starting app: %s", packageName.c_str());
-			m_currentApp->onStart();
+	// Start the new app
+	if (!m_currentApp->isActive()) {
+		Log::info("AppManager", "Starting app: %s", packageName.c_str());
+		if (!m_currentApp->onStart()) {
+			Log::error("AppManager", "Failed to start app: %s", packageName.c_str());
+			m_currentApp = nullptr;
+			success = false;
+		} else {
 			m_currentApp->setActive(true);
 		}
+	}
+
+	if (success) {
 		Log::info("AppManager", "Resuming app: %s", packageName.c_str());
-		m_currentApp->onResume();
-	} catch (const std::exception& e) {
-		Log::error("AppManager", "CRASH in app %s: %s", packageName.c_str(), e.what());
-		m_currentApp->setActive(false);
-		m_currentApp = nullptr;
-		success = false;
-	} catch (...) {
-		Log::error("AppManager", "CRASH in app %s (unknown error)", packageName.c_str());
-		m_currentApp->setActive(false);
-		m_currentApp = nullptr;
-		success = false;
+		if (!m_currentApp->onResume()) {
+			Log::error("AppManager", "Failed to resume app: %s", packageName.c_str());
+			m_currentApp->setActive(false);
+			m_currentApp = nullptr;
+			success = false;
+		}
 	}
 
 	GuiTask::unlock();
@@ -165,30 +160,15 @@ bool AppManager::stopApp(std::shared_ptr<App> app, bool closeUI) {
 	if (m_currentApp == app) {
 		Log::info("AppManager", "Stopping current app: %s", pkg.c_str());
 		GuiTask::lock();
-		try {
-			m_currentApp->onPause();
-		} catch (const std::exception& e) {
-			Log::error("AppManager", "Error onPause while stopping: %s", e.what());
-		} catch (...) {
-		}
-		try {
-			m_currentApp->onStop();
-		} catch (const std::exception& e) {
-			Log::error("AppManager", "Error onStop while stopping: %s", e.what());
-		} catch (...) {
-		}
+		m_currentApp->onPause();
+		m_currentApp->onStop();
 		m_currentApp->setActive(false);
 		m_currentApp = nullptr;
 		GuiTask::unlock();
 	} else if (app->isActive()) {
 		Log::info("AppManager", "Stopping inactive but active-state app: %s", pkg.c_str());
 		GuiTask::lock();
-		try {
-			app->onStop();
-		} catch (const std::exception& e) {
-			Log::error("AppManager", "Error onStop: %s", e.what());
-		} catch (...) {
-		}
+		app->onStop();
 		app->setActive(false);
 		GuiTask::unlock();
 	} else {
@@ -214,11 +194,7 @@ void AppManager::update() {
 
 	if (app) {
 		GuiTask::lock();
-		try {
-			app->update();
-		} catch (const std::exception& e) {
-		} catch (...) {
-		}
+		app->update();
 		GuiTask::unlock();
 	}
 }
@@ -290,11 +266,7 @@ void AppManager::notifyAppStarted(const std::string& packageName) {
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 
 	for (auto* observer: observers) {
-		try {
-			observer->onAppStarted(packageName);
-		} catch (const std::exception& e) {
-		} catch (...) {
-		}
+		observer->onAppStarted(packageName);
 	}
 }
 
@@ -304,11 +276,7 @@ void AppManager::notifyAppStopped(const std::string& packageName) {
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 
 	for (auto* observer: observers) {
-		try {
-			observer->onAppStopped(packageName);
-		} catch (const std::exception& e) {
-		} catch (...) {
-		}
+		observer->onAppStopped(packageName);
 	}
 }
 

@@ -20,6 +20,7 @@
 #include "core/connectivity/wifi/WiFiManager.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "core/system/display/DisplayManager.hpp"
+#include "core/tasks/gui/GuiTask.hpp"
 #include <sstream>
 #include <sys/time.h>
 #include <time.h>
@@ -464,6 +465,38 @@ static int cmdBrightness(int argc, char** argv) {
 	return 0;
 }
 
+// Command: display_test - Test low-level display driver
+static int cmdDisplayTest(int argc, char** argv) {
+	if (argc < 2) {
+		printf("Usage: display_test <color_hex> (e.g., F800 for red)\n");
+		printf("       display_test off (resumes LVGL)\n");
+		return 1;
+	}
+
+	std::string arg = argv[1];
+	if (arg == "off") {
+		GuiTask::setPaused(false);
+		printf("Resuming LVGL...\n");
+		return 0;
+	}
+
+	// Parse color
+	char* endptr = nullptr;
+	long val = strtol(arg.c_str(), &endptr, 16);
+	if (*endptr != '\0') {
+		printf("Invalid color format. Use hex (e.g., F800)\n");
+		return 1;
+	}
+	int color = (int)val;
+
+	// Logic delegated to GuiTask
+	GuiTask::runDisplayTest(color);
+	printf("Drew test pattern with color 0x%04X.\n", color);
+	printf("Touch screen to resume LVGL. CLI is still active.\n");
+
+	return 0;
+}
+
 // Command: time - Display/Set time
 static int cmdTime(int argc, char** argv) {
 	if (argc > 1) {
@@ -582,6 +615,7 @@ void CliService::registerCommands() {
 
 	// Phase 4: System Control
 	REGISTER_CLI_CMD("brightness", "Set display brightness (0-100)", &cmdBrightness);
+	REGISTER_CLI_CMD("display_test", "Test low-level display driver (color_hex or off)", &cmdDisplayTest);
 	REGISTER_CLI_CMD("time", "Show system time", &cmdTime);
 	REGISTER_CLI_CMD("loglevel", "Set log level for tags", &cmdLogLevel);
 	REGISTER_CLI_CMD("clear", "Clear terminal screen", &cmdClear);

@@ -372,3 +372,7 @@ public:
 		setPanel(&_panel_instance);
 	}
 };
+
+typedef struct {
+	LGFX* tft;
+} lv_lovyan_gfx_driver_data_t;

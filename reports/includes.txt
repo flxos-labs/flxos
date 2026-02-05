@@ -1,14 +1,14 @@
 === FlxOS Include Dependency Analysis ===
 
 Building dependency graph...
-Analyzed 75 files
+Analyzed 77 files
 
 Checking for circular dependencies...
 ✅ No circular dependencies found!
 
 Checking include order and header guards...
 
-⚠️  Include Order Issues (158):
+⚠️  Include Order Issues (160):
   main.cpp:16: system include <string_view> after local include
   hal/os/lv_os_custom.c:4: system include <string.h> after local include
   core/connectivity/ConnectivityManager.hpp:8: system include <memory> after local include
@@ -32,6 +32,6 @@ Checking include order and header guards...
 
 === Summary ===
 Circular dependencies: 0
-Include order issues: 158
+Include order issues: 160
 Header guard issues: 0
-Total issues: 158
+Total issues: 160

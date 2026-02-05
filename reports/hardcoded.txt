@@ -1,7 +1,7 @@
-/home/akash/flxos-labs/flxos/main/core/apps/system_info/SystemInfoApp.cpp:143: lv_obj_set_style_margin_top(cpu_header, lv_dpx(10), 0);
-/home/akash/flxos-labs/flxos/main/core/apps/system_info/SystemInfoApp.cpp:143: lv_obj_set_style_margin_top(cpu_header, lv_dpx(10), 0);
-/home/akash/flxos-labs/flxos/main/core/apps/system_info/SystemInfoApp.cpp:158: lv_obj_set_width(label, lv_dpx(80));
-/home/akash/flxos-labs/flxos/main/core/ui/desktop/modules/status_bar/StatusBar.cpp:113: lv_obj_set_style_transform_pivot_x(hotspot_icon1, lv_pct(50), 0);
-/home/akash/flxos-labs/flxos/main/core/ui/desktop/modules/status_bar/StatusBar.cpp:114: lv_obj_set_style_transform_pivot_y(hotspot_icon1, lv_pct(50), 0);
-/home/akash/flxos-labs/flxos/main/core/ui/desktop/modules/status_bar/StatusBar.cpp:119: lv_obj_set_style_transform_pivot_x(hotspot_icon2, lv_pct(50), 0);
-/home/akash/flxos-labs/flxos/main/core/ui/desktop/modules/status_bar/StatusBar.cpp:120: lv_obj_set_style_transform_pivot_y(hotspot_icon2, lv_pct(50), 0);
+/home/akash/flxos-labs/flxos/main/core/apps/system_info/SystemInfoApp.cpp:145: lv_obj_set_style_margin_top(cpu_header, lv_dpx(10), 0);
+/home/akash/flxos-labs/flxos/main/core/apps/system_info/SystemInfoApp.cpp:145: lv_obj_set_style_margin_top(cpu_header, lv_dpx(10), 0);
+/home/akash/flxos-labs/flxos/main/core/apps/system_info/SystemInfoApp.cpp:160: lv_obj_set_width(label, lv_dpx(80));
+/home/akash/flxos-labs/flxos/main/core/ui/desktop/modules/status_bar/StatusBar.cpp:114: lv_obj_set_style_transform_pivot_x(hotspot_icon1, lv_pct(50), 0);
+/home/akash/flxos-labs/flxos/main/core/ui/desktop/modules/status_bar/StatusBar.cpp:115: lv_obj_set_style_transform_pivot_y(hotspot_icon1, lv_pct(50), 0);
+/home/akash/flxos-labs/flxos/main/core/ui/desktop/modules/status_bar/StatusBar.cpp:120: lv_obj_set_style_transform_pivot_x(hotspot_icon2, lv_pct(50), 0);
+/home/akash/flxos-labs/flxos/main/core/ui/desktop/modules/status_bar/StatusBar.cpp:121: lv_obj_set_style_transform_pivot_y(hotspot_icon2, lv_pct(50), 0);

@@ -36,13 +36,15 @@ SystemInfoApp::SystemInfoApp() {
 	m_cpu_labels.clear();
 }
 
-void SystemInfoApp::onStart() {
+bool SystemInfoApp::onStart() {
 	Log::info(TAG, "App started");
+	return true;
 }
 
-void SystemInfoApp::onResume() {
+bool SystemInfoApp::onResume() {
 	Log::debug(TAG, "App resumed, refreshing data");
 	updateInfo();
+	return true;
 }
 
 void SystemInfoApp::onPause() {
