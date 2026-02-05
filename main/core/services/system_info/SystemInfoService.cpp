@@ -13,10 +13,16 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
 #include "freertos/task.h"
+#if defined(CONFIG_FLXOS_BATTERY_ENABLED)
+#include "esp_adc/adc_cali.h"
+#include "esp_adc/adc_cali_scheme.h"
+#include "esp_adc/adc_oneshot.h"
+#endif
 #include "misc/lv_color.h"
 #include "misc/lv_types.h"
 #include "portmacro.h"
 #include "sdkconfig.h"
+#include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <string_view>
@@ -32,10 +38,56 @@ SystemInfoService& SystemInfoService::getInstance() {
 	static bool initialized = false;
 	if (!initialized) {
 		Log::info(TAG, "SystemInfoService initialized");
+#if defined(CONFIG_FLXOS_BATTERY_ENABLED)
+		instance.initBatteryAdc();
+#endif
 		initialized = true;
 	}
 	return instance;
 }
+
+#if defined(CONFIG_FLXOS_BATTERY_ENABLED)
+void SystemInfoService::initBatteryAdc() {
+	if (m_batteryInitialized)
+		return;
+
+	Log::info(TAG, "Initializing Battery ADC...");
+
+	adc_oneshot_unit_handle_t handle;
+	adc_oneshot_unit_init_cfg_t init_config = {
+		.unit_id = (adc_unit_t)(CONFIG_FLXOS_BATTERY_ADC_UNIT_1 ? ADC_UNIT_1 : ADC_UNIT_2),
+		.clk_src = ADC_DIGI_CLK_SRC_DEFAULT,
+		.ulp_mode = ADC_ULP_MODE_DISABLE,
+	};
+	ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &handle));
+	m_adcHandle = handle;
+
+	adc_oneshot_chan_cfg_t config = {
+		.atten = ADC_ATTEN_DB_12,
+		.bitwidth = ADC_BITWIDTH_DEFAULT,
+	};
+	ESP_ERROR_CHECK(adc_oneshot_config_channel(handle, (adc_channel_t)CONFIG_FLXOS_BATTERY_ADC_CHANNEL, &config));
+
+	// Calibration
+	adc_cali_handle_t cali_handle = nullptr;
+	adc_cali_curve_fitting_config_t cali_config = {
+		.unit_id = (adc_unit_t)(CONFIG_FLXOS_BATTERY_ADC_UNIT_1 ? ADC_UNIT_1 : ADC_UNIT_2),
+		.chan = (adc_channel_t)CONFIG_FLXOS_BATTERY_ADC_CHANNEL,
+		.atten = ADC_ATTEN_DB_12,
+		.bitwidth = ADC_BITWIDTH_DEFAULT,
+	};
+
+	esp_err_t const ret = adc_cali_create_scheme_curve_fitting(&cali_config, &cali_handle);
+	if (ret == ESP_OK) {
+		m_adcCaliHandle = cali_handle;
+		Log::info(TAG, "ADC Calibration scheme created");
+	} else {
+		Log::warn(TAG, "ADC Calibration failed or not available");
+	}
+
+	m_batteryInitialized = true;
+}
+#endif
 
 std::string SystemInfoService::getChipModel() {
 #ifdef CONFIG_IDF_TARGET_ESP32
@@ -201,7 +253,43 @@ std::vector<StorageStats> SystemInfoService::getStorageStats() {
 
 BatteryStats SystemInfoService::getBatteryStats() {
 	BatteryStats stats {};
-	// Placeholder: Assume full battery and not charging for now
+#if defined(CONFIG_FLXOS_BATTERY_ENABLED)
+	stats.isConfigured = true;
+	if (m_batteryInitialized && m_adcHandle) {
+		int raw = 0;
+		if (adc_oneshot_read((adc_oneshot_unit_handle_t)m_adcHandle, (adc_channel_t)CONFIG_FLXOS_BATTERY_ADC_CHANNEL, &raw) == ESP_OK) {
+			int voltage = 0;
+			if (m_adcCaliHandle) {
+				adc_cali_raw_to_voltage((adc_cali_handle_t)m_adcCaliHandle, raw, &voltage);
+			} else {
+				// Fallback to simple calculation if calibration is missing
+				voltage = (raw * 3300) / 4095;
+			}
+
+			// Apply divider factor
+			voltage = (int)(voltage * (CONFIG_FLXOS_BATTERY_DIVIDER_FACTOR / 100.0));
+
+			// Map to percentage
+			int const min_v = CONFIG_FLXOS_BATTERY_VOLTAGE_MIN;
+			int const max_v = CONFIG_FLXOS_BATTERY_VOLTAGE_MAX;
+
+			if (voltage >= max_v) {
+				stats.level = 100;
+			} else if (voltage <= min_v) {
+				stats.level = 0;
+			} else {
+				stats.level = (voltage - min_v) * 100 / (max_v - min_v);
+			}
+
+			// For now, charging status is hardcoded as false unless we have a specific PMIC/GPIO for it
+			stats.isCharging = false;
+			return stats;
+		}
+	}
+#else
+	stats.isConfigured = false;
+#endif
+	// Fallback
 	stats.level = 100;
 	stats.isCharging = false;
 	return stats;

@@ -577,8 +577,57 @@ menu "Hardware Configuration"
 					endmenu
 				endif
 			endmenu
-		endif
 
+	endif
+
+				menu "Battery Configuration"
+					config FLXOS_BATTERY_ENABLED
+						bool "Enable Battery Monitoring"
+						default n
+						help
+							Enable battery voltage monitoring via ADC.
+
+					if FLXOS_BATTERY_ENABLED
+						choice FLXOS_BATTERY_ADC_UNIT
+							prompt "ADC Unit"
+							default FLXOS_BATTERY_ADC_UNIT_1
+							help
+								Select the ADC unit to use. ADC2 is often restricted when WiFi is active.
+
+							config FLXOS_BATTERY_ADC_UNIT_1
+								bool "ADC Unit 1"
+							config FLXOS_BATTERY_ADC_UNIT_2
+								bool "ADC Unit 2"
+						endchoice
+
+						config FLXOS_BATTERY_ADC_CHANNEL
+							int "ADC Channel"
+							range 0 9
+							default 7
+							help
+								ADC channel for battery sensing.
+								Check your board documentation for GPIO to Channel mapping.
+
+						config FLXOS_BATTERY_VOLTAGE_MAX
+							int "Battery Max Voltage (mV)"
+							default 4200
+							help
+								Voltage when battery is at 100%.
+
+						config FLXOS_BATTERY_VOLTAGE_MIN
+							int "Battery Min Voltage (mV)"
+							default 3300
+							help
+								Voltage when battery is at 0%.
+
+						config FLXOS_BATTERY_DIVIDER_FACTOR
+							int "Voltage Divider Factor (multiplied by 100)"
+							default 200
+							help
+								If you have a 100k/100k divider, factor is 2.0.
+								Enter 200 for 2.0, 100 for no divider.
+					endif
+				endmenu
 	endif
 
 endmenu

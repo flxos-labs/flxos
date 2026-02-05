@@ -2,6 +2,7 @@
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/display/DisplayManager.hpp"
+#include "core/system/power/PowerManager.hpp"
 #include "core/system/settings/SettingsManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
 #include "core/tasks/TaskManager.hpp"
@@ -67,6 +68,7 @@ esp_err_t SystemManager::initServices() {
 	DisplayManager::getInstance().init();
 	ThemeManager::getInstance().init();
 	ConnectivityManager::getInstance().init();
+	PowerManager::getInstance().init();
 
 	// Start hotspot usage timer (Connectivity handled this inside init, but let's be explicit if needed)
 	ConnectivityManager::getInstance().startHotspotUsageTimer();
@@ -84,6 +86,7 @@ esp_err_t SystemManager::initGuiState() {
 	DisplayManager::getInstance().initGuiBridges();
 	ThemeManager::getInstance().initGuiBridges();
 	ConnectivityManager::getInstance().initGuiBridges();
+	PowerManager::getInstance().initGuiBridges();
 
 	Apps::AppManager::getInstance().init();
 

@@ -8,6 +8,7 @@
 #include "core/lv_obj_tree.h"
 #include "core/lv_observer.h"
 #include "core/system/notification/NotificationManager.hpp"
+#include "core/system/power/PowerManager.hpp"
 #include "core/system/system_core/SystemManager.hpp"
 #include "core/ui/theming/StyleUtils.hpp"
 #include "core/ui/theming/layout_constants/LayoutConstants.hpp"
@@ -222,10 +223,57 @@ void StatusBar::create() {
 		notif_btn, nullptr
 	);
 
+	// Battery Indicator
+	if (System::PowerManager::getInstance().getIsConfiguredObservable().get()) {
+		lv_obj_t* batt_cont = lv_obj_create(m_statusBar);
+		lv_obj_remove_style_all(batt_cont);
+		lv_obj_set_size(batt_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+		lv_obj_set_flex_flow(batt_cont, LV_FLEX_FLOW_ROW);
+		lv_obj_set_flex_align(batt_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+		lv_obj_t* batt_icon = lv_image_create(batt_cont);
+		lv_obj_t* batt_label = lv_label_create(batt_cont);
+		(void)batt_icon;
+		(void)batt_label;
+
+		lv_subject_add_observer_obj(
+			&System::PowerManager::getInstance().getBatteryLevelSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				lv_obj_t* cont = lv_observer_get_target_obj(observer);
+				lv_obj_t* icon = lv_obj_get_child(cont, 0);
+				lv_obj_t* label = lv_obj_get_child(cont, 1);
+				int32_t const level = lv_subject_get_int(subject);
+
+				lv_label_set_text_fmt(label, "%d%%", (int)level);
+
+				const char* symbol = LV_SYMBOL_BATTERY_EMPTY;
+				if (level > 90) symbol = LV_SYMBOL_BATTERY_FULL;
+				else if (level > 70)
+					symbol = LV_SYMBOL_BATTERY_3;
+				else if (level > 40)
+					symbol = LV_SYMBOL_BATTERY_2;
+				else if (level > 15)
+					symbol = LV_SYMBOL_BATTERY_1;
+
+				lv_image_set_src(icon, symbol);
+
+				// Color based on level
+				ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+				if (level <= 15) {
+					lv_obj_set_style_image_recolor(icon, cfg.error, 0);
+					lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
+				} else {
+					lv_obj_set_style_image_recolor_opa(icon, 0, 0);
+				}
+			},
+			batt_cont, nullptr
+		);
+	}
+
 	m_timeLabel = lv_label_create(m_statusBar);
 
-	time_t now;
-	struct tm timeinfo;
+	time_t now = 0;
+	struct tm timeinfo = {};
 	time(&now);
 	localtime_r(&now, &timeinfo);
 	lv_label_set_text_fmt(m_timeLabel, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
@@ -233,8 +281,8 @@ void StatusBar::create() {
 	m_timer = lv_timer_create(
 		[](lv_timer_t* t) {
 			auto* label = (lv_obj_t*)lv_timer_get_user_data(t);
-			time_t now;
-			struct tm timeinfo;
+			time_t now = 0;
+			struct tm timeinfo = {};
 			time(&now);
 			localtime_r(&now, &timeinfo);
 			lv_label_set_text_fmt(label, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);

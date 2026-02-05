@@ -50,6 +50,7 @@ struct StorageStats {
 struct BatteryStats {
 	int level; // 0-100
 	bool isCharging;
+	bool isConfigured;
 };
 
 struct WiFiStats {
@@ -129,6 +130,12 @@ private:
 	};
 	std::unordered_map<TaskHandle_t, TaskTrackingInfo> m_taskTracking {};
 	uint32_t m_lastTotalRuntime = 0;
+
+	// Battery monitoring
+	bool m_batteryInitialized = false;
+	void initBatteryAdc();
+	void* m_adcHandle = nullptr;
+	void* m_adcCaliHandle = nullptr;
 };
 
 } // namespace System::Services

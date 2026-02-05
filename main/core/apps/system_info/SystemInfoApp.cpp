@@ -308,7 +308,11 @@ void SystemInfoApp::updateInfo() {
 	// Update Battery
 	if (m_battery_label) {
 		auto batStats = service.getBatteryStats();
-		lv_label_set_text_fmt(m_battery_label, "Battery: %d%% %s", batStats.level, batStats.isCharging ? "(Charging)" : "");
+		if (batStats.isConfigured) {
+			lv_label_set_text_fmt(m_battery_label, "Battery: %d%% %s", batStats.level, batStats.isCharging ? "(Charging)" : "");
+		} else {
+			lv_label_set_text(m_battery_label, "Battery: Not configured");
+		}
 	}
 
 	// Get task list ONCE and reuse for CPU calculation and table display

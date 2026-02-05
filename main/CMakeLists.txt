@@ -12,6 +12,7 @@ set(CORE_SRCS
     "core/system/display/DisplayManager.cpp"
     "core/system/theme/ThemeManager.cpp"
     "core/system/time/TimeManager.cpp"
+    "core/system/power/PowerManager.cpp"
     "core/tasks/TaskManager.cpp"
     "core/tasks/resource_monitor/ResourceMonitorTask.cpp"
 )

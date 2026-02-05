@@ -1,5 +1,6 @@
 #include "ResourceMonitorTask.hpp"
 #include "core/common/Logger.hpp"
+#include "core/system/power/PowerManager.hpp"
 #include "core/tasks/TaskManager.hpp"
 #include "esp_heap_caps.h"
 #include "freertos/projdefs.h"
@@ -33,12 +34,15 @@ void ResourceMonitorTask::run(void* /*data*/) {
 		m_freePsram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
 		m_uptimeSeconds = (uint32_t)(esp_timer_get_time() / 1000000);
 
+		// Refresh battery stats
+		PowerManager::getInstance().refresh();
+
 		if (m_freeHeap < 32768) {
-			Log::warn(TAG, "LOW HEAP MEMORY: %lu bytes", (uint32_t)m_freeHeap.load());
+			Log::warn(TAG, "LOW HEAP MEMORY: %lu bytes", (unsigned long)m_freeHeap.load());
 		}
 
 		if (m_uptimeSeconds % 60 == 0) {
-			Log::info(TAG, "Stats - Heap: %lu, PSRAM: %lu, Uptime: %lu s", (uint32_t)m_freeHeap.load(), (uint32_t)m_freePsram.load(), (uint32_t)m_uptimeSeconds.load());
+			Log::info(TAG, "Stats - Heap: %lu, PSRAM: %lu, Uptime: %lu s", (unsigned long)m_freeHeap.load(), (unsigned long)m_freePsram.load(), (unsigned long)m_uptimeSeconds.load());
 		}
 		vTaskDelay(pdMS_TO_TICKS(10000));
 	}
