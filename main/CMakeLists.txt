@@ -82,5 +82,5 @@ if(NOT CONFIG_FLXOS_HEADLESS_MODE)
 endif()
 
 # Upload
-fatfs_create_spiflash_image(system ../assets/system FLASH_IN_PROJECT)
-fatfs_create_spiflash_image(data ../assets/data FLASH_IN_PROJECT)
+# fatfs_create_spiflash_image(system ../assets/system FLASH_IN_PROJECT)
+# fatfs_create_spiflash_image(data ../assets/data FLASH_IN_PROJECT)
