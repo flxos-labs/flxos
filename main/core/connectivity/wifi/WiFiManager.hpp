@@ -52,6 +52,11 @@ private:
 	static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 	static void ip_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
+	void handleStaStart();
+	void handleStaDisconnected(void* event_data);
+	void handleStaConnected(void* event_data);
+	void handleScanDone();
+
 	Observable<int32_t>* m_connected_subject = nullptr;
 	StringObservable* m_ssid_subject = nullptr;
 	StringObservable* m_ip_subject = nullptr;

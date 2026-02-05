@@ -205,80 +205,93 @@ void WiFiManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base*/,
 	auto* self = static_cast<WiFiManager*>(arg);
 
 	if (event_id == WIFI_EVENT_STA_START) {
-		Log::debug(TAG, "STA started");
-		if (self->m_should_reconnect) {
-			esp_wifi_connect();
-		}
+		self->handleStaStart();
 	} else if (event_id == WIFI_EVENT_STA_DISCONNECTED) {
-		auto* event =
-			(wifi_event_sta_disconnected_t*)event_data;
-		Log::warn(TAG, "STA disconnected, reason: %d", event->reason);
-
-		if (self->m_connected_subject) {
-			self->m_connected_subject->set(0);
-		}
-		if (self->m_ssid_subject) {
-			self->m_ssid_subject->set("Disconnected");
-		}
-		if (self->m_ip_subject) {
-			self->m_ip_subject->set("0.0.0.0");
-		}
-
-		bool const is_auth_failure =
-			(event->reason == WIFI_REASON_AUTH_EXPIRE ||
-			 event->reason == WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT ||
-			 event->reason == WIFI_REASON_AUTH_FAIL ||
-			 event->reason == WIFI_REASON_HANDSHAKE_TIMEOUT);
-
-		if (is_auth_failure) {
-			self->m_should_reconnect = false;
-			self->setStatus(WiFiStatus::AUTH_FAILED);
-		} else if (self->m_should_reconnect && self->m_retry_count < MAX_RETRIES) {
-			self->setStatus(WiFiStatus::CONNECTING);
-			esp_err_t const err = esp_wifi_connect();
-			if (err == ESP_OK) {
-				self->m_retry_count++;
-			} else {
-			}
-		} else if (self->m_retry_count >= MAX_RETRIES) {
-			self->m_should_reconnect = false;
-
-			if (event->reason == WIFI_REASON_NO_AP_FOUND) {
-				self->setStatus(WiFiStatus::NOT_FOUND);
-			} else {
-				self->setStatus(WiFiStatus::DISCONNECTED);
-			}
-		} else {
-			self->setStatus(WiFiStatus::DISCONNECTED);
-		}
+		self->handleStaDisconnected(event_data);
 	} else if (event_id == WIFI_EVENT_STA_CONNECTED) {
-		auto* event =
-			(wifi_event_sta_connected_t*)event_data;
-		Log::info(TAG, "STA connected to SSID: %s", (char*)event->ssid);
-		if (self->m_ssid_subject) {
-			self->m_ssid_subject->set((char*)event->ssid);
-		}
+		self->handleStaConnected(event_data);
 	} else if (event_id == WIFI_EVENT_SCAN_DONE) {
-		uint16_t ap_count = 0;
-		esp_wifi_scan_get_ap_num(&ap_count);
-		Log::info(TAG, "Scan done, found %d APs", ap_count);
-		if (ap_count > 0) {
-			std::vector<wifi_ap_record_t> ap_records(ap_count);
-			esp_err_t err = esp_wifi_scan_get_ap_records(&ap_count, ap_records.data());
-			if (err == ESP_OK && self->m_scan_callback) {
-				self->m_scan_callback(ap_records);
-			} else if (self->m_scan_callback) {
-				self->m_scan_callback({});
-			}
-		} else {
-			if (self->m_scan_callback) {
-				self->m_scan_callback({});
-			}
-		}
-		self->m_is_scanning = false;
-		self->m_scan_callback = nullptr;
-		self->setStatus(self->isConnected() ? WiFiStatus::CONNECTED : (self->m_is_enabled ? WiFiStatus::DISCONNECTED : WiFiStatus::DISABLED));
+		self->handleScanDone();
 	}
+}
+
+void WiFiManager::handleStaStart() {
+	Log::debug(TAG, "STA started");
+	if (m_should_reconnect) {
+		esp_wifi_connect();
+	}
+}
+
+void WiFiManager::handleStaDisconnected(void* event_data) {
+	auto* event = (wifi_event_sta_disconnected_t*)event_data;
+	Log::warn(TAG, "STA disconnected, reason: %d", event->reason);
+
+	if (m_connected_subject) {
+		m_connected_subject->set(0);
+	}
+	if (m_ssid_subject) {
+		m_ssid_subject->set("Disconnected");
+	}
+	if (m_ip_subject) {
+		m_ip_subject->set("0.0.0.0");
+	}
+
+	bool const is_auth_failure =
+		(event->reason == WIFI_REASON_AUTH_EXPIRE ||
+		 event->reason == WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT ||
+		 event->reason == WIFI_REASON_AUTH_FAIL ||
+		 event->reason == WIFI_REASON_HANDSHAKE_TIMEOUT);
+
+	if (is_auth_failure) {
+		m_should_reconnect = false;
+		setStatus(WiFiStatus::AUTH_FAILED);
+	} else if (m_should_reconnect && m_retry_count < MAX_RETRIES) {
+		setStatus(WiFiStatus::CONNECTING);
+		esp_err_t const err = esp_wifi_connect();
+		if (err == ESP_OK) {
+			m_retry_count++;
+		}
+	} else if (m_retry_count >= MAX_RETRIES) {
+		m_should_reconnect = false;
+		if (event->reason == WIFI_REASON_NO_AP_FOUND) {
+			setStatus(WiFiStatus::NOT_FOUND);
+		} else {
+			setStatus(WiFiStatus::DISCONNECTED);
+		}
+	} else {
+		setStatus(WiFiStatus::DISCONNECTED);
+	}
+}
+
+void WiFiManager::handleStaConnected(void* event_data) {
+	auto* event = (wifi_event_sta_connected_t*)event_data;
+	Log::info(TAG, "STA connected to SSID: %s", (char*)event->ssid);
+	if (m_ssid_subject) {
+		m_ssid_subject->set((char*)event->ssid);
+	}
+}
+
+void WiFiManager::handleScanDone() {
+	uint16_t ap_count = 0;
+	esp_wifi_scan_get_ap_num(&ap_count);
+	Log::info(TAG, "Scan done, found %d APs", ap_count);
+
+	std::vector<wifi_ap_record_t> ap_records;
+	if (ap_count > 0) {
+		ap_records.resize(ap_count);
+		esp_err_t err = esp_wifi_scan_get_ap_records(&ap_count, ap_records.data());
+		if (err != ESP_OK) {
+			ap_records.clear();
+		}
+	}
+
+	if (m_scan_callback) {
+		m_scan_callback(ap_records);
+	}
+
+	m_is_scanning = false;
+	m_scan_callback = nullptr;
+	setStatus(isConnected() ? WiFiStatus::CONNECTED : (m_is_enabled ? WiFiStatus::DISCONNECTED : WiFiStatus::DISABLED));
 }
 
 void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, int32_t event_id, void* event_data) {

@@ -19,7 +19,7 @@
     [XXX] hal/display/lv_lgfx_user.hpp:105: )
     [XXX] hal/display/lv_lgfx_user.hpp:123: )
     [XXX] hal/display/lv_lgfx_user.hpp:124: 
-    [TODO] core/services/cli/CliService.cpp:414: Add confirmation?
+    [TODO] core/services/cli/CliService.cpp:446: Add confirmation?
 
 ⚠️  Undocumented Public Functions (161):
   core/connectivity/ConnectivityManager.hpp:32: 'getWifiMutex' lacks documentation

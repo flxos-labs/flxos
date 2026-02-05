@@ -275,13 +275,13 @@ void SystemInfoApp::createTasksTab(lv_obj_t* tab) {
 	// Use slightly less than full width to avoid potential scrollbar issues
 	int32_t const w = screen_w - 5;
 
-	lv_table_set_column_width(m_tasks_table, 0, w * 0.08); // #
-	lv_table_set_column_width(m_tasks_table, 1, w * 0.28); // Name
-	lv_table_set_column_width(m_tasks_table, 2, w * 0.12); // CPU%
-	lv_table_set_column_width(m_tasks_table, 3, w * 0.15); // State
-	lv_table_set_column_width(m_tasks_table, 4, w * 0.12); // Prio
-	lv_table_set_column_width(m_tasks_table, 5, w * 0.15); // Stack
-	lv_table_set_column_width(m_tasks_table, 6, w * 0.10); // Core
+	lv_table_set_column_width(m_tasks_table, 0, (int32_t)(w * 0.08)); // #
+	lv_table_set_column_width(m_tasks_table, 1, (int32_t)(w * 0.28)); // Name
+	lv_table_set_column_width(m_tasks_table, 2, (int32_t)(w * 0.12)); // CPU%
+	lv_table_set_column_width(m_tasks_table, 3, (int32_t)(w * 0.15)); // State
+	lv_table_set_column_width(m_tasks_table, 4, (int32_t)(w * 0.12)); // Prio
+	lv_table_set_column_width(m_tasks_table, 5, (int32_t)(w * 0.15)); // Stack
+	lv_table_set_column_width(m_tasks_table, 6, (int32_t)(w * 0.10)); // Core
 
 	lv_table_set_cell_value(m_tasks_table, 0, 0, "#");
 	lv_table_set_cell_value(m_tasks_table, 0, 1, "Name");
@@ -298,7 +298,20 @@ void SystemInfoApp::updateInfo() {
 	auto& service = Services::SystemInfoService::getInstance(); // Use reference for convenience
 	auto sysStats = service.getSystemStats();
 
-	// Update uptime
+	updateUptime(sysStats);
+	updateBattery(service);
+
+	// Get task list ONCE and reuse for CPU calculation and table display
+	auto tasks = service.getTaskList();
+	updateCpuUsage(tasks, sysStats.cores);
+
+	updateHeap(service);
+	updateStorage(service);
+	updateWiFi(service);
+	updateTaskList(tasks);
+}
+
+void SystemInfoApp::updateUptime(const Services::SystemStats& sysStats) {
 	if (m_uptime_label) {
 		int const uptime_s = sysStats.uptimeSeconds;
 		int const h = uptime_s / 3600;
@@ -306,8 +319,9 @@ void SystemInfoApp::updateInfo() {
 		int const s = uptime_s % 60;
 		lv_label_set_text_fmt(m_uptime_label, "Uptime: %02d:%02d:%02d", h, m, s);
 	}
+}
 
-	// Update Battery
+void SystemInfoApp::updateBattery(Services::SystemInfoService& service) {
 	if (m_battery_label) {
 		auto batStats = service.getBatteryStats();
 		if (batStats.isConfigured) {
@@ -316,12 +330,10 @@ void SystemInfoApp::updateInfo() {
 			lv_label_set_text(m_battery_label, "Battery: Not configured");
 		}
 	}
+}
 
-	// Get task list ONCE and reuse for CPU calculation and table display
-	auto tasks = service.getTaskList();
-
-	// Update CPU bars
-	std::vector<float> core_usage(sysStats.cores, 0.0f);
+void SystemInfoApp::updateCpuUsage(const std::vector<Services::TaskInfo>& tasks, int coreCount) {
+	std::vector<float> core_usage(coreCount, 0.0f);
 	for (const auto& task: tasks) {
 		if (task.coreID >= 0 && task.coreID < (int)core_usage.size()) {
 			// Don't count idle tasks as "usage" for the bar if we want it to represent load
@@ -340,8 +352,9 @@ void SystemInfoApp::updateInfo() {
 		lv_bar_set_value(m_cpu_bars[i], usage, LV_ANIM_ON);
 		lv_label_set_text_fmt(m_cpu_labels[i], "Core %d: %d%%", (int)i, usage);
 	}
+}
 
-	// Update heap info
+void SystemInfoApp::updateHeap(Services::SystemInfoService& service) {
 	if (m_heap_label && m_heap_bar) {
 		auto memStats = service.getMemoryStats();
 
@@ -354,8 +367,9 @@ void SystemInfoApp::updateInfo() {
 			lv_bar_set_value(m_psram_bar, memStats.usagePercentPsram, LV_ANIM_ON);
 		}
 	}
+}
 
-	// Update Storage info
+void SystemInfoApp::updateStorage(Services::SystemInfoService& service) {
 	if (m_storage_system_label && m_storage_data_label) {
 		auto storageStats = service.getStorageStats();
 		for (const auto& stat: storageStats) {
@@ -369,8 +383,9 @@ void SystemInfoApp::updateInfo() {
 			}
 		}
 	}
+}
 
-	// Update WiFi info
+void SystemInfoApp::updateWiFi(Services::SystemInfoService& service) {
 	if (m_wifi_status_label) {
 		auto wifiStats = service.getWiFiStats();
 		lv_label_set_text_fmt(m_wifi_status_label, "WiFi: %s", wifiStats.connected ? "Connected" : "Disconnected");
@@ -385,8 +400,9 @@ void SystemInfoApp::updateInfo() {
 			if (m_wifi_rssi_label) lv_label_set_text(m_wifi_rssi_label, "Signal: --");
 		}
 	}
+}
 
-	// Update tasks table (reuse existing tasks list)
+void SystemInfoApp::updateTaskList(std::vector<Services::TaskInfo>& tasks) {
 	if (m_tasks_table) {
 		// Sort tasks by stack high water mark (descending) - sort a copy to not affect CPU calculation
 		std::sort(tasks.begin(), tasks.end(), [](const Services::TaskInfo& a, const Services::TaskInfo& b) {

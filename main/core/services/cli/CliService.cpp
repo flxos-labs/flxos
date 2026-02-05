@@ -212,72 +212,104 @@ static int cmdChip(int /*argc*/, char** /*argv*/) {
 }
 
 // Command: wifi - WiFi management
-static int cmdWiFi(int argc, char** argv) {
+// WiFi Helpers
+static int cmdWiFiStatus() {
 	auto& wifi_mgr = System::WiFiManager::getInstance();
+	auto wifi_stats = Services::SystemInfoService::getInstance().getWiFiStats();
+	printf("\n=== WiFi Status ===\n");
+	printf("State:          %s\n", wifi_mgr.isEnabled() ? "Enabled" : "Disabled");
+	printf("Connected:      %s\n", wifi_stats.connected ? "Yes" : "No");
+	printf("SSID:           %s\n", wifi_stats.ssid.c_str());
+	printf("IP Address:     %s\n", wifi_stats.ipAddress.c_str());
+	printf("RSSI:           %d dBm (%s)\n", wifi_stats.rssi, wifi_stats.signalStrength.c_str());
+	printf("MAC Address:    %02X:%02X:%02X:%02X:%02X:%02X\n", wifi_stats.mac[0], wifi_stats.mac[1], wifi_stats.mac[2], wifi_stats.mac[3], wifi_stats.mac[4], wifi_stats.mac[5]);
+	printf("===================\n\n");
+	return 0;
+}
 
+static int cmdWiFiOn() {
+	System::WiFiManager::getInstance().setEnabled(true);
+	printf("WiFi enabled.\n");
+	return 0;
+}
+
+static int cmdWiFiOff() {
+	System::WiFiManager::getInstance().setEnabled(false);
+	printf("WiFi disabled.\n");
+	return 0;
+}
+
+static int cmdWiFiScan() {
+	printf("Starting WiFi scan...\n");
+	System::WiFiManager::getInstance().scan([](const std::vector<wifi_ap_record_t>& aps) {
+		printf("\n=== Scan Results (%zu APs) ===\n", aps.size());
+		printf("%-32s %-6s %-6s %-20s\n", "SSID", "RSSI", "Chan", "Auth");
+		printf("------------------------------------------------------------------\n");
+		for (const auto& ap: aps) {
+			// Determine auth mode string
+			const char* auth_mode = "OPEN";
+			if (ap.authmode == WIFI_AUTH_WEP) auth_mode = "WEP";
+			else if (ap.authmode == WIFI_AUTH_WPA_PSK)
+				auth_mode = "WPA_PSK";
+			else if (ap.authmode == WIFI_AUTH_WPA2_PSK)
+				auth_mode = "WPA2_PSK";
+			else if (ap.authmode == WIFI_AUTH_WPA_WPA2_PSK)
+				auth_mode = "WPA_WPA2_PSK";
+			else if (ap.authmode == WIFI_AUTH_WPA3_PSK)
+				auth_mode = "WPA3_PSK";
+
+			printf("%-32s %-6d %-6d %-20s\n", ap.ssid, ap.rssi, ap.primary, auth_mode);
+		}
+		printf("================================\n\nflxos> "); // Reprint prompt
+		fflush(stdout);
+	});
+	return 0;
+}
+
+static int cmdWiFiConnect(int argc, char** argv) {
+	if (argc < 4) {
+		printf("Usage: wifi connect <ssid> <password>\n");
+		return 1;
+	}
+	std::string ssid = argv[2];
+	std::string pass = argv[3];
+	printf("Connecting to '%s'...\n", ssid.c_str());
+	System::WiFiManager::getInstance().connect(ssid.c_str(), pass.c_str());
+	return 0;
+}
+
+static int cmdWiFiDisconnect() {
+	System::WiFiManager::getInstance().disconnect();
+	printf("Disconnected from WiFi.\n");
+	return 0;
+}
+
+static int cmdWiFiHelp(const std::string& subcmd) {
+	printf("Unknown subcommand: %s. usage: wifi [status|on|off|scan|connect|disconnect]\n", subcmd.c_str());
+	return 1;
+}
+
+// Command: wifi - WiFi management
+static int cmdWiFi(int argc, char** argv) {
 	if (argc == 1 || (argc > 1 && strcmp(argv[1], "status") == 0)) {
-		auto wifi_stats = Services::SystemInfoService::getInstance().getWiFiStats();
-		printf("\n=== WiFi Status ===\n");
-		printf("State:          %s\n", wifi_mgr.isEnabled() ? "Enabled" : "Disabled");
-		printf("Connected:      %s\n", wifi_stats.connected ? "Yes" : "No");
-		printf("SSID:           %s\n", wifi_stats.ssid.c_str());
-		printf("IP Address:     %s\n", wifi_stats.ipAddress.c_str());
-		printf("RSSI:           %d dBm (%s)\n", wifi_stats.rssi, wifi_stats.signalStrength.c_str());
-		printf("MAC Address:    %02X:%02X:%02X:%02X:%02X:%02X\n", wifi_stats.mac[0], wifi_stats.mac[1], wifi_stats.mac[2], wifi_stats.mac[3], wifi_stats.mac[4], wifi_stats.mac[5]);
-		printf("===================\n\n");
-		return 0;
+		return cmdWiFiStatus();
 	}
 
 	std::string subcmd = argv[1];
 
 	if (subcmd == "on") {
-		wifi_mgr.setEnabled(true);
-		printf("WiFi enabled.\n");
+		return cmdWiFiOn();
 	} else if (subcmd == "off") {
-		wifi_mgr.setEnabled(false);
-		printf("WiFi disabled.\n");
+		return cmdWiFiOff();
 	} else if (subcmd == "scan") {
-		printf("Starting WiFi scan...\n");
-		wifi_mgr.scan([](const std::vector<wifi_ap_record_t>& aps) {
-			printf("\n=== Scan Results (%zu APs) ===\n", aps.size());
-			printf("%-32s %-6s %-6s %-20s\n", "SSID", "RSSI", "Chan", "Auth");
-			printf("------------------------------------------------------------------\n");
-			for (const auto& ap: aps) {
-				// Determine auth mode string
-				const char* auth_mode = "OPEN";
-				if (ap.authmode == WIFI_AUTH_WEP) auth_mode = "WEP";
-				else if (ap.authmode == WIFI_AUTH_WPA_PSK)
-					auth_mode = "WPA_PSK";
-				else if (ap.authmode == WIFI_AUTH_WPA2_PSK)
-					auth_mode = "WPA2_PSK";
-				else if (ap.authmode == WIFI_AUTH_WPA_WPA2_PSK)
-					auth_mode = "WPA_WPA2_PSK";
-				else if (ap.authmode == WIFI_AUTH_WPA3_PSK)
-					auth_mode = "WPA3_PSK";
-
-				printf("%-32s %-6d %-6d %-20s\n", ap.ssid, ap.rssi, ap.primary, auth_mode);
-			}
-			printf("================================\n\nflxos> "); // Reprint prompt
-			fflush(stdout);
-		});
+		return cmdWiFiScan();
 	} else if (subcmd == "connect") {
-		if (argc < 4) {
-			printf("Usage: wifi connect <ssid> <password>\n");
-			return 1;
-		}
-		std::string ssid = argv[2];
-		std::string pass = argv[3];
-		printf("Connecting to '%s'...\n", ssid.c_str());
-		wifi_mgr.connect(ssid.c_str(), pass.c_str());
+		return cmdWiFiConnect(argc, argv);
 	} else if (subcmd == "disconnect") {
-		wifi_mgr.disconnect();
-		printf("Disconnected from WiFi.\n");
+		return cmdWiFiDisconnect();
 	} else {
-		printf("Unknown subcommand: %s. usage: wifi [status|on|off|scan|connect|disconnect]\n", subcmd.c_str());
-		return 1;
+		return cmdWiFiHelp(subcmd);
 	}
-
-	return 0;
 }
 
 // Command: hotspot - Hotspot management

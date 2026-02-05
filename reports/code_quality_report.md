@@ -1,6 +1,6 @@
 # FlxOS Code Quality Report
 
-Generated: Thu Feb  5 11:04:13 PM IST 2026
+Generated: Thu Feb  5 11:12:44 PM IST 2026
 
 ---
 
@@ -25,16 +25,12 @@ Generated: Thu Feb  5 11:04:13 PM IST 2026
   core/apps/settings/wifi/WiFiSettings.cpp:172: function 'WiFiSettings::refreshScan' has nesting depth 5 (max: 4)
   core/apps/settings/wifi/WiFiSettings.cpp:172: function 'WiFiSettings::refreshScan' is 86 lines (max: 80)
   core/apps/settings/wifi/WiFiSettings.cpp:38: function 'WiFiSettings::show' is 102 lines (max: 80)
-  core/apps/system_info/SystemInfoApp.cpp:294: function 'SystemInfoApp::updateInfo' has cyclomatic complexity 39 (max: 15)
-  core/apps/system_info/SystemInfoApp.cpp:294: function 'SystemInfoApp::updateInfo' is 123 lines (max: 80)
   core/connectivity/ConnectivityManager.cpp:142: function 'ConnectivityManager::startHotspot' has 7 parameters (max: 6)
   core/connectivity/hotspot/HotspotManager.cpp:113: function 'HotspotManager::getConnectedClients' has nesting depth 5 (max: 4)
   core/connectivity/hotspot/HotspotManager.cpp:192: function 'HotspotManager::startUsageTimer' has nesting depth 5 (max: 4)
   core/connectivity/hotspot/HotspotManager.cpp:251: function 'HotspotManager::start' has 7 parameters (max: 6)
   core/connectivity/hotspot/HotspotManager.cpp:412: function 'HotspotManager::wifi_event_handler' has cyclomatic complexity 18 (max: 15)
   core/connectivity/hotspot/HotspotManager.cpp:412: function 'HotspotManager::wifi_event_handler' has nesting depth 5 (max: 4)
-  core/connectivity/wifi/WiFiManager.cpp:203: function 'WiFiManager::wifi_event_handler' has cyclomatic complexity 32 (max: 15)
-  core/services/cli/CliService.cpp:215: function 'cmdWiFi' has cyclomatic complexity 26 (max: 15)
   core/services/system_info/SystemInfoService.cpp:109: function 'SystemInfoService::getSystemStats' is 96 lines (max: 80)
   core/services/system_info/SystemInfoService.cpp:337: function 'SystemInfoService::getTaskList' has nesting depth 5 (max: 4)
   core/services/system_info/SystemInfoService.cpp:337: function 'SystemInfoService::getTaskList' is 93 lines (max: 80)
@@ -52,17 +48,20 @@ Generated: Thu Feb  5 11:04:13 PM IST 2026
 
 === Summary ===
 Files analyzed: 36
-Functions found: 523
-Issues found: 32
+Functions found: 535
+Issues found: 28
 
 === Top 10 Most Complex Functions ===
-  core/apps/system_info/SystemInfoApp.cpp:294 - SystemInfoApp::updateInfo: complexity=39, lines=123
-  core/connectivity/wifi/WiFiManager.cpp:203 - WiFiManager::wifi_event_handler: complexity=32, lines=80
-  core/services/cli/CliService.cpp:215 - cmdWiFi: complexity=26, lines=67
   core/apps/settings/hotspot/HotspotSettings.cpp:81 - HotspotSettings::createMainPage: complexity=25, lines=253
   core/connectivity/hotspot/HotspotManager.cpp:412 - HotspotManager::wifi_event_handler: complexity=18, lines=78
   core/ui/desktop/modules/status_bar/StatusBar.cpp:40 - StatusBar::create: complexity=18, lines=253
   core/system/focus/FocusManager.cpp:62 - FocusManager::activateWindow: complexity=17, lines=57
+  core/system/focus/FocusManager.cpp:175 - FocusManager::on_global_press: complexity=17, lines=55
+  core/ui/desktop/Desktop.cpp:47 - Desktop::init: complexity=17, lines=150
+  core/connectivity/hotspot/HotspotManager.cpp:251 - HotspotManager::start: complexity=15, lines=68
+  core/connectivity/wifi/WiFiManager.cpp:224 - WiFiManager::handleStaDisconnected: complexity=15, lines=41
+  core/services/system_info/SystemInfoService.cpp:337 - SystemInfoService::getTaskList: complexity=15, lines=93
+  core/apps/settings/hotspot/HotspotSettings.cpp:279 - if: complexity=15, lines=54
 ```
 
 [Full report](/home/akash/flxos-labs/flxos/reports/complexity.txt)
@@ -188,7 +187,7 @@ Issues found: 37
     [XXX] hal/display/lv_lgfx_user.hpp:105: )
     [XXX] hal/display/lv_lgfx_user.hpp:123: )
     [XXX] hal/display/lv_lgfx_user.hpp:124: 
-    [TODO] core/services/cli/CliService.cpp:414: Add confirmation?
+    [TODO] core/services/cli/CliService.cpp:446: Add confirmation?
 
 ⚠️  Undocumented Public Functions (161):
   core/connectivity/ConnectivityManager.hpp:32: 'getWifiMutex' lacks documentation
