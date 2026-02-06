@@ -32,12 +32,15 @@ public:
 	std::recursive_mutex& getWifiMutex() { return m_wifi_mutex; }
 
 	// WiFi Station
-	esp_err_t connectWiFi(const char* ssid, const char* password);
+	esp_err_t connectWiFi(const char* ssid, const char* password, bool remember = true);
 	esp_err_t disconnectWiFi();
 	bool isWiFiConnected();
 	esp_err_t scanWiFi(WiFiManager::ScanCallback callback);
 	esp_err_t setWiFiEnabled(bool enabled);
 	bool isWiFiEnabled();
+	void saveWiFiCredentials(const char* ssid, const char* password);
+	void clearSavedWiFiCredentials();
+	bool hasSavedWiFiCredentials() const;
 
 	// WiFi Hotspot (SoftAP)
 	esp_err_t startHotspot(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);
@@ -82,6 +85,8 @@ public:
 	Observable<int32_t>& getHotspotHiddenObservable() { return m_hotspot_hidden_subject; }
 	Observable<int32_t>& getHotspotAuthObservable() { return m_hotspot_auth_subject; }
 	Observable<int32_t>& getWiFiAutostartObservable() { return m_wifi_autostart_subject; }
+	StringObservable& getSavedWiFiSsidObservable() { return m_saved_wifi_ssid_subject; }
+	StringObservable& getSavedWiFiPasswordObservable() { return m_saved_wifi_password_subject; }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// GUI-only: LVGL subject accessors (for use with lv_subject_add_observer)
@@ -138,6 +143,8 @@ private:
 	Observable<int32_t> m_hotspot_hidden_subject {0};
 	Observable<int32_t> m_hotspot_auth_subject {1};
 	Observable<int32_t> m_wifi_autostart_subject {0};
+	StringObservable m_saved_wifi_ssid_subject {""};
+	StringObservable m_saved_wifi_password_subject {""};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// LVGL bridges (initialized in initGuiBridges)

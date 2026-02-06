@@ -339,11 +339,12 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 
 	lv_obj_t* btnCont = lv_obj_create(m_connectContainer);
 	lv_obj_set_size(btnCont, lv_pct(100), LV_SIZE_CONTENT);
-	lv_obj_set_style_pad_all(btnCont, 0, 0);
+	lv_obj_set_style_pad_all(btnCont, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_style_border_width(btnCont, 0, 0);
 	lv_obj_set_style_bg_opa(btnCont, 0, 0);
 	lv_obj_set_flex_flow(btnCont, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(btnCont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_set_style_pad_gap(btnCont, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 
 	lv_obj_t* cancelBtn = lv_button_create(btnCont);
 	lv_obj_t* cancelLabel = lv_label_create(cancelBtn);
@@ -355,9 +356,26 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 			lv_obj_delete(instance->m_connectContainer);
 			instance->m_connectContainer = nullptr;
 			instance->m_passwordTa = nullptr;
+			instance->m_rememberSwitch = nullptr;
 		},
 		LV_EVENT_CLICKED, this
 	);
+
+	// Remember switch container
+	lv_obj_t* remember_cont = lv_obj_create(btnCont);
+	lv_obj_set_size(remember_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_style_pad_all(remember_cont, 0, 0);
+	lv_obj_set_style_border_width(remember_cont, 0, 0);
+	lv_obj_set_style_bg_opa(remember_cont, 0, 0);
+	lv_obj_set_flex_flow(remember_cont, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(remember_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_set_style_pad_gap(remember_cont, lv_dpx(UiConstants::PAD_SMALL), 0);
+
+	lv_obj_t* remember_label = lv_label_create(remember_cont);
+	lv_label_set_text(remember_label, "Remember");
+
+	m_rememberSwitch = lv_switch_create(remember_cont);
+	lv_obj_add_state(m_rememberSwitch, LV_STATE_CHECKED); // Default to remember
 
 	lv_obj_t* connectBtn = lv_button_create(btnCont);
 	lv_obj_t* connectLabel = lv_label_create(connectBtn);
@@ -367,12 +385,14 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 		[](lv_event_t* e) {
 			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
 			const char* password = lv_textarea_get_text(instance->m_passwordTa);
+			bool remember = lv_obj_has_state(instance->m_rememberSwitch, LV_STATE_CHECKED);
 			ConnectivityManager::getInstance().connectWiFi(
-				instance->m_connectSsid.c_str(), password
+				instance->m_connectSsid.c_str(), password, remember
 			);
 			lv_obj_delete(instance->m_connectContainer);
 			instance->m_connectContainer = nullptr;
 			instance->m_passwordTa = nullptr;
+			instance->m_rememberSwitch = nullptr;
 			instance->updateStatus();
 		},
 		LV_EVENT_CLICKED, this
@@ -410,6 +430,7 @@ void WiFiSettings::destroy() {
 	m_wifiSwitch = nullptr;
 	m_statusLabel = nullptr;
 	m_statusPrefixLabel = nullptr;
+	m_rememberSwitch = nullptr;
 }
 
 } // namespace System::Apps::Settings

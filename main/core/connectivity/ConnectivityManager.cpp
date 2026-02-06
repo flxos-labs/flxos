@@ -46,15 +46,25 @@ esp_err_t ConnectivityManager::init() {
 	SettingsManager::getInstance().registerSetting("hs_hide", m_hotspot_hidden_subject);
 	SettingsManager::getInstance().registerSetting("hs_auth", m_hotspot_auth_subject);
 	SettingsManager::getInstance().registerSetting("wifi_autostart", m_wifi_autostart_subject);
+	SettingsManager::getInstance().registerSetting("wifi_ssid", m_saved_wifi_ssid_subject);
+	SettingsManager::getInstance().registerSetting("wifi_pass", m_saved_wifi_password_subject);
 
 	ESP_ERROR_CHECK(setWifiMode(WIFI_MODE_NULL));
 	m_is_init = true;
 	Log::info(TAG, "ConnectivityManager initialized");
 
-	// Auto-start WiFi if enabled
-	if (m_wifi_autostart_subject.get()) {
+	// Auto-start WiFi and connect to saved network if enabled
+	if (m_wifi_autostart_subject.get() != 0) {
 		Log::info(TAG, "Auto-starting WiFi...");
 		setWiFiEnabled(true);
+
+		// Try to connect to saved network
+		if (hasSavedWiFiCredentials()) {
+			const char* saved_ssid = m_saved_wifi_ssid_subject.get();
+			const char* saved_pass = m_saved_wifi_password_subject.get();
+			Log::info(TAG, "Auto-connecting to saved network: %s", saved_ssid);
+			WiFiManager::getInstance().connect(saved_ssid, saved_pass);
+		}
 	}
 
 	return ESP_OK;
@@ -116,8 +126,12 @@ esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode, bool auto_start) {
 	return ESP_OK;
 }
 
-esp_err_t ConnectivityManager::connectWiFi(const char* s, const char* p) {
-	return WiFiManager::getInstance().connect(s, p);
+esp_err_t ConnectivityManager::connectWiFi(const char* ssid, const char* password, bool remember) {
+	esp_err_t err = WiFiManager::getInstance().connect(ssid, password);
+	if (err == ESP_OK && remember) {
+		saveWiFiCredentials(ssid, password);
+	}
+	return err;
 }
 esp_err_t ConnectivityManager::disconnectWiFi() {
 	return WiFiManager::getInstance().disconnect();
@@ -159,6 +173,23 @@ esp_err_t ConnectivityManager::enableBluetooth(bool e) {
 }
 bool ConnectivityManager::isBluetoothEnabled() {
 	return BluetoothManager::getInstance().isEnabled();
+}
+
+void ConnectivityManager::saveWiFiCredentials(const char* ssid, const char* password) {
+	m_saved_wifi_ssid_subject.set(ssid ? ssid : "");
+	m_saved_wifi_password_subject.set(password ? password : "");
+	Log::info(TAG, "WiFi credentials saved for: %s", ssid);
+}
+
+void ConnectivityManager::clearSavedWiFiCredentials() {
+	m_saved_wifi_ssid_subject.set("");
+	m_saved_wifi_password_subject.set("");
+	Log::info(TAG, "Saved WiFi credentials cleared");
+}
+
+bool ConnectivityManager::hasSavedWiFiCredentials() const {
+	const char* ssid = m_saved_wifi_ssid_subject.get();
+	return ssid != nullptr && ssid[0] != '\0';
 }
 
 } // namespace System

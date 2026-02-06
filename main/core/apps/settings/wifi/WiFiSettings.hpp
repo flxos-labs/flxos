@@ -35,6 +35,7 @@ private:
 	lv_obj_t* m_statusLabel = nullptr;
 	lv_obj_t* m_statusPrefixLabel = nullptr;
 	lv_obj_t* m_passwordTa = nullptr;
+	lv_obj_t* m_rememberSwitch = nullptr;
 	std::string m_connectSsid {};
 	lv_timer_t* m_timer = nullptr;
 	bool m_isScanning = false;

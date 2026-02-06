@@ -68,19 +68,20 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 	// Ensure any previous connection attempt is stopped
 	esp_wifi_disconnect();
 
+	// Always use RAM storage - persistence is handled by SettingsManager/FatFS
+	esp_wifi_set_storage(WIFI_STORAGE_RAM);
+
 	wifi_config_t wifi_config = {};
 	strncpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
-	if (password) {
+	if (password != nullptr) {
 		strncpy((char*)wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
 	}
 
-	wifi_mode_t current_mode;
+	wifi_mode_t current_mode = WIFI_MODE_NULL;
 	esp_wifi_get_mode(&current_mode);
-	wifi_mode_t target_mode;
+	wifi_mode_t target_mode = WIFI_MODE_STA;
 	if (current_mode == WIFI_MODE_AP || current_mode == WIFI_MODE_APSTA) {
 		target_mode = WIFI_MODE_APSTA;
-	} else {
-		target_mode = WIFI_MODE_STA;
 	}
 
 	esp_err_t err = ConnectivityManager::getInstance().setWifiMode(target_mode);
