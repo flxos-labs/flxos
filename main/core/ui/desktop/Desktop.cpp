@@ -17,6 +17,7 @@
 #include "core/ui/theming/themes/Themes.hpp"
 #include "display/lv_display.h"
 #include "font/lv_symbol_def.h"
+#include "misc/cache/instance/lv_image_cache.h"
 #include "misc/lv_area.h"
 #include "misc/lv_event.h"
 #include "misc/lv_types.h"
@@ -114,6 +115,7 @@ void Desktop::init() {
 						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 					}
 					if (instance->m_wallpaper_img != nullptr) {
+						lv_image_cache_drop(lv_image_get_src(instance->m_wallpaper_img));
 						lv_obj_delete(instance->m_wallpaper_img);
 						instance->m_wallpaper_img = nullptr;
 					}
