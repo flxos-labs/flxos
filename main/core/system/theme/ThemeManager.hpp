@@ -14,6 +14,8 @@ namespace System {
 class ThemeManager {
 public:
 
+	static constexpr const char* DEFAULT_WALLPAPER_PATH = "A:/data/wallpaper.jpg";
+
 	static ThemeManager& getInstance();
 
 	void init();

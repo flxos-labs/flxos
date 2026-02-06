@@ -101,7 +101,7 @@ void Desktop::init() {
 						if (path && strlen(path) > 0) {
 							lv_image_set_src(instance->m_wallpaper_img, path);
 						} else {
-							lv_image_set_src(instance->m_wallpaper_img, "A:/data/wallpaper.jpg");
+							lv_image_set_src(instance->m_wallpaper_img, System::ThemeManager::DEFAULT_WALLPAPER_PATH);
 						}
 						lv_obj_set_size(instance->m_wallpaper_img, lv_pct(100), lv_pct(100));
 						lv_obj_set_style_pad_all(instance->m_wallpaper_img, 0, 0);
@@ -127,8 +127,12 @@ void Desktop::init() {
 			[](lv_observer_t* observer, lv_subject_t* subject) {
 				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
 				const char* path = (const char*)lv_subject_get_pointer(subject);
-				if (instance->m_wallpaper_img && path && strlen(path) > 0) {
-					lv_image_set_src(instance->m_wallpaper_img, path);
+				if (instance->m_wallpaper_img) {
+					if (path && strlen(path) > 0) {
+						lv_image_set_src(instance->m_wallpaper_img, path);
+					} else {
+						lv_image_set_src(instance->m_wallpaper_img, System::ThemeManager::DEFAULT_WALLPAPER_PATH);
+					}
 				}
 			},
 			this

@@ -418,23 +418,17 @@ void HotspotSettings::createConfigPage() {
 	lv_obj_set_style_pad_all(maxConnCont, 0, 0);
 	lv_obj_set_style_border_width(maxConnCont, 0, 0);
 	lv_obj_set_flex_flow(maxConnCont, LV_FLEX_FLOW_ROW);
-	lv_obj_set_flex_align(maxConnCont, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_set_flex_align(maxConnCont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 	lv_obj_t* maxConnLabel = lv_label_create(maxConnCont);
 	lv_label_set_text(maxConnLabel, "Max Connections:");
-	lv_obj_t* sliderCont = lv_obj_create(maxConnCont);
-	lv_obj_set_size(sliderCont, lv_pct(100), LV_SIZE_CONTENT);
-	lv_obj_set_style_pad_all(sliderCont, 0, 0);
-	lv_obj_set_style_border_width(sliderCont, 0, 0);
-	lv_obj_set_flex_flow(sliderCont, LV_FLEX_FLOW_COLUMN);
-	m_maxConnSlider = lv_slider_create(sliderCont);
+	m_maxConnSlider = lv_slider_create(maxConnCont);
+	lv_obj_set_flex_grow(m_maxConnSlider, 1);
 	lv_slider_set_range(m_maxConnSlider, 1, 10);
 	int const saved_max = lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotMaxConnSubject());
 	lv_slider_set_value(m_maxConnSlider, saved_max > 0 ? saved_max : 4, LV_ANIM_OFF);
-	lv_obj_set_width(m_maxConnSlider, lv_pct(100));
-	lv_obj_t* maxConnValLabel = lv_label_create(sliderCont);
+	lv_obj_t* maxConnValLabel = lv_label_create(maxConnCont);
 	lv_label_set_text_fmt(maxConnValLabel, "%d", saved_max > 0 ? saved_max : 4);
-	lv_obj_set_style_text_align(maxConnValLabel, LV_TEXT_ALIGN_CENTER, 0);
-	lv_obj_set_width(maxConnValLabel, lv_pct(100));
+	lv_obj_set_width(maxConnValLabel, LV_SIZE_CONTENT);
 	lv_obj_add_event_cb(
 		m_maxConnSlider,
 		[](lv_event_t* e) {
@@ -494,22 +488,16 @@ void HotspotSettings::createConfigPage() {
 	lv_obj_set_style_pad_all(txCont, 0, 0);
 	lv_obj_set_style_border_width(txCont, 0, 0);
 	lv_obj_set_flex_flow(txCont, LV_FLEX_FLOW_ROW);
-	lv_obj_set_flex_align(txCont, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_set_flex_align(txCont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 	lv_obj_t* txLabel = lv_label_create(txCont);
 	lv_label_set_text(txLabel, "TX Power:");
-	lv_obj_t* txSliderCont = lv_obj_create(txCont);
-	lv_obj_set_size(txSliderCont, lv_pct(100), LV_SIZE_CONTENT);
-	lv_obj_set_style_pad_all(txSliderCont, 0, 0);
-	lv_obj_set_style_border_width(txSliderCont, 0, 0);
-	lv_obj_set_flex_flow(txSliderCont, LV_FLEX_FLOW_COLUMN);
-	m_txPowerSlider = lv_slider_create(txSliderCont);
+	m_txPowerSlider = lv_slider_create(txCont);
+	lv_obj_set_flex_grow(m_txPowerSlider, 1);
 	lv_slider_set_range(m_txPowerSlider, 8, 80);
 	lv_slider_set_value(m_txPowerSlider, 80, LV_ANIM_OFF);
-	lv_obj_set_width(m_txPowerSlider, lv_pct(100));
-	lv_obj_t* txValLabel = lv_label_create(txSliderCont);
+	lv_obj_t* txValLabel = lv_label_create(txCont);
 	lv_label_set_text(txValLabel, "80");
-	lv_obj_set_style_text_align(txValLabel, LV_TEXT_ALIGN_CENTER, 0);
-	lv_obj_set_width(txValLabel, lv_pct(100));
+	lv_obj_set_width(txValLabel, LV_SIZE_CONTENT);
 	lv_obj_add_event_cb(
 		m_txPowerSlider,
 		[](lv_event_t* e) {

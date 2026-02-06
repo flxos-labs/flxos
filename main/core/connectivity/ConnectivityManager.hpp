@@ -41,6 +41,8 @@ public:
 	void saveWiFiCredentials(const char* ssid, const char* password);
 	void clearSavedWiFiCredentials();
 	bool hasSavedWiFiCredentials() const;
+	const char* getSavedWiFiSsid() const { return m_saved_wifi_ssid_subject.get(); }
+	const char* getSavedWiFiPassword() const { return m_saved_wifi_password_subject.get(); }
 
 	// WiFi Hotspot (SoftAP)
 	esp_err_t startHotspot(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);
@@ -85,6 +87,7 @@ public:
 	Observable<int32_t>& getHotspotHiddenObservable() { return m_hotspot_hidden_subject; }
 	Observable<int32_t>& getHotspotAuthObservable() { return m_hotspot_auth_subject; }
 	Observable<int32_t>& getWiFiAutostartObservable() { return m_wifi_autostart_subject; }
+	Observable<int32_t>& getWiFiScanIntervalObservable() { return m_wifi_scan_interval_subject; }
 	StringObservable& getSavedWiFiSsidObservable() { return m_saved_wifi_ssid_subject; }
 	StringObservable& getSavedWiFiPasswordObservable() { return m_saved_wifi_password_subject; }
 
@@ -111,6 +114,7 @@ public:
 	lv_subject_t& getHotspotHiddenSubject() { return *m_hotspot_hidden_bridge->getSubject(); }
 	lv_subject_t& getHotspotAuthSubject() { return *m_hotspot_auth_bridge->getSubject(); }
 	lv_subject_t& getWiFiAutostartSubject() { return *m_wifi_autostart_bridge->getSubject(); }
+	lv_subject_t& getWiFiScanIntervalSubject() { return *m_wifi_scan_interval_bridge->getSubject(); }
 #endif
 
 private:
@@ -143,6 +147,7 @@ private:
 	Observable<int32_t> m_hotspot_hidden_subject {0};
 	Observable<int32_t> m_hotspot_auth_subject {1};
 	Observable<int32_t> m_wifi_autostart_subject {0};
+	Observable<int32_t> m_wifi_scan_interval_subject {0}; // 0 = disabled, otherwise seconds
 	StringObservable m_saved_wifi_ssid_subject {""};
 	StringObservable m_saved_wifi_password_subject {""};
 
@@ -169,6 +174,7 @@ private:
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_hidden_bridge {};
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_auth_bridge {};
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_autostart_bridge {};
+	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_scan_interval_bridge {};
 #endif
 
 	bool m_is_init = false;

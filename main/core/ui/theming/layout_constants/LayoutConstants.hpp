@@ -21,7 +21,7 @@ static constexpr int DOCK_BTN_HEIGHT_SMALL_PCT = 80;
 // Fixed Pixel Sizes (Logic Units - use with lv_dpx)
 static constexpr int SIZE_TOUCH_TARGET = 30;
 static constexpr int SIZE_DROPDOWN_WIDTH_SMALL = 80;
-static constexpr int SIZE_DROPDOWN_WIDTH_LARGE = 125;
+static constexpr int SIZE_DROPDOWN_WIDTH_LARGE = 160;
 static constexpr int SIZE_DROPDOWN_HEIGHT = 35;
 static constexpr int SIZE_DROPDOWN_BTN_WIDTH = 40;
 

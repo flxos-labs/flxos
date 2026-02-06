@@ -22,6 +22,11 @@ void ThemeManager::init() {
 	SettingsManager::getInstance().registerSetting("wp_enabled", m_wallpaper_enabled_subject);
 	SettingsManager::getInstance().registerSetting("wp_path", m_wallpaper_path_subject);
 
+	// Set default wallpaper path if not already set
+	if (strlen(m_wallpaper_path_subject.get()) == 0) {
+		m_wallpaper_path_subject.set(DEFAULT_WALLPAPER_PATH);
+	}
+
 	// Initial application
 	applyTheme(m_theme_subject.get());
 }
@@ -35,7 +40,7 @@ void ThemeManager::initGuiBridges() {
 	m_wallpaper_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wallpaper_enabled_subject);
 	m_wallpaper_path_bridge = std::make_unique<LvglStringObserverBridge>(m_wallpaper_path_subject);
 
-	lv_subject_add_observer(m_theme_bridge->getSubject(), [](lv_observer_t*, lv_subject_t* s) { ThemeManager::getInstance().applyTheme(lv_subject_get_int(s)); }, nullptr);
+	lv_subject_add_observer(m_theme_bridge->getSubject(), [](lv_observer_t*, lv_subject_t* s) { ThemeManager::applyTheme(lv_subject_get_int(s)); }, nullptr);
 
 	// Initial application to GUI
 	applyTheme(m_theme_subject.get());
