@@ -1,4 +1,5 @@
 #include "AppManager.hpp"
+#include "calendar/CalendarApp.hpp"
 #include "core/common/Logger.hpp"
 #include "core/tasks/TaskManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
@@ -42,6 +43,7 @@ void AppManager::init() {
 	registerApp(std::make_shared<SettingsApp>());
 	registerApp(std::make_shared<FilesApp>());
 	registerApp(std::make_shared<SystemInfoApp>());
+	registerApp(std::make_shared<CalendarApp>());
 
 	if (!m_executor) {
 		Log::info("AppManager", "Starting AppExecutor task...");
