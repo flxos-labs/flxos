@@ -46,6 +46,7 @@ esp_err_t ConnectivityManager::init() {
 	SettingsManager::getInstance().registerSetting("hs_hide", m_hotspot_hidden_subject);
 	SettingsManager::getInstance().registerSetting("hs_auth", m_hotspot_auth_subject);
 	SettingsManager::getInstance().registerSetting("wifi_autostart", m_wifi_autostart_subject);
+	SettingsManager::getInstance().registerSetting("wifi_scan_int", m_wifi_scan_interval_subject);
 	SettingsManager::getInstance().registerSetting("wifi_ssid", m_saved_wifi_ssid_subject);
 	SettingsManager::getInstance().registerSetting("wifi_pass", m_saved_wifi_password_subject);
 
@@ -94,6 +95,7 @@ void ConnectivityManager::initGuiBridges() {
 	m_hotspot_hidden_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_hidden_subject);
 	m_hotspot_auth_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_auth_subject);
 	m_wifi_autostart_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_autostart_subject);
+	m_wifi_scan_interval_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_scan_interval_subject);
 }
 #endif
 

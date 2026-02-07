@@ -77,4 +77,27 @@ inline void add_switch_item(lv_obj_t* list, const char* text, lv_subject_t* subj
 	lv_obj_bind_checked(sw, subject);
 }
 
+inline lv_obj_t* add_slider_item(lv_obj_t* list, const char* text, lv_subject_t* subject, int32_t min_val, int32_t max_val) {
+	lv_obj_t* btn = lv_list_add_button(list, nullptr, text);
+	lv_obj_set_flex_flow(btn, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(btn, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+	lv_obj_t* slider = lv_slider_create(btn);
+	lv_slider_set_range(slider, min_val, max_val);
+	lv_obj_set_flex_grow(slider, 1);
+	lv_slider_bind_value(slider, subject);
+
+	lv_obj_t* value_label = lv_label_create(btn);
+	lv_label_set_text_fmt(value_label, "%ld", lv_subject_get_int(subject));
+	lv_obj_set_style_min_width(value_label, lv_dpx(UiConstants::PAD_LARGE), 0);
+
+	// Update label when slider changes
+	lv_obj_add_event_cb(slider, [](lv_event_t* e) {
+		auto* label = (lv_obj_t*)lv_event_get_user_data(e);
+		auto* slider_obj = lv_event_get_target_obj(e);
+		lv_label_set_text_fmt(label, "%ld", lv_slider_get_value(slider_obj)); }, LV_EVENT_VALUE_CHANGED, value_label);
+
+	return slider;
+}
+
 } // namespace System::Apps::Settings

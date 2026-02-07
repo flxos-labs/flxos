@@ -4,6 +4,7 @@
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
+#include <atomic>
 #include <functional>
 #include <vector>
 
@@ -64,7 +65,7 @@ private:
 
 	bool m_is_init = false;
 	bool m_is_enabled = false;
-	bool m_is_scanning = false;
+	std::atomic<bool> m_is_scanning {false};
 	bool m_should_reconnect = false;
 	int m_retry_count = 0;
 	static constexpr int MAX_RETRIES = 5;
