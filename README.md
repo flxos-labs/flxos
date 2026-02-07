@@ -1,164 +1,347 @@
 <p align="center">
-  <h1 align="center">FlxOS</h1>
+  <!-- Logo placeholder for future -->
+  <h1 align="center">🖥️ FlxOS</h1>
   <p align="center">
-    <strong>A Modern Desktop Environment for ESP32 Microcontrollers</strong>
+    <strong>A Modern Operating System for ESP32 Microcontrollers</strong>
   </p>
-</p>
-
-<p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
-  <img src="https://img.shields.io/badge/ESP--IDF-v5.5-green.svg" alt="ESP-IDF">
-  <img src="https://img.shields.io/badge/LVGL-v9-orange.svg" alt="LVGL">
-  <img src="https://img.shields.io/badge/platform-ESP32%20%7C%20ESP32--S3-lightgrey.svg" alt="Platform">
-  <a href="https://github.com/flxos-labs/flxos/actions"><img src="https://github.com/flxos-labs/flxos/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
+  <p align="center">
+    <a href="https://github.com/flxos-labs/flxos/actions/workflows/build.yml">
+      <img src="https://github.com/flxos-labs/flxos/actions/workflows/build.yml/badge.svg" alt="Build Status">
+    </a>
+    <a href="https://github.com/flxos-labs/flxos/blob/main/LICENSE">
+      <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+    </a>
+    <img src="https://img.shields.io/badge/ESP--IDF-v5.5-blue?logo=espressif" alt="ESP-IDF Version">
+    <img src="https://img.shields.io/badge/LVGL-v9-purple" alt="LVGL Version">
+  </p>
+  <p align="center">
+    <a href="https://flxos-labs.github.io">Website</a> •
+    <a href="#-features">Features</a> •
+    <a href="#-quick-start">Quick Start</a> •
+    <a href="#-roadmap">Roadmap</a> •
+    <a href="#-contributing">Contributing</a>
+  </p>
 </p>
 
 ---
 
-## 📖 Overview
+FlxOS is a feature-rich, embedded operating system designed for ESP32 microcontrollers. It provides a complete desktop-like experience with a modern graphical user interface, window management, application lifecycle, connectivity features, and extensive hardware support.
 
-**FlxOS** is a high-performance, feature-rich embedded operating environment designed for **ESP32 microcontrollers**. It combines the robustness of the **ESP-IDF** framework with the powerful graphics capabilities of **LVGL 9** and **LovyanGFX** to deliver a responsive, modern desktop-like experience on embedded hardware.
+<!-- Screenshot placeholder for future
+<p align="center">
+  <img src="assets/screenshots/desktop.png" alt="FlxOS Desktop" width="600">
+</p>
+-->
 
-Whether you're building a smart home controller, industrial HMI, or a custom IoT device with a rich user interface, FlxOS provides the foundation you need.
+## ✨ Features
 
-## ✨ Key Features
+### 🖥️ Core System
+- **App Lifecycle Management** — Start, stop, pause, and resume applications seamlessly
+- **Window Manager** — Multi-window support with dynamic layouts
+- **Task Scheduler** — FreeRTOS-based background task scheduling
+- **Resource Monitor** — Real-time CPU and memory monitoring
+- **Backend Service Layer** — Decoupled UI from system logic
+- **Headless Mode** — Run without display/GUI hardware for IoT scenarios
 
-| Feature | Description |
-|---------|-------------|
-| 🎨 **Advanced Graphics Engine** | Built on LVGL 9 + LovyanGFX for hardware-accelerated rendering and smooth 60+ FPS animations |
-| 📱 **Modular App Architecture** | Scalable application system with built-in app manager for easy extension |
-| 🖥️ **Window Manager** | Full-featured window management with multi-app support and dynamic layouts |
-| ⚙️ **System Management** | Centralized hardware abstraction layer (HAL) and resource management |
-| 🌐 **Connectivity Suite** | Integrated Wi-Fi, network stack, and IoT capabilities |
-| 📂 **File System** | FAT filesystem support with SD card and internal flash storage |
-| ⚡ **Real-time Performance** | FreeRTOS-based multitasking for efficient parallel processing |
-| 🔄 **Display Rotation** | Dynamic screen rotation with automatic layout adjustment |
+### 🎨 User Interface
+- **Desktop Environment** — Taskbar, app launcher, and status bar
+- **Theme Engine** — Dark and light themes with easy customization
+- **Virtual Keyboard** — On-screen input for touch displays
+- **Notification System** — Toast and popup notifications
+- **Display Rotation** — Dynamic orientation support (0°, 90°, 180°, 270°)
+- **Custom Wallpapers** — Personalize your desktop
 
-## 🏗️ Architecture
+### 🌐 Connectivity
+- **WiFi Station Mode** — Connect to wireless networks
+- **WiFi Hotspot (SoftAP)** — Create hotspot with NAT and persistent configuration
+- **WiFi Scanning** — Network discovery and management
+- **Bluetooth Control** — Enable/disable Bluetooth support
 
-```
-FlxOS/
-├── main/
-│   ├── core/
-│   │   ├── apps/           # Application modules (Settings, Files, System Info, etc.)
-│   │   ├── common/         # Shared utilities, helpers, and base classes
-│   │   ├── connectivity/   # Wi-Fi, networking, and connectivity features
-│   │   ├── services/       # Background system services (File System, System Info, CLI)
-│   │   ├── system/         # Core system managers (Theme, Display, Time, Focus)
-│   │   ├── tasks/          # FreeRTOS task definitions and management
-│   │   └── ui/             # Desktop environment, window manager, and UI components
-│   ├── hal/                # Hardware Abstraction Layer (Display, OS abstractions)
-│   └── main.cpp            # Entry point
-├── components/             # External libraries and custom ESP-IDF components
-├── assets/                 # Static resources (images, fonts)
-├── scripts/                # Build, deployment, and utility scripts
-└── ...                     # Configuration and partition files
-```
+### 📱 Built-in Applications
+| App | Status | Description |
+|-----|--------|-------------|
+| ⚙️ Settings | ✅ Complete | System configuration hub |
+| 📁 Files | ✅ Complete | File browser with SD card support |
+| 📶 WiFi Settings | ✅ Complete | Network management |
+| 📺 Display Settings | ✅ Complete | Brightness, rotation controls |
+| 📡 Hotspot Settings | ✅ Complete | AP configuration |
+| 🔵 Bluetooth Settings | ✅ Complete | BT management |
+| ℹ️ System Info | ✅ Complete | Hardware/software information |
+| 🧮 Calculator | ⏳ Planned | Basic calculator |
+| ⏰ Clock/Alarm | ⏳ Planned | Time, alarms, timer |
+| 💻 Terminal | ⏳ Planned | Debug console |
 
-## 🚀 Getting Started
+### 💾 Storage & Data
+- **Internal Flash (FAT)** — With wear-leveling support
+- **SD Card Support** — External storage expansion
+- **Settings Persistence** — NVS and JSON-based storage
+
+### 🎨 Hardware Abstraction Layer
+- **30+ Display Drivers** — Via LovyanGFX integration
+- **Universal Touch Support** — XPT2046, GT911, FT5x06, CST816, and more
+- **Flexible Configuration** — Easy hardware customization
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-Ensure you have the following installed:
+- [ESP-IDF v5.5+](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/)
+- Python 3.8+
+- Git with submodule support
 
-- **ESP-IDF v5.5+**: [Installation Guide](https://docs.espressif.com/projects/esp-idf/en/v5.5/esp32/get-started/)
-- **CMake**: 3.16 or later
-- **Ninja Build System**
-- **Python 3.8+**
-
-### Quick Start
+### Installation
 
 ```bash
 # Clone the repository with submodules
 git clone --recursive https://github.com/flxos-labs/flxos.git
 cd flxos
 
-# Set up ESP-IDF environment
-. $HOME/esp/esp-idf/export.sh
+# Set up ESP-IDF environment (if not already done)
+. $IDF_PATH/export.sh
 
-# Configure for your target
-idf.py set-target esp32s3  # or esp32
+# Set target (choose your ESP32 variant)
+idf.py set-target esp32s3
 
-# Build, flash, and monitor
-idf.py build flash monitor
+# Configure (optional - for custom display/touch setup)
+idf.py menuconfig
+
+# Build
+idf.py build
+
+# Flash and monitor
+idf.py -p /dev/ttyUSB0 flash monitor
 ```
 
-### Configuration
+### First Boot
 
-FlxOS supports multiple ESP32 variants with optimized configurations:
+On first boot, FlxOS will:
+1. Initialize the display and touch drivers
+2. Mount the internal filesystem
+3. Launch the desktop environment
+4. Show the app launcher with available applications
 
-| Target | Flash Size | Partition File |
-|--------|------------|----------------|
-| ESP32 | 4MB | `partitions_4mb.csv` |
-| ESP32 | 8MB | `partitions_8mb.csv` |
-| ESP32-S3 | 16MB | `partitions_16mb.csv` |
+---
 
-To customize settings, run:
+## 🎯 Supported Hardware
+
+### Microcontrollers
+
+FlxOS supports the **entire ESP32 family**:
+
+| MCU | Status | Notes |
+|-----|--------|-------|
+| ESP32 | ✅ Supported | Original dual-core |
+| ESP32-S2 | ✅ Supported | Single-core, USB OTG |
+| ESP32-S3 | ✅ Supported | Dual-core, AI acceleration |
+| ESP32-C3 | ✅ Supported | RISC-V single-core |
+| ESP32-C6 | ✅ Supported | RISC-V, WiFi 6 |
+| ESP32-H2 | ✅ Supported | Thread/Zigbee |
+
+### Displays
+
+LovyanGFX provides support for **30+ display controllers**:
+
+- **ILI9341**, **ILI9488**, **ILI9486**, **ILI9481**
+- **ST7735**, **ST7789**, **ST7796**
+- **GC9A01**, **GC9107**
+- **SSD1306**, **SSD1327**, **SSD1351**
+- **R61529**, **RM68120**
+- And many more...
+
+### Touch Controllers
+
+- **Resistive**: XPT2046, STMPE610
+- **Capacitive**: GT911, FT5x06, FT6x36, CST816, CST820
+
+### Partition Sizes
+
+Pre-configured partition tables for various flash sizes:
+
+| Flash Size | Partition File |
+|------------|----------------|
+| 4 MB | `partitions_4mb.csv` |
+| 8 MB | `partitions_8mb.csv` |
+| 16 MB | `partitions_16mb.csv` |
+
+---
+
+## 📁 Project Structure
+
+```
+flxos/
+├── main/
+│   ├── core/                 # Platform-independent FlxOS logic
+│   │   ├── apps/             # Built-in applications
+│   │   ├── common/           # Shared utilities and types
+│   │   ├── connectivity/     # WiFi, Bluetooth, Hotspot
+│   │   ├── services/         # Background services
+│   │   ├── system/           # Core managers (Display, Theme, etc.)
+│   │   ├── tasks/            # FreeRTOS task wrappers
+│   │   └── ui/               # UI framework and desktop
+│   ├── hal/                  # Hardware abstraction layer
+│   └── main.cpp              # Entry point
+├── components/               # External components
+│   ├── lvgl/                 # LVGL graphics library
+│   ├── LovyanGFX/            # Display driver library
+│   └── dhcpserver/           # DHCP server for hotspot
+├── simulator/                # Desktop simulator (SDL)
+├── scripts/                  # Build and quality tools
+├── assets/                   # Static assets and data
+└── .github/workflows/        # CI/CD configuration
+```
+
+---
+
+## ⚙️ Configuration
+
+### Menuconfig Options
+
+Access configuration via `idf.py menuconfig`:
+
+```
+FlxOS Configuration  --->
+    [*] Enable Headless Mode (no GUI)
+    Display Settings  --->
+        (320) Display Width
+        (240) Display Height
+        [*] Enable Touch Input
+    Storage Settings  --->
+        [*] Enable SD Card Support
+```
+
+### Headless Mode
+
+For IoT applications that don't require a display:
+
 ```bash
 idf.py menuconfig
+# Navigate to: FlxOS Configuration -> Enable Headless Mode
+idf.py build
 ```
+
+This excludes LVGL and LovyanGFX, significantly reducing binary size.
+
+---
 
 ## 🛠️ Development
 
-### Building
+### Desktop Simulator
+
+Develop and test without hardware using the SDL-based simulator:
 
 ```bash
-# Full build
-idf.py build
-
-# Clean build
-idf.py fullclean && idf.py build
-
-# Build with verbose output
-idf.py build -v
-```
-
-### Flashing
-
-```bash
-# Flash and monitor
-idf.py flash monitor
-
-# Flash only
-idf.py flash
-
-# Monitor serial output (exit with Ctrl+])
-idf.py monitor
+cd simulator
+mkdir build && cd build
+cmake ..
+make
+./FlxOS_Simulator
 ```
 
 ### Code Quality
 
-The project includes automated workflows for:
-- **Build verification** via GitHub Actions
-- **Code linting** with clang-format and clang-tidy
+FlxOS uses several tools to maintain code quality:
 
 ```bash
 # Format code
-find main -name "*.cpp" -o -name "*.hpp" | xargs clang-format -i
+./scripts/code_format.sh
+
+# Run clang-tidy
+./scripts/run_clang_tidy.sh
+
+# Check code quality
+./scripts/code_quality.sh
 ```
+
+### Pre-commit Hooks
+
+Install pre-commit hooks for automatic code quality checks:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+---
+
+## 📍 Roadmap
+
+FlxOS is currently at **v1.0.0 Alpha** with approximately **41% feature completion**.
+
+### Current Milestone (Alpha)
+- ✅ Core system framework
+- ✅ Window Manager
+- ✅ Settings & Files apps
+- ✅ WiFi & Hotspot with persistence
+- ✅ Theme system
+- ✅ Notification System
+
+### Next Milestone (Beta)
+- ⏳ Lock screen
+- ⏳ OTA updates
+- ⏳ Calculator & Terminal apps
+- ⏳ Unit tests
+- ⏳ API documentation
+
+See the full [**ROADMAP.md**](ROADMAP.md) for detailed progress tracking.
+
+---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Here's how you can help:
+
+### Getting Started
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
+
+### Code Style
+
+- **Directories**: `snake_case` (e.g., `system_core/`)
+- **Files**: `PascalCase` (e.g., `SettingsManager.cpp`)
+- **Classes**: `PascalCase` (e.g., `class ThemeEngine`)
+
+Please run the formatting tools before submitting:
+
+```bash
+./scripts/code_format.sh
+./scripts/check_format.sh
+```
+
+### Areas Needing Help
+
+- 📱 New applications (Calculator, Clock, Terminal)
+- 🧪 Unit and integration tests
+- 📚 Documentation improvements
+- 🌐 Localization/i18n support
+- 🔒 Security features
+
+---
 
 ## 📄 License
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+FlxOS is open source software licensed under the [MIT License](LICENSE).
 
-## 🔗 Links
+---
 
-- **GitHub Repository**: [https://github.com/flxos-labs/flxos](https://github.com/flxos-labs/flxos)
-- **ESP-IDF Documentation**: [https://docs.espressif.com/projects/esp-idf/](https://docs.espressif.com/projects/esp-idf/)
-- **LVGL Documentation**: [https://docs.lvgl.io/](https://docs.lvgl.io/)
+## 🙏 Acknowledgments
+
+FlxOS is built upon these excellent open-source projects:
+
+- [**LVGL**](https://lvgl.io/) — Light and Versatile Graphics Library
+- [**LovyanGFX**](https://github.com/lovyan03/LovyanGFX) — Display driver library
+- [**ESP-IDF**](https://github.com/espressif/esp-idf) — Espressif IoT Development Framework
+- [**FreeRTOS**](https://www.freertos.org/) — Real-time operating system kernel
 
 ---
 
 <p align="center">
-  Made with ❤️ by <a href="https://github.com/flxos-labs">FlxOS Labs</a>
+  Made with ❤️ by the FlxOS Team
+  <br>
+  <a href="https://flxos-labs.github.io">flxos-labs.github.io</a>
 </p>
