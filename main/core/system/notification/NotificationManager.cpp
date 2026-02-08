@@ -50,43 +50,19 @@ void NotificationManager::addNotification(const std::string& title, const std::s
 	// Add to beginning (newest first)
 	m_notifications.insert(m_notifications.begin(), notif);
 
+	// Release lock before updating GUI to prevent deadlock
+	m_mutex.unlock();
 	updateSubjects();
 }
 
 void NotificationManager::removeNotification(const std::string& id) {
-	std::lock_guard<std::mutex> lock(m_mutex);
-	auto it = std::remove_if(m_notifications.begin(), m_notifications.end(), [&id](const Notification& n) { return n.id == id; });
-
-	if (it != m_notifications.end()) {
-		m_notifications.erase(it, m_notifications.end());
-		updateSubjects();
-	}
-}
-
-void NotificationManager::clearAll() {
-	std::lock_guard<std::mutex> lock(m_mutex);
-	Log::info(TAG, "Clearing all notifications (%zu count)", m_notifications.size());
-	m_notifications.clear();
-	updateSubjects();
-}
-
-void NotificationManager::markAsRead(const std::string& id) {
-	std::lock_guard<std::mutex> lock(m_mutex);
-	for (auto& n: m_notifications) {
-		if (n.id == id && !n.isRead) {
-			n.isRead = true;
-			updateSubjects();
-			break;
-		}
-	}
-}
-
-void NotificationManager::markAllAsRead() {
-	std::lock_guard<std::mutex> lock(m_mutex);
 	bool changed = false;
-	for (auto& n: m_notifications) {
-		if (!n.isRead) {
-			n.isRead = true;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		auto it = std::remove_if(m_notifications.begin(), m_notifications.end(), [&id](const Notification& n) { return n.id == id; });
+
+		if (it != m_notifications.end()) {
+			m_notifications.erase(it, m_notifications.end());
 			changed = true;
 		}
 	}
@@ -95,11 +71,55 @@ void NotificationManager::markAllAsRead() {
 	}
 }
 
-const std::vector<Notification>& NotificationManager::getNotifications() const {
+void NotificationManager::clearAll() {
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		Log::info(TAG, "Clearing all notifications (%zu count)", m_notifications.size());
+		m_notifications.clear();
+	}
+	updateSubjects();
+}
+
+void NotificationManager::markAsRead(const std::string& id) {
+	bool changed = false;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		for (auto& n: m_notifications) {
+			if (n.id == id && !n.isRead) {
+				n.isRead = true;
+				changed = true;
+				break;
+			}
+		}
+	}
+	if (changed) {
+		updateSubjects();
+	}
+}
+
+void NotificationManager::markAllAsRead() {
+	bool changed = false;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		for (auto& n: m_notifications) {
+			if (!n.isRead) {
+				n.isRead = true;
+				changed = true;
+			}
+		}
+	}
+	if (changed) {
+		updateSubjects();
+	}
+}
+
+std::vector<Notification> NotificationManager::getNotifications() const {
+	std::lock_guard<std::mutex> lock(m_mutex);
 	return m_notifications;
 }
 
 size_t NotificationManager::getUnreadCount() const {
+	std::lock_guard<std::mutex> lock(m_mutex);
 	size_t count = 0;
 	for (const auto& n: m_notifications) {
 		if (!n.isRead) count++;
@@ -108,17 +128,8 @@ size_t NotificationManager::getUnreadCount() const {
 }
 
 void NotificationManager::updateSubjects() {
-	// These must be called in a way that is thread-safe with LVGL if called from another task
-	// Since this is generic C++ logic, assuming caller context or subjects handle thread safety
-	// LVGL 9 subjects are generally thread safe if lv_lock is used?
-	// Usually these are read from UI task.
-	// If called from other tasks, we might need a mutex or dispatch to UI task.
-	// For now, assuming these simply update integer values.
-
 	GuiTask::lock();
 	lv_subject_set_int(&m_unread_count_subject, (int32_t)getUnreadCount());
-
-	// Toggle or increment update subject to signal list change
 	int const current = lv_subject_get_int(&m_update_subject);
 	lv_subject_set_int(&m_update_subject, current + 1);
 	GuiTask::unlock();

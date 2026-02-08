@@ -35,7 +35,7 @@ public:
 	void markAllAsRead();
 
 	// Getters
-	const std::vector<Notification>& getNotifications() const;
+	std::vector<Notification> getNotifications() const;
 	size_t getUnreadCount() const;
 
 	// Subject for UI binding

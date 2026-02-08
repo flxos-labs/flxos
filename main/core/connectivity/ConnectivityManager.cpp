@@ -2,6 +2,7 @@
 #include "bluetooth/BluetoothManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/system/settings/SettingsManager.hpp"
+#include "core/tasks/gui/GuiTask.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -148,7 +149,9 @@ esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
 	Log::info(TAG, "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
 	esp_err_t const err = WiFiManager::getInstance().setEnabled(enabled);
 	if (err == ESP_OK) {
+		GuiTask::lock();
 		m_wifi_enabled_subject.set(enabled ? 1 : 0);
+		GuiTask::unlock();
 	}
 	return err;
 }
