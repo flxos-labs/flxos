@@ -26,6 +26,14 @@ public:
 
 	~FileBrowser();
 
+	// Non-copyable and non-movable: destructor frees LVGL objects and
+	// callbacks capture `this`, so copies/moves would cause double-free
+	// and dangling-pointer bugs.
+	FileBrowser(const FileBrowser&) = delete;
+	FileBrowser& operator=(const FileBrowser&) = delete;
+	FileBrowser(FileBrowser&&) = delete;
+	FileBrowser& operator=(FileBrowser&&) = delete;
+
 	/**
 	 * Show the file browser screen.
 	 * @param forSave If true, shows filename input for save operations
