@@ -34,24 +34,24 @@ std::string NotificationManager::generateId() {
 }
 
 void NotificationManager::addNotification(const std::string& title, const std::string& message, const std::string& appName, const void* icon, int priority) {
-	std::lock_guard<std::mutex> lock(m_mutex);
-	Log::info(TAG, "New notification from %s: %s", appName.c_str(), title.c_str());
+	{ // Add scope block
+		std::lock_guard<std::mutex> lock(m_mutex);
+		Log::info(TAG, "New notification from %s: %s", appName.c_str(), title.c_str());
 
-	Notification notif;
-	notif.id = generateId();
-	notif.title = title;
-	notif.message = message;
-	notif.appName = appName;
-	notif.icon = icon;
-	notif.priority = priority;
-	notif.timestamp = (uint32_t)(esp_timer_get_time() / 1000000); // Seconds
-	notif.isRead = false;
+		Notification notif;
+		notif.id = generateId();
+		notif.title = title;
+		notif.message = message;
+		notif.appName = appName;
+		notif.icon = icon;
+		notif.priority = priority;
+		notif.timestamp = (uint32_t)(esp_timer_get_time() / 1000000);
+		notif.isRead = false;
 
-	// Add to beginning (newest first)
-	m_notifications.insert(m_notifications.begin(), notif);
+		m_notifications.insert(m_notifications.begin(), notif);
+	} // lock_guard destructor releases mutex here
 
-	// Release lock before updating GUI to prevent deadlock
-	m_mutex.unlock();
+	// Now safe to call updateSubjects() without holding the lock
 	updateSubjects();
 }
 
