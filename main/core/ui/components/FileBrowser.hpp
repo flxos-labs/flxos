@@ -2,21 +2,16 @@
 
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
-#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "lvgl.h"
 #include <functional>
-#include <stack>
 #include <string.h>
 #include <vector>
 
 namespace System::UI {
 
 /**
- * FileBrowser - A versatile file browser component supporting both full-screen
- * and modal overlay modes. Combines features from the legacy FileChooser.
- * 
- * Full-screen mode: Integrates with app navigation using show/hide pattern
- * Modal mode: Displays as an overlay dialog with self-management
+ * FileBrowser - A screen-based file browser component for use in apps.
+ * Creates a full page that integrates with app navigation using show/hide pattern.
  */
 class FileBrowser {
 public:
@@ -25,14 +20,14 @@ public:
 	using BackCallback = std::function<void()>;
 
 	/**
-	 * Constructor for full-screen mode (integrated with app navigation)
+	 * Constructor (integrated with app navigation)
 	 */
 	FileBrowser(lv_obj_t* parent, BackCallback onBack);
 
-	~FileBrowser() = default;
+	~FileBrowser();
 
 	/**
-	 * Show the file browser screen (full-screen mode).
+	 * Show the file browser screen.
 	 * @param forSave If true, shows filename input for save operations
 	 * @param onFileSelected Callback when a file is selected
 	 * @param defaultFilename Default filename for save mode
@@ -40,7 +35,7 @@ public:
 	void show(bool forSave, FileSelectedCallback onFileSelected, const std::string& defaultFilename = "untitled.txt");
 
 	/**
-	 * Hide the file browser screen (full-screen mode).
+	 * Hide the file browser screen.
 	 */
 	void hide();
 
@@ -59,14 +54,6 @@ public:
 	 */
 	void setExtensions(const std::vector<std::string>& extensions) { m_extensions = extensions; }
 
-	/**
-	 * Static helper to show a modal file chooser dialog (legacy FileChooser API)
-	 * @param callback Callback with selected file path
-	 * @param extensions Optional file extension filters
-	 * @param initialPath Starting directory path
-	 */
-	static void showModal(FileSelectedCallback callback, const std::vector<std::string>& extensions = {}, const char* initialPath = "A:/");
-
 private:
 
 	lv_obj_t* m_parent {nullptr};
@@ -75,28 +62,19 @@ private:
 	lv_obj_t* m_pathLabel {nullptr};
 	lv_obj_t* m_filenameInput {nullptr};
 	lv_obj_t* m_actionBtn {nullptr};
-	lv_obj_t* m_backBtn {nullptr};
 
 	BackCallback m_onBack;
 	FileSelectedCallback m_onFileSelected;
 	std::string m_currentPath {"A:/data"};
 	std::vector<std::string> m_extensions {};
-	std::stack<std::string> m_history {};
 	bool m_forSave {false};
-	bool m_isModal {false};
-
-	// Constructor for modal mode
-	FileBrowser(FileSelectedCallback callback, const std::vector<std::string>& extensions, const char* path);
 
 	void createUI();
-	void createModalUI();
 	void refreshList();
 	void navigateUp();
-	void goBack();
 	void enterDirectory(const std::string& name);
 	void selectFile(const std::string& name);
 	void confirmSelection();
-	void closeModal();
 
 	static bool hasExtension(const std::string& fileName, const std::string& ext);
 };
@@ -105,14 +83,12 @@ private:
 // Implementation (header-only for simplicity like other UI components)
 // ============================================================================
 
-// Full-screen mode constructor
 inline FileBrowser::FileBrowser(lv_obj_t* parent, BackCallback onBack)
-	: m_parent(parent), m_onBack(std::move(onBack)), m_isModal(false) {}
+	: m_parent(parent), m_onBack(std::move(onBack)) {}
 
-// Modal mode constructor
-inline FileBrowser::FileBrowser(FileSelectedCallback callback, const std::vector<std::string>& extensions, const char* path)
-	: m_parent(nullptr), m_onFileSelected(std::move(callback)), m_currentPath(path),
-	  m_extensions(extensions), m_isModal(true) {}
+inline FileBrowser::~FileBrowser() {
+	destroy();
+}
 
 inline void FileBrowser::show(bool forSave, FileSelectedCallback onFileSelected, const std::string& defaultFilename) {
 	m_forSave = forSave;
@@ -155,17 +131,14 @@ inline void FileBrowser::hide() {
 }
 
 inline void FileBrowser::destroy() {
-	m_container = nullptr;
+	if (m_container) {
+		lv_obj_del(m_container);
+		m_container = nullptr;
+	}
 	m_list = nullptr;
 	m_pathLabel = nullptr;
 	m_filenameInput = nullptr;
 	m_actionBtn = nullptr;
-	m_backBtn = nullptr;
-}
-
-inline void FileBrowser::showModal(FileSelectedCallback callback, const std::vector<std::string>& extensions, const char* initialPath) {
-	auto* chooser = new FileBrowser(callback, extensions, initialPath);
-	chooser->createModalUI();
 }
 
 inline void FileBrowser::createUI() {
@@ -174,8 +147,9 @@ inline void FileBrowser::createUI() {
 	m_container = create_page_container(m_parent);
 
 	// Header with back button
-	lv_obj_t* header = create_header(m_container, "Browse", &m_backBtn);
-	add_back_button_event_cb(m_backBtn, &m_onBack);
+	lv_obj_t* backBtn = nullptr;
+	lv_obj_t* header = create_header(m_container, "Browse", &backBtn);
+	add_back_button_event_cb(backBtn, &m_onBack);
 
 	// Path label
 	m_pathLabel = lv_label_create(header);
@@ -225,66 +199,14 @@ inline void FileBrowser::createUI() {
 	m_list = create_settings_list(m_container);
 }
 
-inline void FileBrowser::createModalUI() {
-	m_container = lv_obj_create(lv_layer_top());
-	lv_obj_set_size(m_container, lv_pct(LayoutConstants::MODAL_WIDTH_PCT), lv_pct(LayoutConstants::FILE_DIALOG_HEIGHT_PCT));
-	lv_obj_center(m_container);
-	lv_obj_set_flex_flow(m_container, LV_FLEX_FLOW_COLUMN);
-
-	// Header
-	lv_obj_t* header = lv_obj_create(m_container);
-	lv_obj_set_size(header, lv_pct(100), LV_SIZE_CONTENT);
-	lv_obj_set_flex_flow(header, LV_FLEX_FLOW_ROW);
-	lv_obj_set_style_pad_all(header, 0, 0);
-	lv_obj_set_style_border_width(header, 0, 0);
-	lv_obj_set_style_bg_opa(header, LV_OPA_TRANSP, 0);
-
-	m_backBtn = lv_button_create(header);
-	lv_obj_set_size(m_backBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-	lv_obj_t* backLabel = lv_label_create(m_backBtn);
-	lv_label_set_text(backLabel, LV_SYMBOL_LEFT);
-	lv_obj_add_event_cb(m_backBtn, [](lv_event_t* e) {
-		auto* self = static_cast<FileBrowser*>(lv_event_get_user_data(e));
-		self->goBack(); }, LV_EVENT_CLICKED, this);
-
-	m_pathLabel = lv_label_create(header);
-	lv_obj_set_flex_grow(m_pathLabel, 1);
-	lv_label_set_long_mode(m_pathLabel, LV_LABEL_LONG_SCROLL_CIRCULAR);
-
-	lv_obj_t* closeBtn = lv_button_create(header);
-	lv_obj_set_size(closeBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-	lv_obj_set_style_bg_color(closeBtn, lv_palette_main(LV_PALETTE_RED), 0);
-	lv_obj_t* closeLabel = lv_label_create(closeBtn);
-	lv_label_set_text(closeLabel, LV_SYMBOL_CLOSE);
-	lv_obj_add_event_cb(closeBtn, [](lv_event_t* e) {
-		auto* self = static_cast<FileBrowser*>(lv_event_get_user_data(e));
-		self->closeModal(); }, LV_EVENT_CLICKED, this);
-
-	// File List
-	m_list = lv_list_create(m_container);
-	lv_obj_set_size(m_list, lv_pct(100), lv_pct(100));
-	lv_obj_set_flex_grow(m_list, 1);
-
-	refreshList();
-}
-
 inline void FileBrowser::refreshList() {
 	if (!m_list) return;
 
 	lv_obj_clean(m_list);
 	lv_label_set_text(m_pathLabel, m_currentPath.c_str());
 
-	// Update back button state for modal mode
-	if (m_isModal && m_backBtn) {
-		if (m_history.empty()) {
-			lv_obj_add_state(m_backBtn, LV_STATE_DISABLED);
-		} else {
-			lv_obj_remove_state(m_backBtn, LV_STATE_DISABLED);
-		}
-	}
-
-	// Add parent directory option if not at root (full-screen mode)
-	if (!m_isModal && m_currentPath != "A:/" && m_currentPath != "A:/data") {
+	// Add parent directory option if not at root
+	if (m_currentPath != "A:/" && m_currentPath != "A:/data") {
 		lv_obj_t* parentBtn = lv_list_add_button(m_list, LV_SYMBOL_UP, "..");
 		lv_obj_add_event_cb(parentBtn, [](lv_event_t* e) {
 			auto* browser = static_cast<FileBrowser*>(lv_event_get_user_data(e));
@@ -314,6 +236,8 @@ inline void FileBrowser::refreshList() {
 			std::string name;
 			bool isDir;
 		};
+		// Note: EntryData leaked if list cleaned without DELETE event handling?
+		// The original code had DELETE event handler, making sure I keep it.
 		auto* data = new EntryData {this, entry.name, entry.isDirectory};
 
 		lv_obj_add_event_cb(btn, [](lv_event_t* e) {
@@ -340,18 +264,7 @@ inline void FileBrowser::navigateUp() {
 	refreshList();
 }
 
-inline void FileBrowser::goBack() {
-	if (!m_history.empty()) {
-		m_currentPath = m_history.top();
-		m_history.pop();
-		refreshList();
-	}
-}
-
 inline void FileBrowser::enterDirectory(const std::string& name) {
-	if (m_isModal) {
-		m_history.push(m_currentPath);
-	}
 	m_currentPath = Services::FileSystemService::buildPath(m_currentPath, name);
 	refreshList();
 }
@@ -368,9 +281,6 @@ inline void FileBrowser::selectFile(const std::string& name) {
 		if (m_onFileSelected) {
 			m_onFileSelected(vfsPath);
 		}
-		if (m_isModal) {
-			closeModal();
-		}
 	}
 }
 
@@ -386,13 +296,6 @@ inline void FileBrowser::confirmSelection() {
 			m_onFileSelected(vfsPath);
 		}
 	}
-}
-
-inline void FileBrowser::closeModal() {
-	if (m_container) {
-		lv_obj_delete(m_container);
-	}
-	delete this;
 }
 
 inline bool FileBrowser::hasExtension(const std::string& fileName, const std::string& ext) {

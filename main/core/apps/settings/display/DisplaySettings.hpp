@@ -151,24 +151,25 @@ public:
 
 			lv_obj_add_event_cb(
 				chooseWpBtn,
-				[](lv_event_t* /*e*/) {
-					UI::FileBrowser::showModal(
-						[](std::string path) {
-							static char path_buf[256];
-							strncpy(
-								path_buf, path.c_str(),
-								sizeof(path_buf) - 1
-							);
-							lv_subject_set_pointer(
-								&ThemeManager::getInstance()
-									 .getWallpaperPathSubject(),
-								path_buf
-							);
-						},
-						{".png", ".jpg", ".jpeg", ".bmp"}
-					);
+				[](lv_event_t* e) {
+					auto* self = static_cast<DisplaySettings*>(lv_event_get_user_data(e));
+					if (!self->m_fileBrowser) {
+						self->m_fileBrowser = new UI::FileBrowser(self->m_parent, [self]() {
+							self->m_fileBrowser->hide();
+						});
+					}
+					self->m_fileBrowser->setExtensions({".png", ".jpg", ".jpeg", ".bmp"});
+					self->m_fileBrowser->show(false, [self](const std::string& path) {
+						static char path_buf[256];
+						strncpy(path_buf, path.c_str(), sizeof(path_buf) - 1);
+						lv_subject_set_pointer(
+							&ThemeManager::getInstance().getWallpaperPathSubject(),
+							path_buf
+						);
+						self->m_fileBrowser->hide();
+					});
 				},
-				LV_EVENT_CLICKED, nullptr
+				LV_EVENT_CLICKED, this
 			);
 
 			lv_obj_t* transpBtn =
@@ -219,6 +220,10 @@ public:
 	}
 
 	void destroy() {
+		if (m_fileBrowser) {
+			delete m_fileBrowser;
+			m_fileBrowser = nullptr;
+		}
 		m_container = nullptr;
 		m_list = nullptr;
 	}
@@ -229,6 +234,7 @@ private:
 	lv_obj_t* m_container = nullptr;
 	lv_obj_t* m_list = nullptr;
 	std::function<void()> m_onBack {};
+	UI::FileBrowser* m_fileBrowser {nullptr};
 };
 
 } // namespace System::Apps::Settings
