@@ -304,8 +304,7 @@ inline bool FileBrowser::hasExtension(const std::string& fileName, const std::st
 	if (fileName.length() < ext.length()) return false;
 	auto toLower = [](const std::string& s) {
 		std::string lower = s;
-		std::transform(lower.begin(), lower.end(), lower.begin(),
-			[](unsigned char c) { return std::tolower(c); });
+		std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
 		return lower;
 	};
 	return toLower(fileName.substr(fileName.length() - ext.length())) == toLower(ext);
