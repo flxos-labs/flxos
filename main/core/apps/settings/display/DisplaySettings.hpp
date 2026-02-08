@@ -5,7 +5,7 @@
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/system_core/SystemManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
-#include "core/ui/components/FileChooser.hpp"
+#include "core/ui/components/FileBrowser.hpp"
 #include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #include "lvgl.h"
 #include <functional>
@@ -152,7 +152,7 @@ public:
 			lv_obj_add_event_cb(
 				chooseWpBtn,
 				[](lv_event_t* /*e*/) {
-					UI::FileChooser::show(
+					UI::FileBrowser::showModal(
 						[](std::string path) {
 							static char path_buf[256];
 							strncpy(

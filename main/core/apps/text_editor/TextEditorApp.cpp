@@ -2,6 +2,7 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/common/Logger.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
+#include "misc/lv_style.h"
 #include <cstdio>
 #include <cstring>
 
@@ -41,8 +42,7 @@ void TextEditorApp::onStop() {
 	m_lineCountLabel = nullptr;
 	m_fileNameLabel = nullptr;
 	m_editSwitch = nullptr;
-	m_newBtn = nullptr;
-	m_saveBtn = nullptr;
+	m_optionsDropdown = nullptr;
 	m_isDirty = false;
 	m_editMode = false;
 	m_currentFilePath.clear();
@@ -114,14 +114,20 @@ void TextEditorApp::onFileSelected(const std::string& vfsPath, bool forSave) {
 
 void TextEditorApp::createToolbar(lv_obj_t* parent) {
 	m_toolbar = lv_obj_create(parent);
-	lv_obj_set_size(m_toolbar, LV_PCT(100), 40);
-	lv_obj_set_style_pad_all(m_toolbar, 4, 0);
+	lv_obj_set_size(m_toolbar, LV_PCT(100), LV_SIZE_CONTENT);
+	lv_obj_set_style_pad_all(m_toolbar, 0, 0);
 	lv_obj_set_style_pad_gap(m_toolbar, 8, 0);
 	lv_obj_set_style_border_width(m_toolbar, 0, 0);
 	lv_obj_set_style_radius(m_toolbar, 0, 0);
 	lv_obj_set_flex_flow(m_toolbar, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(m_toolbar, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 	lv_obj_remove_flag(m_toolbar, LV_OBJ_FLAG_SCROLLABLE);
+
+	// Options Dropdown
+	m_optionsDropdown = lv_dropdown_create(m_toolbar);
+	lv_dropdown_set_text(m_optionsDropdown, "File");
+	lv_dropdown_set_options(m_optionsDropdown, "New\nOpen\nSave"); // Initial options for Edit mode
+	lv_obj_add_event_cb(m_optionsDropdown, onMenuOptionSelected, LV_EVENT_VALUE_CHANGED, this);
 
 	// Edit mode switch with label
 	lv_obj_t* editLabel = lv_label_create(m_toolbar);
@@ -130,32 +136,6 @@ void TextEditorApp::createToolbar(lv_obj_t* parent) {
 	m_editSwitch = lv_switch_create(m_toolbar);
 	lv_obj_add_event_cb(m_editSwitch, onEditSwitchChanged, LV_EVENT_VALUE_CHANGED, this);
 	lv_obj_add_state(m_editSwitch, LV_STATE_CHECKED); // Default: on (edit mode)
-
-	// New button (hidden by default)
-	m_newBtn = lv_btn_create(m_toolbar);
-	lv_obj_set_size(m_newBtn, LV_SIZE_CONTENT, 30);
-	lv_obj_add_event_cb(m_newBtn, onNewBtnClicked, LV_EVENT_CLICKED, this);
-	lv_obj_t* newLabel = lv_label_create(m_newBtn);
-	lv_label_set_text(newLabel, LV_SYMBOL_FILE " New");
-	lv_obj_center(newLabel);
-	lv_obj_add_flag(m_newBtn, LV_OBJ_FLAG_HIDDEN);
-
-	// Open button (always visible)
-	lv_obj_t* openBtn = lv_btn_create(m_toolbar);
-	lv_obj_set_size(openBtn, LV_SIZE_CONTENT, 30);
-	lv_obj_add_event_cb(openBtn, onOpenBtnClicked, LV_EVENT_CLICKED, this);
-	lv_obj_t* openLabel = lv_label_create(openBtn);
-	lv_label_set_text(openLabel, LV_SYMBOL_DIRECTORY " Open");
-	lv_obj_center(openLabel);
-
-	// Save button (hidden by default)
-	m_saveBtn = lv_btn_create(m_toolbar);
-	lv_obj_set_size(m_saveBtn, LV_SIZE_CONTENT, 30);
-	lv_obj_add_event_cb(m_saveBtn, onSaveBtnClicked, LV_EVENT_CLICKED, this);
-	lv_obj_t* saveLabel = lv_label_create(m_saveBtn);
-	lv_label_set_text(saveLabel, LV_SYMBOL_SAVE " Save");
-	lv_obj_center(saveLabel);
-	lv_obj_add_flag(m_saveBtn, LV_OBJ_FLAG_HIDDEN);
 }
 
 void TextEditorApp::createTextArea(lv_obj_t* parent) {
@@ -165,12 +145,12 @@ void TextEditorApp::createTextArea(lv_obj_t* parent) {
 	lv_obj_set_flex_grow(m_viewContainer, 1);
 	lv_obj_set_style_radius(m_viewContainer, 0, 0);
 	lv_obj_set_style_border_width(m_viewContainer, 0, 0);
-	lv_obj_set_style_pad_all(m_viewContainer, 8, 0);
+	lv_obj_set_style_pad_all(m_viewContainer, 0, 0);
 
 	m_viewLabel = lv_label_create(m_viewContainer);
 	lv_label_set_text(m_viewLabel, "Open a file to view...");
 	lv_obj_set_width(m_viewLabel, LV_PCT(100));
-	lv_label_set_long_mode(m_viewLabel, LV_LABEL_LONG_WRAP);
+	lv_label_set_long_mode(m_viewLabel, LV_LABEL_LONG_MODE_WRAP);
 
 	// Textarea - hidden by default, shown in edit mode
 	m_textarea = lv_textarea_create(parent);
@@ -188,9 +168,10 @@ void TextEditorApp::createTextArea(lv_obj_t* parent) {
 
 void TextEditorApp::createStatusBar(lv_obj_t* parent) {
 	m_statusBar = lv_obj_create(parent);
-	lv_obj_set_size(m_statusBar, LV_PCT(100), 24);
-	lv_obj_set_style_pad_all(m_statusBar, 4, 0);
-	lv_obj_set_style_border_width(m_statusBar, 0, 0);
+	lv_obj_set_size(m_statusBar, LV_PCT(100), LV_SIZE_CONTENT);
+	lv_obj_set_style_pad_all(m_statusBar, 0, 0);
+	lv_obj_set_style_border_side(m_statusBar, LV_BORDER_SIDE_TOP, 0);
+	lv_obj_set_style_border_width(m_statusBar, 1, 0);
 	lv_obj_set_style_radius(m_statusBar, 0, 0);
 	lv_obj_set_flex_flow(m_statusBar, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(m_statusBar, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -199,7 +180,7 @@ void TextEditorApp::createStatusBar(lv_obj_t* parent) {
 	// File name label (left side)
 	m_fileNameLabel = lv_label_create(m_statusBar);
 	lv_label_set_text(m_fileNameLabel, "New File");
-	lv_label_set_long_mode(m_fileNameLabel, LV_LABEL_LONG_DOT);
+	lv_label_set_long_mode(m_fileNameLabel, LV_LABEL_LONG_MODE_DOTS);
 	lv_obj_set_flex_grow(m_fileNameLabel, 1);
 
 	// Line count label (right side)
@@ -316,42 +297,37 @@ bool TextEditorApp::saveFile(const std::string& vfsPath) {
 	return true;
 }
 
-void TextEditorApp::onNewBtnClicked(lv_event_t* e) {
-	auto* app = static_cast<TextEditorApp*>(lv_event_get_user_data(e));
-	if (!app || !app->m_textarea) {
-		return;
-	}
-
-	lv_textarea_set_text(app->m_textarea, "");
-	if (app->m_viewLabel) {
-		lv_label_set_text(app->m_viewLabel, "");
-	}
-	app->m_currentFilePath.clear();
-	app->m_isDirty = false;
-	app->updateStatusBar();
-	Log::info(TAG, "New document created");
-}
-
-void TextEditorApp::onOpenBtnClicked(lv_event_t* e) {
-	auto* app = static_cast<TextEditorApp*>(lv_event_get_user_data(e));
-	if (!app) {
-		return;
-	}
-	app->showFileBrowser(false);
-}
-
-void TextEditorApp::onSaveBtnClicked(lv_event_t* e) {
+void TextEditorApp::onMenuOptionSelected(lv_event_t* e) {
 	auto* app = static_cast<TextEditorApp*>(lv_event_get_user_data(e));
 	if (!app) {
 		return;
 	}
 
-	if (app->m_currentFilePath.empty()) {
-		// No file path, show save as dialog
-		app->showFileBrowser(true);
-	} else {
-		// Save to existing path
-		app->saveFile(app->m_currentFilePath);
+	lv_obj_t* dropdown = lv_event_get_target_obj(e);
+	char buf[32];
+	lv_dropdown_get_selected_str(dropdown, buf, sizeof(buf));
+
+	if (strcmp(buf, "New") == 0) {
+		if (app->m_textarea) {
+			lv_textarea_set_text(app->m_textarea, "");
+			if (app->m_viewLabel) {
+				lv_label_set_text(app->m_viewLabel, "");
+			}
+			app->m_currentFilePath.clear();
+			app->m_isDirty = false;
+			app->updateStatusBar();
+			Log::info(TAG, "New document created");
+		}
+	} else if (strcmp(buf, "Open") == 0) {
+		app->showFileBrowser(false);
+	} else if (strcmp(buf, "Save") == 0) {
+		if (app->m_currentFilePath.empty()) {
+			// No file path, show save as dialog
+			app->showFileBrowser(true);
+		} else {
+			// Save to existing path
+			app->saveFile(app->m_currentFilePath);
+		}
 	}
 }
 
@@ -401,20 +377,12 @@ void TextEditorApp::setEditMode(bool enabled) {
 		}
 	}
 
-	// Show/hide edit-only buttons
-	if (m_newBtn) {
+	// Show/hide edit-only buttons in dropdown
+	if (m_optionsDropdown) {
 		if (enabled) {
-			lv_obj_remove_flag(m_newBtn, LV_OBJ_FLAG_HIDDEN);
+			lv_dropdown_set_options(m_optionsDropdown, "New\nOpen\nSave");
 		} else {
-			lv_obj_add_flag(m_newBtn, LV_OBJ_FLAG_HIDDEN);
-		}
-	}
-
-	if (m_saveBtn) {
-		if (enabled) {
-			lv_obj_remove_flag(m_saveBtn, LV_OBJ_FLAG_HIDDEN);
-		} else {
-			lv_obj_add_flag(m_saveBtn, LV_OBJ_FLAG_HIDDEN);
+			lv_dropdown_set_options(m_optionsDropdown, "Open");
 		}
 	}
 
