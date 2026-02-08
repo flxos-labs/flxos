@@ -39,6 +39,7 @@ if(NOT CONFIG_FLXOS_HEADLESS_MODE)
         "core/apps/calendar/CalendarApp.cpp"
         "core/apps/settings/wifi/WiFiSettings.cpp"
         "core/apps/settings/hotspot/HotspotSettings.cpp"
+        "core/apps/text_editor/TextEditorApp.cpp"
         "core/system/focus/FocusManager.cpp"
         "core/system/notification/NotificationManager.cpp"
     )
