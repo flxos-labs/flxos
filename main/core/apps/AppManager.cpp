@@ -11,6 +11,7 @@
 #include "portmacro.h"
 #include "settings/SettingsApp.hpp"
 #include "system_info/SystemInfoApp.hpp"
+#include "text_editor/TextEditorApp.hpp"
 
 namespace System::Apps {
 class AppExecutor : public System::Task {
@@ -44,6 +45,7 @@ void AppManager::init() {
 	registerApp(std::make_shared<FilesApp>());
 	registerApp(std::make_shared<SystemInfoApp>());
 	registerApp(std::make_shared<CalendarApp>());
+	registerApp(std::make_shared<TextEditorApp>());
 
 	if (!m_executor) {
 		Log::info("AppManager", "Starting AppExecutor task...");

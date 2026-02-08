@@ -3,6 +3,7 @@
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/time/TimeManager.hpp"
+#include "core/tasks/gui/GuiTask.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_event_base.h"
@@ -231,6 +232,7 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 	auto* event = (wifi_event_sta_disconnected_t*)event_data;
 	Log::warn(TAG, "STA disconnected, reason: %d", event->reason);
 
+	GuiTask::lock();
 	if (m_connected_subject) {
 		m_connected_subject->set(0);
 	}
@@ -240,6 +242,7 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 	if (m_ip_subject) {
 		m_ip_subject->set("0.0.0.0");
 	}
+	GuiTask::unlock();
 
 	bool const is_auth_failure =
 		(event->reason == WIFI_REASON_AUTH_EXPIRE ||
@@ -249,31 +252,41 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 
 	if (is_auth_failure) {
 		m_should_reconnect = false;
+		GuiTask::lock();
 		setStatus(WiFiStatus::AUTH_FAILED);
+		GuiTask::unlock();
 	} else if (m_should_reconnect && m_retry_count < MAX_RETRIES) {
+		GuiTask::lock();
 		setStatus(WiFiStatus::CONNECTING);
+		GuiTask::unlock();
 		esp_err_t const err = esp_wifi_connect();
 		if (err == ESP_OK) {
 			m_retry_count++;
 		}
 	} else if (m_retry_count >= MAX_RETRIES) {
 		m_should_reconnect = false;
+		GuiTask::lock();
 		if (event->reason == WIFI_REASON_NO_AP_FOUND) {
 			setStatus(WiFiStatus::NOT_FOUND);
 		} else {
 			setStatus(WiFiStatus::DISCONNECTED);
 		}
+		GuiTask::unlock();
 	} else {
+		GuiTask::lock();
 		setStatus(WiFiStatus::DISCONNECTED);
+		GuiTask::unlock();
 	}
 }
 
 void WiFiManager::handleStaConnected(void* event_data) {
 	auto* event = (wifi_event_sta_connected_t*)event_data;
 	Log::info(TAG, "STA connected to SSID: %s", (char*)event->ssid);
+	GuiTask::lock();
 	if (m_ssid_subject) {
 		m_ssid_subject->set((char*)event->ssid);
 	}
+	GuiTask::unlock();
 }
 
 void WiFiManager::handleScanDone() {
@@ -296,7 +309,9 @@ void WiFiManager::handleScanDone() {
 
 	m_is_scanning.store(false);
 	m_scan_callback = nullptr;
+	GuiTask::lock();
 	setStatus(isConnected() ? WiFiStatus::CONNECTED : (m_is_enabled ? WiFiStatus::DISCONNECTED : WiFiStatus::DISABLED));
+	GuiTask::unlock();
 }
 
 void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, int32_t event_id, void* event_data) {
@@ -308,6 +323,7 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 		esp_ip4addr_ntoa(&event->ip_info.ip, ip_str, sizeof(ip_str));
 		Log::info(TAG, "Got IP: %s", ip_str);
 
+		GuiTask::lock();
 		if (self->m_ip_subject) {
 			self->m_ip_subject->set(ip_str);
 		}
@@ -317,6 +333,7 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 
 		self->m_retry_count = 0;
 		self->setStatus(WiFiStatus::CONNECTED);
+		GuiTask::unlock();
 
 		// Sync time now that we have internet access
 		TimeManager::getInstance().syncTime();

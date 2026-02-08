@@ -9,14 +9,6 @@ on:
       - '.gitignore'
       - '.editorconfig'
       - '.clang-format'
-  pull_request:
-    branches: [ "main" ]
-    paths-ignore:
-      - '**.md'
-      - 'LICENSE'
-      - '.gitignore'
-      - '.editorconfig'
-      - '.clang-format'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
