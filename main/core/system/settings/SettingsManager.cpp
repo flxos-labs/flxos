@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 static constexpr const char* TAG = "SettingsManager";
-static constexpr const char* SETTINGS_PATH = "/data/settings.json";
+static constexpr const char* SETTINGS_PATH = "/system/settings.json";
 static constexpr const char* SETTINGS_TMP_PATH = "/data/settings.tmp";
 
 namespace System {

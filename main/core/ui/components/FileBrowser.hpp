@@ -3,6 +3,8 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "lvgl.h"
+#include <algorithm>
+#include <cctype>
 #include <functional>
 #include <string.h>
 #include <vector>
@@ -25,6 +27,14 @@ public:
 	FileBrowser(lv_obj_t* parent, BackCallback onBack);
 
 	~FileBrowser();
+
+	// Non-copyable and non-movable: destructor frees LVGL objects and
+	// callbacks capture `this`, so copies/moves would cause double-free
+	// and dangling-pointer bugs.
+	FileBrowser(const FileBrowser&) = delete;
+	FileBrowser& operator=(const FileBrowser&) = delete;
+	FileBrowser(FileBrowser&&) = delete;
+	FileBrowser& operator=(FileBrowser&&) = delete;
 
 	/**
 	 * Show the file browser screen.
@@ -65,7 +75,7 @@ private:
 
 	BackCallback m_onBack;
 	FileSelectedCallback m_onFileSelected;
-	std::string m_currentPath {"A:/data"};
+	std::string m_currentPath {"A:/"};
 	std::vector<std::string> m_extensions {};
 	bool m_forSave {false};
 
@@ -206,7 +216,7 @@ inline void FileBrowser::refreshList() {
 	lv_label_set_text(m_pathLabel, m_currentPath.c_str());
 
 	// Add parent directory option if not at root
-	if (m_currentPath != "A:/" && m_currentPath != "A:/data") {
+	if (m_currentPath != "A:/") {
 		lv_obj_t* parentBtn = lv_list_add_button(m_list, LV_SYMBOL_UP, "..");
 		lv_obj_add_event_cb(parentBtn, [](lv_event_t* e) {
 			auto* browser = static_cast<FileBrowser*>(lv_event_get_user_data(e));
@@ -257,9 +267,15 @@ inline void FileBrowser::refreshList() {
 }
 
 inline void FileBrowser::navigateUp() {
+	if (m_currentPath == "A:/") return;
+
 	size_t pos = m_currentPath.find_last_of('/');
-	if (pos != std::string::npos && pos > 2) {
-		m_currentPath = m_currentPath.substr(0, pos);
+	if (pos != std::string::npos) {
+		if (pos == 2) {
+			m_currentPath = "A:/";
+		} else {
+			m_currentPath = m_currentPath.substr(0, pos);
+		}
 	}
 	refreshList();
 }
@@ -300,7 +316,12 @@ inline void FileBrowser::confirmSelection() {
 
 inline bool FileBrowser::hasExtension(const std::string& fileName, const std::string& ext) {
 	if (fileName.length() < ext.length()) return false;
-	return fileName.compare(fileName.length() - ext.length(), ext.length(), ext) == 0;
+	auto toLower = [](const std::string& s) {
+		std::string lower = s;
+		std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
+		return lower;
+	};
+	return toLower(fileName.substr(fileName.length() - ext.length())) == toLower(ext);
 }
 
 } // namespace System::UI
