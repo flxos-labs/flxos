@@ -3,6 +3,8 @@
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "lvgl.h"
+#include <algorithm>
+#include <cctype>
 #include <functional>
 #include <string.h>
 #include <vector>
@@ -300,7 +302,13 @@ inline void FileBrowser::confirmSelection() {
 
 inline bool FileBrowser::hasExtension(const std::string& fileName, const std::string& ext) {
 	if (fileName.length() < ext.length()) return false;
-	return fileName.compare(fileName.length() - ext.length(), ext.length(), ext) == 0;
+	auto toLower = [](const std::string& s) {
+		std::string lower = s;
+		std::transform(lower.begin(), lower.end(), lower.begin(),
+			[](unsigned char c) { return std::tolower(c); });
+		return lower;
+	};
+	return toLower(fileName.substr(fileName.length() - ext.length())) == toLower(ext);
 }
 
 } // namespace System::UI
