@@ -384,6 +384,8 @@ void TextEditorApp::setEditMode(bool enabled) {
 		} else {
 			lv_dropdown_set_options(m_optionsDropdown, "Open");
 		}
+		// Reset selection to first option to prevent stale index from previous mode
+		lv_dropdown_set_selected(m_optionsDropdown, 0);
 	}
 
 	Log::info(TAG, "Edit mode: %s", enabled ? "enabled" : "disabled");
