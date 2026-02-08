@@ -49,8 +49,7 @@ private:
 
 	// Edit mode controls
 	lv_obj_t* m_editSwitch {nullptr};
-	lv_obj_t* m_newBtn {nullptr};
-	lv_obj_t* m_saveBtn {nullptr};
+	lv_obj_t* m_optionsDropdown {nullptr};
 
 	void showEditorScreen();
 	void showFileBrowser(bool forSave);
@@ -66,9 +65,7 @@ private:
 	bool loadFile(const std::string& vfsPath);
 	bool saveFile(const std::string& vfsPath);
 
-	static void onNewBtnClicked(lv_event_t* e);
-	static void onOpenBtnClicked(lv_event_t* e);
-	static void onSaveBtnClicked(lv_event_t* e);
+	static void onMenuOptionSelected(lv_event_t* e);
 	static void onTextChanged(lv_event_t* e);
 	static void onEditSwitchChanged(lv_event_t* e);
 

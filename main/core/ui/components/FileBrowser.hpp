@@ -5,13 +5,13 @@
 #include "lvgl.h"
 #include <functional>
 #include <string.h>
+#include <vector>
 
 namespace System::UI {
 
 /**
  * FileBrowser - A screen-based file browser component for use in apps.
- * Unlike FileChooser (overlay modal), this creates a full page that integrates
- * with app navigation using show/hide pattern like Settings screens.
+ * Creates a full page that integrates with app navigation using show/hide pattern.
  */
 class FileBrowser {
 public:
@@ -19,8 +19,12 @@ public:
 	using FileSelectedCallback = std::function<void(const std::string& vfsPath)>;
 	using BackCallback = std::function<void()>;
 
+	/**
+	 * Constructor (integrated with app navigation)
+	 */
 	FileBrowser(lv_obj_t* parent, BackCallback onBack);
-	~FileBrowser() = default;
+
+	~FileBrowser();
 
 	/**
 	 * Show the file browser screen.
@@ -45,6 +49,11 @@ public:
 	 */
 	void setInitialPath(const std::string& path) { m_currentPath = path; }
 
+	/**
+	 * Set file extension filters (e.g., {".txt", ".md"})
+	 */
+	void setExtensions(const std::vector<std::string>& extensions) { m_extensions = extensions; }
+
 private:
 
 	lv_obj_t* m_parent {nullptr};
@@ -57,6 +66,7 @@ private:
 	BackCallback m_onBack;
 	FileSelectedCallback m_onFileSelected;
 	std::string m_currentPath {"A:/data"};
+	std::vector<std::string> m_extensions {};
 	bool m_forSave {false};
 
 	void createUI();
@@ -65,6 +75,8 @@ private:
 	void enterDirectory(const std::string& name);
 	void selectFile(const std::string& name);
 	void confirmSelection();
+
+	static bool hasExtension(const std::string& fileName, const std::string& ext);
 };
 
 // ============================================================================
@@ -73,6 +85,10 @@ private:
 
 inline FileBrowser::FileBrowser(lv_obj_t* parent, BackCallback onBack)
 	: m_parent(parent), m_onBack(std::move(onBack)) {}
+
+inline FileBrowser::~FileBrowser() {
+	destroy();
+}
 
 inline void FileBrowser::show(bool forSave, FileSelectedCallback onFileSelected, const std::string& defaultFilename) {
 	m_forSave = forSave;
@@ -115,7 +131,10 @@ inline void FileBrowser::hide() {
 }
 
 inline void FileBrowser::destroy() {
-	m_container = nullptr;
+	if (m_container) {
+		lv_obj_del(m_container);
+		m_container = nullptr;
+	}
 	m_list = nullptr;
 	m_pathLabel = nullptr;
 	m_filenameInput = nullptr;
@@ -129,11 +148,25 @@ inline void FileBrowser::createUI() {
 
 	// Header with back button
 	lv_obj_t* backBtn = nullptr;
-	lv_obj_t* header = create_header(m_container, "Browse Files", &backBtn);
+	lv_obj_t* header = create_header(m_container, "Browse", &backBtn);
 	add_back_button_event_cb(backBtn, &m_onBack);
 
+	// Path label
+	m_pathLabel = lv_label_create(header);
+	lv_obj_set_style_pad_left(m_pathLabel, 8, 0);
+	lv_obj_set_style_pad_right(m_pathLabel, 8, 0);
+	lv_label_set_long_mode(m_pathLabel, LV_LABEL_LONG_MODE_SCROLL_CIRCULAR);
+	lv_obj_set_flex_grow(m_pathLabel, 1);
+
+	// Spacer for right alignment
+	lv_obj_t* spacer = lv_obj_create(header);
+	lv_obj_set_size(spacer, 0, 0);
+	lv_obj_set_flex_grow(spacer, 1);
+	lv_obj_set_style_border_width(spacer, 0, 0);
+	lv_obj_set_style_bg_opa(spacer, LV_OPA_TRANSP, 0);
+
 	// Action button in header (for save mode)
-	m_actionBtn = lv_btn_create(header);
+	m_actionBtn = lv_button_create(header);
 	lv_obj_set_size(m_actionBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 	lv_obj_t* actionLabel = lv_label_create(m_actionBtn);
 	lv_label_set_text(actionLabel, "Save");
@@ -141,15 +174,6 @@ inline void FileBrowser::createUI() {
 		auto* browser = static_cast<FileBrowser*>(lv_event_get_user_data(e));
 		browser->confirmSelection(); }, LV_EVENT_CLICKED, this);
 	lv_obj_add_flag(m_actionBtn, LV_OBJ_FLAG_HIDDEN);
-
-	// Path label
-	m_pathLabel = lv_label_create(m_container);
-	lv_obj_set_width(m_pathLabel, lv_pct(100));
-	lv_obj_set_style_pad_left(m_pathLabel, 8, 0);
-	lv_obj_set_style_pad_right(m_pathLabel, 8, 0);
-	lv_obj_set_style_pad_top(m_pathLabel, 4, 0);
-	lv_obj_set_style_pad_bottom(m_pathLabel, 4, 0);
-	lv_label_set_long_mode(m_pathLabel, LV_LABEL_LONG_SCROLL_CIRCULAR);
 
 	// Filename input row (for save mode)
 	lv_obj_t* inputRow = lv_obj_create(m_container);
@@ -191,6 +215,18 @@ inline void FileBrowser::refreshList() {
 
 	auto entries = Services::FileSystemService::getInstance().listDirectory(m_currentPath);
 	for (const auto& entry: entries) {
+		// Apply extension filter if set
+		if (!entry.isDirectory && !m_extensions.empty()) {
+			bool match = false;
+			for (const auto& ext: m_extensions) {
+				if (hasExtension(entry.name, ext)) {
+					match = true;
+					break;
+				}
+			}
+			if (!match) continue;
+		}
+
 		const char* icon = entry.isDirectory ? LV_SYMBOL_DIRECTORY : LV_SYMBOL_FILE;
 		lv_obj_t* btn = lv_list_add_button(m_list, icon, entry.name.c_str());
 
@@ -200,6 +236,8 @@ inline void FileBrowser::refreshList() {
 			std::string name;
 			bool isDir;
 		};
+		// Note: EntryData leaked if list cleaned without DELETE event handling?
+		// The original code had DELETE event handler, making sure I keep it.
 		auto* data = new EntryData {this, entry.name, entry.isDirectory};
 
 		lv_obj_add_event_cb(btn, [](lv_event_t* e) {
@@ -258,6 +296,11 @@ inline void FileBrowser::confirmSelection() {
 			m_onFileSelected(vfsPath);
 		}
 	}
+}
+
+inline bool FileBrowser::hasExtension(const std::string& fileName, const std::string& ext) {
+	if (fileName.length() < ext.length()) return false;
+	return fileName.compare(fileName.length() - ext.length(), ext.length(), ext) == 0;
 }
 
 } // namespace System::UI

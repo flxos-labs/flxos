@@ -53,10 +53,10 @@ void Launcher::create() {
 	auto apps = System::Apps::AppManager::getInstance().getInstalledApps();
 	for (auto& app: apps) {
 		lv_obj_t* btn = lv_button_create(m_list);
-		lv_obj_set_size(btn, lv_pct(100), LV_SIZE_CONTENT);
+		lv_obj_set_width(btn, lv_pct(100));
 		lv_obj_set_style_border_width(btn, 0, 0);
 		lv_obj_set_style_shadow_width(btn, 0, 0);
-		lv_obj_set_style_pad_all(btn, lv_dpx(UiConstants::PAD_SMALL), 0);
+		lv_obj_set_style_pad_all(btn, lv_dpx(UiConstants::PAD_LARGE), 0);
 		lv_obj_set_flex_flow(btn, LV_FLEX_FLOW_ROW);
 		lv_obj_set_flex_align(btn, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
