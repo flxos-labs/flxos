@@ -65,7 +65,7 @@ private:
 
 	BackCallback m_onBack;
 	FileSelectedCallback m_onFileSelected;
-	std::string m_currentPath {"A:/data"};
+	std::string m_currentPath {"A:/"};
 	std::vector<std::string> m_extensions {};
 	bool m_forSave {false};
 
@@ -206,7 +206,7 @@ inline void FileBrowser::refreshList() {
 	lv_label_set_text(m_pathLabel, m_currentPath.c_str());
 
 	// Add parent directory option if not at root
-	if (m_currentPath != "A:/" && m_currentPath != "A:/data") {
+	if (m_currentPath != "A:/") {
 		lv_obj_t* parentBtn = lv_list_add_button(m_list, LV_SYMBOL_UP, "..");
 		lv_obj_add_event_cb(parentBtn, [](lv_event_t* e) {
 			auto* browser = static_cast<FileBrowser*>(lv_event_get_user_data(e));
@@ -257,9 +257,15 @@ inline void FileBrowser::refreshList() {
 }
 
 inline void FileBrowser::navigateUp() {
+	if (m_currentPath == "A:/") return;
+
 	size_t pos = m_currentPath.find_last_of('/');
-	if (pos != std::string::npos && pos > 2) {
-		m_currentPath = m_currentPath.substr(0, pos);
+	if (pos != std::string::npos) {
+		if (pos == 2) {
+			m_currentPath = "A:/";
+		} else {
+			m_currentPath = m_currentPath.substr(0, pos);
+		}
 	}
 	refreshList();
 }
