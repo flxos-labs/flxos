@@ -12,6 +12,11 @@ public:
 	Calculator() = default;
 	~Calculator() = default;
 
+	Calculator(const Calculator&) = delete;
+	Calculator& operator=(const Calculator&) = delete;
+	Calculator(Calculator&&) = delete;
+	Calculator& operator=(Calculator&&) = delete;
+
 	void createView(lv_obj_t* parent, std::function<void()> onBack);
 	lv_obj_t* getView() const { return m_view; }
 	void show();
@@ -20,6 +25,7 @@ public:
 
 private:
 
+	std::function<void()> m_onBack {};
 	lv_obj_t* m_view {nullptr};
 	lv_obj_t* m_calcDisplay {nullptr};
 	lv_obj_t* m_calcExpressionLabel {nullptr};

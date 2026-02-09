@@ -10,9 +10,8 @@ void Flashlight::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	lv_obj_t* backBtn = nullptr;
 	Settings::create_header(m_view, "Flashlight", &backBtn);
 
-	lv_obj_add_event_cb(backBtn, [](lv_event_t* e) {
-        auto* fn = static_cast<std::function<void()>*>(lv_event_get_user_data(e));
-        if (fn && *fn) (*fn)(); }, LV_EVENT_CLICKED, new std::function<void()>(onBack));
+	m_onBack = onBack;
+	Settings::add_back_button_event_cb(backBtn, &m_onBack);
 
 	m_flashlightContainer = lv_obj_create(m_view);
 	lv_obj_set_size(m_flashlightContainer, lv_pct(100), lv_pct(100));

@@ -12,9 +12,8 @@ void Stopwatch::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	lv_obj_t* backBtn = nullptr;
 	Settings::create_header(m_view, "Stopwatch", &backBtn);
 
-	lv_obj_add_event_cb(backBtn, [](lv_event_t* e) {
-        auto* fn = static_cast<std::function<void()>*>(lv_event_get_user_data(e));
-        if (fn && *fn) (*fn)(); }, LV_EVENT_CLICKED, new std::function<void()>(onBack));
+	m_onBack = onBack;
+	Settings::add_back_button_event_cb(backBtn, &m_onBack);
 
 	// Content
 	lv_obj_t* content = lv_obj_create(m_view);
@@ -124,14 +123,14 @@ void Stopwatch::destroy() {
 void Stopwatch::updateStopwatchDisplay() {
 	if (!m_stopwatchLabel) return;
 
-	uint32_t totalMs = m_stopwatchElapsed;
+	int64_t totalMs = m_stopwatchElapsed;
 	if (m_stopwatchRunning) {
 		totalMs += (esp_timer_get_time() / 1000) - m_stopwatchStartTime;
 	}
 
-	uint32_t minutes = totalMs / 60000;
-	uint32_t seconds = (totalMs / 1000) % 60;
-	uint32_t centiseconds = (totalMs / 10) % 100;
+	unsigned long minutes = static_cast<unsigned long>(totalMs / 60000);
+	unsigned long seconds = static_cast<unsigned long>((totalMs / 1000) % 60);
+	unsigned long centiseconds = static_cast<unsigned long>((totalMs / 10) % 100);
 
 	lv_label_set_text_fmt(m_stopwatchLabel, "%02lu:%02lu.%02lu", minutes, seconds, centiseconds);
 }

@@ -13,42 +13,8 @@ void Calculator::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	lv_obj_t* backBtn = nullptr;
 	Settings::create_header(m_view, "Calculator", &backBtn);
 
-	// We need to copy the callback to a member or capture it properly if needed,
-	// but Settings::add_back_button_event_cb takes a pointer to a std::function.
-	// Since onBack is passed by value/ref here, we need to store it if we want to use the helper.
-	// However, the helper expects a persistent pointer.
-	// Let's just implement the back button event manually or store the callback.
-	// Actually, looking at ToolsApp.cpp: Settings::add_back_button_event_cb(backBtn, &m_onBackToMain);
-	// In ToolsApp, m_onBackToMain is a member. Here onBack is a parameter.
-	// We should probably store onBack in a member variable if we want to use it.
-	// But wait, the Settings helper takes a pointer to the std::function.
-	// So we need a stable address.
-
-	// Let's allocate a new function on heap or just use a lambda that calls onBack?
-	// The easiest verification-friendly way is to just attach the event handler directly
-	// mimicking what Settings::add_back_button_event_cb likely does, or just store the function.
-
-	// BUT! I can't easily see SettingsCommon.hpp right now to know what add_back_button_event_cb does exactly.
-	// Assuming standard LVGL event.
-
-	// Let's store the callback in a member variable to ensure lifetime.
-	static std::function<void()> s_onBack; // This is risky if multiple instances.
-	// Better: use user_data.
-
-	// Actually, I'll just change the design slightly to not rely on passing the std::function pointer
-	// to a helper that might expect a member variable if I can't guarantee lifetime.
-	// However, looking at ToolsApp.hpp, m_onBackToMain is a member.
-	// I can make a member m_onBack in Calculator class.
-
-	// Let's assume I add m_onBack member to Calculator.hpp (I didn't in the previous step, but I can add it now).
-	// Wait, I can't modify the previous step's file in this step without a new call.
-	// I'll just implement the back button logic directly using a lambda capturing the callback.
-
-	lv_obj_add_event_cb(backBtn, [](lv_event_t* e) {
-        auto* fn = static_cast<std::function<void()>*>(lv_event_get_user_data(e));
-        if (fn && *fn) (*fn)(); }, LV_EVENT_CLICKED, new std::function<void()>(onBack));
-	// Note: leaking the std::function, but for a singleton-ish app it's minor.
-	// Better: use the user_data to pass 'this' and call a member that calls onBack.
+	m_onBack = onBack;
+	Settings::add_back_button_event_cb(backBtn, &m_onBack);
 
 	// Content area
 	lv_obj_t* content = lv_obj_create(m_view);

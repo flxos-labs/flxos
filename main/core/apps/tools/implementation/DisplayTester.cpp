@@ -12,9 +12,8 @@ void DisplayTester::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	lv_obj_t* backBtn = nullptr;
 	Settings::create_header(m_view, "Display Tester", &backBtn);
 
-	lv_obj_add_event_cb(backBtn, [](lv_event_t* e) {
-        auto* fn = static_cast<std::function<void()>*>(lv_event_get_user_data(e));
-        if (fn && *fn) (*fn)(); }, LV_EVENT_CLICKED, new std::function<void()>(onBack));
+	m_onBack = onBack;
+	Settings::add_back_button_event_cb(backBtn, &m_onBack);
 
 	// Color display
 	m_rgbDisplay = lv_obj_create(m_view);
@@ -68,14 +67,6 @@ void DisplayTester::createView(lv_obj_t* parent, std::function<void()> onBack) {
             auto* app = static_cast<DisplayTester*>(lv_event_get_user_data(e));
             auto* target = static_cast<lv_obj_t*>(lv_event_get_target(e));
             int idx = (int)(uintptr_t)lv_obj_get_user_data(target);
-
-            static const ColorDef colors[] = {
-                {0xFF0000, "RED", lv_color_white()},
-                {0x00FF00, "GREEN", lv_color_black()},
-                {0x0000FF, "BLUE", lv_color_white()},
-                {0xFFFFFF, "WHITE", lv_color_black()},
-                {0x000000, "BLACK", lv_color_white()}
-            };
 
             lv_obj_set_style_bg_color(app->m_rgbDisplay, lv_color_hex(colors[idx].color), 0);
             lv_obj_t* label = lv_obj_get_child(app->m_rgbDisplay, 0);
