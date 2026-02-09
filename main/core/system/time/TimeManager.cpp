@@ -29,8 +29,7 @@ void TimeManager::init() {
 		return;
 	}
 
-	// Set time to compile time if current time is invalid (older than build time)
-	setCompileTime();
+	// setCompileTime(); // Moved to after tzset to correct offset
 
 	esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
 	esp_sntp_setservername(0, "pool.ntp.org");
@@ -43,6 +42,10 @@ void TimeManager::init() {
 	// Set default timezone to India (IST)
 	setenv("TZ", "IST-5:30", 1);
 	tzset();
+
+	// Set time to compile time if current time is invalid (older than build time)
+	// This must be called AFTER tzset so mktime knows the local time offset
+	setCompileTime();
 
 	m_is_init = true;
 }
