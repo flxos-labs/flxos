@@ -165,13 +165,15 @@ void WiFiSettings::createUI() {
 					.callback = [](void* arg) {
 						auto* inst = static_cast<WiFiSettings*>(arg);
 						GuiTask::lock();
-						bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
-						GuiTask::unlock();
-						if (should_scan) {
-							GuiTask::lock();
-							inst->refreshScan();
+						if (inst->m_destroying) {
 							GuiTask::unlock();
+							return;
 						}
+						bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
+						if (should_scan) {
+							inst->refreshScan();
+						}
+						GuiTask::unlock();
 					},
 					.arg = instance,
 					.dispatch_method = ESP_TIMER_TASK,
@@ -192,13 +194,15 @@ void WiFiSettings::createUI() {
 			.callback = [](void* arg) {
 				auto* inst = static_cast<WiFiSettings*>(arg);
 				GuiTask::lock();
-				bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
-				GuiTask::unlock();
-				if (should_scan) {
-					GuiTask::lock();
-					inst->refreshScan();
+				if (inst->m_destroying) {
 					GuiTask::unlock();
+					return;
 				}
+				bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
+				if (should_scan) {
+					inst->refreshScan();
+				}
+				GuiTask::unlock();
 			},
 			.arg = this,
 			.dispatch_method = ESP_TIMER_TASK,
@@ -497,6 +501,7 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 }
 
 void WiFiSettings::onDestroy() {
+	m_destroying = true;
 	if (m_scanTimer != nullptr) {
 		esp_timer_stop(m_scanTimer);
 		esp_timer_delete(m_scanTimer);

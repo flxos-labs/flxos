@@ -4,7 +4,6 @@
 #include "esp_wifi.h"
 #include "lvgl.h"
 #include <cstring>
-#include <functional>
 #include <string>
 #include <vector>
 
@@ -39,13 +38,14 @@ private:
 	lv_obj_t* m_statusPrefixLabel = nullptr;
 	lv_obj_t* m_passwordTa = nullptr;
 	lv_obj_t* m_saveSwitch = nullptr;
-	std::string m_connectSsid {};
+	std::string m_connectSsid;
 	bool m_isScanning = false;
 	bool m_pendingAutoScan = false;
+	bool m_destroying = false;
 	lv_observer_t* m_statusObserver = nullptr;
 	lv_observer_t* m_scanIntervalObserver = nullptr;
 	esp_timer_handle_t m_scanTimer = nullptr;
-	std::vector<wifi_ap_record_t> m_scanResults {};
+	std::vector<wifi_ap_record_t> m_scanResults;
 };
 
 } // namespace System::Apps::Settings
