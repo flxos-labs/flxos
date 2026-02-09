@@ -412,7 +412,7 @@ void ToolsApp::updateStopwatchDisplay() {
 	uint32_t seconds = (totalMs / 1000) % 60;
 	uint32_t centiseconds = (totalMs / 10) % 100;
 
-	lv_label_set_text_fmt(m_stopwatchLabel, "%02lu:%02lu.%02lu", minutes, seconds, centiseconds);
+	lv_label_set_text_fmt(m_stopwatchLabel, "%02u:%02u.%02u", minutes, seconds, centiseconds);
 }
 
 // ============================================================================
