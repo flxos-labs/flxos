@@ -12,6 +12,7 @@
 #include "settings/SettingsApp.hpp"
 #include "system_info/SystemInfoApp.hpp"
 #include "text_editor/TextEditorApp.hpp"
+#include "tools/ToolsApp.hpp"
 
 namespace System::Apps {
 class AppExecutor : public System::Task {
@@ -42,6 +43,7 @@ void AppManager::init() {
 	registerApp(std::make_shared<SystemInfoApp>());
 	registerApp(std::make_shared<CalendarApp>());
 	registerApp(std::make_shared<TextEditorApp>());
+	registerApp(std::make_shared<ToolsApp>());
 
 	if (!m_executor) {
 		Log::info("AppManager", "Starting AppExecutor task...");
