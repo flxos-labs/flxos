@@ -25,6 +25,7 @@ protected:
 
 	void createUI() override;
 	void onShow() override;
+	void onHide() override;
 	void onDestroy() override;
 
 private:

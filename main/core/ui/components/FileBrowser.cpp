@@ -165,10 +165,13 @@ void FileBrowser::refreshList() {
 
 		lv_obj_add_event_cb(btn, [](lv_event_t* e) {
 			auto* data = static_cast<EntryData*>(lv_event_get_user_data(e));
-			if (data->isDir) {
-				data->browser->enterDirectory(data->name);
+			FileBrowser* browser = data->browser;
+			std::string name = data->name;
+			bool isDir = data->isDir;
+			if (isDir) {
+				browser->enterDirectory(name);
 			} else {
-				data->browser->selectFile(data->name);
+				browser->selectFile(name);
 			} }, LV_EVENT_CLICKED, data);
 
 		// Cleanup on button delete

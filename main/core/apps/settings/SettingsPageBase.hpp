@@ -12,7 +12,10 @@ public:
 	SettingsPageBase(lv_obj_t* parent, std::function<void()> onBack)
 		: m_parent(parent), m_onBack(std::move(onBack)) {}
 
-	virtual ~SettingsPageBase() = default;
+	virtual ~SettingsPageBase() { destroy(); }
+
+	SettingsPageBase(const SettingsPageBase&) = delete;
+	SettingsPageBase& operator=(const SettingsPageBase&) = delete;
 
 	virtual void show() {
 		if (m_container == nullptr) {
@@ -24,6 +27,7 @@ public:
 	}
 
 	void hide() {
+		onHide();
 		if (m_container) {
 			lv_obj_add_flag(m_container, LV_OBJ_FLAG_HIDDEN);
 		}
@@ -42,6 +46,7 @@ protected:
 
 	virtual void createUI() = 0;
 	virtual void onShow() {}
+	virtual void onHide() {}
 	virtual void onDestroy() {}
 
 	lv_obj_t* m_parent;

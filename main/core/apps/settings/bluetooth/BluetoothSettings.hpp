@@ -79,7 +79,6 @@ protected:
 		);
 
 		m_list = create_settings_list(m_container);
-		refresh();
 	}
 
 	void onShow() override {

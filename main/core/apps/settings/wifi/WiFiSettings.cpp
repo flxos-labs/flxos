@@ -209,12 +209,21 @@ void WiFiSettings::createUI() {
 		esp_timer_start_periodic(m_scanTimer, static_cast<uint64_t>(initial_interval) * 1000000);
 	}
 
-	refreshScan();
 }
 
 void WiFiSettings::onShow() {
 	updateStatus();
 	refreshScan();
+}
+
+void WiFiSettings::onHide() {
+	if (m_connectContainer) {
+		lv_obj_delete(m_connectContainer);
+		m_connectContainer = nullptr;
+		m_passwordTa = nullptr;
+		m_saveSwitch = nullptr;
+	}
+	hideConfig();
 }
 
 void WiFiSettings::showConfig() {

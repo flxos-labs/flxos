@@ -163,6 +163,7 @@ protected:
 				self->m_fileBrowser->show(false, [self](const std::string& path) {
 					static char path_buf[256];
 					strncpy(path_buf, path.c_str(), sizeof(path_buf) - 1);
+					path_buf[sizeof(path_buf) - 1] = '\0';
 					lv_subject_set_pointer(
 						&ThemeManager::getInstance().getWallpaperPathSubject(),
 						path_buf
