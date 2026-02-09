@@ -12,7 +12,7 @@ public:
 	SettingsPageBase(lv_obj_t* parent, std::function<void()> onBack)
 		: m_parent(parent), m_onBack(std::move(onBack)) {}
 
-	virtual ~SettingsPageBase() { destroy(); }
+	virtual ~SettingsPageBase() { destroyBase(); }
 
 	SettingsPageBase(const SettingsPageBase&) = delete;
 	SettingsPageBase& operator=(const SettingsPageBase&) = delete;
@@ -35,11 +35,7 @@ public:
 
 	void destroy() {
 		onDestroy();
-		if (m_container && lv_obj_is_valid(m_container)) {
-			lv_obj_delete(m_container);
-		}
-		m_container = nullptr;
-		m_list = nullptr;
+		destroyBase();
 	}
 
 protected:
@@ -53,6 +49,16 @@ protected:
 	lv_obj_t* m_container = nullptr;
 	lv_obj_t* m_list = nullptr;
 	std::function<void()> m_onBack;
+
+private:
+
+	void destroyBase() {
+		if (m_container && lv_obj_is_valid(m_container)) {
+			lv_obj_delete(m_container);
+		}
+		m_container = nullptr;
+		m_list = nullptr;
+	}
 };
 
 } // namespace System::Apps::Settings

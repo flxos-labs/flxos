@@ -208,7 +208,6 @@ void WiFiSettings::createUI() {
 		esp_timer_create(&timer_args, &m_scanTimer);
 		esp_timer_start_periodic(m_scanTimer, static_cast<uint64_t>(initial_interval) * 1000000);
 	}
-
 }
 
 void WiFiSettings::onShow() {
