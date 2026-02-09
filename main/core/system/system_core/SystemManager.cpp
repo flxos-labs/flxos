@@ -5,6 +5,7 @@
 #include "core/system/power/PowerManager.hpp"
 #include "core/system/settings/SettingsManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
+#include "core/system/time/TimeManager.hpp"
 #include "core/tasks/TaskManager.hpp"
 #include "core/tasks/resource_monitor/ResourceMonitorTask.hpp"
 #include "esp_err.h"
@@ -69,6 +70,7 @@ esp_err_t SystemManager::initServices() {
 	ThemeManager::getInstance().init();
 	ConnectivityManager::getInstance().init();
 	PowerManager::getInstance().init();
+	TimeManager::getInstance().init();
 
 	// Start hotspot usage timer (Connectivity handled this inside init, but let's be explicit if needed)
 	ConnectivityManager::getInstance().startHotspotUsageTimer();
