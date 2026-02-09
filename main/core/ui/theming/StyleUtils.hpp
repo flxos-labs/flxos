@@ -1,9 +1,9 @@
 #pragma once
 
 #include "core/system/theme/ThemeManager.hpp"
-#include "lvgl.h"
 #include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #include "core/ui/theming/themes/Themes.hpp"
+#include "lvgl.h"
 #include "ui_constants/UiConstants.hpp"
 
 namespace UI::StyleUtils {
