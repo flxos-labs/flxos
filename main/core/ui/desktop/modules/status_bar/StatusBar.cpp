@@ -60,9 +60,6 @@ void StatusBar::create() {
 	if (System::SystemManager::getInstance().isSafeMode()) {
 		lv_obj_t* safe_img = lv_image_create(left_group);
 		lv_image_set_src(safe_img, LV_SYMBOL_WARNING);
-		ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
-		lv_obj_set_style_image_recolor(safe_img, cfg.error, 0);
-		lv_obj_set_style_image_recolor_opa(safe_img, UiConstants::OPA_COVER, 0);
 
 		lv_obj_t* safe_label = lv_label_create(left_group);
 		lv_label_set_text(safe_label, " SAFE MODE");
@@ -258,12 +255,14 @@ void StatusBar::create() {
 				lv_image_set_src(icon, symbol);
 
 				// Color based on level
-				ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 				if (level <= 15) {
+					ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 					lv_obj_set_style_image_recolor(icon, cfg.error, 0);
 					lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
 				} else {
-					lv_obj_set_style_image_recolor_opa(icon, 0, 0);
+					// Fallback to theme primary color via status bar inheritance
+					ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+					lv_obj_set_style_image_recolor(icon, cfg.text_primary, 0);
 				}
 			},
 			batt_cont, nullptr
