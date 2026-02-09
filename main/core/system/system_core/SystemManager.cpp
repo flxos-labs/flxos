@@ -23,15 +23,12 @@
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "core/apps/AppManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
+#include "core/ui/LvglBridgeHelpers.hpp"
 #endif
 
 static constexpr std::string_view TAG = "SystemManager";
 
 namespace System {
-SystemManager& SystemManager::getInstance() {
-	static SystemManager instance;
-	return instance;
-}
 
 esp_err_t SystemManager::initHardware() {
 	Log::info(TAG, "Starting hardware initialization...");
@@ -83,7 +80,7 @@ esp_err_t SystemManager::initServices() {
 esp_err_t SystemManager::initGuiState() {
 	GuiTask::lock();
 
-	m_uptime_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_uptime_subject);
+	INIT_BRIDGE(m_uptime_bridge, m_uptime_subject);
 
 	DisplayManager::getInstance().initGuiBridges();
 	ThemeManager::getInstance().initGuiBridges();

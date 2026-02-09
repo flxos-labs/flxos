@@ -32,191 +32,189 @@
 
 namespace System::Apps::Settings {
 
-WiFiSettings::WiFiSettings(lv_obj_t* parent, std::function<void()> onBack)
-	: m_parent(parent), m_onBack(onBack) {}
+// Constructor removed (using inherited)
 
-void WiFiSettings::show() {
-	if (m_container == nullptr) {
-		m_container = create_page_container(m_parent);
-		lv_obj_set_style_pad_gap(m_container, 0, 0);
+void WiFiSettings::createUI() {
+	m_container = create_page_container(m_parent);
+	lv_obj_set_style_pad_gap(m_container, 0, 0);
 
-		lv_obj_t* backBtn = nullptr;
-		lv_obj_t* header = create_header(m_container, "Wi-Fi", &backBtn);
-		add_back_button_event_cb(backBtn, &m_onBack);
+	lv_obj_t* backBtn = nullptr;
+	lv_obj_t* header = create_header(m_container, "Wi-Fi", &backBtn);
+	add_back_button_event_cb(backBtn, &m_onBack);
 
-		lv_obj_t* title = lv_obj_get_child(header, 1);
-		lv_obj_set_flex_grow(title, 1);
+	lv_obj_t* title = lv_obj_get_child(header, 1);
+	lv_obj_set_flex_grow(title, 1);
 
-		// Config Button
-		lv_obj_t* configBtn = lv_button_create(header);
-		lv_obj_set_size(configBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-		lv_obj_t* configIcon = lv_image_create(configBtn);
-		lv_image_set_src(configIcon, LV_SYMBOL_SETTINGS);
-		lv_obj_add_event_cb(
-			configBtn,
-			[](lv_event_t* e) {
-				auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
-				instance->showConfig();
-			},
-			LV_EVENT_CLICKED, this
-		);
+	// Config Button
+	lv_obj_t* configBtn = lv_button_create(header);
+	lv_obj_set_size(configBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_t* configIcon = lv_image_create(configBtn);
+	lv_image_set_src(configIcon, LV_SYMBOL_SETTINGS);
+	lv_obj_add_event_cb(
+		configBtn,
+		[](lv_event_t* e) {
+			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+			instance->showConfig();
+		},
+		LV_EVENT_CLICKED, this
+	);
 
-		m_wifiSwitch = lv_switch_create(header);
-		lv_obj_bind_checked(
-			m_wifiSwitch,
-			&ConnectivityManager::getInstance().getWiFiEnabledSubject()
-		);
+	m_wifiSwitch = lv_switch_create(header);
+	lv_obj_bind_checked(
+		m_wifiSwitch,
+		&ConnectivityManager::getInstance().getWiFiEnabledSubject()
+	);
 
-		lv_obj_add_event_cb(
-			m_wifiSwitch,
-			[](lv_event_t* e) {
-				auto* sw = lv_event_get_target_obj(e);
-				auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
-				bool const enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
-				ConnectivityManager::getInstance().setWiFiEnabled(enabled);
-				if (!enabled) {
-					instance->m_isScanning = false;
+	lv_obj_add_event_cb(
+		m_wifiSwitch,
+		[](lv_event_t* e) {
+			auto* sw = lv_event_get_target_obj(e);
+			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+			bool const enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
+			ConnectivityManager::getInstance().setWiFiEnabled(enabled);
+			if (!enabled) {
+				instance->m_isScanning = false;
+				lv_obj_clean(instance->m_list);
+				lv_list_add_text(instance->m_list, "Wi-Fi is disabled");
+			} else {
+				// Auto-connect to saved network if available
+				auto& cm = ConnectivityManager::getInstance();
+				if (cm.hasSavedWiFiCredentials()) {
+					cm.connectWiFi(
+						cm.getSavedWiFiSsid(),
+						cm.getSavedWiFiPassword(),
+						false // Don't re-save, already saved
+					);
+					// Mark pending auto-scan for when connection completes
+					instance->m_pendingAutoScan = true;
 					lv_obj_clean(instance->m_list);
-					lv_list_add_text(instance->m_list, "Wi-Fi is disabled");
+					lv_list_add_text(instance->m_list, "Connecting to saved network...");
 				} else {
-					// Auto-connect to saved network if available
-					auto& cm = ConnectivityManager::getInstance();
-					if (cm.hasSavedWiFiCredentials()) {
-						cm.connectWiFi(
-							cm.getSavedWiFiSsid(),
-							cm.getSavedWiFiPassword(),
-							false // Don't re-save, already saved
-						);
-						// Mark pending auto-scan for when connection completes
-						instance->m_pendingAutoScan = true;
-						lv_obj_clean(instance->m_list);
-						lv_list_add_text(instance->m_list, "Connecting to saved network...");
-					} else {
-						instance->refreshScan();
-					}
-				}
-				instance->updateStatus();
-			},
-			LV_EVENT_VALUE_CHANGED, this
-		);
-
-		lv_obj_t* statusCont = lv_obj_create(m_container);
-		lv_obj_set_size(statusCont, lv_pct(100), LV_SIZE_CONTENT);
-		lv_obj_set_style_pad_all(statusCont, 0, 0);
-		lv_obj_set_style_pad_gap(statusCont, 0, 0);
-		lv_obj_set_style_pad_hor(statusCont, lv_dpx(UiConstants::PAD_MEDIUM), 0);
-		lv_obj_set_style_border_width(statusCont, 0, 0);
-		lv_obj_set_flex_flow(statusCont, LV_FLEX_FLOW_ROW);
-		lv_obj_set_flex_align(statusCont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-		m_statusPrefixLabel = lv_label_create(statusCont);
-		lv_label_set_text(m_statusPrefixLabel, "Status: ");
-
-		m_statusLabel = lv_label_create(statusCont);
-		lv_obj_set_flex_grow(m_statusLabel, 1);
-		lv_label_set_long_mode(m_statusLabel, LV_LABEL_LONG_MODE_SCROLL);
-		updateStatus();
-
-		lv_obj_t* refreshBtn = lv_button_create(statusCont);
-		lv_obj_set_size(refreshBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-		lv_obj_t* refreshLabel = lv_image_create(refreshBtn);
-		lv_image_set_src(refreshLabel, LV_SYMBOL_REFRESH);
-		lv_obj_add_event_cb(
-			refreshBtn,
-			[](lv_event_t* e) {
-				auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
-				instance->refreshScan();
-			},
-			LV_EVENT_CLICKED, this
-		);
-
-		m_list = create_settings_list(m_container);
-
-		// Observer for WiFi status changes - triggers auto-scan after connection
-		m_statusObserver = lv_subject_add_observer_obj(
-			&ConnectivityManager::getInstance().getWiFiConnectedSubject(),
-			[](lv_observer_t* observer, lv_subject_t* subject) {
-				auto* instance = (WiFiSettings*)lv_observer_get_user_data(observer);
-				int32_t connected = lv_subject_get_int(subject);
-				if (connected && instance->m_pendingAutoScan) {
-					instance->m_pendingAutoScan = false;
 					instance->refreshScan();
 				}
-				instance->updateStatus();
-			},
-			m_container, this
-		);
+			}
+			instance->updateStatus();
+		},
+		LV_EVENT_VALUE_CHANGED, this
+	);
 
-		// Observer for scan interval setting changes
-		m_scanIntervalObserver = lv_subject_add_observer_obj(
-			&ConnectivityManager::getInstance().getWiFiScanIntervalSubject(),
-			[](lv_observer_t* observer, lv_subject_t* subject) {
-				auto* instance = (WiFiSettings*)lv_observer_get_user_data(observer);
-				int32_t interval = lv_subject_get_int(subject);
+	lv_obj_t* statusCont = lv_obj_create(m_container);
+	lv_obj_set_size(statusCont, lv_pct(100), LV_SIZE_CONTENT);
+	lv_obj_set_style_pad_all(statusCont, 0, 0);
+	lv_obj_set_style_pad_gap(statusCont, 0, 0);
+	lv_obj_set_style_pad_hor(statusCont, lv_dpx(UiConstants::PAD_MEDIUM), 0);
+	lv_obj_set_style_border_width(statusCont, 0, 0);
+	lv_obj_set_flex_flow(statusCont, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(statusCont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-				// Delete existing timer if any
-				if (instance->m_scanTimer != nullptr) {
-					esp_timer_stop(instance->m_scanTimer);
-					esp_timer_delete(instance->m_scanTimer);
-					instance->m_scanTimer = nullptr;
-				}
+	m_statusPrefixLabel = lv_label_create(statusCont);
+	lv_label_set_text(m_statusPrefixLabel, "Status: ");
 
-				// Create new timer if interval > 0
-				if (interval > 0) {
-					esp_timer_create_args_t timer_args = {
-						.callback = [](void* arg) {
-							auto* inst = static_cast<WiFiSettings*>(arg);
-							GuiTask::lock();
-							bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
-							GuiTask::unlock();
-							if (should_scan) {
-								GuiTask::lock();
-								inst->refreshScan();
-								GuiTask::unlock();
-							}
-						},
-						.arg = instance,
-						.dispatch_method = ESP_TIMER_TASK,
-						.name = "wifi_scan_timer",
-						.skip_unhandled_events = true,
-					};
-					esp_timer_create(&timer_args, &instance->m_scanTimer);
-					esp_timer_start_periodic(instance->m_scanTimer, static_cast<uint64_t>(interval) * 1000000);
-				}
-			},
-			m_container, this
-		);
+	m_statusLabel = lv_label_create(statusCont);
+	lv_obj_set_flex_grow(m_statusLabel, 1);
+	lv_label_set_long_mode(m_statusLabel, LV_LABEL_LONG_MODE_SCROLL);
+	updateStatus();
 
-		// Trigger initial timer setup based on current setting
-		int32_t initial_interval = lv_subject_get_int(&ConnectivityManager::getInstance().getWiFiScanIntervalSubject());
-		if (initial_interval > 0) {
-			esp_timer_create_args_t timer_args = {
-				.callback = [](void* arg) {
-					auto* inst = static_cast<WiFiSettings*>(arg);
-					GuiTask::lock();
-					bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
-					GuiTask::unlock();
-					if (should_scan) {
+	lv_obj_t* refreshBtn = lv_button_create(statusCont);
+	lv_obj_set_size(refreshBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_t* refreshLabel = lv_image_create(refreshBtn);
+	lv_image_set_src(refreshLabel, LV_SYMBOL_REFRESH);
+	lv_obj_add_event_cb(
+		refreshBtn,
+		[](lv_event_t* e) {
+			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+			instance->refreshScan();
+		},
+		LV_EVENT_CLICKED, this
+	);
+
+	m_list = create_settings_list(m_container);
+
+	// Observer for WiFi status changes - triggers auto-scan after connection
+	m_statusObserver = lv_subject_add_observer_obj(
+		&ConnectivityManager::getInstance().getWiFiConnectedSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			auto* instance = (WiFiSettings*)lv_observer_get_user_data(observer);
+			int32_t connected = lv_subject_get_int(subject);
+			if (connected && instance->m_pendingAutoScan) {
+				instance->m_pendingAutoScan = false;
+				instance->refreshScan();
+			}
+			instance->updateStatus();
+		},
+		m_container, this
+	);
+
+	// Observer for scan interval setting changes
+	m_scanIntervalObserver = lv_subject_add_observer_obj(
+		&ConnectivityManager::getInstance().getWiFiScanIntervalSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			auto* instance = (WiFiSettings*)lv_observer_get_user_data(observer);
+			int32_t interval = lv_subject_get_int(subject);
+
+			// Delete existing timer if any
+			if (instance->m_scanTimer != nullptr) {
+				esp_timer_stop(instance->m_scanTimer);
+				esp_timer_delete(instance->m_scanTimer);
+				instance->m_scanTimer = nullptr;
+			}
+
+			// Create new timer if interval > 0
+			if (interval > 0) {
+				esp_timer_create_args_t timer_args = {
+					.callback = [](void* arg) {
+						auto* inst = static_cast<WiFiSettings*>(arg);
 						GuiTask::lock();
-						inst->refreshScan();
+						bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
 						GuiTask::unlock();
-					}
-				},
-				.arg = this,
-				.dispatch_method = ESP_TIMER_TASK,
-				.name = "wifi_scan_timer",
-				.skip_unhandled_events = true,
-			};
-			esp_timer_create(&timer_args, &m_scanTimer);
-			esp_timer_start_periodic(m_scanTimer, static_cast<uint64_t>(initial_interval) * 1000000);
-		}
+						if (should_scan) {
+							GuiTask::lock();
+							inst->refreshScan();
+							GuiTask::unlock();
+						}
+					},
+					.arg = instance,
+					.dispatch_method = ESP_TIMER_TASK,
+					.name = "wifi_scan_timer",
+					.skip_unhandled_events = true,
+				};
+				esp_timer_create(&timer_args, &instance->m_scanTimer);
+				esp_timer_start_periodic(instance->m_scanTimer, static_cast<uint64_t>(interval) * 1000000);
+			}
+		},
+		m_container, this
+	);
 
-		refreshScan();
-	} else {
-		lv_obj_remove_flag(m_container, LV_OBJ_FLAG_HIDDEN);
-		updateStatus();
-		refreshScan();
+	// Trigger initial timer setup based on current setting
+	int32_t initial_interval = lv_subject_get_int(&ConnectivityManager::getInstance().getWiFiScanIntervalSubject());
+	if (initial_interval > 0) {
+		esp_timer_create_args_t timer_args = {
+			.callback = [](void* arg) {
+				auto* inst = static_cast<WiFiSettings*>(arg);
+				GuiTask::lock();
+				bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
+				GuiTask::unlock();
+				if (should_scan) {
+					GuiTask::lock();
+					inst->refreshScan();
+					GuiTask::unlock();
+				}
+			},
+			.arg = this,
+			.dispatch_method = ESP_TIMER_TASK,
+			.name = "wifi_scan_timer",
+			.skip_unhandled_events = true,
+		};
+		esp_timer_create(&timer_args, &m_scanTimer);
+		esp_timer_start_periodic(m_scanTimer, static_cast<uint64_t>(initial_interval) * 1000000);
 	}
+
+	refreshScan();
+}
+
+void WiFiSettings::onShow() {
+	updateStatus();
+	refreshScan();
 }
 
 void WiFiSettings::showConfig() {
@@ -490,18 +488,7 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 	lv_obj_add_state(m_passwordTa, LV_STATE_FOCUSED);
 }
 
-void WiFiSettings::hide() {
-	if (m_container) {
-		lv_obj_add_flag(m_container, LV_OBJ_FLAG_HIDDEN);
-	}
-	if (m_connectContainer) {
-		lv_obj_delete(m_connectContainer);
-		m_connectContainer = nullptr;
-	}
-	hideConfig();
-}
-
-void WiFiSettings::destroy() {
+void WiFiSettings::onDestroy() {
 	if (m_scanTimer != nullptr) {
 		esp_timer_stop(m_scanTimer);
 		esp_timer_delete(m_scanTimer);
@@ -512,7 +499,7 @@ void WiFiSettings::destroy() {
 		m_connectContainer = nullptr;
 	}
 	hideConfig();
-	m_container = nullptr;
+	// m_container is deleted by base class
 	m_list = nullptr;
 	m_wifiSwitch = nullptr;
 	m_statusLabel = nullptr;

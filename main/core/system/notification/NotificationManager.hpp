@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/common/Singleton.hpp"
 #include "lvgl.h"
 #include <functional>
 #include <memory>
@@ -20,10 +21,10 @@ struct Notification {
 	bool isRead {};
 };
 
-class NotificationManager {
-public:
+class NotificationManager : public Singleton<NotificationManager> {
+	friend class Singleton<NotificationManager>;
 
-	static NotificationManager& getInstance();
+public:
 
 	void init();
 
@@ -49,8 +50,6 @@ private:
 
 	NotificationManager();
 	~NotificationManager() = default;
-	NotificationManager(const NotificationManager&) = delete;
-	NotificationManager& operator=(const NotificationManager&) = delete;
 
 	std::vector<Notification> m_notifications {};
 	mutable std::mutex m_mutex {};

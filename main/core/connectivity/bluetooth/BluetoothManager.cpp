@@ -9,11 +9,6 @@ static constexpr std::string_view TAG = "BluetoothManager";
 
 namespace System {
 
-BluetoothManager& BluetoothManager::getInstance() {
-	static BluetoothManager instance;
-	return instance;
-}
-
 esp_err_t BluetoothManager::init(Observable<int32_t>* enabled_subject) {
 	Log::info(TAG, "Initializing Bluetooth Manager...");
 	m_enabled_subject = enabled_subject;

@@ -1,14 +1,15 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/common/Singleton.hpp"
 #include "esp_err.h"
 
 namespace System {
 
-class BluetoothManager {
-public:
+class BluetoothManager : public Singleton<BluetoothManager> {
+	friend class Singleton<BluetoothManager>;
 
-	static BluetoothManager& getInstance();
+public:
 
 	esp_err_t init(Observable<int32_t>* enabled_subject);
 	esp_err_t enable(bool enable);

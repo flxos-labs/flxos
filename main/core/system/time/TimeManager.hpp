@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/common/Singleton.hpp"
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -8,10 +9,10 @@
 
 namespace System {
 
-class TimeManager {
-public:
+class TimeManager : public Singleton<TimeManager> {
+	friend class Singleton<TimeManager>;
 
-	static TimeManager& getInstance();
+public:
 
 	void init();
 	void deinit();
@@ -27,8 +28,6 @@ private:
 
 	TimeManager() = default;
 	~TimeManager() = default;
-	TimeManager(const TimeManager&) = delete;
-	TimeManager& operator=(const TimeManager&) = delete;
 
 	bool m_is_init = false;
 	bool m_is_synced = false;

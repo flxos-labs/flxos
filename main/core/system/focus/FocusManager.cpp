@@ -21,11 +21,6 @@ static constexpr std::string_view TAG = "FocusManager";
 
 namespace System {
 
-FocusManager& FocusManager::getInstance() {
-	static FocusManager instance;
-	return instance;
-}
-
 FocusManager::FocusManager() = default;
 
 void FocusManager::init(lv_obj_t* window_container, lv_obj_t* screen, lv_obj_t* status_bar, lv_obj_t* dock) {

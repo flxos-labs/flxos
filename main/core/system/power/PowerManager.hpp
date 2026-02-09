@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/common/Singleton.hpp"
 #include <memory>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
@@ -13,10 +14,10 @@ namespace System {
  * @brief Manages battery levels, charging status, and power-related subjects.
  * Bridges state from SystemInfoService to LVGL observers.
  */
-class PowerManager {
-public:
+class PowerManager : public Singleton<PowerManager> {
+	friend class Singleton<PowerManager>;
 
-	static PowerManager& getInstance();
+public:
 
 	/**
 	 * @brief Initialize PowerManager
@@ -50,8 +51,6 @@ private:
 
 	PowerManager() = default;
 	~PowerManager() = default;
-	PowerManager(const PowerManager&) = delete;
-	PowerManager& operator=(const PowerManager&) = delete;
 
 	Observable<int32_t> m_batteryLevel {100};
 	Observable<int32_t> m_isCharging {0};

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/common/Singleton.hpp"
 #include "lvgl.h"
 #include <vector>
 
@@ -10,10 +11,10 @@ namespace System {
  *
  * Manages Z-order, visual feedback, and exclusive visibility.
  */
-class FocusManager {
-public:
+class FocusManager : public Singleton<FocusManager> {
+	friend class Singleton<FocusManager>;
 
-	static FocusManager& getInstance();
+public:
 
 	/**
 	 * @brief Initialize the focus manager.
@@ -74,8 +75,6 @@ private:
 
 	FocusManager();
 	~FocusManager() = default;
-	FocusManager(const FocusManager&) = delete;
-	FocusManager& operator=(const FocusManager&) = delete;
 
 	lv_obj_t* m_windowContainer = nullptr;
 	lv_obj_t* m_screen = nullptr;

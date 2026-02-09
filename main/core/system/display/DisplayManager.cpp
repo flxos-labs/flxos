@@ -4,6 +4,7 @@
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "core/tasks/gui/GuiTask.hpp"
+#include "core/ui/LvglBridgeHelpers.hpp"
 #include "src/debugging/sysmon/lv_sysmon.h"
 
 #if LV_USE_LOVYAN_GFX
@@ -14,11 +15,6 @@
 static constexpr const char* TAG = "DisplayManager";
 
 namespace System {
-
-DisplayManager& DisplayManager::getInstance() {
-	static DisplayManager instance;
-	return instance;
-}
 
 void DisplayManager::init() {
 	SettingsManager::getInstance().registerSetting("brightness", m_brightness_subject);
@@ -34,15 +30,10 @@ void DisplayManager::init() {
 #if !CONFIG_FLXOS_HEADLESS_MODE
 void DisplayManager::initGuiBridges() {
 	GuiTask::lock();
-	m_brightness_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_brightness_subject);
-	m_rotation_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_rotation_subject);
-	m_show_fps_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_show_fps_subject);
 
-	lv_subject_add_observer(m_brightness_bridge->getSubject(), [](lv_observer_t*, lv_subject_t* s) { DisplayManager::getInstance().applyBrightness(lv_subject_get_int(s)); }, nullptr);
-
-	lv_subject_add_observer(m_rotation_bridge->getSubject(), [](lv_observer_t*, lv_subject_t* s) { DisplayManager::getInstance().applyRotation(lv_subject_get_int(s)); }, nullptr);
-
-	lv_subject_add_observer(m_show_fps_bridge->getSubject(), [](lv_observer_t*, lv_subject_t* s) { DisplayManager::getInstance().applyShowFps(lv_subject_get_int(s)); }, nullptr);
+	INIT_INT_BRIDGE(m_brightness_bridge, m_brightness_subject, applyBrightness);
+	INIT_INT_BRIDGE(m_rotation_bridge, m_rotation_subject, applyRotation);
+	INIT_INT_BRIDGE(m_show_fps_bridge, m_show_fps_subject, applyShowFps);
 
 	// Apply initial values to GUI
 	applyBrightness(m_brightness_subject.get());

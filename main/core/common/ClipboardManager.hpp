@@ -1,4 +1,5 @@
 #pragma once
+#include "core/common/Singleton.hpp"
 #include <string>
 
 namespace System {
@@ -13,13 +14,10 @@ struct ClipboardEntry {
 	ClipboardOp op;
 };
 
-class ClipboardManager {
-public:
+class ClipboardManager : public Singleton<ClipboardManager> {
+	friend class Singleton<ClipboardManager>;
 
-	static ClipboardManager& getInstance() {
-		static ClipboardManager instance;
-		return instance;
-	}
+public:
 
 	void set(const std::string& path, bool isDir, ClipboardOp op) {
 		m_entry = {path, isDir, op};

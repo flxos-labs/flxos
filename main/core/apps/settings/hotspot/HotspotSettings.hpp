@@ -1,4 +1,5 @@
 #pragma once
+#include "core/apps/settings/SettingsPageBase.hpp"
 #include "lvgl.h"
 #include <cstring>
 #include <functional>
@@ -6,14 +7,16 @@
 
 namespace System::Apps::Settings {
 
-class HotspotSettings {
+class HotspotSettings : public SettingsPageBase {
 public:
 
-	HotspotSettings(lv_obj_t* parent, std::function<void()> onBack);
+	using SettingsPageBase::SettingsPageBase;
 
-	void show();
-	void hide();
-	void destroy();
+protected:
+
+	void createUI() override;
+	void onShow() override;
+	void onDestroy() override;
 
 private:
 
@@ -24,8 +27,6 @@ private:
 	void saveAndApply();
 	void applyHotspotSettings();
 
-	lv_obj_t* m_parent;
-	lv_obj_t* m_container = nullptr;
 	lv_obj_t* m_mainPage = nullptr;
 	lv_obj_t* m_configPage = nullptr;
 	lv_obj_t* m_hotspotSwitch = nullptr;
@@ -41,7 +42,6 @@ private:
 	lv_obj_t* m_clientsCont = nullptr;
 	lv_obj_t* m_configTitle = nullptr;
 	lv_timer_t* m_refreshTimer = nullptr;
-	std::function<void()> m_onBack {};
 	bool m_ignore_events = false;
 };
 

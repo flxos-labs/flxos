@@ -14,11 +14,6 @@
 
 static constexpr std::string_view TAG = "WindowManager";
 
-WindowManager& WindowManager::getInstance() {
-	static WindowManager instance;
-	return instance;
-}
-
 WindowManager::WindowManager()
 	: m_windowContainer(nullptr), m_appContainer(nullptr), m_screen(nullptr),
 	  m_statusBar(nullptr), m_dock(nullptr) {

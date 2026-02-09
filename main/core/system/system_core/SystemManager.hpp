@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/common/Singleton.hpp"
 #include "esp_err.h"
 #include "esp_timer.h"
 #include "wear_levelling.h"
@@ -12,10 +13,10 @@
 #endif
 
 namespace System {
-class SystemManager {
-public:
+class SystemManager : public Singleton<SystemManager> {
+	friend class Singleton<SystemManager>;
 
-	static SystemManager& getInstance();
+public:
 
 	esp_err_t initHardware();
 	esp_err_t initServices(); // Headless-compatible: connectivity, settings
@@ -40,8 +41,6 @@ private:
 
 	SystemManager() = default;
 	~SystemManager() = default;
-	SystemManager(const SystemManager&) = delete;
-	SystemManager& operator=(const SystemManager&) = delete;
 
 	esp_err_t mountStorage();
 	static void mount_storage_helper(const char* path, const char* partition_label, wl_handle_t* wl_handle, bool format_if_failed);

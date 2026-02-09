@@ -3,6 +3,7 @@
 #include "core/common/Logger.hpp"
 #include "core/system/settings/SettingsManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
+#include "core/ui/LvglBridgeHelpers.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -17,10 +18,6 @@
 static constexpr std::string_view TAG = "Connectivity";
 
 namespace System {
-ConnectivityManager& ConnectivityManager::getInstance() {
-	static ConnectivityManager instance;
-	return instance;
-}
 
 esp_err_t ConnectivityManager::init() {
 	if (m_is_init) {
@@ -75,28 +72,32 @@ esp_err_t ConnectivityManager::init() {
 #if !CONFIG_FLXOS_HEADLESS_MODE
 void ConnectivityManager::initGuiBridges() {
 	Log::info(TAG, "Initializing LVGL bridges for connectivity...");
-	m_wifi_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_enabled_subject);
-	m_wifi_status_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_status_subject);
-	m_wifi_connected_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_connected_subject);
-	m_wifi_ssid_bridge = std::make_unique<LvglStringObserverBridge>(m_wifi_ssid_subject);
-	m_wifi_ip_bridge = std::make_unique<LvglStringObserverBridge>(m_wifi_ip_subject);
-	m_hotspot_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_enabled_subject);
-	m_hotspot_clients_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_clients_subject);
-	m_hotspot_usage_sent_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_usage_sent_subject);
-	m_hotspot_usage_received_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_usage_received_subject);
-	m_hotspot_download_speed_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_download_speed_subject);
-	m_hotspot_upload_speed_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_upload_speed_subject);
-	m_hotspot_uptime_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_uptime_subject);
-	m_bluetooth_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_bluetooth_enabled_subject);
 
-	m_hotspot_ssid_bridge = std::make_unique<LvglStringObserverBridge>(m_hotspot_ssid_subject);
-	m_hotspot_password_bridge = std::make_unique<LvglStringObserverBridge>(m_hotspot_password_subject);
-	m_hotspot_channel_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_channel_subject);
-	m_hotspot_max_conn_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_max_conn_subject);
-	m_hotspot_hidden_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_hidden_subject);
-	m_hotspot_auth_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_hotspot_auth_subject);
-	m_wifi_autostart_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_autostart_subject);
-	m_wifi_scan_interval_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wifi_scan_interval_subject);
+	INIT_BRIDGE(m_wifi_enabled_bridge, m_wifi_enabled_subject);
+	INIT_BRIDGE(m_wifi_status_bridge, m_wifi_status_subject);
+	INIT_BRIDGE(m_wifi_connected_bridge, m_wifi_connected_subject);
+
+	INIT_STRING_BRIDGE(m_wifi_ssid_bridge, m_wifi_ssid_subject);
+	INIT_STRING_BRIDGE(m_wifi_ip_bridge, m_wifi_ip_subject);
+
+	INIT_BRIDGE(m_hotspot_enabled_bridge, m_hotspot_enabled_subject);
+	INIT_BRIDGE(m_hotspot_clients_bridge, m_hotspot_clients_subject);
+	INIT_BRIDGE(m_hotspot_usage_sent_bridge, m_hotspot_usage_sent_subject);
+	INIT_BRIDGE(m_hotspot_usage_received_bridge, m_hotspot_usage_received_subject);
+	INIT_BRIDGE(m_hotspot_download_speed_bridge, m_hotspot_download_speed_subject);
+	INIT_BRIDGE(m_hotspot_upload_speed_bridge, m_hotspot_upload_speed_subject);
+	INIT_BRIDGE(m_hotspot_uptime_bridge, m_hotspot_uptime_subject);
+	INIT_BRIDGE(m_bluetooth_enabled_bridge, m_bluetooth_enabled_subject);
+
+	INIT_STRING_BRIDGE(m_hotspot_ssid_bridge, m_hotspot_ssid_subject);
+	INIT_STRING_BRIDGE(m_hotspot_password_bridge, m_hotspot_password_subject);
+
+	INIT_BRIDGE(m_hotspot_channel_bridge, m_hotspot_channel_subject);
+	INIT_BRIDGE(m_hotspot_max_conn_bridge, m_hotspot_max_conn_subject);
+	INIT_BRIDGE(m_hotspot_hidden_bridge, m_hotspot_hidden_subject);
+	INIT_BRIDGE(m_hotspot_auth_bridge, m_hotspot_auth_subject);
+	INIT_BRIDGE(m_wifi_autostart_bridge, m_wifi_autostart_subject);
+	INIT_BRIDGE(m_wifi_scan_interval_bridge, m_wifi_scan_interval_subject);
 }
 #endif
 

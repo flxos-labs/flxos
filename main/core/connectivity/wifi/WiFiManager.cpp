@@ -19,11 +19,6 @@ static constexpr std::string_view TAG = "WiFiManager";
 
 namespace System {
 
-WiFiManager& WiFiManager::getInstance() {
-	static WiFiManager instance;
-	return instance;
-}
-
 esp_err_t WiFiManager::init(Observable<int32_t>* connected_subject, StringObservable* ssid_subject, StringObservable* ip_subject, Observable<int32_t>* status_subject) {
 	if (m_is_init) {
 		return ESP_OK;

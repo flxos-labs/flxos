@@ -10,11 +10,6 @@ static constexpr std::string_view TAG = "TimeManager";
 
 namespace System {
 
-TimeManager& TimeManager::getInstance() {
-	static TimeManager instance;
-	return instance;
-}
-
 static void time_sync_notification_cb(struct timeval* /*tv*/) {
 	TimeManager::getInstance().updateSyncStatus(true);
 

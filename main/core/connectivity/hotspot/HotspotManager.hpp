@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/common/Singleton.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_wifi_types.h"
@@ -13,10 +14,10 @@ extern "C" {
 
 namespace System {
 
-class HotspotManager {
-public:
+class HotspotManager : public Singleton<HotspotManager> {
+	friend class Singleton<HotspotManager>;
 
-	static HotspotManager& getInstance();
+public:
 
 	esp_err_t init(Observable<int32_t>* enabled_subject, Observable<int32_t>* client_count_subject);
 	esp_err_t start(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);

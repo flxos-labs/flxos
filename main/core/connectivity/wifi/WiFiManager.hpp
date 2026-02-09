@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/common/Singleton.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
@@ -20,10 +21,10 @@ enum class WiFiStatus {
 	NOT_FOUND
 };
 
-class WiFiManager {
-public:
+class WiFiManager : public Singleton<WiFiManager> {
+	friend class Singleton<WiFiManager>;
 
-	static WiFiManager& getInstance();
+public:
 
 	esp_err_t init(Observable<int32_t>* connected_subject, StringObservable* ssid_subject, StringObservable* ip_subject, Observable<int32_t>* status_subject);
 	esp_err_t connect(const char* ssid, const char* password);

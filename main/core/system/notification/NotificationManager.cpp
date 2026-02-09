@@ -13,11 +13,6 @@ static constexpr std::string_view TAG = "Notification";
 
 namespace System {
 
-NotificationManager& NotificationManager::getInstance() {
-	static NotificationManager instance;
-	return instance;
-}
-
 NotificationManager::NotificationManager() {
 	lv_subject_init_int(&m_unread_count_subject, 0);
 	lv_subject_init_int(&m_update_subject, 0);

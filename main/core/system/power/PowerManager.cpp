@@ -1,15 +1,15 @@
 #include "PowerManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/services/system_info/SystemInfoService.hpp"
+#include "core/ui/LvglBridgeHelpers.hpp"
+
+#if !CONFIG_FLXOS_HEADLESS_MODE
+#include "core/tasks/gui/GuiTask.hpp"
+#endif
 
 static constexpr const char* TAG = "PowerManager";
 
 namespace System {
-
-PowerManager& PowerManager::getInstance() {
-	static PowerManager instance;
-	return instance;
-}
 
 void PowerManager::init() {
 	if (m_is_init) return;
@@ -21,8 +21,8 @@ void PowerManager::init() {
 #if !CONFIG_FLXOS_HEADLESS_MODE
 void PowerManager::initGuiBridges() {
 	Log::info(TAG, "Initializing GUI bridges...");
-	m_batteryLevelBridge = std::make_unique<LvglObserverBridge<int32_t>>(m_batteryLevel);
-	m_isChargingBridge = std::make_unique<LvglObserverBridge<int32_t>>(m_isCharging);
+	INIT_BRIDGE(m_batteryLevelBridge, m_batteryLevel);
+	INIT_BRIDGE(m_isChargingBridge, m_isCharging);
 }
 #endif
 

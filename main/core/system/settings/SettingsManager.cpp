@@ -15,11 +15,6 @@ static constexpr const char* SETTINGS_TMP_PATH = "/system/settings.tmp";
 
 namespace System {
 
-SettingsManager& SettingsManager::getInstance() {
-	static SettingsManager instance;
-	return instance;
-}
-
 void SettingsManager::init() {
 	if (m_is_init) return;
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/common/Singleton.hpp"
 #include "core/tasks/TaskManager.hpp"
 #include <memory>
 #include <string>
@@ -40,10 +41,10 @@ protected:
 	bool m_isActive = false;
 };
 
-class AppManager {
-public:
+class AppManager : public Singleton<AppManager> {
+	friend class Singleton<AppManager>;
 
-	static AppManager& getInstance();
+public:
 
 	void init();
 	void registerApp(std::shared_ptr<App> app);
@@ -74,8 +75,6 @@ private:
 
 	AppManager();
 	~AppManager() = default;
-	AppManager(const AppManager&) = delete;
-	AppManager& operator=(const AppManager&) = delete;
 
 	std::shared_ptr<App> m_currentApp {};
 	std::vector<std::shared_ptr<App>> m_apps;

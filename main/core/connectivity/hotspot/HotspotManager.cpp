@@ -60,11 +60,6 @@ static err_t netif_linkoutput_hook(struct netif* netif, struct pbuf* p) {
 	return ERR_IF;
 }
 
-HotspotManager& HotspotManager::getInstance() {
-	static HotspotManager instance;
-	return instance;
-}
-
 void HotspotManager::addBytesSent(uint32_t bytes) { m_bytes_sent += bytes; }
 
 void HotspotManager::addBytesReceived(uint32_t bytes) {

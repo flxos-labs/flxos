@@ -42,6 +42,7 @@ if(NOT CONFIG_FLXOS_HEADLESS_MODE)
         "core/apps/text_editor/TextEditorApp.cpp"
         "core/system/focus/FocusManager.cpp"
         "core/system/notification/NotificationManager.cpp"
+        "core/ui/components/FileBrowser.cpp"
     )
 endif()
 

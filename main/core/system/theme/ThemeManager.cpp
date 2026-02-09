@@ -5,15 +5,11 @@
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "core/tasks/gui/GuiTask.hpp"
+#include "core/ui/LvglBridgeHelpers.hpp"
 #include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #endif
 
 namespace System {
-
-ThemeManager& ThemeManager::getInstance() {
-	static ThemeManager instance;
-	return instance;
-}
 
 void ThemeManager::init() {
 	SettingsManager::getInstance().registerSetting("theme", m_theme_subject);
@@ -34,13 +30,12 @@ void ThemeManager::init() {
 #if !CONFIG_FLXOS_HEADLESS_MODE
 void ThemeManager::initGuiBridges() {
 	GuiTask::lock();
-	m_theme_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_theme_subject);
-	m_glass_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_glass_enabled_subject);
-	m_transparency_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_transparency_enabled_subject);
-	m_wallpaper_enabled_bridge = std::make_unique<LvglObserverBridge<int32_t>>(m_wallpaper_enabled_subject);
-	m_wallpaper_path_bridge = std::make_unique<LvglStringObserverBridge>(m_wallpaper_path_subject);
 
-	lv_subject_add_observer(m_theme_bridge->getSubject(), [](lv_observer_t*, lv_subject_t* s) { ThemeManager::applyTheme(lv_subject_get_int(s)); }, nullptr);
+	INIT_INT_BRIDGE(m_theme_bridge, m_theme_subject, applyTheme);
+	INIT_BRIDGE(m_glass_enabled_bridge, m_glass_enabled_subject);
+	INIT_BRIDGE(m_transparency_enabled_bridge, m_transparency_enabled_subject);
+	INIT_BRIDGE(m_wallpaper_enabled_bridge, m_wallpaper_enabled_subject);
+	INIT_STRING_BRIDGE(m_wallpaper_path_bridge, m_wallpaper_path_subject);
 
 	// Initial application to GUI
 	applyTheme(m_theme_subject.get());

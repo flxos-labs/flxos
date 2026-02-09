@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/common/Singleton.hpp"
 #include <functional>
 #include <map>
 #include <memory>
@@ -10,10 +11,10 @@
 
 namespace System {
 
-class SettingsManager {
-public:
+class SettingsManager : public Singleton<SettingsManager> {
+	friend class Singleton<SettingsManager>;
 
-	static SettingsManager& getInstance();
+public:
 
 	void init();
 
@@ -29,8 +30,6 @@ private:
 
 	SettingsManager() = default;
 	~SettingsManager() = default;
-	SettingsManager(const SettingsManager&) = delete;
-	SettingsManager& operator=(const SettingsManager&) = delete;
 
 	struct Setting {
 		enum class Type { INT,

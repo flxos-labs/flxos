@@ -33,10 +33,6 @@ protected:
 	}
 };
 
-AppManager& AppManager::getInstance() {
-	static AppManager instance;
-	return instance;
-}
 AppManager::AppManager() : m_mutex(xSemaphoreCreateMutex()) {}
 
 void AppManager::init() {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/common/Singleton.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "hotspot/HotspotManager.hpp"
@@ -16,10 +17,10 @@
 
 namespace System {
 
-class ConnectivityManager {
-public:
+class ConnectivityManager : public Singleton<ConnectivityManager> {
+	friend class Singleton<ConnectivityManager>;
 
-	static ConnectivityManager& getInstance();
+public:
 
 	esp_err_t init();
 
@@ -121,8 +122,6 @@ private:
 
 	ConnectivityManager() = default;
 	~ConnectivityManager() = default;
-	ConnectivityManager(const ConnectivityManager&) = delete;
-	ConnectivityManager& operator=(const ConnectivityManager&) = delete;
 
 	Observable<int32_t> m_wifi_enabled_subject {0};
 	Observable<int32_t> m_wifi_status_subject {0};

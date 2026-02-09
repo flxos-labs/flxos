@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/common/Singleton.hpp"
 #include <memory>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
@@ -10,10 +11,10 @@
 
 namespace System {
 
-class DisplayManager {
-public:
+class DisplayManager : public Singleton<DisplayManager> {
+	friend class Singleton<DisplayManager>;
 
-	static DisplayManager& getInstance();
+public:
 
 	void init();
 
@@ -35,8 +36,6 @@ private:
 
 	DisplayManager() = default;
 	~DisplayManager() = default;
-	DisplayManager(const DisplayManager&) = delete;
-	DisplayManager& operator=(const DisplayManager&) = delete;
 
 	Observable<int32_t> m_brightness_subject {127};
 	Observable<int32_t> m_rotation_subject {90};

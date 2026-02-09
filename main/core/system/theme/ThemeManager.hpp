@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/common/Observable.hpp"
+#include "core/common/Singleton.hpp"
 #include <memory>
 #include <string>
 
@@ -11,12 +12,12 @@
 
 namespace System {
 
-class ThemeManager {
+class ThemeManager : public Singleton<ThemeManager> {
+	friend class Singleton<ThemeManager>;
+
 public:
 
 	static constexpr const char* DEFAULT_WALLPAPER_PATH = "A:/data/wallpaper.jpg";
-
-	static ThemeManager& getInstance();
 
 	void init();
 
@@ -42,8 +43,6 @@ private:
 
 	ThemeManager() = default;
 	~ThemeManager() = default;
-	ThemeManager(const ThemeManager&) = delete;
-	ThemeManager& operator=(const ThemeManager&) = delete;
 
 	Observable<int32_t> m_theme_subject {0};
 	Observable<int32_t> m_glass_enabled_subject {0};

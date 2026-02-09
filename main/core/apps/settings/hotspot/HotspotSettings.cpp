@@ -34,35 +34,25 @@
 
 namespace System::Apps::Settings {
 
-HotspotSettings::HotspotSettings(lv_obj_t* parent, std::function<void()> onBack)
-	: m_parent(parent), m_onBack(onBack) {}
+// Constructor removed (using inherited)
 
-void HotspotSettings::show() {
-	if (m_container == nullptr) {
-		m_container = create_page_container(m_parent);
-
-		createMainPage();
-		createConfigPage();
-
-		showMainPage();
-	} else {
-		lv_obj_remove_flag(m_container, LV_OBJ_FLAG_HIDDEN);
-		showMainPage();
-	}
+void HotspotSettings::createUI() {
+	m_container = create_page_container(m_parent);
+	createMainPage();
+	createConfigPage();
+	showMainPage();
 }
 
-void HotspotSettings::hide() {
-	if (m_container) {
-		lv_obj_add_flag(m_container, LV_OBJ_FLAG_HIDDEN);
-	}
+void HotspotSettings::onShow() {
+	showMainPage();
 }
 
-void HotspotSettings::destroy() {
+void HotspotSettings::onDestroy() {
 	if (m_refreshTimer) {
 		lv_timer_delete(m_refreshTimer);
 		m_refreshTimer = nullptr;
 	}
-	m_container = nullptr;
+	// m_container is deleted by base class
 	m_mainPage = nullptr;
 	m_configPage = nullptr;
 	m_hotspotSwitch = nullptr;

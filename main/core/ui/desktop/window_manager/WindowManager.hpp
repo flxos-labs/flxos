@@ -5,12 +5,13 @@
 #include <vector>
 
 #include "core/apps/AppManager.hpp"
+#include "core/common/Singleton.hpp"
 #include "lvgl.h"
 
-class WindowManager : public System::Apps::AppStateObserver {
-public:
+class WindowManager : public System::Apps::AppStateObserver, public System::Singleton<WindowManager> {
+	friend class System::Singleton<WindowManager>;
 
-	static WindowManager& getInstance();
+public:
 
 	void init(lv_obj_t* window_container, lv_obj_t* app_container, lv_obj_t* screen, lv_obj_t* status_bar, lv_obj_t* dock);
 
