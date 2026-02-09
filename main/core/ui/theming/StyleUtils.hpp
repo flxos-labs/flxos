@@ -13,8 +13,6 @@ static inline void apply_glass(lv_obj_t* obj, int32_t blur) {
 	lv_obj_set_style_bg_color(obj, cfg.surface, 0);
 	lv_obj_set_style_bg_opa(obj, UiConstants::OPA_GLASS_BG, 0);
 	lv_obj_set_style_text_color(obj, cfg.text_primary, 0);
-	lv_obj_set_style_image_recolor(obj, cfg.text_primary, 0);
-	lv_obj_set_style_image_recolor_opa(obj, UiConstants::OPA_COVER, 0);
 
 	// Add observer for Theme changes
 	lv_subject_add_observer_obj(
@@ -25,7 +23,6 @@ static inline void apply_glass(lv_obj_t* obj, int32_t blur) {
 			ThemeConfig cfg = Themes::GetConfig(theme);
 			lv_obj_set_style_bg_color(target, cfg.surface, 0);
 			lv_obj_set_style_text_color(target, cfg.text_primary, 0);
-			lv_obj_set_style_image_recolor(target, cfg.text_primary, 0);
 		},
 		obj, nullptr
 	);
