@@ -11,7 +11,7 @@
 
 static constexpr const char* TAG = "SettingsManager";
 static constexpr const char* SETTINGS_PATH = "/system/settings.json";
-static constexpr const char* SETTINGS_TMP_PATH = "/data/settings.tmp";
+static constexpr const char* SETTINGS_TMP_PATH = "/system/settings.tmp";
 
 namespace System {
 
