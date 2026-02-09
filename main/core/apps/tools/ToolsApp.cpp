@@ -43,6 +43,7 @@ void ToolsApp::onStop() {
 	m_rgbDisplay = nullptr;
 
 	m_calcInput.clear();
+	m_calcExpression.clear();
 	m_calcOperator.clear();
 	m_calcOperand = 0;
 	m_calcNewInput = true;
@@ -166,6 +167,13 @@ void ToolsApp::createCalculatorView() {
 	lv_obj_set_style_border_width(content, 0, 0);
 	lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
 
+	// Expression label (history)
+	m_calcExpressionLabel = lv_label_create(content);
+	lv_obj_set_width(m_calcExpressionLabel, lv_pct(100));
+	lv_obj_set_style_text_align(m_calcExpressionLabel, LV_TEXT_ALIGN_RIGHT, 0);
+	lv_obj_set_style_text_color(m_calcExpressionLabel, lv_color_hex(0xaaaaaa), 0); // Grey color for history
+	lv_label_set_text(m_calcExpressionLabel, "");
+
 	// Display
 	m_calcDisplay = lv_label_create(content);
 	lv_obj_set_width(m_calcDisplay, lv_pct(100));
@@ -244,7 +252,9 @@ void ToolsApp::onCalcOperator(const char* op) {
 		}
 		m_calcOperand = std::stod(m_calcInput);
 		m_calcOperator = op;
+		m_calcExpression = m_calcInput + " " + op;
 		m_calcNewInput = true;
+		updateCalcDisplay();
 	}
 }
 
@@ -263,7 +273,10 @@ void ToolsApp::onCalcEquals() {
 		if (b != 0) result = m_calcOperand / b;
 		else {
 			m_calcInput = "Error";
+			m_calcExpression = "";
 			updateCalcDisplay();
+			// Reset to "0" after displaying error to prevent std::stod crash
+			m_calcInput = "0";
 			m_calcNewInput = true;
 			m_calcOperator.clear();
 			return;
@@ -276,6 +289,21 @@ void ToolsApp::onCalcEquals() {
 	} else {
 		snprintf(buf, sizeof(buf), "%.6g", result);
 	}
+
+	// Append second operand to expression
+	// Check if expression already has equals to avoid double append if user keeps hitting equals (though logic might differ)
+	// For simple calculator: "5 + 3 ="
+	if (m_calcExpression.find('=') == std::string::npos) {
+		// Only append if it's not already showing a result
+		m_calcExpression += " " + m_calcInput + " =";
+	} else {
+		// If we want to support repeated equals (e.g. 5+3=8, =11, etc), we'd need more logic.
+		// For now, let's just reset expression to "8 =" or something?
+		// Let's keep it simple: just show result as new input start
+		m_calcExpression = buf;
+		m_calcExpression += " =";
+	}
+
 	m_calcInput = buf;
 	m_calcOperator.clear();
 	m_calcNewInput = true;
@@ -284,17 +312,24 @@ void ToolsApp::onCalcEquals() {
 
 void ToolsApp::onCalcClear() {
 	m_calcInput.clear();
+	m_calcExpression.clear();
 	m_calcOperator.clear();
 	m_calcOperand = 0;
 	m_calcNewInput = true;
 	if (m_calcDisplay) {
 		lv_label_set_text(m_calcDisplay, "0");
 	}
+	if (m_calcExpressionLabel) {
+		lv_label_set_text(m_calcExpressionLabel, "");
+	}
 }
 
 void ToolsApp::updateCalcDisplay() {
 	if (m_calcDisplay) {
 		lv_label_set_text(m_calcDisplay, m_calcInput.empty() ? "0" : m_calcInput.c_str());
+	}
+	if (m_calcExpressionLabel) {
+		lv_label_set_text(m_calcExpressionLabel, m_calcExpression.c_str());
 	}
 }
 

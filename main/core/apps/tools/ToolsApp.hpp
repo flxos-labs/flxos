@@ -38,7 +38,9 @@ private:
 
 	// Calculator state
 	lv_obj_t* m_calcDisplay {nullptr};
+	lv_obj_t* m_calcExpressionLabel {nullptr};
 	std::string m_calcInput {};
+	std::string m_calcExpression {};
 	std::string m_calcOperator {};
 	double m_calcOperand {0};
 	bool m_calcNewInput {true};
