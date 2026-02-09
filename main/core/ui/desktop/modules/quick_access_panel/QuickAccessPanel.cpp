@@ -78,6 +78,21 @@ void QuickAccessPanel::create() {
 		System::FocusManager::getInstance().dismissAllPanels();
 		WindowManager::getInstance().openApp("com.os.settings"); }, LV_EVENT_CLICKED, nullptr);
 
+	lv_obj_set_style_text_color(settings_btn, Themes::GetConfig(ThemeEngine::get_current_theme()).text_primary, 0);
+
+	lv_subject_add_observer_obj(
+		&System::ThemeManager::getInstance().getThemeSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			lv_obj_t* btn = lv_observer_get_target_obj(observer);
+			if (btn) {
+				ThemeType theme = (ThemeType)lv_subject_get_int(subject);
+				ThemeConfig cfg = Themes::GetConfig(theme);
+				lv_obj_set_style_text_color(btn, cfg.text_primary, 0);
+			}
+		},
+		settings_btn, nullptr
+	);
+
 	lv_obj_t* toggles_cont = lv_obj_create(m_panel);
 	lv_obj_remove_style_all(toggles_cont);
 	lv_obj_set_size(toggles_cont, lv_pct(100), LV_SIZE_CONTENT);
