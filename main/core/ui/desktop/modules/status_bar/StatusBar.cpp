@@ -263,6 +263,7 @@ void StatusBar::create() {
 					// Fallback to theme primary color via status bar inheritance
 					ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 					lv_obj_set_style_image_recolor(icon, cfg.text_primary, 0);
+					lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
 				}
 			},
 			batt_cont, nullptr
