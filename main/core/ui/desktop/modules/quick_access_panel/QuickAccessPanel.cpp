@@ -3,14 +3,16 @@
 #include "../../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../../theming/theme_engine/ThemeEngine.hpp"
 #include "../../../theming/ui_constants/UiConstants.hpp"
-#include "core/apps/AppManager.hpp"
+
 #include "core/lv_obj.h"
 #include "core/lv_obj_pos.h"
 #include "core/lv_obj_style.h"
 #include "core/lv_obj_style_gen.h"
 #include "core/lv_observer.h"
 #include "core/system/display/DisplayManager.hpp"
+#include "core/system/focus/FocusManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
+#include "core/ui/desktop/window_manager/WindowManager.hpp"
 #include "core/ui/theming/themes/Themes.hpp"
 #include "display/lv_display.h"
 #include "draw/lv_draw_rect.h"
@@ -72,7 +74,9 @@ void QuickAccessPanel::create() {
 	lv_image_set_src(settings_icon, LV_SYMBOL_SETTINGS);
 	lv_obj_center(settings_icon);
 
-	lv_obj_add_event_cb(settings_btn, [](lv_event_t* e) { System::Apps::AppManager::getInstance().startApp("com.os.settings"); }, LV_EVENT_CLICKED, nullptr);
+	lv_obj_add_event_cb(settings_btn, [](lv_event_t* e) {
+		System::FocusManager::getInstance().dismissAllPanels();
+		WindowManager::getInstance().openApp("com.os.settings"); }, LV_EVENT_CLICKED, nullptr);
 
 	lv_obj_t* toggles_cont = lv_obj_create(m_panel);
 	lv_obj_remove_style_all(toggles_cont);
