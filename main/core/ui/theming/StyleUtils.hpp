@@ -2,8 +2,8 @@
 
 #include "core/system/theme/ThemeManager.hpp"
 #include "lvgl.h"
-#include "theme_engine/ThemeEngine.hpp"
-#include "themes/Themes.hpp"
+#include "core/ui/theming/theme_engine/ThemeEngine.hpp"
+#include "core/ui/theming/themes/Themes.hpp"
 #include "ui_constants/UiConstants.hpp"
 
 namespace UI::StyleUtils {
