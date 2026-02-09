@@ -3,6 +3,7 @@
 #include "../../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../../theming/theme_engine/ThemeEngine.hpp"
 #include "../../../theming/ui_constants/UiConstants.hpp"
+#include "core/apps/AppManager.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_pos.h"
 #include "core/lv_obj_style.h"
@@ -47,10 +48,31 @@ void QuickAccessPanel::create() {
 	lv_obj_set_flex_flow(m_panel, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(m_panel, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-	lv_obj_t* label = lv_label_create(m_panel);
+	// Header container
+	lv_obj_t* header_cont = lv_obj_create(m_panel);
+	lv_obj_remove_style_all(header_cont);
+	lv_obj_set_size(header_cont, lv_pct(100), LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(header_cont, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(header_cont, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_set_style_pad_left(header_cont, lv_dpx(UiConstants::PAD_SMALL), 0);
+	lv_obj_set_style_pad_right(header_cont, lv_dpx(UiConstants::PAD_SMALL), 0);
+	lv_obj_set_style_pad_top(header_cont, lv_dpx(UiConstants::PAD_SMALL), 0);
+
+	lv_obj_t* label = lv_label_create(header_cont);
 	lv_label_set_text(label, "Quick Access");
-	lv_obj_set_width(label, lv_pct(100));
-	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
+	lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_LEFT, 0);
+
+	lv_obj_t* settings_btn = lv_button_create(header_cont);
+	lv_obj_set_size(settings_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_style_bg_opa(settings_btn, LV_OPA_TRANSP, 0);
+	lv_obj_set_style_shadow_width(settings_btn, 0, 0);
+	lv_obj_set_style_pad_all(settings_btn, lv_dpx(UiConstants::PAD_SMALL), 0);
+
+	lv_obj_t* settings_icon = lv_image_create(settings_btn);
+	lv_image_set_src(settings_icon, LV_SYMBOL_SETTINGS);
+	lv_obj_center(settings_icon);
+
+	lv_obj_add_event_cb(settings_btn, [](lv_event_t* e) { System::Apps::AppManager::getInstance().startApp("com.os.settings"); }, LV_EVENT_CLICKED, nullptr);
 
 	lv_obj_t* toggles_cont = lv_obj_create(m_panel);
 	lv_obj_remove_style_all(toggles_cont);
@@ -123,7 +145,7 @@ void QuickAccessPanel::create() {
 		lv_obj_set_flex_align(slider_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
 		lv_obj_t* icon = lv_image_create(slider_cont);
-		lv_image_set_src(icon, LV_SYMBOL_SETTINGS);
+		lv_image_set_src(icon, LV_SYMBOL_EYE_OPEN); // Changed from SETTINGS to EYE_OPEN for brightness
 
 		lv_obj_t* slider = lv_slider_create(slider_cont);
 		lv_obj_set_flex_grow(slider, 1);
