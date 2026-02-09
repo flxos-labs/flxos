@@ -32,6 +32,8 @@ private:
 
 	bool m_is_init = false;
 	bool m_is_synced = false;
+
+	void setCompileTime();
 };
 
 } // namespace System

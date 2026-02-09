@@ -29,6 +29,9 @@ void TimeManager::init() {
 		return;
 	}
 
+	// Set time to compile time if current time is invalid (older than build time)
+	setCompileTime();
+
 	esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
 	esp_sntp_setservername(0, "pool.ntp.org");
 	esp_sntp_setservername(1, "time.google.com");
@@ -98,6 +101,44 @@ void TimeManager::updateSyncStatus(bool synced) {
 void TimeManager::setTimeZone(const char* tz) {
 	setenv("TZ", tz, 1);
 	tzset();
+}
+
+void TimeManager::setCompileTime() {
+	char s_month[5];
+	int day, year, hour, minute, second;
+	struct tm t = {0};
+	static const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
+
+	sscanf(__DATE__, "%s %d %d", s_month, &day, &year);
+	sscanf(__TIME__, "%d:%d:%d", &hour, &minute, &second);
+
+	// Calculate month index (0-11)
+	const char* month_ptr = strstr(month_names, s_month);
+	if (month_ptr) {
+		t.tm_mon = (month_ptr - month_names) / 3;
+	} else {
+		t.tm_mon = 0; // Default to Jan if parsing fails
+	}
+
+	t.tm_mday = day;
+	t.tm_year = year - 1900;
+	t.tm_hour = hour;
+	t.tm_min = minute;
+	t.tm_sec = second;
+	t.tm_isdst = -1;
+
+	time_t buildTime = mktime(&t);
+	time_t now;
+	time(&now);
+
+	if (now < buildTime) {
+		struct timeval tv = {.tv_sec = buildTime, .tv_usec = 0};
+		settimeofday(&tv, NULL);
+		// Log the time we just set to verify
+		char buf[64];
+		strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &t);
+		Log::info(TAG, "System time was invalid. Set to compile time: %s", buf);
+	}
 }
 
 } // namespace System
