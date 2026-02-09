@@ -13,9 +13,9 @@ namespace System {
  * @param observable Observable<int32_t> member
  * @param callback Member function taking int32_t
  */
-#define INIT_INT_BRIDGE(bridge, observable, callback) \
-	do { \
-		bridge = std::make_unique<::System::LvglObserverBridge<int32_t>>(observable); \
+#define INIT_INT_BRIDGE(bridge, observable, callback)                                                     \
+	do {                                                                                                  \
+		bridge = std::make_unique<::System::LvglObserverBridge<int32_t>>(observable);                     \
 		lv_subject_add_observer(bridge->getSubject(), [](lv_observer_t* obs, lv_subject_t* s) { \
 			auto* self = static_cast<std::remove_reference_t<decltype(*this)>*>(lv_observer_get_user_data(obs)); \
 			self->callback(lv_subject_get_int(s)); }, this); \
