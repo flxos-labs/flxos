@@ -226,7 +226,7 @@ menu "Hardware Configuration"
 						config FLXOS_PIN_MISO
 							int "SPI MISO Pin (-1 to disable)"
 							range -1 48
-							default 7 if IDF_TARGET_ESP32S3
+							default 13 if IDF_TARGET_ESP32S3
 							default 2 if IDF_TARGET_ESP32C3
 							default 19
 							help
@@ -377,6 +377,7 @@ menu "Hardware Configuration"
 					config FLXOS_PIN_RST
 						int "Display Reset Pin (-1 to disable)"
 						range -1 48
+						default 14 if IDF_TARGET_ESP32S3
 						default 15
 
 					config FLXOS_PIN_BUSY
@@ -439,6 +440,7 @@ menu "Hardware Configuration"
 						int "Backlight Pin (-1 to disable)"
 						range -1 48
 						default 21 if IDF_TARGET_ESP32
+						default 7 if IDF_TARGET_ESP32S3
 						default 17
 
 					config FLXOS_BCKL_INVERT
@@ -490,6 +492,7 @@ menu "Hardware Configuration"
 						config FLXOS_PIN_TOUCH_CS
 							int "Touch CS Pin (SPI only)"
 							range -1 48
+							default 5 if IDF_TARGET_ESP32S3
 							default 8
 							depends on FLXOS_TOUCH_XPT2046
 
@@ -510,6 +513,7 @@ menu "Hardware Configuration"
 						config FLXOS_PIN_TOUCH_INT
 							int "Touch INT Pin (-1 to disable)"
 							range -1 48
+							default -1 if IDF_TARGET_ESP32S3
 							default 16
 					endmenu
 
@@ -643,6 +647,7 @@ menu "Hardware Configuration"
 					config FLXOS_SD_PIN_CS
 						int "SD Card SPI CS Pin"
 						range -1 48
+						default 4 if IDF_TARGET_ESP32S3
 						default 5
 						help
 							Chip select pin for SD card SPI.
