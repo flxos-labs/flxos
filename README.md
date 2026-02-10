@@ -36,6 +36,7 @@ FlxOS is a feature-rich, embedded operating system designed for ESP32 microcontr
 ## ✨ Features
 
 ### 🖥️ Core System
+
 - **App Lifecycle Management** — Start, stop, pause, and resume applications seamlessly
 - **Window Manager** — Multi-window support with dynamic layouts
 - **Task Scheduler** — FreeRTOS-based background task scheduling
@@ -44,6 +45,7 @@ FlxOS is a feature-rich, embedded operating system designed for ESP32 microcontr
 - **Headless Mode** — Run without display/GUI hardware for IoT scenarios
 
 ### 🎨 User Interface
+
 - **Desktop Environment** — Taskbar, app launcher, and status bar
 - **Theme Engine** — Dark and light themes with easy customization
 - **Virtual Keyboard** — On-screen input for touch displays
@@ -52,12 +54,14 @@ FlxOS is a feature-rich, embedded operating system designed for ESP32 microcontr
 - **Custom Wallpapers** — Personalize your desktop
 
 ### 🌐 Connectivity
+
 - **WiFi Station Mode** — Connect to wireless networks
 - **WiFi Hotspot (SoftAP)** — Create hotspot with NAT and persistent configuration
 - **WiFi Scanning** — Network discovery and management
 - **Bluetooth Control** — Enable/disable Bluetooth support
 
 ### 📱 Built-in Applications
+
 | App | Status | Description |
 |-----|--------|-------------|
 | ⚙️ Settings | ✅ Complete | System configuration hub |
@@ -72,11 +76,13 @@ FlxOS is a feature-rich, embedded operating system designed for ESP32 microcontr
 | 💻 Terminal | ⏳ Planned | Debug console |
 
 ### 💾 Storage & Data
+
 - **Internal Flash (FAT)** — With wear-leveling support
 - **SD Card Support** — External storage expansion
 - **Settings Persistence** — NVS and JSON-based storage
 
 ### 🎨 Hardware Abstraction Layer
+
 - **30+ Display Drivers** — Via LovyanGFX integration
 - **Universal Touch Support** — XPT2046, GT911, FT5x06, CST816, and more
 - **Flexible Configuration** — Easy hardware customization
@@ -117,6 +123,7 @@ idf.py -p /dev/ttyUSB0 flash monitor
 ### First Boot
 
 On first boot, FlxOS will:
+
 1. Initialize the display and touch drivers
 2. Mount the internal filesystem
 3. Launch the desktop environment
@@ -164,6 +171,30 @@ Pre-configured partition tables for various flash sizes:
 | 4 MB | `partitions_4mb.csv` |
 | 8 MB | `partitions_8mb.csv` |
 | 16 MB | `partitions_16mb.csv` |
+
+### Board Presets
+
+Pre-configured defaults are available for popular boards:
+
+#### ESP32-2432S028R (Cheap Yellow Display / CYD)
+
+This board uses an ILI9341 display on HSPI and an XPT2046 touch controller on separate GPIO pins (software SPI).
+
+```bash
+# Copy the CYD preset
+cp sdkconfig.defaults.esp32_cyd sdkconfig.defaults.esp32
+
+# Set target and build
+idf.py set-target esp32
+idf.py build
+```
+
+Or configure manually via `idf.py menuconfig`:
+
+- **Panel Driver**: ILI9341
+- **Touch Driver**: XPT2046
+- **Touch Advanced Settings → Use Separate SPI Pins for Touch**: Yes
+- **Touch SPI Host**: -1 (Software SPI)
 
 ---
 
@@ -270,6 +301,7 @@ pre-commit install
 FlxOS is currently at **v1.0.0 Alpha** with approximately **41% feature completion**.
 
 ### Current Milestone (Alpha)
+
 - ✅ Core system framework
 - ✅ Window Manager
 - ✅ Settings & Files apps
@@ -278,6 +310,7 @@ FlxOS is currently at **v1.0.0 Alpha** with approximately **41% feature completi
 - ✅ Notification System
 
 ### Next Milestone (Beta)
+
 - ⏳ Lock screen
 - ⏳ OTA updates
 - ⏳ Calculator & Terminal apps

@@ -554,6 +554,52 @@ menu "Hardware Configuration"
 							help
 								SPI frequency for touch controller (typically 1MHz)
 
+						config FLXOS_TOUCH_SPI_SEPARATE_PINS
+							bool "Use Separate SPI Pins for Touch"
+							default n
+							depends on FLXOS_TOUCH_XPT2046
+							help
+								Enable if the touch controller uses different SPI pins
+								than the display. Required for boards like the
+								ESP32-2432S028R (Cheap Yellow Display / CYD) where
+								the XPT2046 is on separate GPIO pins.
+
+						if FLXOS_TOUCH_SPI_SEPARATE_PINS
+							config FLXOS_TOUCH_SPI_HOST
+								int "Touch SPI Host (-1=Software SPI, 1=SPI2, 2=SPI3)"
+								range -1 2
+								default -1
+								help
+									-1 = Software (bitbang) SPI. Use this when the SPI
+									bus is shared with SD card and cannot be used
+									simultaneously (e.g. ESP32-2432S028R).
+									1 = SPI2_HOST (HSPI), 2 = SPI3_HOST (VSPI).
+
+							config FLXOS_PIN_TOUCH_SCLK
+								int "Touch SPI SCLK Pin"
+								range -1 48
+								default 25
+								help
+									SPI clock pin for the touch controller.
+									Default 25 (ESP32-2432S028R).
+
+							config FLXOS_PIN_TOUCH_MOSI
+								int "Touch SPI MOSI Pin"
+								range -1 48
+								default 32
+								help
+									SPI data out pin for the touch controller.
+									Default 32 (ESP32-2432S028R).
+
+							config FLXOS_PIN_TOUCH_MISO
+								int "Touch SPI MISO Pin"
+								range -1 48
+								default 39
+								help
+									SPI data in pin for the touch controller.
+									Default 39 (ESP32-2432S028R).
+						endif
+
 						config FLXOS_TOUCH_I2C_PORT
 							int "Touch I2C Port"
 							range 0 1

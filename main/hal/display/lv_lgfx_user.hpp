@@ -345,12 +345,24 @@ public:
 
 #if defined(LGFX_TOUCH_IS_SPI)
 			// SPI Touch Controller (e.g., XPT2046)
+#if defined(CONFIG_FLXOS_TOUCH_SPI_SEPARATE_PINS)
+			// Separate SPI pins for touch (e.g., ESP32-2432S028R / CYD)
+			// spi_host = -1 triggers software (bitbang) SPI in LovyanGFX
+			cfg.spi_host = CONFIG_FLXOS_TOUCH_SPI_HOST;
+			cfg.freq = CONFIG_FLXOS_TOUCH_SPI_FREQ;
+			cfg.pin_sclk = CONFIG_FLXOS_PIN_TOUCH_SCLK;
+			cfg.pin_mosi = CONFIG_FLXOS_PIN_TOUCH_MOSI;
+			cfg.pin_miso = CONFIG_FLXOS_PIN_TOUCH_MISO;
+			cfg.pin_cs = CONFIG_FLXOS_PIN_TOUCH_CS;
+#else
+			// Shared SPI bus — touch reuses display SPI pins
 			cfg.spi_host = LGFX_SPI_HOST;
 			cfg.freq = CONFIG_FLXOS_TOUCH_SPI_FREQ;
 			cfg.pin_sclk = CONFIG_FLXOS_PIN_SCLK;
 			cfg.pin_mosi = CONFIG_FLXOS_PIN_MOSI;
 			cfg.pin_miso = CONFIG_FLXOS_PIN_MISO;
 			cfg.pin_cs = CONFIG_FLXOS_PIN_TOUCH_CS;
+#endif
 
 #elif defined(LGFX_TOUCH_IS_I2C)
 			// I2C Touch Controller
