@@ -124,7 +124,11 @@ void SdCardService::unmount() {
 		return;
 	}
 
-	esp_vfs_fat_sdcard_unmount(m_mountPoint.c_str(), m_card);
+	esp_err_t ret = esp_vfs_fat_sdcard_unmount(m_mountPoint.c_str(), m_card);
+	if (ret != ESP_OK) {
+		Log::error(TAG, "Failed to unmount SD card: %s", esp_err_to_name(ret));
+		return;
+	}
 
 	if (m_busInitializedHere) {
 		spi_host_device_t host_id = (CONFIG_FLXOS_SD_SPI_HOST == 1)
