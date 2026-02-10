@@ -247,6 +247,9 @@ std::vector<StorageStats> SystemInfoService::getStorageStats() {
 
 	addStats("System", "/system");
 	addStats("Data", "/data");
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+	addStats("SD Card", CONFIG_FLXOS_SD_MOUNT_POINT);
+#endif
 
 	return storageStats;
 }

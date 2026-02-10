@@ -626,7 +626,69 @@ menu "Hardware Configuration"
 
 	endif
 
-				menu "Battery Configuration"
+				menu "SD Card Configuration"
+				config FLXOS_SD_CARD_ENABLED
+					bool "Enable SD Card Support"
+					default n
+					help
+						Enable SD card storage via SPI bus.
+
+				if FLXOS_SD_CARD_ENABLED
+					config FLXOS_SD_MOUNT_POINT
+						string "SD Card Mount Point"
+						default "/sdcard"
+						help
+							VFS mount point for SD card.
+
+					config FLXOS_SD_PIN_CS
+						int "SD Card SPI CS Pin"
+						range -1 48
+						default 5
+						help
+							Chip select pin for SD card SPI.
+
+					config FLXOS_SD_PIN_MOSI
+						int "SD Card SPI MOSI Pin (-1 = use display MOSI)"
+						range -1 48
+						default -1
+						help
+							MOSI pin for SD card. Set to -1 to reuse the
+							display SPI MOSI pin (CONFIG_FLXOS_PIN_MOSI).
+
+					config FLXOS_SD_PIN_MISO
+						int "SD Card SPI MISO Pin (-1 = use display MISO)"
+						range -1 48
+						default -1
+						help
+							MISO pin for SD card. Set to -1 to reuse the
+							display SPI MISO pin (CONFIG_FLXOS_PIN_MISO).
+
+					config FLXOS_SD_PIN_SCLK
+						int "SD Card SPI SCLK Pin (-1 = use display SCLK)"
+						range -1 48
+						default -1
+						help
+							SCLK pin for SD card. Set to -1 to reuse the
+							display SPI SCLK pin (CONFIG_FLXOS_PIN_SCLK).
+
+					config FLXOS_SD_SPI_HOST
+						int "SD Card SPI Host (1=SPI2, 2=SPI3)"
+						range 1 2
+						default 1
+						help
+							SPI host for SD card.
+							1 = SPI2_HOST (HSPI), 2 = SPI3_HOST (VSPI).
+
+					config FLXOS_SD_MAX_FREQ_KHZ
+						int "SD Card Max SPI Frequency (kHz)"
+						default 4000
+						help
+							Maximum SPI clock frequency for SD card in kHz.
+							Typical values: 4000 (4MHz) or 20000 (20MHz).
+				endif
+			endmenu
+
+			menu "Battery Configuration"
 					config FLXOS_BATTERY_ENABLED
 						bool "Enable Battery Monitoring"
 						default n

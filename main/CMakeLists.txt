@@ -58,6 +58,13 @@ if(CONFIG_FLXOS_CLI_ENABLED)
     )
 endif()
 
+# SD Card sources (when enabled)
+if(CONFIG_FLXOS_SD_CARD_ENABLED)
+    list(APPEND CORE_SRCS
+        "core/services/storage/SdCardService.cpp"
+    )
+endif()
+
 # Set include directories based on mode
 if(CONFIG_FLXOS_HEADLESS_MODE)
     set(INCLUDE_DIRS "." "hal/os" "core/common")
@@ -68,7 +75,7 @@ else()
 endif()
 
 # Console is always included because Kconfig values aren't reliably available during first CMake pass
-set(PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event esp_netif lwip nvs_flash esp_system heap esp_timer freertos json console)
+set(PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event esp_netif lwip nvs_flash esp_system heap esp_timer freertos json console sdmmc)
 
 # Register the main component
 idf_component_register(SRCS ${CORE_SRCS}

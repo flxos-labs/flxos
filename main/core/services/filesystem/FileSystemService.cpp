@@ -1,6 +1,10 @@
 #include "FileSystemService.hpp"
 #include "core/common/Logger.hpp"
 #include "misc/lv_fs.h"
+#include "sdkconfig.h"
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#include "core/services/storage/SdCardService.hpp"
+#endif
 #include <cstring>
 #include <dirent.h>
 #include <string_view>
@@ -41,6 +45,11 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 			// Return default directories
 			entries.push_back({"system", true, 0});
 			entries.push_back({"data", true, 0});
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+			if (SdCardService::getInstance().isMounted()) {
+				entries.push_back({"sdcard", true, 0});
+			}
+#endif
 			return entries;
 		}
 		lv_fs_dir_close(&dir);

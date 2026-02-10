@@ -14,6 +14,9 @@
 #include "nvs_flash.h"
 #include "sdkconfig.h"
 #include "wear_levelling.h"
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#include "core/services/storage/SdCardService.hpp"
+#endif
 #include <cstring>
 #include <memory>
 #include <string_view>
@@ -50,6 +53,11 @@ esp_err_t SystemManager::initHardware() {
 	} else {
 		Log::info(TAG, "System storage mounted successfully");
 	}
+
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+	// Mount SD card (non-critical — failure does not trigger safe mode)
+	Services::SdCardService::getInstance().mount();
+#endif
 
 	TaskManager::getInstance().initWatchdog();
 	ResourceMonitorTask::getInstance().start();
