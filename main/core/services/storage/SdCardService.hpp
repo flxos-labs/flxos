@@ -1,7 +1,9 @@
 #pragma once
 
-#include "sdkconfig.h"
 #include <string>
+
+// Forward declare to avoid pulling in ESP-IDF headers
+struct sdmmc_card_t;
 
 namespace System::Services {
 
@@ -39,6 +41,8 @@ private:
 	SdCardService& operator=(const SdCardService&) = delete;
 
 	bool m_mounted = false;
+	bool m_busInitializedHere = false;
+	sdmmc_card_t* m_card = nullptr;
 	std::string m_mountPoint;
 };
 

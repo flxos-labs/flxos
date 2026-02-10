@@ -48,7 +48,7 @@ bool SdCardService::mount() {
 		.use_one_fat = false,
 	};
 
-	sdmmc_card_t* card = nullptr;
+	m_card = nullptr;
 
 	// SPI host config
 	spi_host_device_t host_id = (CONFIG_FLXOS_SD_SPI_HOST == 1)
@@ -71,7 +71,7 @@ bool SdCardService::mount() {
 	if (pin_sclk == -1) pin_sclk = CONFIG_FLXOS_PIN_SCLK;
 #endif
 
-	bool bus_initialized_here = false;
+	m_busInitializedHere = false;
 
 	// Try to initialize the SPI bus (may already be initialized by the display)
 	spi_bus_config_t bus_cfg = {};
@@ -84,7 +84,7 @@ bool SdCardService::mount() {
 
 	esp_err_t ret = spi_bus_initialize(host_id, &bus_cfg, SDSPI_DEFAULT_DMA);
 	if (ret == ESP_OK) {
-		bus_initialized_here = true;
+		m_busInitializedHere = true;
 		Log::info(TAG, "SPI bus initialized for SD card");
 	} else if (ret == ESP_ERR_INVALID_STATE) {
 		// Bus already initialized (shared with display) — that's fine
@@ -100,12 +100,12 @@ bool SdCardService::mount() {
 	slot_config.host_id = host_id;
 
 	ret = esp_vfs_fat_sdspi_mount(
-		m_mountPoint.c_str(), &host, &slot_config, &mount_config, &card
+		m_mountPoint.c_str(), &host, &slot_config, &mount_config, &m_card
 	);
 
 	if (ret != ESP_OK) {
 		Log::error(TAG, "Failed to mount SD card: %s", esp_err_to_name(ret));
-		if (bus_initialized_here) {
+		if (m_busInitializedHere) {
 			spi_bus_free(host_id);
 		}
 		return false;
@@ -113,7 +113,7 @@ bool SdCardService::mount() {
 
 	m_mounted = true;
 	Log::info(TAG, "SD card mounted at %s", m_mountPoint.c_str());
-	sdmmc_card_print_info(stdout, card);
+	sdmmc_card_print_info(stdout, m_card);
 	return true;
 #endif
 }
@@ -124,12 +124,17 @@ void SdCardService::unmount() {
 		return;
 	}
 
-	spi_host_device_t host_id = (CONFIG_FLXOS_SD_SPI_HOST == 1)
-		? SPI2_HOST
-		: SPI3_HOST;
+	esp_vfs_fat_sdcard_unmount(m_mountPoint.c_str(), m_card);
 
-	esp_vfs_fat_sdcard_unmount(m_mountPoint.c_str(), nullptr);
-	spi_bus_free(host_id);
+	if (m_busInitializedHere) {
+		spi_host_device_t host_id = (CONFIG_FLXOS_SD_SPI_HOST == 1)
+			? SPI2_HOST
+			: SPI3_HOST;
+		spi_bus_free(host_id);
+	}
+
+	m_card = nullptr;
+	m_busInitializedHere = false;
 	m_mounted = false;
 	Log::info(TAG, "SD card unmounted");
 #endif

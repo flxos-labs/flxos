@@ -646,7 +646,7 @@ menu "Hardware Configuration"
 
 					config FLXOS_SD_PIN_CS
 						int "SD Card SPI CS Pin"
-						range -1 48
+						range 0 48
 						default 4 if IDF_TARGET_ESP32S3
 						default 5
 						help
@@ -686,6 +686,7 @@ menu "Hardware Configuration"
 
 					config FLXOS_SD_MAX_FREQ_KHZ
 						int "SD Card Max SPI Frequency (kHz)"
+						range 400 40000
 						default 4000
 						help
 							Maximum SPI clock frequency for SD card in kHz.
