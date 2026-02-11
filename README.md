@@ -1,5 +1,5 @@
 <p align="center">
-  <!-- Logo placeholder for future -->
+  <img src="assets/logo.jpg" alt="FlxOS Logo" width="200">
   <h1 align="center">🖥️ FlxOS</h1>
   <p align="center">
     <strong>A Modern Operating System for ESP32 Microcontrollers</strong>
