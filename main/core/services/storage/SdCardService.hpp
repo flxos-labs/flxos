@@ -1,9 +1,7 @@
 #pragma once
 
+#include "sd_protocol_types.h"
 #include <string>
-
-// Forward declare to avoid pulling in ESP-IDF headers
-struct sdmmc_card_t;
 
 namespace System::Services {
 
