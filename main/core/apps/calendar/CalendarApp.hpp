@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/apps/AppManager.hpp"
+#include "core/apps/AppManifest.hpp"
 #include "lvgl.h"
 
 namespace System::Apps {
@@ -21,6 +22,8 @@ public:
 	std::string getPackageName() const override { return "com.flxos.calendar"; }
 	std::string getAppName() const override { return "Calendar"; }
 	const void* getIcon() const override { return LV_SYMBOL_LEFT; }
+
+	static const AppManifest manifest;
 
 private:
 

@@ -15,8 +15,20 @@ static constexpr const char* SETTINGS_TMP_PATH = "/system/settings.tmp";
 
 namespace System {
 
-void SettingsManager::init() {
-	if (m_is_init) return;
+const Services::ServiceManifest SettingsManager::serviceManifest = {
+	.serviceId = "com.flxos.settings",
+	.serviceName = "Settings",
+	.dependencies = {},
+	.priority = 10,
+	.required = true,
+	.autoStart = true,
+	.guiRequired = false,
+	.capabilities = Services::ServiceCapability::None,
+	.description = "Persistent key-value settings storage",
+};
+
+bool SettingsManager::onStart() {
+	if (isRunning()) return true;
 
 	esp_timer_create_args_t const timer_args = {
 		.callback = [](void* /*arg*/) {
@@ -30,7 +42,23 @@ void SettingsManager::init() {
 	esp_timer_create(&timer_args, &m_save_timer);
 
 	loadSettings();
-	m_is_init = true;
+	Log::info(TAG, "Settings service started");
+	return true;
+}
+
+void SettingsManager::onStop() {
+	// Save any pending settings before stopping
+	if (m_save_timer) {
+		esp_timer_stop(m_save_timer);
+		saveSettings();
+		esp_timer_delete(m_save_timer);
+		m_save_timer = nullptr;
+	}
+	if (m_json_cache) {
+		cJSON_Delete((cJSON*)m_json_cache);
+		m_json_cache = nullptr;
+	}
+	Log::info(TAG, "Settings service stopped");
 }
 
 void SettingsManager::registerSetting(const std::string& key, Observable<int32_t>& observable) {

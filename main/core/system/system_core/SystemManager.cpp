@@ -1,6 +1,7 @@
 #include "SystemManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
+#include "core/services/ServiceRegistry.hpp"
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/power/PowerManager.hpp"
 #include "core/system/settings/SettingsManager.hpp"
@@ -16,6 +17,9 @@
 #include "wear_levelling.h"
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
 #include "core/services/storage/SdCardService.hpp"
+#endif
+#if !CONFIG_FLXOS_HEADLESS_MODE
+#include "core/system/notification/NotificationManager.hpp"
 #endif
 #include <cstring>
 #include <memory>
@@ -54,33 +58,56 @@ esp_err_t SystemManager::initHardware() {
 		Log::info(TAG, "System storage mounted successfully");
 	}
 
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
-	// Mount SD card (non-critical — failure does not trigger safe mode)
-	Services::SdCardService::getInstance().mount();
-#endif
-
 	TaskManager::getInstance().initWatchdog();
 	ResourceMonitorTask::getInstance().start();
 	return ESP_OK;
 }
 
+/**
+ * Register all system services with the ServiceRegistry.
+ * Services declare their own dependencies so the registry resolves boot order.
+ */
+void SystemManager::registerServices() {
+	auto& registry = Services::ServiceRegistry::getInstance();
+
+	// Core managers (as shared_ptr wrapping the singletons — prevent deletion)
+	auto noDelete = [](auto*) {}; // Custom deleter that does nothing
+	registry.addService(std::shared_ptr<Services::IService>(&SettingsManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<Services::IService>(&DisplayManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<Services::IService>(&ThemeManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<Services::IService>(&ConnectivityManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<Services::IService>(&PowerManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<Services::IService>(&TimeManager::getInstance(), noDelete));
+
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+	registry.addService(std::shared_ptr<Services::IService>(&Services::SdCardService::getInstance(), noDelete));
+#endif
+
+#if !CONFIG_FLXOS_HEADLESS_MODE
+	registry.addService(std::shared_ptr<Services::IService>(&NotificationManager::getInstance(), noDelete));
+#endif
+}
+
 esp_err_t SystemManager::initServices() {
-	Log::info(TAG, "Initializing services...");
+	Log::info(TAG, "Registering services with ServiceRegistry...");
+	registerServices();
 
-	// 1. Initialize SettingsManager (Persistence)
-	SettingsManager::getInstance().init();
+	auto& registry = Services::ServiceRegistry::getInstance();
 
-	// 2. Initialize specialized managers
-	DisplayManager::getInstance().init();
-	ThemeManager::getInstance().init();
-	ConnectivityManager::getInstance().init();
-	PowerManager::getInstance().init();
-	TimeManager::getInstance().init();
+	bool guiMode = true;
+#if CONFIG_FLXOS_HEADLESS_MODE
+	guiMode = false;
+#endif
 
-	// Start hotspot usage timer (Connectivity handled this inside init, but let's be explicit if needed)
-	ConnectivityManager::getInstance().startHotspotUsageTimer();
+	bool success = registry.startAll(guiMode);
 
-	Log::info(TAG, "Services initialized");
+	if (!success) {
+		Log::error(TAG, "Some required services failed — safe mode may be needed");
+		m_isSafeMode = true;
+	}
+
+	registry.dumpServiceStates();
+	Log::info(TAG, "Services initialized via ServiceRegistry");
 	return ESP_OK;
 }
 
@@ -90,10 +117,8 @@ esp_err_t SystemManager::initGuiState() {
 
 	INIT_BRIDGE(m_uptime_bridge, m_uptime_subject);
 
-	DisplayManager::getInstance().initGuiBridges();
-	ThemeManager::getInstance().initGuiBridges();
-	ConnectivityManager::getInstance().initGuiBridges();
-	PowerManager::getInstance().initGuiBridges();
+	// Let ServiceRegistry call onGuiInit() on all started services
+	Services::ServiceRegistry::getInstance().initGuiServices();
 
 	Apps::AppManager::getInstance().init();
 

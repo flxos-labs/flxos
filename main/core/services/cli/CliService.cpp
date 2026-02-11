@@ -71,6 +71,18 @@ static std::string resolvePath(const std::string& base, const std::string& part)
 
 namespace System {
 
+const Services::ServiceManifest CliService::serviceManifest = {
+	.serviceId = "com.flxos.cli",
+	.serviceName = "CLI",
+	.dependencies = {},
+	.priority = 90,
+	.required = false,
+	.autoStart = false,
+	.guiRequired = false,
+	.capabilities = Services::ServiceCapability::None,
+	.description = "Interactive serial console CLI",
+};
+
 CliService& CliService::getInstance() {
 	static CliService instance;
 	return instance;
@@ -658,11 +670,7 @@ void CliService::registerCommands() {
 	Log::info(TAG, "Registered CLI commands: sysinfo, heap, uptime, reboot, tasks, storage, psram, version, chip, wifi, hotspot, ls, cd, pwd, mkdir, rm, cat, df, brightness, time, loglevel, clear, echo, free, top");
 }
 
-esp_err_t CliService::init() {
-	if (m_running) {
-		return ESP_OK;
-	}
-
+bool CliService::onStart() {
 	Log::info(TAG, "Initializing CLI...");
 
 	// Initialize console
@@ -689,10 +697,12 @@ esp_err_t CliService::init() {
 	// Start REPL
 	ESP_ERROR_CHECK(esp_console_start_repl(repl));
 
-	m_running = true;
 	Log::info(TAG, "CLI started. Type 'help' for available commands.");
+	return true;
+}
 
-	return ESP_OK;
+void CliService::onStop() {
+	Log::info(TAG, "CLI service stopped");
 }
 
 } // namespace System

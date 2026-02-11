@@ -51,7 +51,7 @@ static void showMsgBox(const char* title, const char* text) {
 	lv_msgbox_add_close_button(mb);
 }
 
-std::string FilesApp::getPackageName() const { return "com.os.files"; }
+std::string FilesApp::getPackageName() const { return "com.flxos.files"; }
 std::string FilesApp::getAppName() const { return "Files"; }
 const void* FilesApp::getIcon() const { return LV_SYMBOL_DIRECTORY; }
 

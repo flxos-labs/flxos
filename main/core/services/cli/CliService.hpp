@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/services/IService.hpp"
+#include "core/services/ServiceManifest.hpp"
 #include "esp_err.h"
 #include <string>
 
@@ -12,21 +14,18 @@ namespace System {
  * using ESP-IDF's esp_console component. Designed for future GUI integration
  * where commands could be sent via other interfaces (e.g., serial terminal widget).
  */
-class CliService {
+class CliService : public Services::IService {
 public:
 
 	static CliService& getInstance();
 
-	/**
-	 * @brief Initialize and start the CLI REPL
-	 * @return ESP_OK on success
-	 */
-	esp_err_t init();
+	// ──── IService manifest ────
+	static const Services::ServiceManifest serviceManifest;
+	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
 
-	/**
-	 * @brief Check if CLI is running
-	 */
-	bool isRunning() const { return m_running; }
+	// ──── IService lifecycle ────
+	bool onStart() override;
+	void onStop() override;
 
 	/**
 	 * @brief Get current working directory
@@ -47,7 +46,6 @@ private:
 
 	static void registerCommands();
 
-	bool m_running = false;
 	std::string m_currentDirectory = "/";
 };
 

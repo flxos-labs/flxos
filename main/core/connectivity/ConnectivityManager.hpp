@@ -2,6 +2,8 @@
 
 #include "core/common/Observable.hpp"
 #include "core/common/Singleton.hpp"
+#include "core/services/IService.hpp"
+#include "core/services/ServiceManifest.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "hotspot/HotspotManager.hpp"
@@ -17,15 +19,21 @@
 
 namespace System {
 
-class ConnectivityManager : public Singleton<ConnectivityManager> {
+class ConnectivityManager : public Singleton<ConnectivityManager>, public Services::IService {
 	friend class Singleton<ConnectivityManager>;
 
 public:
 
-	esp_err_t init();
+	// ──── IService manifest ────
+	static const Services::ServiceManifest serviceManifest;
+	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
+
+	// ──── IService lifecycle ────
+	bool onStart() override;
+	void onStop() override;
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	void initGuiBridges(); // Initialize LVGL bridges for GUI mode
+	void onGuiInit() override;
 #endif
 
 	// Mode management
@@ -146,12 +154,12 @@ private:
 	Observable<int32_t> m_hotspot_hidden_subject {0};
 	Observable<int32_t> m_hotspot_auth_subject {1};
 	Observable<int32_t> m_wifi_autostart_subject {0};
-	Observable<int32_t> m_wifi_scan_interval_subject {0}; // 0 = disabled, otherwise seconds
+	Observable<int32_t> m_wifi_scan_interval_subject {0};
 	StringObservable m_saved_wifi_ssid_subject {""};
 	StringObservable m_saved_wifi_password_subject {""};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	// LVGL bridges (initialized in initGuiBridges)
+	// LVGL bridges
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_enabled_bridge {};
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_status_bridge {};
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_connected_bridge {};
@@ -176,7 +184,6 @@ private:
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_scan_interval_bridge {};
 #endif
 
-	bool m_is_init = false;
 	std::recursive_mutex m_wifi_mutex {};
 };
 

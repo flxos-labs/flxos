@@ -1,4 +1,5 @@
 #include "ThemeManager.hpp"
+#include "core/common/Logger.hpp"
 #include "core/system/settings/SettingsManager.hpp"
 #include "core/ui/theming/themes/Themes.hpp"
 #include <cstdint>
@@ -9,26 +10,44 @@
 #include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #endif
 
+static constexpr const char* TAG = "ThemeManager";
+
 namespace System {
 
-void ThemeManager::init() {
+const Services::ServiceManifest ThemeManager::serviceManifest = {
+	.serviceId = "com.flxos.theme",
+	.serviceName = "Theme",
+	.dependencies = {"com.flxos.settings"},
+	.priority = 25,
+	.required = false,
+	.autoStart = true,
+	.guiRequired = false,
+	.capabilities = Services::ServiceCapability::None,
+	.description = "Theme engine, wallpaper, and glass effects",
+};
+
+bool ThemeManager::onStart() {
 	SettingsManager::getInstance().registerSetting("theme", m_theme_subject);
 	SettingsManager::getInstance().registerSetting("glass_enabled", m_glass_enabled_subject);
 	SettingsManager::getInstance().registerSetting("transp_enabled", m_transparency_enabled_subject);
 	SettingsManager::getInstance().registerSetting("wp_enabled", m_wallpaper_enabled_subject);
 	SettingsManager::getInstance().registerSetting("wp_path", m_wallpaper_path_subject);
 
-	// Set default wallpaper path if not already set
 	if (strlen(m_wallpaper_path_subject.get()) == 0) {
 		m_wallpaper_path_subject.set(DEFAULT_WALLPAPER_PATH);
 	}
 
-	// Initial application
 	applyTheme(m_theme_subject.get());
+	Log::info(TAG, "Theme service started");
+	return true;
+}
+
+void ThemeManager::onStop() {
+	Log::info(TAG, "Theme service stopped");
 }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-void ThemeManager::initGuiBridges() {
+void ThemeManager::onGuiInit() {
 	GuiTask::lock();
 
 	INIT_INT_BRIDGE(m_theme_bridge, m_theme_subject, applyTheme);
@@ -37,7 +56,6 @@ void ThemeManager::initGuiBridges() {
 	INIT_BRIDGE(m_wallpaper_enabled_bridge, m_wallpaper_enabled_subject);
 	INIT_STRING_BRIDGE(m_wallpaper_path_bridge, m_wallpaper_path_subject);
 
-	// Initial application to GUI
 	applyTheme(m_theme_subject.get());
 
 	GuiTask::unlock();

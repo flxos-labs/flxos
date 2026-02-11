@@ -5,6 +5,7 @@
 
 #include "../modules/dock/Dock.hpp"
 #include "core/apps/AppManager.hpp"
+#include "core/apps/Intent.hpp"
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/focus/FocusManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
@@ -63,8 +64,13 @@ void WindowManager::openApp(const std::string& packageName) {
 	}
 
 	// Create new window
+	Log::info(TAG, "openApp: Creating new window for %s", packageName.c_str());
 	lv_obj_t* win = lv_win_create(m_windowContainer);
-	lv_obj_set_style_radius(win, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
+	if (!win) {
+		Log::error(TAG, "openApp: Failed to create window (OOM?)");
+		GuiTask::unlock();
+		return;
+	}
 	lv_obj_set_style_border_post(win, true, 0);
 
 	m_windowAppMap[win] = packageName;
@@ -81,21 +87,23 @@ void WindowManager::openApp(const std::string& packageName) {
 	System::FocusManager::getInstance().registerWindow(win);
 	System::FocusManager::getInstance().activateWindow(win);
 
-	System::Apps::AppManager::getInstance().startApp(app);
+	// App is already started by AppManager before calling openApp
 	updateLayout();
+	Log::info(TAG, "openApp: Window created and layout updated for %s", packageName.c_str());
 	GuiTask::unlock();
 }
 
 bool WindowManager::activateIfOpen(const std::string& packageName) {
 	if (lv_obj_t* win = findWindowByPackage(packageName)) {
-		Log::info(TAG, "App %s already open, activating window", packageName.c_str());
+		Log::info(TAG, "activateIfOpen: App %s already open, activating window", packageName.c_str());
 		lv_obj_remove_flag(win, LV_OBJ_FLAG_HIDDEN);
 
 		auto* dp = static_cast<lv_obj_t*>(lv_obj_get_user_data(win));
 		if (dp && lv_obj_is_valid(dp)) lv_obj_add_state(dp, LV_STATE_USER_1);
 
 		System::FocusManager::getInstance().activateWindow(win);
-		System::Apps::AppManager::getInstance().startApp(packageName);
+		// AppManager::startApp call removed to prevent recursion loops (AppManager -> Desktop -> WM -> AppManager)
+		Log::info(TAG, "activateIfOpen: Window activated");
 		return true;
 	}
 	return false;
@@ -186,7 +194,9 @@ void WindowManager::on_win_minimize(lv_event_t* e) {
 
 		System::FocusManager::getInstance().activateWindow(w);
 		if (wm->m_windowAppMap.contains(w)) {
-			System::Apps::AppManager::getInstance().startApp(wm->m_windowAppMap[w]);
+			System::Apps::AppManager::getInstance().startApp(
+				System::Apps::Intent::forApp(wm->m_windowAppMap[w])
+			);
 		}
 	} else {
 		lv_obj_add_flag(w, LV_OBJ_FLAG_HIDDEN);

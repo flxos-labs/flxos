@@ -14,6 +14,18 @@ static constexpr std::string_view TAG = "SdCard";
 
 namespace System::Services {
 
+const ServiceManifest SdCardService::serviceManifest = {
+	.serviceId = "com.flxos.sdcard",
+	.serviceName = "SD Card",
+	.dependencies = {},
+	.priority = 15,
+	.required = false,
+	.autoStart = true,
+	.guiRequired = false,
+	.capabilities = ServiceCapability::Storage,
+	.description = "SD card mount/unmount via SPI",
+};
+
 SdCardService::SdCardService()
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
 	: m_mountPoint(CONFIG_FLXOS_SD_MOUNT_POINT)
@@ -26,6 +38,14 @@ SdCardService::SdCardService()
 SdCardService& SdCardService::getInstance() {
 	static SdCardService instance;
 	return instance;
+}
+
+bool SdCardService::onStart() {
+	return mount();
+}
+
+void SdCardService::onStop() {
+	unmount();
 }
 
 bool SdCardService::mount() {
@@ -59,8 +79,7 @@ bool SdCardService::mount() {
 	host.slot = host_id;
 	host.max_freq_khz = CONFIG_FLXOS_SD_MAX_FREQ_KHZ;
 
-	// SPI bus config — only initialize if pins are explicitly set
-	// (if -1, we assume the bus is already initialized by the display driver)
+	// SPI bus config
 	int pin_mosi = CONFIG_FLXOS_SD_PIN_MOSI;
 	int pin_miso = CONFIG_FLXOS_SD_PIN_MISO;
 	int pin_sclk = CONFIG_FLXOS_SD_PIN_SCLK;
@@ -73,7 +92,6 @@ bool SdCardService::mount() {
 
 	m_busInitializedHere = false;
 
-	// Try to initialize the SPI bus (may already be initialized by the display)
 	spi_bus_config_t bus_cfg = {};
 	bus_cfg.mosi_io_num = pin_mosi;
 	bus_cfg.miso_io_num = pin_miso;
@@ -87,14 +105,12 @@ bool SdCardService::mount() {
 		m_busInitializedHere = true;
 		Log::info(TAG, "SPI bus initialized for SD card");
 	} else if (ret == ESP_ERR_INVALID_STATE) {
-		// Bus already initialized (shared with display) — that's fine
 		Log::info(TAG, "SPI bus already initialized (shared), attaching SD device");
 	} else {
 		Log::error(TAG, "Failed to initialize SPI bus: %s", esp_err_to_name(ret));
 		return false;
 	}
 
-	// Configure the SD SPI device
 	sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
 	slot_config.gpio_cs = (gpio_num_t)CONFIG_FLXOS_SD_PIN_CS;
 	slot_config.host_id = host_id;

@@ -5,6 +5,7 @@ set(CORE_SRCS
     "core/connectivity/bluetooth/BluetoothManager.cpp"
     "core/connectivity/hotspot/HotspotManager.cpp"
     "core/connectivity/wifi/WiFiManager.cpp"
+    "core/services/ServiceRegistry.cpp"
     "core/services/filesystem/FileSystemService.cpp"
     "core/services/system_info/SystemInfoService.cpp"
     "core/system/system_core/SystemManager.cpp"
@@ -15,6 +16,8 @@ set(CORE_SRCS
     "core/system/power/PowerManager.cpp"
     "core/tasks/TaskManager.cpp"
     "core/tasks/resource_monitor/ResourceMonitorTask.cpp"
+    "core/apps/Bundle.cpp"
+    "core/apps/EventBus.cpp"
 )
 
 # GUI sources (excluded in headless mode)
@@ -34,6 +37,8 @@ if(NOT CONFIG_FLXOS_HEADLESS_MODE)
         "core/ui/theming/theme_engine/ThemeEngine.cpp"
         "core/ui/theming/themes/Themes.cpp"
         "core/apps/AppManager.cpp"
+        "core/apps/AppRegistry.cpp"
+        "core/apps/AppContext.cpp"
         "core/apps/files/FilesApp.cpp"
         "core/apps/system_info/SystemInfoApp.cpp"
         "core/apps/calendar/CalendarApp.cpp"

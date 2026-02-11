@@ -2,6 +2,8 @@
 
 #include "core/common/Observable.hpp"
 #include "core/common/Singleton.hpp"
+#include "core/services/IService.hpp"
+#include "core/services/ServiceManifest.hpp"
 #include <functional>
 #include <map>
 #include <memory>
@@ -11,12 +13,18 @@
 
 namespace System {
 
-class SettingsManager : public Singleton<SettingsManager> {
+class SettingsManager : public Singleton<SettingsManager>, public Services::IService {
 	friend class Singleton<SettingsManager>;
 
 public:
 
-	void init();
+	// ──── IService manifest ────
+	static const Services::ServiceManifest serviceManifest;
+	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
+
+	// ──── IService lifecycle ────
+	bool onStart() override;
+	void onStop() override;
 
 	// Registration
 	void registerSetting(const std::string& key, Observable<int32_t>& observable);
@@ -41,8 +49,6 @@ private:
 	void* m_json_cache = nullptr; // cJSON*
 
 	esp_timer_handle_t m_save_timer = nullptr;
-
-	bool m_is_init = false;
 };
 
 } // namespace System
