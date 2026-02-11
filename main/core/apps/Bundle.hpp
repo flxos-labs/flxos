@@ -61,6 +61,14 @@ public:
 	const std::vector<uint8_t>& getBlob(const std::string& key) const;
 	const Bundle& getBundle(const std::string& key) const;
 
+	// === Default-value getters (safe, no UB if key missing) ===
+
+	bool getBoolOr(const std::string& key, bool defaultValue) const;
+	int32_t getInt32Or(const std::string& key, int32_t defaultValue) const;
+	int64_t getInt64Or(const std::string& key, int64_t defaultValue) const;
+	float getFloatOr(const std::string& key, float defaultValue) const;
+	std::string getStringOr(const std::string& key, const std::string& defaultValue) const;
+
 	// === Type-checked presence queries ===
 
 	bool hasBool(const std::string& key) const;

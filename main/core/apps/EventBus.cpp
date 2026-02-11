@@ -38,20 +38,20 @@ void EventBus::unsubscribe(SubscriptionId id) {
 }
 
 void EventBus::publish(const std::string& event, const Bundle& data) {
-	// Copy subscriptions under lock, then invoke outside lock to avoid deadlocks
-	std::vector<Callback> toNotify;
+	// Snapshot callback pointers under lock — avoids copying std::function objects
+	std::vector<Callback*> toNotify;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		for (const auto& sub: m_subscriptions) {
+		for (auto& sub: m_subscriptions) {
 			if (sub.event.empty() || sub.event == event) {
-				toNotify.push_back(sub.callback);
+				toNotify.push_back(&sub.callback);
 			}
 		}
 	}
 
-	for (const auto& cb: toNotify) {
-		if (cb) {
-			cb(event, data);
+	for (auto* cb: toNotify) {
+		if (*cb) {
+			(*cb)(event, data);
 		}
 	}
 }

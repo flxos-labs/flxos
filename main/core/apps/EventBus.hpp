@@ -14,7 +14,6 @@ namespace System::Apps {
  * @brief System-wide publish/subscribe event bus
  *
  * Enables decoupled communication between apps, services, and system components.
- * Enables decoupled communication between apps, services, and system components.
  *
  * Standard system events:
  * - "app.started"       — Bundle: { "appId": string }

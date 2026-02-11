@@ -1,9 +1,21 @@
 #pragma once
 
 #include "ServiceManifest.hpp"
+#include "esp_system.h"
+#include "esp_timer.h"
+#include <cstdint>
 #include <string>
 
 namespace System::Services {
+
+/**
+ * @brief Runtime stats for a service (Beyond Tactility: service metrics)
+ */
+struct ServiceStats {
+	uint32_t startCount = 0; ///< Number of times this service has been started
+	int64_t lastStartTimeUs = 0; ///< Duration of last start() call in microseconds
+	int32_t heapDeltaBytes = 0; ///< Heap change from last start (negative = consumed)
+};
 
 /**
  * @brief Abstract interface for all FlxOS services.
@@ -67,11 +79,20 @@ public:
 			return m_state == ServiceState::Started;
 		}
 		m_state = ServiceState::Starting;
+
+		// Measure boot timing and heap impact
+		uint32_t heapBefore = esp_get_free_heap_size();
+		int64_t t0 = esp_timer_get_time();
+
 		if (onStart()) {
+			m_lastStartTimeUs = esp_timer_get_time() - t0;
+			m_heapDeltaBytes = (int32_t)esp_get_free_heap_size() - (int32_t)heapBefore;
 			m_state = ServiceState::Started;
 			m_startCount++;
 			return true;
 		}
+		m_lastStartTimeUs = esp_timer_get_time() - t0;
+		m_heapDeltaBytes = (int32_t)esp_get_free_heap_size() - (int32_t)heapBefore;
 		m_state = ServiceState::Failed;
 		return false;
 	}
@@ -100,6 +121,13 @@ public:
 	ServiceState getState() const { return m_state; }
 	bool isRunning() const { return m_state == ServiceState::Started; }
 	uint32_t getStartCount() const { return m_startCount; }
+	int64_t getLastStartTimeUs() const { return m_lastStartTimeUs; }
+	int32_t getHeapDeltaBytes() const { return m_heapDeltaBytes; }
+
+	/// Get aggregated service stats
+	ServiceStats getServiceStats() const {
+		return {m_startCount, m_lastStartTimeUs, m_heapDeltaBytes};
+	}
 
 	/// Each service must provide its manifest
 	virtual const ServiceManifest& getManifest() const = 0;
@@ -111,6 +139,8 @@ protected:
 
 	ServiceState m_state = ServiceState::Stopped;
 	uint32_t m_startCount = 0;
+	int64_t m_lastStartTimeUs = 0; ///< Duration of last start() in microseconds
+	int32_t m_heapDeltaBytes = 0; ///< Heap change from last start (negative = consumed)
 };
 
 } // namespace System::Services

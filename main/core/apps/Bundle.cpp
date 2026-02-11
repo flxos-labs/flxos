@@ -251,6 +251,35 @@ bool Bundle::optString(const std::string& key, std::string& out) const {
 }
 
 // ============================================================
+// Default-value getters
+// ============================================================
+
+bool Bundle::getBoolOr(const std::string& key, bool defaultValue) const {
+	auto* v = findEntry(key, Type::Bool);
+	return v ? v->valueBool : defaultValue;
+}
+
+int32_t Bundle::getInt32Or(const std::string& key, int32_t defaultValue) const {
+	auto* v = findEntry(key, Type::Int32);
+	return v ? v->valueInt32 : defaultValue;
+}
+
+int64_t Bundle::getInt64Or(const std::string& key, int64_t defaultValue) const {
+	auto* v = findEntry(key, Type::Int64);
+	return v ? v->valueInt64 : defaultValue;
+}
+
+float Bundle::getFloatOr(const std::string& key, float defaultValue) const {
+	auto* v = findEntry(key, Type::Float);
+	return v ? v->valueFloat : defaultValue;
+}
+
+std::string Bundle::getStringOr(const std::string& key, const std::string& defaultValue) const {
+	auto* v = findEntry(key, Type::String);
+	return v ? v->valueString : defaultValue;
+}
+
+// ============================================================
 // Introspection
 // ============================================================
 

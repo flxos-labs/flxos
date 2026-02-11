@@ -11,7 +11,6 @@ namespace System::Apps {
  * @brief Standard intent actions
  *
  * Intents declaratively describe what an app should do, similar to Android Intents.
- * Intents declaratively describe what an app should do, similar to Android Intents.
  */
 namespace IntentAction {
 constexpr const char* ACTION_MAIN = "MAIN"; // Launch app's main activity
@@ -88,7 +87,23 @@ public:
 			}
 		}
 
-		// 3. No match
+		// 3. URL scheme matching (for deep links like "flxos://settings/wifi")
+		if (!intent.data.empty()) {
+			auto colonPos = intent.data.find("://");
+			if (colonPos != std::string::npos) {
+				std::string schemePrefix = intent.data.substr(0, colonPos + 3);
+				for (const auto& manifest: registry.getAll()) {
+					for (const auto& scheme: manifest.urlSchemes) {
+						// Match if the data starts with a declared URL scheme
+						if (intent.data.rfind(scheme, 0) == 0) {
+							return manifest;
+						}
+					}
+				}
+			}
+		}
+
+		// 4. No match
 		return std::nullopt;
 	}
 
@@ -106,6 +121,23 @@ public:
 
 		if (!intent.mimeType.empty()) {
 			return registry.getForMimeType(intent.mimeType);
+		}
+
+		// URL scheme matching
+		if (!intent.data.empty()) {
+			auto colonPos = intent.data.find("://");
+			if (colonPos != std::string::npos) {
+				std::vector<AppManifest> results;
+				for (const auto& manifest: registry.getAll()) {
+					for (const auto& scheme: manifest.urlSchemes) {
+						if (intent.data.rfind(scheme, 0) == 0) {
+							results.push_back(manifest);
+							break;
+						}
+					}
+				}
+				return results;
+			}
 		}
 
 		return {};

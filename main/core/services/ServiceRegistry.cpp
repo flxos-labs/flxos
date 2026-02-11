@@ -285,7 +285,8 @@ void ServiceRegistry::dumpServiceStates() const {
 	Log::info(TAG, "=== Service States (%zu services) ===", m_services.size());
 	for (const auto& svc: m_services) {
 		const auto& m = svc->getManifest();
-		Log::info(TAG, "  [%s] %s — %s (starts: %lu, required: %s)", serviceStateToString(svc->getState()), m.serviceName.c_str(), m.serviceId.c_str(), (unsigned long)svc->getStartCount(), m.required ? "yes" : "no");
+		auto stats = svc->getServiceStats();
+		Log::info(TAG, "  [%s] %s — %s (v%s, starts: %lu, boot: %lld ms, heap: %ld B, required: %s)", serviceStateToString(svc->getState()), m.serviceName.c_str(), m.serviceId.c_str(), m.version.c_str(), (unsigned long)stats.startCount, (long long)(stats.lastStartTimeUs / 1000), (long)stats.heapDeltaBytes, m.required ? "yes" : "no");
 	}
 	Log::info(TAG, "====================================");
 }

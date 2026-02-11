@@ -4,6 +4,7 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace System::Apps {
@@ -27,7 +28,7 @@ public:
 	bool removeApp(const std::string& appId);
 
 	// === Basic Queries ===
-	const std::vector<AppManifest>& getAll() const;
+	std::vector<AppManifest> getAll() const;
 	std::optional<AppManifest> findById(const std::string& appId) const;
 
 	// === Advanced Filtering ===
@@ -48,6 +49,7 @@ private:
 	AppRegistry& operator=(const AppRegistry&) = delete;
 
 	std::vector<AppManifest> m_manifests;
+	std::unordered_map<std::string, size_t> m_idIndex; // appId → index in m_manifests
 	mutable std::mutex m_mutex;
 
 	// Insert sorted by sortPriority

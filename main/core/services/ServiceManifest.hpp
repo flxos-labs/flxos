@@ -74,6 +74,8 @@ struct ServiceManifest {
 	/// Human-readable name
 	std::string serviceName;
 
+	/// Service version for API compatibility
+	std::string version = "1.0.0";
 	/// IDs of services this service depends on (must be started first)
 	std::vector<std::string> dependencies {};
 

@@ -4,9 +4,11 @@
 #include "EventBus.hpp"
 #include "calendar/CalendarApp.hpp"
 #include "core/common/Logger.hpp"
+#include "core/services/ServiceRegistry.hpp"
 #include "core/tasks/TaskManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "core/ui/desktop/Desktop.hpp"
+#include "esp_system.h"
 #include "files/FilesApp.hpp"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
@@ -221,6 +223,27 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 	}
 
 	const auto& manifest = *manifestOpt;
+
+	// === Pre-launch validation (Beyond Tactility) ===
+
+	// Check required services are running
+	for (const auto& svcId: manifest.requiredServices) {
+		auto state = Services::ServiceRegistry::getInstance().getServiceState(svcId);
+		if (state != Services::ServiceState::Started) {
+			Log::error("AppManager", "App '%s' requires service '%s' which is not running", manifest.appId.c_str(), svcId.c_str());
+			return LAUNCH_ID_INVALID;
+		}
+	}
+
+	// Check minimum heap requirement
+	if (manifest.minHeapKb > 0) {
+		uint32_t freeKb = esp_get_free_heap_size() / 1024;
+		if (freeKb < manifest.minHeapKb) {
+			Log::error("AppManager", "Not enough heap for '%s' (need %u KB, have %lu KB)", manifest.appId.c_str(), manifest.minHeapKb, (unsigned long)freeKb);
+			return LAUNCH_ID_INVALID;
+		}
+	}
+
 	auto app = getAppByPackageName(manifest.appId);
 	if (!app) {
 		Log::error("AppManager", "App '%s' resolved but not registered", manifest.appId.c_str());

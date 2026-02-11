@@ -14,12 +14,10 @@ AppRegistry& AppRegistry::getInstance() {
 void AppRegistry::addApp(const AppManifest& manifest) {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
-	// Check for duplicates
-	for (const auto& existing: m_manifests) {
-		if (existing.appId == manifest.appId) {
-			ESP_LOGW(TAG, "App already registered: %s", manifest.appId.c_str());
-			return;
-		}
+	// O(1) duplicate check via index
+	if (m_idIndex.count(manifest.appId)) {
+		ESP_LOGW(TAG, "App already registered: %s", manifest.appId.c_str());
+		return;
 	}
 
 	insertSorted(manifest);
@@ -29,29 +27,35 @@ void AppRegistry::addApp(const AppManifest& manifest) {
 bool AppRegistry::removeApp(const std::string& appId) {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
-	auto it = std::remove_if(m_manifests.begin(), m_manifests.end(), [&appId](const AppManifest& m) { return m.appId == appId; });
-
-	if (it != m_manifests.end()) {
-		m_manifests.erase(it, m_manifests.end());
-		ESP_LOGI(TAG, "Removed app: %s", appId.c_str());
-		return true;
+	auto idxIt = m_idIndex.find(appId);
+	if (idxIt == m_idIndex.end()) {
+		ESP_LOGW(TAG, "App not found for removal: %s", appId.c_str());
+		return false;
 	}
 
-	ESP_LOGW(TAG, "App not found for removal: %s", appId.c_str());
-	return false;
+	m_manifests.erase(m_manifests.begin() + idxIt->second);
+
+	// Rebuild index (indices shifted after erase)
+	m_idIndex.clear();
+	for (size_t i = 0; i < m_manifests.size(); i++) {
+		m_idIndex[m_manifests[i].appId] = i;
+	}
+
+	ESP_LOGI(TAG, "Removed app: %s", appId.c_str());
+	return true;
 }
 
-const std::vector<AppManifest>& AppRegistry::getAll() const {
+std::vector<AppManifest> AppRegistry::getAll() const {
+	std::lock_guard<std::mutex> lock(m_mutex);
 	return m_manifests;
 }
 
 std::optional<AppManifest> AppRegistry::findById(const std::string& appId) const {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
-	for (const auto& manifest: m_manifests) {
-		if (manifest.appId == appId) {
-			return manifest;
-		}
+	auto it = m_idIndex.find(appId);
+	if (it != m_idIndex.end()) {
+		return m_manifests[it->second];
 	}
 	return std::nullopt;
 }
@@ -114,20 +118,20 @@ size_t AppRegistry::count() const {
 
 bool AppRegistry::hasApp(const std::string& appId) const {
 	std::lock_guard<std::mutex> lock(m_mutex);
-
-	for (const auto& manifest: m_manifests) {
-		if (manifest.appId == appId) {
-			return true;
-		}
-	}
-	return false;
+	return m_idIndex.count(appId) > 0;
 }
 
 void AppRegistry::insertSorted(const AppManifest& manifest) {
 	auto pos = std::lower_bound(m_manifests.begin(), m_manifests.end(), manifest, [](const AppManifest& a, const AppManifest& b) {
 		return a.sortPriority < b.sortPriority;
 	});
-	m_manifests.insert(pos, manifest);
+	auto insertedIt = m_manifests.insert(pos, manifest);
+
+	// Rebuild index (indices shifted after insert)
+	m_idIndex.clear();
+	for (size_t i = 0; i < m_manifests.size(); i++) {
+		m_idIndex[m_manifests[i].appId] = i;
+	}
 }
 
 bool AppRegistry::matchesMimeType(const std::string& pattern, const std::string& type) {
