@@ -1,8 +1,6 @@
 #pragma once
 
 #include "core/common/Singleton.hpp"
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
 #include "lvgl.h"
 #include <functional>
 #include <memory>
@@ -23,18 +21,12 @@ struct Notification {
 	bool isRead {};
 };
 
-class NotificationManager : public Singleton<NotificationManager>, public Services::IService {
+class NotificationManager : public Singleton<NotificationManager> {
 	friend class Singleton<NotificationManager>;
 
 public:
 
-	// ──── IService manifest ────
-	static const Services::ServiceManifest serviceManifest;
-	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
-
-	// ──── IService lifecycle ────
-	bool onStart() override;
-	void onStop() override;
+	void init();
 
 	// Notification Management
 	void addNotification(const std::string& title, const std::string& message, const std::string& appName = "System", const void* icon = nullptr, int priority = 1);
@@ -48,7 +40,10 @@ public:
 	size_t getUnreadCount() const;
 
 	// Subject for UI binding
+	// Value will be the number of unread notifications
 	lv_subject_t& getUnreadCountSubject() { return m_unread_count_subject; }
+
+	// Value will be incremented on any change (add/remove/read) to signal UI update
 	lv_subject_t& getUpdateSubject() { return m_update_subject; }
 
 private:

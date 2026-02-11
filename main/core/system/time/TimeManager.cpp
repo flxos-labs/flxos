@@ -10,18 +10,6 @@ static constexpr std::string_view TAG = "TimeManager";
 
 namespace System {
 
-const Services::ServiceManifest TimeManager::serviceManifest = {
-	.serviceId = "com.flxos.time",
-	.serviceName = "Time",
-	.dependencies = {"com.flxos.connectivity"},
-	.priority = 60,
-	.required = false,
-	.autoStart = true,
-	.guiRequired = false,
-	.capabilities = Services::ServiceCapability::WiFi,
-	.description = "SNTP time synchronization",
-};
-
 static void time_sync_notification_cb(struct timeval* /*tv*/) {
 	TimeManager::getInstance().updateSyncStatus(true);
 
@@ -31,12 +19,19 @@ static void time_sync_notification_cb(struct timeval* /*tv*/) {
 	localtime_r(&now, &timeinfo);
 }
 
-bool TimeManager::onStart() {
+void TimeManager::init() {
+	if (m_is_init) {
+		return;
+	}
+
+	// setCompileTime(); // Moved to after tzset to correct offset
+
 	// 1. Set default timezone to India (IST)
+	// This must be done first so mktime knows the local time offset
 	setenv("TZ", "IST-5:30", 1);
 	tzset();
 
-	// 2. Set time to compile time if current time is invalid
+	// 2. Set time to compile time if current time is invalid (older than build time)
 	setCompileTime();
 
 	// 3. Initialize SNTP
@@ -48,29 +43,33 @@ bool TimeManager::onStart() {
 	Log::info(TAG, "Initializing SNTP...");
 	esp_sntp_init();
 
-	Log::info(TAG, "Time service started");
-	return true;
+	m_is_init = true;
 }
 
-void TimeManager::onStop() {
+void TimeManager::deinit() {
+	if (!m_is_init) {
+		return;
+	}
+
 	esp_sntp_stop();
+	m_is_init = false;
 	m_is_synced = false;
-	Log::info(TAG, "Time service stopped");
 }
 
 void TimeManager::syncTime() {
-	if (!isRunning()) {
-		start();
+	if (!m_is_init) {
+		init();
 	}
 
+	// Check if we are already synced
 	if (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
 		m_is_synced = true;
 	}
 }
 
 bool TimeManager::waitForSync(uint32_t timeout_ms) {
-	if (!isRunning()) {
-		start();
+	if (!m_is_init) {
+		init();
 	}
 
 	uint32_t waited = 0;
@@ -83,6 +82,9 @@ bool TimeManager::waitForSync(uint32_t timeout_ms) {
 		}
 		vTaskDelay(pdMS_TO_TICKS(INTERVAL));
 		waited += INTERVAL;
+	}
+
+	if (!m_is_synced) {
 	}
 
 	return m_is_synced;
@@ -109,11 +111,12 @@ void TimeManager::setCompileTime() {
 	sscanf(__DATE__, "%s %d %d", s_month, &day, &year);
 	sscanf(__TIME__, "%d:%d:%d", &hour, &minute, &second);
 
+	// Calculate month index (0-11)
 	const char* month_ptr = strstr(month_names, s_month);
 	if (month_ptr) {
 		t.tm_mon = (month_ptr - month_names) / 3;
 	} else {
-		t.tm_mon = 0;
+		t.tm_mon = 0; // Default to Jan if parsing fails
 	}
 
 	t.tm_mday = day;
@@ -130,6 +133,7 @@ void TimeManager::setCompileTime() {
 	if (now < buildTime) {
 		struct timeval tv = {.tv_sec = buildTime, .tv_usec = 0};
 		settimeofday(&tv, NULL);
+		// Log the time we just set to verify
 		char buf[64];
 		strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &t);
 		Log::info(TAG, "System time was invalid. Set to compile time: %s", buf);

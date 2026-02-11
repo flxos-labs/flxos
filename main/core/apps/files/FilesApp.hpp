@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/apps/AppManager.hpp"
-#include "core/apps/AppManifest.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/common/ClipboardManager.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
@@ -22,8 +21,6 @@ public:
 	std::string getPackageName() const override;
 	std::string getAppName() const override;
 	const void* getIcon() const override;
-
-	static const AppManifest manifest;
 
 	void createUI(void* parent) override;
 	void onStop() override;

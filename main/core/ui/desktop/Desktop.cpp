@@ -4,7 +4,6 @@
 #include "../theming/theme_engine/ThemeEngine.hpp"
 #include "../theming/ui_constants/UiConstants.hpp"
 #include "core/apps/AppManager.hpp"
-#include "core/apps/Intent.hpp"
 #include "core/common/Logger.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
@@ -255,9 +254,7 @@ void Desktop::on_app_click(lv_event_t* e) {
 	std::string packageName = appPtr->getPackageName();
 
 	System::FocusManager::getInstance().dismissAllPanels();
-	System::Apps::AppManager::getInstance().startApp(
-		System::Apps::Intent::forApp(packageName)
-	);
+	d->openApp(packageName);
 }
 
 void Desktop::openApp(const std::string& packageName) {

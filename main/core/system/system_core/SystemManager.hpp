@@ -19,7 +19,7 @@ class SystemManager : public Singleton<SystemManager> {
 public:
 
 	esp_err_t initHardware();
-	esp_err_t initServices(); // Registers services with ServiceRegistry and starts them
+	esp_err_t initServices(); // Headless-compatible: connectivity, settings
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	esp_err_t initGuiState(); // GUI-only: LVGL subjects, observers, themes
@@ -44,11 +44,6 @@ private:
 
 	esp_err_t mountStorage();
 	static void mount_storage_helper(const char* path, const char* partition_label, wl_handle_t* wl_handle, bool format_if_failed);
-
-	/**
-	 * Register all system services with the ServiceRegistry.
-	 */
-	void registerServices();
 
 	wl_handle_t m_wl_handle_system = WL_INVALID_HANDLE;
 	wl_handle_t m_wl_handle_data = WL_INVALID_HANDLE;

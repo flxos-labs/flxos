@@ -2,8 +2,6 @@
 
 #include "core/common/Observable.hpp"
 #include "core/common/Singleton.hpp"
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
 #include <memory>
 #include <string>
 
@@ -14,23 +12,17 @@
 
 namespace System {
 
-class ThemeManager : public Singleton<ThemeManager>, public Services::IService {
+class ThemeManager : public Singleton<ThemeManager> {
 	friend class Singleton<ThemeManager>;
 
 public:
 
 	static constexpr const char* DEFAULT_WALLPAPER_PATH = "A:/data/wallpaper.jpg";
 
-	// ──── IService manifest ────
-	static const Services::ServiceManifest serviceManifest;
-	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
-
-	// ──── IService lifecycle ────
-	bool onStart() override;
-	void onStop() override;
+	void init();
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	void onGuiInit() override;
+	void initGuiBridges();
 #endif
 
 	Observable<int32_t>& getThemeObservable() { return m_theme_subject; }

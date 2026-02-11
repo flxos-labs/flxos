@@ -2,8 +2,6 @@
 
 #include "core/common/Observable.hpp"
 #include "core/common/Singleton.hpp"
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
 #include <memory>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
@@ -16,21 +14,21 @@ namespace System {
  * @brief Manages battery levels, charging status, and power-related subjects.
  * Bridges state from SystemInfoService to LVGL observers.
  */
-class PowerManager : public Singleton<PowerManager>, public Services::IService {
+class PowerManager : public Singleton<PowerManager> {
 	friend class Singleton<PowerManager>;
 
 public:
 
-	// ──── IService manifest ────
-	static const Services::ServiceManifest serviceManifest;
-	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
-
-	// ──── IService lifecycle ────
-	bool onStart() override;
-	void onStop() override;
+	/**
+	 * @brief Initialize PowerManager
+	 */
+	void init();
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	void onGuiInit() override;
+	/**
+	 * @brief Initialize LVGL bridges for GUI mode
+	 */
+	void initGuiBridges();
 #endif
 
 	/**
@@ -62,6 +60,8 @@ private:
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_batteryLevelBridge {};
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_isChargingBridge {};
 #endif
+
+	bool m_is_init = false;
 };
 
 } // namespace System

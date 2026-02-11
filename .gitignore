@@ -76,6 +76,4 @@ Desktop.ini
 *.user
 *.workspace # General workspace files, can be from various tools
 *.suo       # Visual Studio Solution User Options
-
-# Documentation
-MODULARIZATION_TRACKER.md
+*.sln.docstates # Visual Studio

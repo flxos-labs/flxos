@@ -13,31 +13,12 @@ static constexpr std::string_view TAG = "Notification";
 
 namespace System {
 
-const Services::ServiceManifest NotificationManager::serviceManifest = {
-	.serviceId = "com.flxos.notifications",
-	.serviceName = "Notifications",
-	.dependencies = {},
-	.priority = 80,
-	.required = false,
-	.autoStart = true,
-	.guiRequired = true,
-	.capabilities = Services::ServiceCapability::None,
-	.description = "System notification management",
-};
-
 NotificationManager::NotificationManager() {
 	lv_subject_init_int(&m_unread_count_subject, 0);
 	lv_subject_init_int(&m_update_subject, 0);
 }
 
-bool NotificationManager::onStart() {
-	Log::info(TAG, "Notification service started");
-	return true;
-}
-
-void NotificationManager::onStop() {
-	clearAll();
-	Log::info(TAG, "Notification service stopped");
+void NotificationManager::init() {
 }
 
 std::string NotificationManager::generateId() {
@@ -65,6 +46,7 @@ void NotificationManager::addNotification(const std::string& title, const std::s
 		m_notifications.insert(m_notifications.begin(), notif);
 	} // lock_guard destructor releases mutex here
 
+	// Now safe to call updateSubjects() without holding the lock
 	updateSubjects();
 }
 

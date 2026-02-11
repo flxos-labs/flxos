@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/apps/AppManager.hpp"
-#include "core/apps/AppManifest.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/apps/settings/bluetooth/BluetoothSettings.hpp"
 #include "core/apps/settings/display/DisplaySettings.hpp"
@@ -13,12 +12,10 @@ namespace System::Apps {
 class SettingsApp : public App {
 public:
 
-	std::string getPackageName() const override { return "com.flxos.settings"; }
+	std::string getPackageName() const override { return "com.os.settings"; }
 	std::string getAppName() const override { return "Settings"; }
 	std::string getVersion() const override { return "1.1.0"; }
 	const void* getIcon() const override { return LV_SYMBOL_SETTINGS; }
-
-	static const AppManifest manifest;
 
 	void createUI(void* parent) override {
 		m_container = (lv_obj_t*)parent;

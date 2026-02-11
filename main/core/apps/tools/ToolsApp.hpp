@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/apps/AppManager.hpp"
-#include "core/apps/AppManifest.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "lvgl.h"
 #include <functional>
@@ -30,8 +29,6 @@ public:
 	std::string getPackageName() const override { return "com.flxos.tools"; }
 	std::string getAppName() const override { return "Tools"; }
 	const void* getIcon() const override { return LV_SYMBOL_LIST; }
-
-	static const AppManifest manifest;
 
 private:
 

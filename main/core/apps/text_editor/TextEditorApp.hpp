@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/apps/AppManager.hpp"
-#include "core/apps/AppManifest.hpp"
 #include "core/ui/components/FileBrowser.hpp"
 #include "lvgl.h"
 #include <functional>
@@ -26,8 +25,6 @@ public:
 	std::string getPackageName() const override { return "com.flxos.texteditor"; }
 	std::string getAppName() const override { return "Text Editor"; }
 	const void* getIcon() const override { return LV_SYMBOL_EDIT; }
-
-	static const AppManifest manifest;
 
 private:
 

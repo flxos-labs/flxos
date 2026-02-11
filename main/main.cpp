@@ -1,17 +1,15 @@
 #include "core/common/Logger.hpp"
 #include "core/system/system_core/SystemManager.hpp"
+#include "font/lv_symbol_def.h"
 #include "sdkconfig.h"
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "core/system/notification/NotificationManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
-#include "font/lv_symbol_def.h"
 #endif
 
 #if CONFIG_FLXOS_CLI_ENABLED
-#include "core/services/ServiceRegistry.hpp"
 #include "core/services/cli/CliService.hpp"
-#include <memory>
 #endif
 
 #include "freertos/task.h"
@@ -25,14 +23,12 @@ extern "C" void app_main(void) {
 	System::SystemManager::getInstance().initServices();
 
 #if CONFIG_FLXOS_CLI_ENABLED
-	// CLI is autoStart=false, so start it explicitly
-	auto noDelete = [](auto*) {};
-	auto& registry = System::Services::ServiceRegistry::getInstance();
-	registry.addService(std::shared_ptr<System::Services::IService>(&System::CliService::getInstance(), noDelete));
-	System::CliService::getInstance().start();
+	// Initialize CLI (works in both headless and GUI modes)
+	System::CliService::getInstance().init();
 #endif
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
+	System::NotificationManager::getInstance().init();
 	Log::info(TAG, "Sending welcome notification");
 	System::NotificationManager::getInstance().addNotification("Welcome", "FlxOS initialized successfully!", "System", LV_SYMBOL_OK, 1);
 

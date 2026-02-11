@@ -11,31 +11,15 @@ static constexpr const char* TAG = "PowerManager";
 
 namespace System {
 
-const Services::ServiceManifest PowerManager::serviceManifest = {
-	.serviceId = "com.flxos.power",
-	.serviceName = "Power",
-	.dependencies = {},
-	.priority = 50,
-	.required = false,
-	.autoStart = true,
-	.guiRequired = false,
-	.capabilities = Services::ServiceCapability::None,
-	.description = "Battery level, charging status, and power management",
-};
-
-bool PowerManager::onStart() {
-	Log::info(TAG, "Power service starting...");
+void PowerManager::init() {
+	if (m_is_init) return;
+	Log::info(TAG, "Initializing PowerManager...");
 	refresh();
-	Log::info(TAG, "Power service started");
-	return true;
-}
-
-void PowerManager::onStop() {
-	Log::info(TAG, "Power service stopped");
+	m_is_init = true;
 }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-void PowerManager::onGuiInit() {
+void PowerManager::initGuiBridges() {
 	Log::info(TAG, "Initializing GUI bridges...");
 	INIT_BRIDGE(m_batteryLevelBridge, m_batteryLevel);
 	INIT_BRIDGE(m_isChargingBridge, m_isCharging);
