@@ -31,7 +31,7 @@ lv_display_t* GuiTask::m_disp = nullptr;
 bool GuiTask::m_paused = false;
 bool GuiTask::m_resume_on_touch = false;
 
-GuiTask::GuiTask() : System::Task("gui_task", 20 * 1024, 5, 1) {
+GuiTask::GuiTask() : System::Task("gui_task", 32 * 1024, 5, 1) {
 	if (!xGuiSemaphore) {
 		xGuiSemaphore = xSemaphoreCreateRecursiveMutex();
 	}

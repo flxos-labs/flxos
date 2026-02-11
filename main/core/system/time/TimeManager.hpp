@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core/common/Singleton.hpp"
+#include "core/services/IService.hpp"
+#include "core/services/ServiceManifest.hpp"
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -9,13 +11,19 @@
 
 namespace System {
 
-class TimeManager : public Singleton<TimeManager> {
+class TimeManager : public Singleton<TimeManager>, public Services::IService {
 	friend class Singleton<TimeManager>;
 
 public:
 
-	void init();
-	void deinit();
+	// ──── IService manifest ────
+	static const Services::ServiceManifest serviceManifest;
+	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
+
+	// ──── IService lifecycle ────
+	bool onStart() override;
+	void onStop() override;
+
 	void syncTime();
 	static void setTimeZone(const char* tz);
 
@@ -29,7 +37,6 @@ private:
 	TimeManager() = default;
 	~TimeManager() = default;
 
-	bool m_is_init = false;
 	bool m_is_synced = false;
 
 	void setCompileTime();

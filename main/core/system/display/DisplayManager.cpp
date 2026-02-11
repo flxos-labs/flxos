@@ -16,26 +16,43 @@ static constexpr const char* TAG = "DisplayManager";
 
 namespace System {
 
-void DisplayManager::init() {
+const Services::ServiceManifest DisplayManager::serviceManifest = {
+	.serviceId = "com.flxos.display",
+	.serviceName = "Display",
+	.dependencies = {"com.flxos.settings"},
+	.priority = 20,
+	.required = true,
+	.autoStart = true,
+	.guiRequired = false,
+	.capabilities = Services::ServiceCapability::Display,
+	.description = "Display brightness, rotation, and FPS monitoring",
+};
+
+bool DisplayManager::onStart() {
 	SettingsManager::getInstance().registerSetting("brightness", m_brightness_subject);
 	SettingsManager::getInstance().registerSetting("rotation", m_rotation_subject);
 	SettingsManager::getInstance().registerSetting("show_fps", m_show_fps_subject);
 
-	// Initial application of settings (if GUI is running, it will be done in initGuiBridges or via subscriptions)
 	applyBrightness(m_brightness_subject.get());
 	applyRotation(m_rotation_subject.get());
 	applyShowFps(m_show_fps_subject.get());
+
+	Log::info(TAG, "Display service started");
+	return true;
+}
+
+void DisplayManager::onStop() {
+	Log::info(TAG, "Display service stopped");
 }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-void DisplayManager::initGuiBridges() {
+void DisplayManager::onGuiInit() {
 	GuiTask::lock();
 
 	INIT_INT_BRIDGE(m_brightness_bridge, m_brightness_subject, applyBrightness);
 	INIT_INT_BRIDGE(m_rotation_bridge, m_rotation_subject, applyRotation);
 	INIT_INT_BRIDGE(m_show_fps_bridge, m_show_fps_subject, applyShowFps);
 
-	// Apply initial values to GUI
 	applyBrightness(m_brightness_subject.get());
 	applyRotation(m_rotation_subject.get());
 	applyShowFps(m_show_fps_subject.get());

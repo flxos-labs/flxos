@@ -2,8 +2,6 @@
 #include "bluetooth/BluetoothManager.hpp"
 #include "core/common/Logger.hpp"
 #include "core/system/settings/SettingsManager.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
-#include "core/ui/LvglBridgeHelpers.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -15,14 +13,28 @@
 #include <cstdint>
 #include <string_view>
 
+#if !CONFIG_FLXOS_HEADLESS_MODE
+#include "core/tasks/gui/GuiTask.hpp"
+#include "core/ui/LvglBridgeHelpers.hpp"
+#endif
+
 static constexpr std::string_view TAG = "Connectivity";
 
 namespace System {
 
-esp_err_t ConnectivityManager::init() {
-	if (m_is_init) {
-		return ESP_OK;
-	}
+const Services::ServiceManifest ConnectivityManager::serviceManifest = {
+	.serviceId = "com.flxos.connectivity",
+	.serviceName = "Connectivity",
+	.dependencies = {"com.flxos.settings"},
+	.priority = 30,
+	.required = false,
+	.autoStart = true,
+	.guiRequired = false,
+	.capabilities = Services::ServiceCapability::WiFi | Services::ServiceCapability::Bluetooth,
+	.description = "WiFi, Hotspot, and Bluetooth connectivity",
+};
+
+bool ConnectivityManager::onStart() {
 	Log::info(TAG, "Initializing networking stack...");
 	ESP_ERROR_CHECK(esp_netif_init());
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -49,15 +61,13 @@ esp_err_t ConnectivityManager::init() {
 	SettingsManager::getInstance().registerSetting("wifi_pass", m_saved_wifi_password_subject);
 
 	ESP_ERROR_CHECK(setWifiMode(WIFI_MODE_NULL));
-	m_is_init = true;
-	Log::info(TAG, "ConnectivityManager initialized");
+	Log::info(TAG, "Connectivity service started");
 
 	// Auto-start WiFi and connect to saved network if enabled
 	if (m_wifi_autostart_subject.get() != 0) {
 		Log::info(TAG, "Auto-starting WiFi...");
 		setWiFiEnabled(true);
 
-		// Try to connect to saved network
 		if (hasSavedWiFiCredentials()) {
 			const char* saved_ssid = m_saved_wifi_ssid_subject.get();
 			const char* saved_pass = m_saved_wifi_password_subject.get();
@@ -66,11 +76,27 @@ esp_err_t ConnectivityManager::init() {
 		}
 	}
 
-	return ESP_OK;
+	// Start hotspot usage timer
+	HotspotManager::getInstance().startUsageTimer();
+
+	return true;
+}
+
+void ConnectivityManager::onStop() {
+	Log::info(TAG, "Connectivity service stopping...");
+	// Disconnect WiFi if connected
+	if (isWiFiConnected()) {
+		WiFiManager::getInstance().disconnect();
+	}
+	// Stop hotspot if running
+	if (isHotspotEnabled()) {
+		HotspotManager::getInstance().stop();
+	}
+	Log::info(TAG, "Connectivity service stopped");
 }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-void ConnectivityManager::initGuiBridges() {
+void ConnectivityManager::onGuiInit() {
 	Log::info(TAG, "Initializing LVGL bridges for connectivity...");
 
 	INIT_BRIDGE(m_wifi_enabled_bridge, m_wifi_enabled_subject);
@@ -150,9 +176,13 @@ esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
 	Log::info(TAG, "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
 	esp_err_t const err = WiFiManager::getInstance().setEnabled(enabled);
 	if (err == ESP_OK) {
+#if !CONFIG_FLXOS_HEADLESS_MODE
 		GuiTask::lock();
+#endif
 		m_wifi_enabled_subject.set(enabled ? 1 : 0);
+#if !CONFIG_FLXOS_HEADLESS_MODE
 		GuiTask::unlock();
+#endif
 	}
 	return err;
 }

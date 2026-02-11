@@ -2,6 +2,8 @@
 
 #include "core/common/Observable.hpp"
 #include "core/common/Singleton.hpp"
+#include "core/services/IService.hpp"
+#include "core/services/ServiceManifest.hpp"
 #include <memory>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
@@ -11,15 +13,21 @@
 
 namespace System {
 
-class DisplayManager : public Singleton<DisplayManager> {
+class DisplayManager : public Singleton<DisplayManager>, public Services::IService {
 	friend class Singleton<DisplayManager>;
 
 public:
 
-	void init();
+	// ──── IService manifest ────
+	static const Services::ServiceManifest serviceManifest;
+	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
+
+	// ──── IService lifecycle ────
+	bool onStart() override;
+	void onStop() override;
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	void initGuiBridges();
+	void onGuiInit() override;
 #endif
 
 	Observable<int32_t>& getBrightnessObservable() { return m_brightness_subject; }

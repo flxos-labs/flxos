@@ -1,47 +1,47 @@
 #pragma once
 
-#include "sd_protocol_types.h"
+#include "core/services/IService.hpp"
+#include "core/services/ServiceManifest.hpp"
+#include "sdkconfig.h"
 #include <string>
+
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+struct sdmmc_card_t;
+#endif
 
 namespace System::Services {
 
-class SdCardService {
+class SdCardService : public IService {
 public:
 
 	static SdCardService& getInstance();
 
-	/**
-	 * Mount the SD card. Call during hardware init.
-	 * @return true if mounted successfully
-	 */
-	bool mount();
+	// ──── IService manifest ────
+	static const ServiceManifest serviceManifest;
+	const ServiceManifest& getManifest() const override { return serviceManifest; }
 
-	/**
-	 * Unmount the SD card.
-	 */
-	void unmount();
+	// ──── IService lifecycle ────
+	bool onStart() override;
+	void onStop() override;
 
-	/**
-	 * @return true if SD card is currently mounted
-	 */
 	bool isMounted() const { return m_mounted; }
-
-	/**
-	 * @return The VFS mount point (e.g., "/sdcard")
-	 */
 	const std::string& getMountPoint() const { return m_mountPoint; }
 
 private:
 
 	SdCardService();
 	~SdCardService() = default;
-	SdCardService(const SdCardService&) = delete;
-	SdCardService& operator=(const SdCardService&) = delete;
+
+	bool mount();
+	void unmount();
 
 	bool m_mounted = false;
-	bool m_busInitializedHere = false;
-	sdmmc_card_t* m_card = nullptr;
 	std::string m_mountPoint;
+
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+	sdmmc_card_t* m_card = nullptr;
+	bool m_busInitializedHere = false;
+#endif
 };
 
 } // namespace System::Services
