@@ -84,15 +84,16 @@ public:
 		uint32_t heapBefore = esp_get_free_heap_size();
 		int64_t t0 = esp_timer_get_time();
 
-		if (onStart()) {
-			m_lastStartTimeUs = esp_timer_get_time() - t0;
-			m_heapDeltaBytes = (int32_t)esp_get_free_heap_size() - (int32_t)heapBefore;
+		bool ok = onStart();
+
+		m_lastStartTimeUs = esp_timer_get_time() - t0;
+		m_heapDeltaBytes = static_cast<int32_t>(esp_get_free_heap_size()) - static_cast<int32_t>(heapBefore);
+
+		if (ok) {
 			m_state = ServiceState::Started;
 			m_startCount++;
 			return true;
 		}
-		m_lastStartTimeUs = esp_timer_get_time() - t0;
-		m_heapDeltaBytes = (int32_t)esp_get_free_heap_size() - (int32_t)heapBefore;
 		m_state = ServiceState::Failed;
 		return false;
 	}
