@@ -18,6 +18,7 @@
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
 #include "core/services/storage/SdCardService.hpp"
 #endif
+#include "core/services/device/DeviceProfileService.hpp"
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "core/system/notification/NotificationManager.hpp"
 #endif
@@ -78,6 +79,7 @@ void SystemManager::registerServices() {
 	registry.addService(std::shared_ptr<Services::IService>(&ConnectivityManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<Services::IService>(&PowerManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<Services::IService>(&TimeManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<Services::IService>(&Services::DeviceProfileService::getInstance(), noDelete));
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
 	registry.addService(std::shared_ptr<Services::IService>(&Services::SdCardService::getInstance(), noDelete));

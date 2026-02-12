@@ -224,7 +224,7 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 
 	const auto& manifest = *manifestOpt;
 
-	// === Pre-launch validation (Beyond Tactility) ===
+	// === Pre-launch validation ===
 
 	// Check required services are running
 	for (const auto& svcId: manifest.requiredServices) {

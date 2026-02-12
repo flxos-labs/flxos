@@ -6,6 +6,7 @@
 #include "core/lv_obj_pos.h"
 #include "core/lv_obj_style.h"
 #include "core/lv_obj_style_gen.h"
+#include "core/services/device/DeviceProfileService.hpp"
 #include "core/services/system_info/SystemInfoService.hpp"
 #include "display/lv_display.h"
 #include "esp_timer.h"
@@ -122,6 +123,52 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	// Build Date
 	lv_obj_t* build_label = lv_label_create(tab);
 	lv_label_set_text_fmt(build_label, "Build: %s", stats.buildDate.c_str());
+
+	// Device Profile
+	auto& profileService = Services::DeviceProfileService::getInstance();
+	if (profileService.hasValidProfile()) {
+		const auto& profile = profileService.getActiveProfile();
+
+		lv_obj_t* separator = lv_obj_create(tab);
+		lv_obj_set_size(separator, lv_pct(100), 1);
+		lv_obj_set_style_bg_color(separator, lv_color_hex(0x888888), 0);
+		lv_obj_set_style_bg_opa(separator, LV_OPA_50, 0);
+
+		lv_obj_t* profile_header = lv_label_create(tab);
+		lv_label_set_text(profile_header, "Device Profile");
+		lv_obj_set_style_text_font(profile_header, &lv_font_montserrat_14, 0);
+
+		lv_obj_t* board_label = lv_label_create(tab);
+		lv_label_set_text_fmt(board_label, "Board: %s %s", profile.vendor.c_str(), profile.boardName.c_str());
+
+		lv_obj_t* chip_info_label = lv_label_create(tab);
+		lv_label_set_text_fmt(chip_info_label, "Target: %s", profile.chipTarget.c_str());
+
+		lv_obj_t* display_info_label = lv_label_create(tab);
+		lv_label_set_text_fmt(display_info_label, "Display: %ux%u %s (%.1f\")", profile.display.width, profile.display.height, profile.display.driver.c_str(), profile.display.sizeInches);
+
+		if (profile.touch.enabled) {
+			lv_obj_t* touch_label = lv_label_create(tab);
+			lv_label_set_text_fmt(touch_label, "Touch: %s via %s", profile.touch.driver.c_str(), profile.touch.bus.c_str());
+		}
+
+		// Feature flags
+		std::string caps;
+		if (profile.hasWifi()) caps += "WiFi ";
+		if (profile.hasBluetooth()) caps += profile.connectivity.bleOnly ? "BLE " : "BT ";
+		if (profile.hasPsram()) caps += "PSRAM ";
+		if (profile.hasSdCard()) caps += "SD ";
+		if (profile.hasBattery()) caps += "Battery ";
+		if (profile.features.hasRgbLed) caps += "RGB ";
+
+		lv_obj_t* caps_label = lv_label_create(tab);
+		lv_label_set_text_fmt(caps_label, "Features: %s", caps.c_str());
+
+		lv_obj_t* separator2 = lv_obj_create(tab);
+		lv_obj_set_size(separator2, lv_pct(100), 1);
+		lv_obj_set_style_bg_color(separator2, lv_color_hex(0x888888), 0);
+		lv_obj_set_style_bg_opa(separator2, LV_OPA_50, 0);
+	}
 
 	// ESP-IDF Version
 	m_idf_label = lv_label_create(tab);
