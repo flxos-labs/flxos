@@ -1,5 +1,42 @@
 menu "Hardware Configuration"
 
+	choice FLXOS_DEVICE_PROFILE
+		prompt "Device Profile"
+		default FLXOS_PROFILE_GENERIC_ESP32
+		help
+			Select your hardware board. This loads metadata about display,
+			touch, SD card, and connectivity for the selected board.
+			Pin configuration is still handled by the options below.
+
+		config FLXOS_PROFILE_GENERIC_ESP32
+			bool "Generic ESP32"
+			help
+				Generic ESP32 board with no specific hardware assumptions.
+
+		config FLXOS_PROFILE_GENERIC_ESP32S3
+			bool "Generic ESP32-S3"
+			help
+				Generic ESP32-S3 board with PSRAM and USB-OTG.
+
+		config FLXOS_PROFILE_GENERIC_ESP32C3
+			bool "Generic ESP32-C3"
+			help
+				Generic ESP32-C3 RISC-V board (BLE only, no classic Bluetooth).
+
+		config FLXOS_PROFILE_CYD_2432S028R
+			bool "CYD 2432S028R (2.8\" ILI9341 + XPT2046)"
+			help
+				Cheap Yellow Display 2.8" with ILI9341 display and XPT2046
+				resistive touch (original v1 variant).
+	endchoice
+
+	config FLXOS_DEVICE_PROFILE_ID
+		string
+		default "generic-esp32"     if FLXOS_PROFILE_GENERIC_ESP32
+		default "generic-esp32s3"   if FLXOS_PROFILE_GENERIC_ESP32S3
+		default "generic-esp32c3"   if FLXOS_PROFILE_GENERIC_ESP32C3
+		default "cyd-2432s028r"     if FLXOS_PROFILE_CYD_2432S028R
+
 	config FLXOS_HEADLESS_MODE
 		bool "Headless Mode (No Display/GUI)"
 		default n

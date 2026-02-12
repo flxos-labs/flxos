@@ -9,7 +9,7 @@
 namespace System::Services {
 
 /**
- * @brief Runtime stats for a service (Beyond Tactility: service metrics)
+ * @brief Runtime stats for a service (service metrics)
  */
 struct ServiceStats {
 	uint32_t startCount = 0; ///< Number of times this service has been started

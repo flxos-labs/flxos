@@ -18,6 +18,8 @@ set(CORE_SRCS
     "core/tasks/resource_monitor/ResourceMonitorTask.cpp"
     "core/apps/Bundle.cpp"
     "core/apps/EventBus.cpp"
+    "core/system/device/DeviceProfiles.cpp"
+    "core/services/device/DeviceProfileService.cpp"
 )
 
 # GUI sources (excluded in headless mode)
