@@ -100,13 +100,7 @@ void Desktop::init() {
 					if (instance->m_wallpaper_img == nullptr && instance->m_wallpaper != nullptr) {
 						const char* path = (const char*)lv_subject_get_pointer(&System::ThemeManager::getInstance().getWallpaperPathSubject());
 						if (path && strlen(path) > 0) {
-							instance->m_wallpaper_img = lv_image_create(instance->m_wallpaper);
-							lv_image_set_src(instance->m_wallpaper_img, path);
-							lv_obj_set_size(instance->m_wallpaper_img, lv_pct(100), lv_pct(100));
-							lv_obj_set_style_pad_all(instance->m_wallpaper_img, 0, 0);
-							lv_obj_set_style_border_width(instance->m_wallpaper_img, 0, 0);
-							lv_image_set_inner_align(instance->m_wallpaper_img, LV_IMAGE_ALIGN_COVER);
-							lv_obj_move_background(instance->m_wallpaper_img);
+							instance->createWallpaperImage(path);
 						}
 					}
 				} else {
@@ -133,13 +127,7 @@ void Desktop::init() {
 						lv_image_set_src(instance->m_wallpaper_img, path);
 					} else if (System::ThemeManager::getInstance().getWallpaperEnabledObservable().get()) {
 						if (instance->m_wallpaper != nullptr) {
-							instance->m_wallpaper_img = lv_image_create(instance->m_wallpaper);
-							lv_image_set_src(instance->m_wallpaper_img, path);
-							lv_obj_set_size(instance->m_wallpaper_img, lv_pct(100), lv_pct(100));
-							lv_obj_set_style_pad_all(instance->m_wallpaper_img, 0, 0);
-							lv_obj_set_style_border_width(instance->m_wallpaper_img, 0, 0);
-							lv_image_set_inner_align(instance->m_wallpaper_img, LV_IMAGE_ALIGN_COVER);
-							lv_obj_move_background(instance->m_wallpaper_img);
+							instance->createWallpaperImage(path);
 						}
 					}
 				} else {
@@ -222,6 +210,16 @@ void Desktop::configure_panel_style(lv_obj_t* panel) {
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_FLOATING);
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
 	UI::StyleUtils::apply_glass(panel, lv_dpx(UiConstants::GLASS_BLUR_SMALL));
+}
+
+void Desktop::createWallpaperImage(const char* path) {
+	m_wallpaper_img = lv_image_create(m_wallpaper);
+	lv_image_set_src(m_wallpaper_img, path);
+	lv_obj_set_size(m_wallpaper_img, lv_pct(100), lv_pct(100));
+	lv_obj_set_style_pad_all(m_wallpaper_img, 0, 0);
+	lv_obj_set_style_border_width(m_wallpaper_img, 0, 0);
+	lv_image_set_inner_align(m_wallpaper_img, LV_IMAGE_ALIGN_COVER);
+	lv_obj_move_background(m_wallpaper_img);
 }
 
 void Desktop::realign_panels() {
