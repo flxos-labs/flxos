@@ -10,7 +10,7 @@ namespace System {
  * @brief Static registry of known device profiles.
  *
  * Contains built-in profiles for popular ESP32 boards.
- * Profiles are compile-time constants — no heap allocation.
+ * Profiles are defined at static initialization time.
  */
 class DeviceProfiles {
 public:

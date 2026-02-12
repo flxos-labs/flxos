@@ -135,8 +135,12 @@ bool DeviceProfileService::setPinOverride(const std::string& pinName, int gpioNu
 
 	err = nvs_set_i32(handle, pinName.c_str(), static_cast<int32_t>(gpioNum));
 	if (err == ESP_OK) {
-		nvs_commit(handle);
-		Log::info(TAG, "Pin override saved: %s = GPIO %d (takes effect on next boot)", pinName.c_str(), gpioNum);
+		err = nvs_commit(handle);
+		if (err == ESP_OK) {
+			Log::info(TAG, "Pin override saved: %s = GPIO %d (takes effect on next boot)", pinName.c_str(), gpioNum);
+		} else {
+			Log::error(TAG, "Failed to commit pin override: %s", esp_err_to_name(err));
+		}
 	} else {
 		Log::error(TAG, "Failed to save pin override: %s", esp_err_to_name(err));
 	}
@@ -154,8 +158,12 @@ bool DeviceProfileService::clearPinOverride(const std::string& pinName) {
 
 	err = nvs_erase_key(handle, pinName.c_str());
 	if (err == ESP_OK) {
-		nvs_commit(handle);
-		Log::info(TAG, "Pin override cleared: %s", pinName.c_str());
+		err = nvs_commit(handle);
+		if (err == ESP_OK) {
+			Log::info(TAG, "Pin override cleared: %s", pinName.c_str());
+		} else {
+			Log::error(TAG, "Failed to commit pin override clear: %s", esp_err_to_name(err));
+		}
 	}
 
 	nvs_close(handle);
@@ -193,8 +201,12 @@ bool DeviceProfileService::saveTouchCalibration(int16_t xMin, int16_t xMax, int1
 
 	err = nvs_set_blob(handle, "cal", &cal, sizeof(cal));
 	if (err == ESP_OK) {
-		nvs_commit(handle);
-		Log::info(TAG, "Touch calibration saved: xMin=%d xMax=%d yMin=%d yMax=%d", xMin, xMax, yMin, yMax);
+		err = nvs_commit(handle);
+		if (err == ESP_OK) {
+			Log::info(TAG, "Touch calibration saved: xMin=%d xMax=%d yMin=%d yMax=%d", xMin, xMax, yMin, yMax);
+		} else {
+			Log::error(TAG, "Failed to commit touch calibration: %s", esp_err_to_name(err));
+		}
 	} else {
 		Log::error(TAG, "Failed to save touch calibration: %s", esp_err_to_name(err));
 	}

@@ -1,5 +1,5 @@
 #include "DeviceProfiles.hpp"
-#include <array>
+#include <cstddef>
 
 namespace System {
 
@@ -187,21 +187,23 @@ static const DeviceProfile PROFILE_CYD_2432S028R = {
 // Profile Table
 // ============================================================================
 
-static const std::array<const DeviceProfile*, 4> ALL_PROFILES = {
+static const DeviceProfile* const ALL_PROFILES[] = {
 	&PROFILE_GENERIC_ESP32,
 	&PROFILE_GENERIC_ESP32S3,
 	&PROFILE_GENERIC_ESP32C3,
 	&PROFILE_CYD_2432S028R,
 };
 
+static constexpr size_t ALL_PROFILES_COUNT = sizeof(ALL_PROFILES) / sizeof(ALL_PROFILES[0]);
+
 // ============================================================================
 // Lookup Implementation
 // ============================================================================
 
 const DeviceProfile* DeviceProfiles::findById(const std::string& profileId) {
-	for (const auto* profile: ALL_PROFILES) {
-		if (profile->profileId == profileId) {
-			return profile;
+	for (size_t i = 0; i < ALL_PROFILES_COUNT; ++i) {
+		if (ALL_PROFILES[i]->profileId == profileId) {
+			return ALL_PROFILES[i];
 		}
 	}
 	return nullptr;
@@ -209,24 +211,24 @@ const DeviceProfile* DeviceProfiles::findById(const std::string& profileId) {
 
 std::vector<const DeviceProfile*> DeviceProfiles::getAll() {
 	std::vector<const DeviceProfile*> result;
-	result.reserve(ALL_PROFILES.size());
-	for (const auto* p: ALL_PROFILES) {
-		result.push_back(p);
+	result.reserve(ALL_PROFILES_COUNT);
+	for (size_t i = 0; i < ALL_PROFILES_COUNT; ++i) {
+		result.push_back(ALL_PROFILES[i]);
 	}
 	return result;
 }
 
 std::vector<std::string> DeviceProfiles::getAllIds() {
 	std::vector<std::string> ids;
-	ids.reserve(ALL_PROFILES.size());
-	for (const auto* profile: ALL_PROFILES) {
-		ids.push_back(profile->profileId);
+	ids.reserve(ALL_PROFILES_COUNT);
+	for (size_t i = 0; i < ALL_PROFILES_COUNT; ++i) {
+		ids.push_back(ALL_PROFILES[i]->profileId);
 	}
 	return ids;
 }
 
 size_t DeviceProfiles::count() {
-	return ALL_PROFILES.size();
+	return ALL_PROFILES_COUNT;
 }
 
 } // namespace System

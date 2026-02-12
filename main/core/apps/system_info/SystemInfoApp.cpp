@@ -145,7 +145,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		lv_label_set_text_fmt(chip_info_label, "Target: %s", profile.chipTarget.c_str());
 
 		lv_obj_t* display_info_label = lv_label_create(tab);
-		lv_label_set_text_fmt(display_info_label, "Display: %ux%u %s (%.1f\")", profile.display.width, profile.display.height, profile.display.driver.c_str(), profile.display.sizeInches);
+		lv_label_set_text_fmt(display_info_label, "Panel: %ux%u %s (%.1f\")", profile.display.width, profile.display.height, profile.display.driver.c_str(), profile.display.sizeInches);
 
 		if (profile.touch.enabled) {
 			lv_obj_t* touch_label = lv_label_create(tab);
