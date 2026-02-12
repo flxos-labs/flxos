@@ -4,7 +4,7 @@
 #include <SDL2/SDL.h>
 
 namespace HAL {
-void init_sdl();
+bool init_sdl();
 void flush_cb(lv_display_t* display, const lv_area_t* area, uint8_t* px_map);
 } // namespace HAL
 
@@ -12,7 +12,10 @@ int main(int argc, char* argv[]) {
 	Log::info("Simulator", "Starting FlxOS Simulator...");
 
 	lv_init();
-	HAL::init_sdl();
+	if (!HAL::init_sdl()) {
+		Log::error("Simulator", "Failed to initialize SDL.");
+		return -1;
+	}
 
 	lv_display_t* disp = lv_display_create(320, 240);
 	lv_display_set_flush_cb(disp, HAL::flush_cb);
@@ -29,6 +32,7 @@ int main(int argc, char* argv[]) {
 			if (event.type == SDL_QUIT) running = false;
 		}
 
+		lv_tick_inc(5);
 		lv_timer_handler();
 		SDL_Delay(5);
 	}

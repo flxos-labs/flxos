@@ -267,7 +267,7 @@ cd simulator
 mkdir build && cd build
 cmake ..
 make
-./FlxOS_Simulator
+./flxos_sim
 ```
 
 ### Code Quality

@@ -33,10 +33,6 @@ bool ThemeManager::onStart() {
 	SettingsManager::getInstance().registerSetting("wp_enabled", m_wallpaper_enabled_subject);
 	SettingsManager::getInstance().registerSetting("wp_path", m_wallpaper_path_subject);
 
-	if (strlen(m_wallpaper_path_subject.get()) == 0) {
-		m_wallpaper_path_subject.set(DEFAULT_WALLPAPER_PATH);
-	}
-
 	applyTheme(m_theme_subject.get());
 	Log::info(TAG, "Theme service started");
 	return true;

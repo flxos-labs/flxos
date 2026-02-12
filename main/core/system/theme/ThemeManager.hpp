@@ -19,8 +19,6 @@ class ThemeManager : public Singleton<ThemeManager>, public Services::IService {
 
 public:
 
-	static constexpr const char* DEFAULT_WALLPAPER_PATH = "A:/data/wallpaper.jpg";
-
 	// ──── IService manifest ────
 	static const Services::ServiceManifest serviceManifest;
 	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }

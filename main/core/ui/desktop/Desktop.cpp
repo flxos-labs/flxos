@@ -98,18 +98,16 @@ void Desktop::init() {
 						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 					}
 					if (instance->m_wallpaper_img == nullptr && instance->m_wallpaper != nullptr) {
-						instance->m_wallpaper_img = lv_image_create(instance->m_wallpaper);
 						const char* path = (const char*)lv_subject_get_pointer(&System::ThemeManager::getInstance().getWallpaperPathSubject());
 						if (path && strlen(path) > 0) {
+							instance->m_wallpaper_img = lv_image_create(instance->m_wallpaper);
 							lv_image_set_src(instance->m_wallpaper_img, path);
-						} else {
-							lv_image_set_src(instance->m_wallpaper_img, System::ThemeManager::DEFAULT_WALLPAPER_PATH);
+							lv_obj_set_size(instance->m_wallpaper_img, lv_pct(100), lv_pct(100));
+							lv_obj_set_style_pad_all(instance->m_wallpaper_img, 0, 0);
+							lv_obj_set_style_border_width(instance->m_wallpaper_img, 0, 0);
+							lv_image_set_inner_align(instance->m_wallpaper_img, LV_IMAGE_ALIGN_COVER);
+							lv_obj_move_background(instance->m_wallpaper_img);
 						}
-						lv_obj_set_size(instance->m_wallpaper_img, lv_pct(100), lv_pct(100));
-						lv_obj_set_style_pad_all(instance->m_wallpaper_img, 0, 0);
-						lv_obj_set_style_border_width(instance->m_wallpaper_img, 0, 0);
-						lv_image_set_inner_align(instance->m_wallpaper_img, LV_IMAGE_ALIGN_COVER);
-						lv_obj_move_background(instance->m_wallpaper_img);
 					}
 				} else {
 					if (instance->m_wallpaper_icon) {
@@ -130,11 +128,25 @@ void Desktop::init() {
 			[](lv_observer_t* observer, lv_subject_t* subject) {
 				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
 				const char* path = (const char*)lv_subject_get_pointer(subject);
-				if (instance->m_wallpaper_img) {
-					if (path && strlen(path) > 0) {
+				if (path && strlen(path) > 0) {
+					if (instance->m_wallpaper_img) {
 						lv_image_set_src(instance->m_wallpaper_img, path);
-					} else {
-						lv_image_set_src(instance->m_wallpaper_img, System::ThemeManager::DEFAULT_WALLPAPER_PATH);
+					} else if (System::ThemeManager::getInstance().getWallpaperEnabledObservable().get()) {
+						if (instance->m_wallpaper != nullptr) {
+							instance->m_wallpaper_img = lv_image_create(instance->m_wallpaper);
+							lv_image_set_src(instance->m_wallpaper_img, path);
+							lv_obj_set_size(instance->m_wallpaper_img, lv_pct(100), lv_pct(100));
+							lv_obj_set_style_pad_all(instance->m_wallpaper_img, 0, 0);
+							lv_obj_set_style_border_width(instance->m_wallpaper_img, 0, 0);
+							lv_image_set_inner_align(instance->m_wallpaper_img, LV_IMAGE_ALIGN_COVER);
+							lv_obj_move_background(instance->m_wallpaper_img);
+						}
+					}
+				} else {
+					if (instance->m_wallpaper_img) {
+						lv_image_cache_drop(lv_image_get_src(instance->m_wallpaper_img));
+						lv_obj_delete(instance->m_wallpaper_img);
+						instance->m_wallpaper_img = nullptr;
 					}
 				}
 			},
