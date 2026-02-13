@@ -197,11 +197,11 @@ void QuickAccessPanel::create() {
 		System::FocusManager::getInstance().dismissAllPanels();
 
 		// 2. Schedule screenshot using service
-		// Default delay or at least 500ms to allow panel close animation
-		uint32_t delayMs = System::Services::ScreenshotService::getInstance().getDefaultDelay() * 1000;
-		if (delayMs < 500) delayMs = 500; 
+		// Default delay (seconds), at least 1s to allow panel close animation
+		uint32_t delaySec = System::Services::ScreenshotService::getInstance().getDefaultDelay();
+		if (delaySec < 1) delaySec = 1;
 
-		System::Services::ScreenshotService::getInstance().scheduleCapture(delayMs); }, LV_EVENT_CLICKED, nullptr);
+		System::Services::ScreenshotService::getInstance().scheduleCapture(delaySec); }, LV_EVENT_CLICKED, nullptr);
 
 	{
 		lv_obj_t* slider_cont = lv_obj_create(m_panel);

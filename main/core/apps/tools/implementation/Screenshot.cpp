@@ -135,14 +135,13 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 // ──────────────────────────────────────────────────────
 
 void Screenshot::startCapture() {
-	int delay = lv_slider_get_value(m_delaySlider);
-
-	// Convert seconds to ms
-	uint32_t delayMs = delay * 1000;
+	uint32_t delaySec = lv_slider_get_value(m_delaySlider);
+	std::string storagePath = getSelectedBasePath();
 
 	// Use service to schedule capture with completion callback
 	Services::ScreenshotService::getInstance().scheduleCapture(
-		delayMs,
+		delaySec,
+		storagePath,
 		[this](bool success, const std::string& path) {
 			if (success) {
 				std::string msg = "Saved: " + path;
@@ -154,7 +153,7 @@ void Screenshot::startCapture() {
 	);
 
 	// Update local UI
-	if (delayMs > 0) {
+	if (delaySec > 0) {
 		updateStatus("Capturing...");
 	}
 }

@@ -60,10 +60,14 @@ public:
 	/**
 	 * Schedule a screenshot capture after a delay.
 	 * Shows a countdown overlay in the status bar if delay > 0.
-	 * @param delayMs  Delay in milliseconds.
+	 * @param delaySec  Delay in seconds (0 = instant capture).
+	 * @param storagePath  Base storage path (e.g. "/data" or SD mount point).
+	 *                     If empty, uses getDefaultStoragePath().
 	 * @param onComplete Optional callback when capture finishes/fails.
 	 */
-	void scheduleCapture(uint32_t delayMs, CaptureCallback onComplete = nullptr);
+	void scheduleCapture(uint32_t delaySec,
+	                     const std::string& storagePath = "",
+	                     CaptureCallback onComplete = nullptr);
 
 	/**
 	 * Cancel any pending scheduled capture.
@@ -77,6 +81,7 @@ private:
 
 	lv_timer_t* m_timer {nullptr};
 	int m_countdownRemaining {0};
+	std::string m_storagePath;
 	CaptureCallback m_onComplete {nullptr};
 	void onTimerTick();
 };

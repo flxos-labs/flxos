@@ -45,6 +45,7 @@ bool ScreenshotService::onStart() {
 }
 
 void ScreenshotService::onStop() {
+	cancelCapture();
 	Log::info(TAG, "Screenshot service stopped");
 }
 
@@ -166,15 +167,26 @@ ScreenshotService::~ScreenshotService() {
 	}
 }
 
-void ScreenshotService::scheduleCapture(uint32_t delayMs, CaptureCallback onComplete) {
+void ScreenshotService::scheduleCapture(uint32_t delaySec,
+                                        const std::string& storagePath,
+                                        CaptureCallback onComplete) {
 	// Cancel any existing pending capture/timer
 	cancelCapture();
 
 	m_onComplete = onComplete; // Store new callback
+	m_storagePath = storagePath.empty() ? getDefaultStoragePath() : storagePath;
 
-	if (delayMs == 0) {
+	if (delaySec == 0) {
 		// Instant capture
-		std::string path = generateFilename(getDefaultStoragePath());
+		std::string path = generateFilename(m_storagePath);
+		if (path.empty()) {
+			Log::error(TAG, "Failed to generate screenshot filename");
+			if (m_onComplete) {
+				m_onComplete(false, "");
+				m_onComplete = nullptr;
+			}
+			return;
+		}
 		bool res = capture(path);
 
 		if (m_onComplete) {
@@ -184,8 +196,7 @@ void ScreenshotService::scheduleCapture(uint32_t delayMs, CaptureCallback onComp
 		return;
 	}
 
-	// Calculate seconds directly from ms
-	m_countdownRemaining = delayMs / 1000;
+	m_countdownRemaining = static_cast<int>(delaySec);
 	if (m_countdownRemaining < 1) m_countdownRemaining = 1;
 
 	// Show initial overlay
@@ -226,8 +237,13 @@ void ScreenshotService::onTimerTick() {
 		UI::Modules::StatusBar::clearOverlay();
 
 		// Capture
-		std::string path = generateFilename(getDefaultStoragePath());
-		bool res = capture(path);
+		std::string path = generateFilename(m_storagePath);
+		bool res = false;
+		if (path.empty()) {
+			Log::error(TAG, "Failed to generate screenshot filename");
+		} else {
+			res = capture(path);
+		}
 
 		if (m_onComplete) {
 			m_onComplete(res, path);
