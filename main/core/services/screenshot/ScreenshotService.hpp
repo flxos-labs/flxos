@@ -3,6 +3,8 @@
 #include "core/common/Singleton.hpp"
 #include "core/services/IService.hpp"
 #include "core/services/ServiceManifest.hpp"
+#include "lvgl.h"
+#include <functional>
 #include <string>
 
 namespace System::Services {
@@ -43,10 +45,40 @@ public:
 	 */
 	std::string generateFilename(const std::string& basePath);
 
+	/**
+	 * Get the default delay in seconds for taking a screenshot.
+	 */
+	uint32_t getDefaultDelay() const;
+
+	/**
+	 * Get the default storage path (SD card if mounted, else /data).
+	 */
+	std::string getDefaultStoragePath() const;
+
+	using CaptureCallback = std::function<void(bool success, const std::string& path)>;
+
+	/**
+	 * Schedule a screenshot capture after a delay.
+	 * Shows a countdown overlay in the status bar if delay > 0.
+	 * @param delayMs  Delay in milliseconds.
+	 * @param onComplete Optional callback when capture finishes/fails.
+	 */
+	void scheduleCapture(uint32_t delayMs, CaptureCallback onComplete = nullptr);
+
+	/**
+	 * Cancel any pending scheduled capture.
+	 */
+	void cancelCapture();
+
 private:
 
-	ScreenshotService() = default;
-	~ScreenshotService() = default;
+	ScreenshotService();
+	~ScreenshotService();
+
+	lv_timer_t* m_timer {nullptr};
+	int m_countdownRemaining {0};
+	CaptureCallback m_onComplete {nullptr};
+	void onTimerTick();
 };
 
 } // namespace System::Services

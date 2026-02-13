@@ -5,7 +5,7 @@
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "core/services/screenshot/ScreenshotService.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
-#include "core/ui/desktop/modules/status_bar/StatusBar.hpp"
+
 #include "sdkconfig.h"
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
@@ -55,11 +55,11 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 
 	m_delaySlider = lv_slider_create(delayRow);
 	lv_slider_set_range(m_delaySlider, 0, 10);
-	lv_slider_set_value(m_delaySlider, 3, LV_ANIM_OFF);
+	lv_slider_set_value(m_delaySlider, Services::ScreenshotService::getInstance().getDefaultDelay(), LV_ANIM_OFF);
 	lv_obj_set_flex_grow(m_delaySlider, 1);
 
 	m_delayValueLabel = lv_label_create(delayRow);
-	lv_label_set_text(m_delayValueLabel, "3s");
+	lv_label_set_text_fmt(m_delayValueLabel, "%ds", (int)Services::ScreenshotService::getInstance().getDefaultDelay());
 	lv_obj_set_style_min_width(m_delayValueLabel, lv_dpx(30), 0);
 
 	lv_obj_add_event_cb(
@@ -88,12 +88,19 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 
 	// Build dropdown options based on available storage
 	std::string options = "Internal Flash";
+	int defaultSel = 0;
+	std::string defaultPath = Services::ScreenshotService::getInstance().getDefaultStoragePath();
+
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
 	if (Services::SdCardService::getInstance().isMounted()) {
 		options += "\nSD Card";
+		if (defaultPath == Services::SdCardService::getInstance().getMountPoint()) {
+			defaultSel = 1;
+		}
 	}
 #endif
 	lv_dropdown_set_options(m_pathDropdown, options.c_str());
+	lv_dropdown_set_selected(m_pathDropdown, defaultSel);
 
 	// --- Capture button ---
 	m_captureBtn = lv_button_create(content);
@@ -128,77 +135,28 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 // ──────────────────────────────────────────────────────
 
 void Screenshot::startCapture() {
-	// Don't start if already counting down
-	if (m_countdownTimer) return;
-
 	int delay = lv_slider_get_value(m_delaySlider);
 
-	if (delay == 0) {
-		// Instant capture
-		updateStatus("Capturing...");
-		doCapture();
-		return;
-	}
+	// Convert seconds to ms
+	uint32_t delayMs = delay * 1000;
 
-	// Start countdown
-	m_countdownRemaining = delay;
-	lv_obj_add_state(m_captureBtn, LV_STATE_DISABLED);
-
-	// Show first countdown tick in status bar
-	char buf[16];
-	snprintf(buf, sizeof(buf), LV_SYMBOL_IMAGE " %d", m_countdownRemaining);
-	UI::Modules::StatusBar::showOverlay(buf);
-	updateStatus("Capturing...");
-
-	m_countdownTimer = lv_timer_create(
-		[](lv_timer_t* t) {
-			auto* self = static_cast<Screenshot*>(lv_timer_get_user_data(t));
-			self->onCountdownTick();
-		},
-		1000, this
+	// Use service to schedule capture with completion callback
+	Services::ScreenshotService::getInstance().scheduleCapture(
+		delayMs,
+		[this](bool success, const std::string& path) {
+			if (success) {
+				std::string msg = "Saved: " + path;
+				updateStatus(msg.c_str());
+			} else {
+				updateStatus("Save failed!", true);
+			}
+		}
 	);
-}
 
-void Screenshot::onCountdownTick() {
-	m_countdownRemaining--;
-
-	if (m_countdownRemaining <= 0) {
-		// Stop countdown timer
-		lv_timer_delete(m_countdownTimer);
-		m_countdownTimer = nullptr;
-
-		UI::Modules::StatusBar::clearOverlay();
-		lv_obj_clear_state(m_captureBtn, LV_STATE_DISABLED);
-
-		doCapture();
-	} else {
-		// Update status bar overlay
-		char buf[16];
-		snprintf(buf, sizeof(buf), LV_SYMBOL_IMAGE " %d", m_countdownRemaining);
-		UI::Modules::StatusBar::showOverlay(buf);
+	// Update local UI
+	if (delayMs > 0) {
+		updateStatus("Capturing...");
 	}
-}
-
-bool Screenshot::doCapture() {
-	auto& svc = Services::ScreenshotService::getInstance();
-
-	std::string path = generateFilename();
-	if (path.empty()) {
-		updateStatus("Save failed: storage not available", true);
-		return false;
-	}
-
-	bool ok = svc.capture(path);
-
-	if (ok) {
-		Log::info(TAG, "Screenshot saved: %s", path.c_str());
-		std::string msg = "Saved: " + path;
-		updateStatus(msg.c_str());
-	} else {
-		Log::error(TAG, "Failed to save screenshot: %s", path.c_str());
-		updateStatus("Save failed!", true);
-	}
-	return ok;
 }
 
 // ──────────────────────────────────────────────────────
@@ -217,43 +175,6 @@ std::string Screenshot::getSelectedBasePath() {
 	// Default: internal flash data partition
 	(void)sel;
 	return "/data";
-}
-
-std::string Screenshot::generateFilename() {
-	std::string base = getSelectedBasePath();
-	std::string dir = base + "/screenshots";
-
-	// Create directory if it doesn't exist
-	Services::FileSystemService::getInstance().mkdir(dir);
-
-	// Try to use RTC time for filename
-	time_t now = 0;
-	time(&now);
-	struct tm timeinfo = {};
-	localtime_r(&now, &timeinfo);
-
-	char filename[64];
-	if (timeinfo.tm_year > 100) { // Year > 2000 means RTC is set
-		snprintf(filename, sizeof(filename), "/scr_%04d%02d%02d_%02d%02d%02d.png", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-	} else {
-		// Fallback: find next available number
-		bool found = false;
-		for (int i = 1; i <= 99999; i++) {
-			snprintf(filename, sizeof(filename), "/scr_%05d.png", i);
-			std::string full = dir + filename;
-			struct stat st {};
-			if (stat(full.c_str(), &st) != 0) {
-				found = true;
-				break; // File doesn't exist, use this name
-			}
-		}
-		if (!found) {
-			Log::error(TAG, "All screenshot filename slots exhausted");
-			return {};
-		}
-	}
-
-	return dir + filename;
 }
 
 void Screenshot::updateStatus(const char* msg, bool isError) {
@@ -279,11 +200,9 @@ void Screenshot::hide() {
 }
 
 void Screenshot::destroy() {
-	if (m_countdownTimer) {
-		lv_timer_delete(m_countdownTimer);
-		m_countdownTimer = nullptr;
-		UI::Modules::StatusBar::clearOverlay();
-	}
+	// Cancel any pending capture to prevent callback on destroyed object
+	Services::ScreenshotService::getInstance().cancelCapture();
+
 	if (m_view) {
 		lv_obj_del(m_view);
 		m_view = nullptr;

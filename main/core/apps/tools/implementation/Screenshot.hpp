@@ -32,14 +32,10 @@ private:
 	lv_obj_t* m_delayValueLabel {nullptr};
 	lv_obj_t* m_pathDropdown {nullptr};
 	lv_obj_t* m_captureBtn {nullptr};
-	lv_timer_t* m_countdownTimer {nullptr};
-	int m_countdownRemaining {0};
 
 	void startCapture();
-	void onCountdownTick();
-	bool doCapture();
 	std::string getSelectedBasePath();
-	std::string generateFilename();
+
 	void updateStatus(const char* msg, bool isError = false);
 };
 
