@@ -25,7 +25,7 @@ private:
 	lv_obj_t* m_image = nullptr;
 	lv_obj_t* m_errorLabel = nullptr;
 	std::string m_filePath;
-	std::string m_lvglPath;  // Must persist — LVGL stores the pointer
+	std::string m_lvglPath; // Must persist — LVGL stores the pointer
 
 	std::string getFileName(const std::string& path);
 };

@@ -522,14 +522,15 @@ void FilesApp::goHome() {
 
 void FilesApp::onFileClick(const std::string& name) {
 	std::string vfsPath = Services::FileSystemService::buildPath(
-		Services::FileSystemService::toVfsPath(m_currentPath), name);
+		Services::FileSystemService::toVfsPath(m_currentPath), name
+	);
 
 	// Check file extension
 	auto dotPos = name.rfind('.');
 	if (dotPos != std::string::npos) {
 		std::string ext = name.substr(dotPos + 1);
 		// Convert to lowercase
-		for (auto& c : ext) c = static_cast<char>(tolower(c));
+		for (auto& c: ext) c = static_cast<char>(tolower(c));
 
 		if (ext == "png" || ext == "jpg" || ext == "jpeg") {
 			Intent intent = Intent::view(vfsPath, "image/" + ext);

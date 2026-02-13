@@ -104,9 +104,7 @@ std::string ScreenshotService::generateFilename(const std::string& basePath) {
 	localtime_r(&now, &timeinfo);
 
 	if (timeinfo.tm_year > 100) { // RTC is set
-		snprintf(filename, sizeof(filename), "/scr_%04d%02d%02d_%02d%02d%02d.png",
-			timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
-			timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+		snprintf(filename, sizeof(filename), "/scr_%04d%02d%02d_%02d%02d%02d.png", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 	} else {
 		for (int i = 1; i <= 99999; i++) {
 			snprintf(filename, sizeof(filename), "/scr_%05d.png", i);

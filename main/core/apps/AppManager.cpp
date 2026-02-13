@@ -13,12 +13,12 @@
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include "freertos/semphr.h"
+#include "image_viewer/ImageViewerApp.hpp"
 #include "portmacro.h"
 #include "settings/SettingsApp.hpp"
 #include "system_info/SystemInfoApp.hpp"
 #include "text_editor/TextEditorApp.hpp"
 #include "tools/ToolsApp.hpp"
-#include "image_viewer/ImageViewerApp.hpp"
 #include <algorithm> // Explicitly include for std::find_if
 
 namespace System::Apps {

@@ -152,7 +152,7 @@ void NotificationPanel::update_list() {
 		lv_obj_set_style_text_opa(msg_lbl, UiConstants::OPA_70, 0);
 
 		lv_obj_t* close_btn = lv_button_create(item);
-		lv_obj_set_size(close_btn, LayoutConstants::SIZE_TOUCH_TARGET, LayoutConstants::SIZE_TOUCH_TARGET);
+		lv_obj_set_size(close_btn, lv_dpx(LayoutConstants::SIZE_TOUCH_TARGET), lv_dpx(LayoutConstants::SIZE_TOUCH_TARGET));
 		lv_obj_set_style_radius(close_btn, LV_RADIUS_CIRCLE, 0);
 		lv_obj_t* close_icon = lv_label_create(close_btn);
 		lv_label_set_text(close_icon, LV_SYMBOL_CLOSE);
