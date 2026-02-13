@@ -64,6 +64,13 @@ void TextEditorApp::createUI(void* parent) {
 	createEditorScreen();
 	showEditorScreen();
 	setEditMode(true); // Default to edit mode
+
+	// If launched via Intent with a file path, auto-load it
+	if (m_context && !m_context->getData().empty()) {
+		std::string filePath = m_context->getData();
+		Log::info(TAG, "Loading file from intent: %s", filePath.c_str());
+		loadFile(filePath);
+	}
 }
 
 void TextEditorApp::createEditorScreen() {

@@ -31,6 +31,7 @@ void ToolsApp::onStop() {
 	m_stopwatch.destroy();
 	m_flashlight.destroy();
 	m_displayTester.destroy();
+	m_screenshot.destroy();
 }
 
 void ToolsApp::createUI(void* parent) {
@@ -54,6 +55,7 @@ void ToolsApp::hideAllViews() {
 	m_stopwatch.hide();
 	m_flashlight.hide();
 	m_displayTester.hide();
+	m_screenshot.hide();
 }
 
 void ToolsApp::showMainList() {
@@ -87,6 +89,11 @@ void ToolsApp::showMainList() {
 		lv_obj_add_event_cb(rgbBtn, [](lv_event_t* e) {
 			auto* app = static_cast<ToolsApp*>(lv_event_get_user_data(e));
 			app->showDisplayTester(); }, LV_EVENT_CLICKED, this);
+
+		lv_obj_t* screenshotBtn = Settings::add_list_btn(m_mainList, LV_SYMBOL_IMAGE, "Screenshot");
+		lv_obj_add_event_cb(screenshotBtn, [](lv_event_t* e) {
+			auto* app = static_cast<ToolsApp*>(lv_event_get_user_data(e));
+			app->showScreenshot(); }, LV_EVENT_CLICKED, this);
 	} else {
 		lv_obj_remove_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -122,6 +129,14 @@ void ToolsApp::showDisplayTester() {
 		m_displayTester.createView(m_container, m_onBackToMain);
 	}
 	m_displayTester.show();
+}
+
+void ToolsApp::showScreenshot() {
+	hideAllViews();
+	if (m_screenshot.getView() == nullptr) {
+		m_screenshot.createView(m_container, m_onBackToMain);
+	}
+	m_screenshot.show();
 }
 
 } // namespace System::Apps

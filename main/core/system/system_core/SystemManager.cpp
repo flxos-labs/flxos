@@ -19,6 +19,7 @@
 #include "core/services/storage/SdCardService.hpp"
 #endif
 #include "core/services/device/DeviceProfileService.hpp"
+#include "core/services/screenshot/ScreenshotService.hpp"
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "core/system/notification/NotificationManager.hpp"
 #endif
@@ -87,6 +88,7 @@ void SystemManager::registerServices() {
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	registry.addService(std::shared_ptr<Services::IService>(&NotificationManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<Services::IService>(&Services::ScreenshotService::getInstance(), noDelete));
 #endif
 }
 

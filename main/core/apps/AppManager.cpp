@@ -13,6 +13,7 @@
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include "freertos/semphr.h"
+#include "image_viewer/ImageViewerApp.hpp"
 #include "portmacro.h"
 #include "settings/SettingsApp.hpp"
 #include "system_info/SystemInfoApp.hpp"
@@ -115,6 +116,22 @@ const AppManifest ToolsApp::manifest = {
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ToolsApp>(); }
 };
 
+const AppManifest ImageViewerApp::manifest = {
+	.appId = "com.flxos.imageviewer",
+	.appName = "Image Viewer",
+	.appIcon = LV_SYMBOL_IMAGE,
+	.appVersionName = "1.0.0",
+	.appVersionCode = 1,
+	.category = AppCategory::System,
+	.flags = AppFlags::Hidden,
+	.location = AppLocation::internal(),
+	.description = "View image files",
+	.sortPriority = 100,
+	.capabilities = AppCapability::Storage,
+	.supportedMimeTypes = {"image/bmp", "image/*"},
+	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ImageViewerApp>(); }
+};
+
 // ============================================================
 
 class AppExecutor : public System::Task {
@@ -149,6 +166,7 @@ void AppManager::init() {
 	registry.addApp(CalendarApp::manifest);
 	registry.addApp(TextEditorApp::manifest);
 	registry.addApp(ToolsApp::manifest);
+	registry.addApp(ImageViewerApp::manifest);
 
 	// Instantiate apps from registry
 	for (const auto& manifest: registry.getAll()) {

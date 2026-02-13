@@ -1,6 +1,7 @@
 #include "FileBrowser.hpp"
 #include "core/apps/settings/SettingsCommon.hpp" // Required for create_page_container etc.
 #include "core/services/filesystem/FileSystemService.hpp"
+#include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include <algorithm>
 #include <cctype>
 
@@ -76,8 +77,8 @@ void FileBrowser::createUI() {
 
 	// Path label
 	m_pathLabel = lv_label_create(header);
-	lv_obj_set_style_pad_left(m_pathLabel, 8, 0);
-	lv_obj_set_style_pad_right(m_pathLabel, 8, 0);
+	lv_obj_set_style_pad_left(m_pathLabel, lv_dpx(UiConstants::PAD_DEFAULT), 0);
+	lv_obj_set_style_pad_right(m_pathLabel, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 	lv_label_set_long_mode(m_pathLabel, LV_LABEL_LONG_MODE_SCROLL_CIRCULAR);
 	lv_obj_set_flex_grow(m_pathLabel, 1);
 
@@ -100,8 +101,8 @@ void FileBrowser::createUI() {
 
 	// Filename input row (for save mode)
 	lv_obj_t* inputRow = lv_obj_create(m_container);
-	lv_obj_set_size(inputRow, lv_pct(100), 44);
-	lv_obj_set_style_pad_all(inputRow, 4, 0);
+	lv_obj_set_size(inputRow, lv_pct(100), lv_dpx(44));
+	lv_obj_set_style_pad_all(inputRow, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_style_border_width(inputRow, 0, 0);
 	lv_obj_set_style_bg_opa(inputRow, LV_OPA_TRANSP, 0);
 	lv_obj_set_flex_flow(inputRow, LV_FLEX_FLOW_ROW);
@@ -111,7 +112,7 @@ void FileBrowser::createUI() {
 
 	lv_obj_t* fnLabel = lv_label_create(inputRow);
 	lv_label_set_text(fnLabel, "Name:");
-	lv_obj_set_style_pad_right(fnLabel, 8, 0);
+	lv_obj_set_style_pad_right(fnLabel, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 
 	m_filenameInput = lv_textarea_create(inputRow);
 	lv_obj_set_flex_grow(m_filenameInput, 1);
