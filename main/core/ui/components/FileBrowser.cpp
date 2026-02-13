@@ -1,9 +1,9 @@
 #include "FileBrowser.hpp"
 #include "core/apps/settings/SettingsCommon.hpp" // Required for create_page_container etc.
 #include "core/services/filesystem/FileSystemService.hpp"
+#include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include <algorithm>
 #include <cctype>
-#include "core/ui/theming/ui_constants/UiConstants.hpp"
 
 namespace System::UI {
 
