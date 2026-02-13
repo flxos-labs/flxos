@@ -28,6 +28,9 @@
 
 namespace UI::Modules {
 
+lv_obj_t* StatusBar::s_overlayLabel = nullptr;
+lv_obj_t* StatusBar::s_statusBarInstance = nullptr;
+
 StatusBar::StatusBar(lv_obj_t* parent) : m_parent(parent) {
 	create();
 }
@@ -40,6 +43,7 @@ StatusBar::~StatusBar() {
 
 void StatusBar::create() {
 	m_statusBar = lv_obj_create(m_parent);
+	s_statusBarInstance = m_statusBar;
 	lv_obj_remove_style_all(m_statusBar);
 	lv_obj_set_size(m_statusBar, lv_pct(100), lv_pct(UiConstants::SIZE_STATUS_BAR_HEIGHT_PCT));
 	lv_obj_set_style_pad_hor(m_statusBar, lv_dpx(UiConstants::PAD_SMALL), 0);
@@ -289,6 +293,24 @@ void StatusBar::create() {
 		},
 		1000, m_timeLabel
 	);
+}
+
+void StatusBar::showOverlay(const char* text) {
+	if (!s_statusBarInstance) return;
+
+	if (!s_overlayLabel) {
+		s_overlayLabel = lv_label_create(s_statusBarInstance);
+		lv_obj_move_to_index(s_overlayLabel, 0);
+		lv_obj_set_style_text_color(s_overlayLabel, lv_color_hex(0xFFD700), 0);
+	}
+	lv_label_set_text(s_overlayLabel, text);
+	lv_obj_remove_flag(s_overlayLabel, LV_OBJ_FLAG_HIDDEN);
+}
+
+void StatusBar::clearOverlay() {
+	if (s_overlayLabel) {
+		lv_obj_add_flag(s_overlayLabel, LV_OBJ_FLAG_HIDDEN);
+	}
 }
 
 } // namespace UI::Modules

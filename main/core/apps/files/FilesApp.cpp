@@ -253,7 +253,7 @@ void FilesApp::addListItem(const std::string& name, bool isDir) {
 	lv_obj_add_flag(dropdown, LV_OBJ_FLAG_FLOATING);
 	lv_obj_align(dropdown, LV_ALIGN_RIGHT_MID, 0, 0);
 
-	lv_dropdown_set_options(dropdown, "Copy\nCut\nRename\nDelete");
+	lv_dropdown_set_options(dropdown, "Copy\nCut\nRename\nDelete\nInfo");
 	lv_dropdown_set_text(dropdown, LV_SYMBOL_BARS);
 	lv_dropdown_set_symbol(dropdown, nullptr);
 	lv_dropdown_set_selected_highlight(dropdown, false);
@@ -312,7 +312,10 @@ void FilesApp::addListItem(const std::string& name, bool isDir) {
 
 void FilesApp::handleMenuAction(const std::string& action, const std::string& name, bool isDir) {
 	std::string basePath = Services::FileSystemService::toVfsPath(m_currentPath);
-	if (action == "Copy") {
+	if (action == "Info") {
+		std::string fullPath = Services::FileSystemService::buildPath(basePath, name);
+		showMsgBox("File Info", fullPath.c_str());
+	} else if (action == "Copy") {
 		ClipboardManager::getInstance().set(Services::FileSystemService::buildPath(basePath, name), isDir, ClipboardOp::COPY);
 		refreshList();
 	} else if (action == "Cut") {
@@ -518,7 +521,30 @@ void FilesApp::goHome() {
 }
 
 void FilesApp::onFileClick(const std::string& name) {
-	showMsgBox("File Info", Services::FileSystemService::buildPath(m_currentPath, name).c_str());
+	std::string vfsPath = Services::FileSystemService::buildPath(
+		Services::FileSystemService::toVfsPath(m_currentPath), name);
+
+	// Check file extension
+	auto dotPos = name.rfind('.');
+	if (dotPos != std::string::npos) {
+		std::string ext = name.substr(dotPos + 1);
+		// Convert to lowercase
+		for (auto& c : ext) c = static_cast<char>(tolower(c));
+
+		if (ext == "png" || ext == "jpg" || ext == "jpeg") {
+			Intent intent = Intent::view(vfsPath, "image/" + ext);
+			AppManager::getInstance().startApp(intent);
+			return;
+		}
+
+		if (ext == "txt" || ext == "log" || ext == "json" || ext == "csv" || ext == "md") {
+			Intent intent = Intent::view(vfsPath, "text/plain");
+			AppManager::getInstance().startApp(intent);
+			return;
+		}
+	}
+
+	showMsgBox("File Info", vfsPath.c_str());
 }
 
 } // namespace System::Apps
