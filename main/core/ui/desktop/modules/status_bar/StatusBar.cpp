@@ -39,6 +39,8 @@ StatusBar::~StatusBar() {
 	if (m_timer) {
 		lv_timer_delete(m_timer);
 	}
+	s_overlayLabel = nullptr;
+	s_statusBarInstance = nullptr;
 }
 
 void StatusBar::create() {

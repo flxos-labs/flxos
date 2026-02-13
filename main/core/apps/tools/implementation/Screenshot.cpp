@@ -237,13 +237,19 @@ std::string Screenshot::generateFilename() {
 		snprintf(filename, sizeof(filename), "/scr_%04d%02d%02d_%02d%02d%02d.png", timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 	} else {
 		// Fallback: find next available number
+		bool found = false;
 		for (int i = 1; i <= 99999; i++) {
 			snprintf(filename, sizeof(filename), "/scr_%05d.png", i);
 			std::string full = dir + filename;
 			struct stat st {};
 			if (stat(full.c_str(), &st) != 0) {
+				found = true;
 				break; // File doesn't exist, use this name
 			}
+		}
+		if (!found) {
+			Log::error(TAG, "All screenshot filename slots exhausted");
+			return {};
 		}
 	}
 

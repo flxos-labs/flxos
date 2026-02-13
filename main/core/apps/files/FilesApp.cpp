@@ -533,7 +533,8 @@ void FilesApp::onFileClick(const std::string& name) {
 		for (auto& c: ext) c = static_cast<char>(tolower(c));
 
 		if (ext == "png" || ext == "jpg" || ext == "jpeg") {
-			Intent intent = Intent::view(vfsPath, "image/" + ext);
+			std::string mimeType = "image/" + (ext == "jpg" ? std::string("jpeg") : ext);
+			Intent intent = Intent::view(vfsPath, mimeType);
 			AppManager::getInstance().startApp(intent);
 			return;
 		}
