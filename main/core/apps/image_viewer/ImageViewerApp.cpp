@@ -27,7 +27,6 @@ void ImageViewerApp::createUI(void* parent) {
 	auto* parentObj = static_cast<lv_obj_t*>(parent);
 
 	m_container = Settings::create_page_container(parentObj);
-	lv_obj_set_style_pad_gap(m_container, 0, 0);
 
 	// Get the file path from the intent data
 	if (m_context) {
