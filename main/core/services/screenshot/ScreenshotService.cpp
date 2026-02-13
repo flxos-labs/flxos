@@ -167,9 +167,7 @@ ScreenshotService::~ScreenshotService() {
 	}
 }
 
-void ScreenshotService::scheduleCapture(uint32_t delaySec,
-                                        const std::string& storagePath,
-                                        CaptureCallback onComplete) {
+void ScreenshotService::scheduleCapture(uint32_t delaySec, const std::string& storagePath, CaptureCallback onComplete) {
 	// Cancel any existing pending capture/timer
 	cancelCapture();
 

@@ -65,9 +65,7 @@ public:
 	 *                     If empty, uses getDefaultStoragePath().
 	 * @param onComplete Optional callback when capture finishes/fails.
 	 */
-	void scheduleCapture(uint32_t delaySec,
-	                     const std::string& storagePath = "",
-	                     CaptureCallback onComplete = nullptr);
+	void scheduleCapture(uint32_t delaySec, const std::string& storagePath = "", CaptureCallback onComplete = nullptr);
 
 	/**
 	 * Cancel any pending scheduled capture.
