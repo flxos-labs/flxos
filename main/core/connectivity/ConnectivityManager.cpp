@@ -1,6 +1,5 @@
 #include "ConnectivityManager.hpp"
 #include "bluetooth/BluetoothManager.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/system/settings/SettingsManager.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
@@ -11,6 +10,7 @@
 #include "hotspot/HotspotManager.hpp"
 #include "wifi/WiFiManager.hpp"
 #include <cstdint>
+#include <flx/core/Logger.hpp>
 #include <string_view>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE

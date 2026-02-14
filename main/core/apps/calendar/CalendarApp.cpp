@@ -1,6 +1,6 @@
 #include "CalendarApp.hpp"
-#include <flx/core/Logger.hpp>
 #include <ctime>
+#include <flx/core/Logger.hpp>
 
 namespace System::Apps {
 

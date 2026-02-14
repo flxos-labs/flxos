@@ -1,7 +1,6 @@
 #include "SystemInfoApp.hpp"
 #include "../../ui/theming/layout_constants/LayoutConstants.hpp"
 #include "../../ui/theming/ui_constants/UiConstants.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/lv_obj.h"
 #include "core/lv_obj_pos.h"
 #include "core/lv_obj_style.h"
@@ -24,6 +23,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <flx/core/Logger.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "SystemInfoApp";

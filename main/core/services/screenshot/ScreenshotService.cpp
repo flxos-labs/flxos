@@ -1,11 +1,11 @@
 #include "ScreenshotService.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "core/system/notification/NotificationManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "core/ui/desktop/modules/status_bar/StatusBar.hpp"
 #include "draw/snapshot/lv_snapshot.h"
 #include "sdkconfig.h"
+#include <flx/core/Logger.hpp>
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
 #include "core/services/storage/SdCardService.hpp"
 #endif

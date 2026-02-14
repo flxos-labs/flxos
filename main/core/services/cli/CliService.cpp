@@ -1,6 +1,6 @@
 #include "CliService.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/services/system_info/SystemInfoService.hpp"
+#include <flx/core/Logger.hpp>
 
 #include "esp_console.h"
 #include "esp_err.h"

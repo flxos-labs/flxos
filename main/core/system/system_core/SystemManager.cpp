@@ -1,21 +1,21 @@
 #include "SystemManager.hpp"
 #include "core/apps/EventBus.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
-#include <flx/services/ServiceRegistry.hpp>
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/power/PowerManager.hpp"
 #include "core/system/settings/SettingsManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
 #include "core/system/time/TimeManager.hpp"
-#include <flx/kernel/TaskManager.hpp>
-#include <flx/kernel/ResourceMonitorTask.hpp>
 #include "esp_err.h"
 #include "esp_vfs_fat.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "sdkconfig.h"
 #include "wear_levelling.h"
+#include <flx/core/Logger.hpp>
+#include <flx/kernel/ResourceMonitorTask.hpp>
+#include <flx/kernel/TaskManager.hpp>
+#include <flx/services/ServiceRegistry.hpp>
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
 #include "core/services/storage/SdCardService.hpp"
 #endif

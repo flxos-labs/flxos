@@ -1,10 +1,10 @@
 #include "TextEditorApp.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "misc/lv_style.h"
 #include <cstdio>
 #include <cstring>
+#include <flx/core/Logger.hpp>
 
 namespace System::Apps {
 

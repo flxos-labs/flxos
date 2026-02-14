@@ -1,6 +1,4 @@
 #include "HotspotManager.hpp"
-#include <flx/core/Observable.hpp>
-#include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/wifi/WiFiManager.hpp"
 #include "dhcpserver/dhcpserver_hostname.h"
@@ -13,6 +11,8 @@
 #include "esp_wifi.h"
 #include <cstdint>
 #include <cstring>
+#include <flx/core/Logger.hpp>
+#include <flx/core/Observable.hpp>
 #include <string_view>
 
 #include "esp_netif.h"

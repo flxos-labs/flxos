@@ -1,10 +1,10 @@
 #include "ImageViewerApp.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include "font/lv_symbol_def.h"
 #include "widgets/image/lv_image.h"
 #include "widgets/label/lv_label.h"
+#include <flx/core/Logger.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "ImageViewer";

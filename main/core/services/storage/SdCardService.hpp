@@ -1,8 +1,8 @@
 #pragma once
 
+#include "sdkconfig.h"
 #include <flx/services/IService.hpp>
 #include <flx/services/ServiceManifest.hpp>
-#include "sdkconfig.h"
 #include <string>
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)

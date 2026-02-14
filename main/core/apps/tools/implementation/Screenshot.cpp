@@ -1,10 +1,10 @@
 #include "Screenshot.hpp"
 #include "../../ui/theming/ui_constants/UiConstants.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "core/services/screenshot/ScreenshotService.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
+#include <flx/core/Logger.hpp>
 
 #include "sdkconfig.h"
 

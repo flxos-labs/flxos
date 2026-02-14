@@ -1,9 +1,9 @@
 #pragma once
 
-#include <flx/core/Observable.hpp>
 #include "core/tasks/gui/GuiTask.hpp"
 #include "lvgl.h"
 #include "misc/lv_async.h"
+#include <flx/core/Observable.hpp>
 
 namespace System {
 

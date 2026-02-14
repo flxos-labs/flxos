@@ -1,9 +1,9 @@
 #pragma once
 
+#include "lvgl.h"
 #include <flx/core/Singleton.hpp>
 #include <flx/services/IService.hpp>
 #include <flx/services/ServiceManifest.hpp>
-#include "lvgl.h"
 #include <functional>
 #include <memory>
 #include <mutex>

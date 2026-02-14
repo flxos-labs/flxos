@@ -1,5 +1,4 @@
 #include "SystemInfoService.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "display/lv_display.h"
 #include "esp_chip_info.h"
@@ -13,6 +12,7 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
 #include "freertos/task.h"
+#include <flx/core/Logger.hpp>
 #if defined(CONFIG_FLXOS_BATTERY_ENABLED)
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"

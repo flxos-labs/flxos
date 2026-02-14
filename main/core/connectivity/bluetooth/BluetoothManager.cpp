@@ -1,8 +1,8 @@
 #include "BluetoothManager.hpp"
-#include <flx/core/Observable.hpp>
-#include <flx/core/Logger.hpp>
 #include "esp_err.h"
 #include <cstdint>
+#include <flx/core/Logger.hpp>
+#include <flx/core/Observable.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "BluetoothManager";

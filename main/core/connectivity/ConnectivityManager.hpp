@@ -1,13 +1,13 @@
 #pragma once
 
-#include <flx/core/Observable.hpp>
-#include <flx/core/Singleton.hpp>
-#include <flx/services/IService.hpp>
-#include <flx/services/ServiceManifest.hpp>
 #include "esp_err.h"
 #include "esp_event.h"
 #include "hotspot/HotspotManager.hpp"
 #include "wifi/WiFiManager.hpp"
+#include <flx/core/Observable.hpp>
+#include <flx/core/Singleton.hpp>
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include <memory>
 #include <mutex>
 #include <string>

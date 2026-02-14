@@ -5,7 +5,6 @@
 #include "../theming/ui_constants/UiConstants.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/apps/Intent.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_style_gen.h"
@@ -14,6 +13,7 @@
 #include "core/system/focus/FocusManager.hpp"
 #include "core/system/system_core/SystemManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
+#include <flx/core/Logger.hpp>
 
 #include "core/ui/theming/themes/Themes.hpp"
 #include "display/lv_display.h"

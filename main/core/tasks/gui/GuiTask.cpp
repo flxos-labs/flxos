@@ -1,8 +1,6 @@
 #include "GuiTask.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/lv_group.h"
 #include "core/system/system_core/SystemManager.hpp"
-#include <flx/kernel/TaskManager.hpp>
 #include "core/ui/desktop/Desktop.hpp"
 #include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #include "display/lv_display.h"
@@ -20,6 +18,8 @@
 #include "tick/lv_tick.h"
 #include <cstddef>
 #include <cstdint>
+#include <flx/core/Logger.hpp>
+#include <flx/kernel/TaskManager.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "GuiTask";

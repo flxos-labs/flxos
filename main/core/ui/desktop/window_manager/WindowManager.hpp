@@ -5,8 +5,8 @@
 #include <vector>
 
 #include "core/apps/AppManager.hpp"
-#include <flx/core/Singleton.hpp>
 #include "lvgl.h"
+#include <flx/core/Singleton.hpp>
 
 class WindowManager : public System::Apps::AppStateObserver, public flx::Singleton<WindowManager> {
 	friend class flx::Singleton<WindowManager>;

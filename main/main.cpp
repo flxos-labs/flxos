@@ -1,7 +1,7 @@
-#include <flx/core/Logger.hpp>
-#include <flx/core/Compat.hpp>  // Namespace compatibility during migration
 #include "core/system/system_core/SystemManager.hpp"
 #include "sdkconfig.h"
+#include <flx/core/Compat.hpp> // Namespace compatibility during migration
+#include <flx/core/Logger.hpp>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "core/system/notification/NotificationManager.hpp"
@@ -10,8 +10,8 @@
 #endif
 
 #if CONFIG_FLXOS_CLI_ENABLED
-#include <flx/services/ServiceRegistry.hpp>
 #include "core/services/cli/CliService.hpp"
+#include <flx/services/ServiceRegistry.hpp>
 #include <memory>
 #endif
 

@@ -1,7 +1,7 @@
 #include "FileSystemService.hpp"
-#include <flx/core/Logger.hpp>
 #include "misc/lv_fs.h"
 #include "sdkconfig.h"
+#include <flx/core/Logger.hpp>
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
 #include "core/services/storage/SdCardService.hpp"
 #endif

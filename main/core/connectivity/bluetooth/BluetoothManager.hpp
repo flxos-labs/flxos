@@ -1,8 +1,8 @@
 #pragma once
 
+#include "esp_err.h"
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
-#include "esp_err.h"
 
 namespace System {
 

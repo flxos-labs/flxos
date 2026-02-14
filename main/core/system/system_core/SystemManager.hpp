@@ -1,10 +1,10 @@
 #pragma once
 
-#include <flx/core/Observable.hpp>
-#include <flx/core/Singleton.hpp>
 #include "esp_err.h"
 #include "esp_timer.h"
 #include "wear_levelling.h"
+#include <flx/core/Observable.hpp>
+#include <flx/core/Singleton.hpp>
 #include <memory>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE

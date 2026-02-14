@@ -1,7 +1,7 @@
 #pragma once
 
-#include <flx/kernel/TaskManager.hpp>
 #include "freertos/semphr.h"
+#include <flx/kernel/TaskManager.hpp>
 
 typedef struct _lv_display_t lv_display_t;
 

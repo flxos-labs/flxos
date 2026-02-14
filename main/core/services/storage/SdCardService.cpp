@@ -1,6 +1,6 @@
 #include "SdCardService.hpp"
-#include <flx/core/Logger.hpp>
 #include "sdkconfig.h"
+#include <flx/core/Logger.hpp>
 #include <string_view>
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)

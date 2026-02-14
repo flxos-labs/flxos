@@ -1,11 +1,11 @@
 #include "SettingsManager.hpp"
-#include <flx/core/Observable.hpp>
 #include "cJSON.h"
-#include <flx/core/Logger.hpp>
 #include "esp_timer.h"
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <flx/core/Logger.hpp>
+#include <flx/core/Observable.hpp>
 #include <sys/stat.h>
 #include <unistd.h>
 

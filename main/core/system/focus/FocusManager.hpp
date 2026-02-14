@@ -1,7 +1,7 @@
 #pragma once
 
-#include <flx/core/Singleton.hpp>
 #include "lvgl.h"
+#include <flx/core/Singleton.hpp>
 #include <vector>
 
 namespace System {

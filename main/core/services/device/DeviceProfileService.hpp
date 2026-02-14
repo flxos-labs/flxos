@@ -1,10 +1,10 @@
 #pragma once
 
+#include "core/system/device/DeviceProfile.hpp"
+#include <cstdint>
 #include <flx/core/Singleton.hpp>
 #include <flx/services/IService.hpp>
 #include <flx/services/ServiceManifest.hpp>
-#include "core/system/device/DeviceProfile.hpp"
-#include <cstdint>
 #include <string>
 #include <vector>
 

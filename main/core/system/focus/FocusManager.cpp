@@ -1,6 +1,5 @@
 #include "FocusManager.hpp"
 #include "../../ui/theming/ui_constants/UiConstants.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/lv_group.h"
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
@@ -15,6 +14,7 @@
 #include "misc/lv_event.h"
 #include "misc/lv_types.h"
 #include <cstdint>
+#include <flx/core/Logger.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "FocusManager";

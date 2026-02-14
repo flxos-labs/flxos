@@ -1,5 +1,4 @@
 #include "ThemeEngine.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/lv_obj_style.h"
 #include "core/lv_observer.h"
 #include "core/system/theme/ThemeManager.hpp"
@@ -12,6 +11,7 @@
 #include "themes/lv_theme.h"
 #include <cstddef>
 #include <cstdint>
+#include <flx/core/Logger.hpp>
 #include <map>
 #include <string_view>
 #include <vector>

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <flx/core/Observable.hpp>
-#include <flx/core/Singleton.hpp>
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_wifi_types.h"
+#include <flx/core/Observable.hpp>
+#include <flx/core/Singleton.hpp>
 extern "C" {
 #include "dhcpserver/dhcpserver_hostname.h"
 }

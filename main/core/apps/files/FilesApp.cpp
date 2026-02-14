@@ -1,7 +1,5 @@
 #include "FilesApp.hpp"
-#include <flx/core/ClipboardManager.hpp>
 #include "core/apps/settings/SettingsCommon.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_pos.h"
@@ -10,7 +8,6 @@
 #include "core/lv_obj_tree.h"
 #include "core/lv_refr.h"
 #include "core/services/filesystem/FileSystemService.hpp"
-#include <flx/kernel/TaskManager.hpp>
 #include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "display/lv_display.h"
 #include "esp_timer.h"
@@ -34,6 +31,9 @@
 #include "widgets/textarea/lv_textarea.h"
 #include <cstdint>
 #include <cstring>
+#include <flx/core/ClipboardManager.hpp>
+#include <flx/core/Logger.hpp>
+#include <flx/kernel/TaskManager.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "FilesApp";

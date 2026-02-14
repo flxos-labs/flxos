@@ -1,9 +1,9 @@
 #include "TimeManager.hpp"
-#include <flx/core/Logger.hpp>
 #include "esp_sntp.h"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include <cstdint>
+#include <flx/core/Logger.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "TimeManager";

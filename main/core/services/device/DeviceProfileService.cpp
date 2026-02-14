@@ -1,7 +1,7 @@
 #include "DeviceProfileService.hpp"
-#include <flx/core/Logger.hpp>
 #include "core/system/device/DeviceProfiles.hpp"
 #include "sdkconfig.h"
+#include <flx/core/Logger.hpp>
 
 #include "driver/i2c_master.h"
 #include "nvs.h"

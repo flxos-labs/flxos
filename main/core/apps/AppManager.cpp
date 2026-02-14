@@ -3,9 +3,6 @@
 #include "AppRegistry.hpp"
 #include "EventBus.hpp"
 #include "calendar/CalendarApp.hpp"
-#include <flx/core/Logger.hpp>
-#include <flx/services/ServiceRegistry.hpp>
-#include <flx/kernel/TaskManager.hpp>
 #include "core/tasks/gui/GuiTask.hpp"
 #include "core/ui/desktop/Desktop.hpp"
 #include "esp_system.h"
@@ -20,6 +17,9 @@
 #include "text_editor/TextEditorApp.hpp"
 #include "tools/ToolsApp.hpp"
 #include <algorithm> // Explicitly include for std::find_if
+#include <flx/core/Logger.hpp>
+#include <flx/kernel/TaskManager.hpp>
+#include <flx/services/ServiceRegistry.hpp>
 
 namespace System::Apps {
 
