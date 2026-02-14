@@ -11,7 +11,7 @@ enum class ClipboardOp { NONE,
 struct ClipboardEntry {
 	std::string path {};
 	bool isDir {};
-	ClipboardOp op;
+	ClipboardOp op {ClipboardOp::NONE};
 };
 
 class ClipboardManager : public Singleton<ClipboardManager> {

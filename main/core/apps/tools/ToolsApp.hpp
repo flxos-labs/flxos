@@ -13,11 +13,9 @@
 #include "implementation/Screenshot.hpp"
 #include "implementation/Stopwatch.hpp"
 
-// Use flx::apps namespace elements
-using flx::apps::App;
-using flx::apps::AppManifest;
-
 namespace System::Apps {
+
+using flx::apps::AppManifest;
 
 class ToolsApp : public flx::apps::App {
 public:

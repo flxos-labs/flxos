@@ -5,11 +5,9 @@
 #include <flx/apps/AppManifest.hpp>
 #include <string>
 
-// Use flx::apps namespace elements
-using flx::apps::App;
-using flx::apps::AppManifest;
-
 namespace System::Apps {
+
+using flx::apps::AppManifest;
 
 class ImageViewerApp : public flx::apps::App {
 public:

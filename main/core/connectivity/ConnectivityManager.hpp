@@ -50,8 +50,8 @@ public:
 	void saveWiFiCredentials(const char* ssid, const char* password);
 	void clearSavedWiFiCredentials();
 	bool hasSavedWiFiCredentials() const;
-	const char* getSavedWiFiSsid() const { return m_saved_wifi_ssid_subject.get(); }
-	const char* getSavedWiFiPassword() const { return m_saved_wifi_password_subject.get(); }
+	std::string getSavedWiFiSsid() const { return m_saved_wifi_ssid_subject.get(); }
+	std::string getSavedWiFiPassword() const { return m_saved_wifi_password_subject.get(); }
 
 	// WiFi Hotspot (SoftAP)
 	esp_err_t startHotspot(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);

@@ -12,7 +12,7 @@ namespace flx::apps {
 /**
  * @brief Central registry for all app manifests
  *
- * flx::Singleton that manages app registration and lookup. Apps register their
+ * Singleton that manages app registration and lookup. Apps register their
  * manifests here, and the launcher/AppManager queries it to discover apps.
  *
  * Supports advanced filtering by category, capability, and MIME type.

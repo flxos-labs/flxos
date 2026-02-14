@@ -75,10 +75,10 @@ public:
 		lv_subject_init_pointer(&m_subject, (void*)m_buffer.c_str());
 
 		// Subscribe to flx::Observable changes
-		observable.subscribe([this](const char* value) {
+		observable.subscribe([this](const std::string& value) {
 			if (!m_updating) {
 				// Allocate data for async transfer
-				auto* data = new AsyncUpdateData {this, value ? value : ""};
+				auto* data = new AsyncUpdateData {this, value};
 				lv_async_call(async_cb, data);
 			}
 		});

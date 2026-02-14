@@ -4,11 +4,9 @@
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
 
-// Use flx::apps namespace elements
-using flx::apps::App;
-using flx::apps::AppManifest;
-
 namespace System::Apps {
+
+using flx::apps::AppManifest;
 
 class CalendarApp : public flx::apps::App {
 public:

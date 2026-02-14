@@ -19,11 +19,21 @@ def process_file(filepath):
         # Pattern: Word boundary, TypeName, Word boundary, NOT preceded by flx::kernel::
         # We want to replace "TaskManager" with "flx::kernel::TaskManager"
         # But ignore "flx::kernel::TaskManager"
-        
+        # Also skip #include lines and filenames (e.g. TaskManager.hpp)
+
+        def replace_match(match, tn=type_name):
+            line = match.string[match.string.rfind('\n', 0, match.start()) + 1:match.end()]
+            # Skip #include lines
+            if line.lstrip().startswith('#include'):
+                return match.group(0)
+            # Skip if followed by a dot (filename like TaskManager.hpp)
+            end = match.end()
+            if end < len(match.string) and match.string[end] == '.':
+                return match.group(0)
+            return f'flx::kernel::{tn}'
+
         pattern = fr'(?<!flx::kernel::)\b{type_name}\b'
-        replacement = fr'flx::kernel::{type_name}'
-        
-        content = re.sub(pattern, replacement, content)
+        content = re.sub(pattern, replace_match, content)
 
     if content != original_content:
         print(f"Updating {filepath}")

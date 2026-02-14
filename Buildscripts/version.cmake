@@ -9,7 +9,7 @@ function(flx_embed_version)
         string(STRIP "${FLX_VERSION_STRING}" FLX_VERSION_STRING)
         
         # Parse semantic version (MAJOR.MINOR.PATCH)
-        string(REPLACE "." ";" VERSION_LIST ${FLX_VERSION_STRING})
+        string(REPLACE "." ";" VERSION_LIST "${FLX_VERSION_STRING}")
         list(LENGTH VERSION_LIST VERSION_PARTS)
         
         if(VERSION_PARTS GREATER_EQUAL 1)

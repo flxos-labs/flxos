@@ -65,7 +65,7 @@ public:
 
 	LaunchId getLaunchId() const { return m_launchId; }
 
-	// === flx::Result setting ===
+	// === Result setting ===
 
 	/** Set the result to deliver back to the parent app when this app finishes */
 	void setResult(ResultCode code, const Bundle& data = {}) {
@@ -78,7 +78,7 @@ public:
 	ResultCode getResultCode() const { return m_resultCode; }
 	const Bundle& getResultData() const { return m_resultData; }
 
-	// === flx::Result callback (set by AppManager, used internally) ===
+	// === Result callback (set by AppManager, used internally) ===
 
 	void setResultCallback(ResultCallback cb) { m_resultCallback = std::move(cb); }
 	const ResultCallback& getResultCallback() const { return m_resultCallback; }

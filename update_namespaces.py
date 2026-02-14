@@ -27,7 +27,7 @@ def process_file(filepath):
         # Regex looks for type_name NOT preceded by flx:: or System:: or ::
         
         # 1. Replace System::Type with flx::Type
-        content = re.sub(f'System::{type_name}', f'flx::{type_name}', content)
+        content = re.sub(fr'System::{type_name}\b', f'flx::{type_name}', content)
         
         # 2. Replace Type with flx::Type, ensuring it's not already prefixed
         # We use a negative lookbehind to check for ::

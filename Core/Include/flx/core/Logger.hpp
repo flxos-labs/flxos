@@ -50,8 +50,8 @@ private:
 	static void log_impl(esp_log_level_t level, const char* level_char, const char* color, std::string_view tag, const char* fmt, va_list args) {
 		char buf[1024];
 		int pos = std::snprintf(buf, sizeof(buf), "%s%s (%lu) %.*s: ", color, level_char, (unsigned long)esp_log_timestamp(), (int)tag.size(), tag.data());
-		if (pos >= 0 && pos < (int)sizeof(buf)) {
-			int msg_len = std::vsnprintf(buf + pos, sizeof(buf) - pos - 8, fmt, args); // -8 for reset sequence and newline
+		if (pos >= 0 && pos < (int)sizeof(buf) - 8) {
+			int msg_len = std::vsnprintf(buf + pos, sizeof(buf) - (size_t)pos - 8, fmt, args); // -8 for reset sequence and newline
 			if (msg_len >= 0) {
 				std::strcat(buf, "\033[0m\n");
 				// Provide a null-terminated tag for ESP-IDF's filtering system

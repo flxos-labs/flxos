@@ -13,7 +13,7 @@ function(flx_add_module)
     cmake_parse_arguments(FLX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     # Get component name from current directory
-    get_filename_component(COMPONENT_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+    get_filename_component(COMPONENT_NAME "${CMAKE_CURRENT_SOURCE_DIR}" NAME)
 
     # Default include directory
     if(NOT FLX_INCLUDE_DIRS)

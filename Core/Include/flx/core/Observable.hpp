@@ -30,11 +30,22 @@ public:
 	 * Set the value and notify all observers if it changed.
 	 */
 	void set(const T& value) {
-		std::lock_guard<std::mutex> lock(m_mutex);
-		if (m_value != value) {
+		std::vector<Callback> observers_copy;
+		T value_copy;
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			if (m_value == value) {
+				return;
+			}
 			m_prev_value = m_value;
 			m_value = value;
-			notifyLocked();
+			observers_copy = m_observers;
+			value_copy = m_value;
+		}
+		for (auto& cb: observers_copy) {
+			if (cb) {
+				cb(value_copy);
+			}
 		}
 	}
 
@@ -42,10 +53,20 @@ public:
 	 * Set the value and always notify observers (even if unchanged).
 	 */
 	void setAndNotify(const T& value) {
-		std::lock_guard<std::mutex> lock(m_mutex);
-		m_prev_value = m_value;
-		m_value = value;
-		notifyLocked();
+		std::vector<Callback> observers_copy;
+		T value_copy;
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			m_prev_value = m_value;
+			m_value = value;
+			observers_copy = m_observers;
+			value_copy = m_value;
+		}
+		for (auto& cb: observers_copy) {
+			if (cb) {
+				cb(value_copy);
+			}
+		}
 	}
 
 	/**
@@ -76,22 +97,35 @@ public:
 	}
 
 	/**
+	 * Unsubscribe an observer by index.
+	 * @param index Index returned by subscribe().
+	 */
+	void unsubscribe(size_t index) {
+		std::lock_guard<std::mutex> lock(m_mutex);
+		if (index < m_observers.size()) {
+			m_observers[index] = nullptr;
+		}
+	}
+
+	/**
 	 * Manually notify all observers with current value.
 	 */
 	void notify() {
-		std::lock_guard<std::mutex> lock(m_mutex);
-		notifyLocked();
-	}
-
-private:
-
-	void notifyLocked() {
-		for (auto& cb: m_observers) {
+		std::vector<Callback> observers_copy;
+		T value_copy;
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			observers_copy = m_observers;
+			value_copy = m_value;
+		}
+		for (auto& cb: observers_copy) {
 			if (cb) {
-				cb(m_value);
+				cb(value_copy);
 			}
 		}
 	}
+
+private:
 
 	T m_value;
 	T m_prev_value;
@@ -105,31 +139,42 @@ private:
 class StringObservable {
 public:
 
-	using Callback = std::function<void(const char* value)>;
+	using Callback = std::function<void(const std::string& value)>;
 
 	explicit StringObservable(const char* initial = "")
 		: m_value(initial ? initial : ""), m_prev_value(m_value) {}
 
 	void set(const char* value) {
-		std::lock_guard<std::mutex> lock(m_mutex);
-		std::string newVal = value ? value : "";
-		if (m_value != newVal) {
+		std::vector<Callback> observers_copy;
+		std::string value_copy;
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			std::string newVal = value ? value : "";
+			if (m_value == newVal) {
+				return;
+			}
 			m_prev_value = m_value;
 			m_value = newVal;
-			notifyLocked();
+			observers_copy = m_observers;
+			value_copy = m_value;
+		}
+		for (auto& cb: observers_copy) {
+			if (cb) {
+				cb(value_copy);
+			}
 		}
 	}
 
 	void copy(const char* value) { set(value); }
 
-	const char* get() const {
+	std::string get() const {
 		std::lock_guard<std::mutex> lock(m_mutex);
-		return m_value.c_str();
+		return m_value;
 	}
 
-	const char* getPrevious() const {
+	std::string getPrevious() const {
 		std::lock_guard<std::mutex> lock(m_mutex);
-		return m_prev_value.c_str();
+		return m_prev_value;
 	}
 
 	size_t subscribe(Callback cb) {
@@ -138,20 +183,29 @@ public:
 		return m_observers.size() - 1;
 	}
 
-	void notify() {
+	void unsubscribe(size_t index) {
 		std::lock_guard<std::mutex> lock(m_mutex);
-		notifyLocked();
+		if (index < m_observers.size()) {
+			m_observers[index] = nullptr;
+		}
 	}
 
-private:
-
-	void notifyLocked() {
-		for (auto& cb: m_observers) {
+	void notify() {
+		std::vector<Callback> observers_copy;
+		std::string value_copy;
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
+			observers_copy = m_observers;
+			value_copy = m_value;
+		}
+		for (auto& cb: observers_copy) {
 			if (cb) {
-				cb(m_value.c_str());
+				cb(value_copy);
 			}
 		}
 	}
+
+private:
 
 	std::string m_value {};
 	std::string m_prev_value {};
