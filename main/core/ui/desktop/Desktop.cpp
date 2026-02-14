@@ -11,6 +11,7 @@
 #include "core/system/focus/FocusManager.hpp"
 #include "core/system/system_core/SystemManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
+#include "core/tasks/gui/GuiTask.hpp"
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/Intent.hpp>
 #include <flx/core/Logger.hpp>
@@ -186,6 +187,17 @@ void Desktop::init() {
 	System::FocusManager::getInstance().registerPanel(m_quick_access_panel);
 	System::FocusManager::getInstance().registerPanel(m_notification_panel);
 	System::FocusManager::getInstance().setNotificationPanel(m_notification_panel);
+
+	// Register AppManager callbacks
+	flx::apps::AppManager::getInstance().setWindowCallbacks(
+		[this](const std::string& pkg) { this->openApp(pkg); },
+		[this](const std::string& pkg) { this->closeApp(pkg); }
+	);
+
+	flx::apps::AppManager::getInstance().setGuiCallbacks(
+		[]() { GuiTask::lock(); },
+		[]() { GuiTask::unlock(); }
+	);
 
 	lv_subject_add_observer(
 		&System::DisplayManager::getInstance().getRotationSubject(),
