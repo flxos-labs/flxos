@@ -276,6 +276,10 @@ void StatusBar::create() {
 		);
 	}
 
+	s_overlayLabel = lv_label_create(m_statusBar);
+	lv_obj_set_style_text_color(s_overlayLabel, lv_color_hex(0xFFD700), 0);
+	lv_obj_add_flag(s_overlayLabel, LV_OBJ_FLAG_HIDDEN);
+
 	m_timeLabel = lv_label_create(m_statusBar);
 
 	time_t now = 0;
@@ -298,13 +302,7 @@ void StatusBar::create() {
 }
 
 void StatusBar::showOverlay(const char* text) {
-	if (!s_statusBarInstance) return;
-
-	if (!s_overlayLabel) {
-		s_overlayLabel = lv_label_create(s_statusBarInstance);
-		lv_obj_move_to_index(s_overlayLabel, 0);
-		lv_obj_set_style_text_color(s_overlayLabel, lv_color_hex(0xFFD700), 0);
-	}
+	if (!s_overlayLabel) return;
 	lv_label_set_text(s_overlayLabel, text);
 	lv_obj_remove_flag(s_overlayLabel, LV_OBJ_FLAG_HIDDEN);
 }

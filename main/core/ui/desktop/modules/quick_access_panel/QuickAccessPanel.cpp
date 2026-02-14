@@ -11,6 +11,7 @@
 #include "core/lv_obj_style.h"
 #include "core/lv_obj_style_gen.h"
 #include "core/lv_observer.h"
+#include "core/services/screenshot/ScreenshotService.hpp"
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/focus/FocusManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
@@ -23,6 +24,7 @@
 #include "misc/lv_area.h"
 #include "misc/lv_event.h"
 #include "misc/lv_text.h"
+#include "misc/lv_timer.h"
 #include "misc/lv_types.h"
 #include "widgets/button/lv_button.h"
 #include "widgets/image/lv_image.h"
@@ -101,11 +103,13 @@ void QuickAccessPanel::create() {
 	lv_obj_remove_style_all(toggles_cont);
 	lv_obj_set_size(toggles_cont, lv_pct(100), LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(toggles_cont, LV_FLEX_FLOW_ROW_WRAP);
+	lv_obj_set_style_pad_gap(toggles_cont, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_flex_align(toggles_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
+	// Theme Toggle
 	lv_obj_t* theme_cont = lv_obj_create(toggles_cont);
 	lv_obj_remove_style_all(theme_cont);
-	lv_obj_set_size(theme_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_size(theme_cont, lv_pct(30), LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(theme_cont, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(theme_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
@@ -117,6 +121,9 @@ void QuickAccessPanel::create() {
 	lv_obj_center(theme_icon);
 
 	m_themeLabel = lv_label_create(theme_cont);
+	lv_obj_set_width(m_themeLabel, lv_pct(100));
+	lv_label_set_long_mode(m_themeLabel, LV_LABEL_LONG_DOT);
+	lv_obj_set_style_text_align(m_themeLabel, LV_TEXT_ALIGN_CENTER, 0);
 	lv_label_set_text(m_themeLabel, Themes::ToString(ThemeEngine::get_current_theme()));
 
 	lv_subject_add_observer_obj(
@@ -136,9 +143,10 @@ void QuickAccessPanel::create() {
 		LV_EVENT_CLICKED
 	);
 
+	// Rotation Toggle
 	lv_obj_t* rot_cont = lv_obj_create(toggles_cont);
 	lv_obj_remove_style_all(rot_cont);
-	lv_obj_set_size(rot_cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_size(rot_cont, lv_pct(30), LV_SIZE_CONTENT);
 	lv_obj_set_flex_flow(rot_cont, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(rot_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
@@ -150,6 +158,9 @@ void QuickAccessPanel::create() {
 	lv_obj_center(rot_icon);
 
 	lv_obj_t* rot_label = lv_label_create(rot_cont);
+	lv_obj_set_width(rot_label, lv_pct(100));
+	lv_label_set_long_mode(rot_label, LV_LABEL_LONG_DOT);
+	lv_obj_set_style_text_align(rot_label, LV_TEXT_ALIGN_CENTER, 0);
 	lv_label_bind_text(rot_label, &System::DisplayManager::getInstance().getRotationSubject(), "%d°");
 
 	lv_subject_increment_dsc_t* rot_dsc = lv_obj_add_subject_increment_event(
@@ -159,6 +170,38 @@ void QuickAccessPanel::create() {
 	lv_obj_set_subject_increment_event_min_value(rot_btn, rot_dsc, 0);
 	lv_obj_set_subject_increment_event_max_value(rot_btn, rot_dsc, 270);
 	lv_obj_set_subject_increment_event_rollover(rot_btn, rot_dsc, true);
+
+	// Screenshot Toggle
+	lv_obj_t* shot_cont = lv_obj_create(toggles_cont);
+	lv_obj_remove_style_all(shot_cont);
+	lv_obj_set_size(shot_cont, lv_pct(30), LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(shot_cont, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_flex_align(shot_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+	lv_obj_t* shot_btn = lv_button_create(shot_cont);
+	lv_obj_set_size(shot_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_set_style_radius(shot_btn, LV_RADIUS_CIRCLE, 0);
+	lv_obj_t* shot_icon = lv_image_create(shot_btn);
+	// Use CUT as requested by user, fallback to IMAGE if needed
+	lv_image_set_src(shot_icon, LV_SYMBOL_CUT);
+	lv_obj_center(shot_icon);
+
+	lv_obj_t* shot_label = lv_label_create(shot_cont);
+	lv_obj_set_width(shot_label, lv_pct(100));
+	lv_label_set_long_mode(shot_label, LV_LABEL_LONG_DOT);
+	lv_obj_set_style_text_align(shot_label, LV_TEXT_ALIGN_CENTER, 0);
+	lv_label_set_text(shot_label, "Screenshot");
+
+	lv_obj_add_event_cb(shot_btn, [](lv_event_t* e) {
+		// 1. Close the panel
+		System::FocusManager::getInstance().dismissAllPanels();
+
+		// 2. Schedule screenshot using service
+		// Default delay (seconds), at least 1s to allow panel close animation
+		uint32_t delaySec = System::Services::ScreenshotService::getInstance().getDefaultDelay();
+		if (delaySec < 1) delaySec = 1;
+
+		System::Services::ScreenshotService::getInstance().scheduleCapture(delaySec); }, LV_EVENT_CLICKED, nullptr);
 
 	{
 		lv_obj_t* slider_cont = lv_obj_create(m_panel);

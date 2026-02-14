@@ -49,7 +49,7 @@ void ImageViewerApp::createUI(void* parent) {
 		LV_EVENT_CLICKED, this
 	);
 
-	// Image content area — scrollable, centered
+	// Image content area — no scrolling, image fits inside
 	lv_obj_t* content = lv_obj_create(m_container);
 	lv_obj_set_size(content, lv_pct(100), lv_pct(100));
 	lv_obj_set_flex_grow(content, 1);
@@ -57,7 +57,8 @@ void ImageViewerApp::createUI(void* parent) {
 	lv_obj_set_style_pad_all(content, 0, 0);
 	lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(content, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-	lv_obj_set_scroll_dir(content, LV_DIR_ALL);
+	lv_obj_set_scroll_dir(content, LV_DIR_NONE);
+	lv_obj_set_style_clip_corner(content, true, 0);
 
 	if (m_filePath.empty()) {
 		m_errorLabel = lv_label_create(content);
@@ -72,6 +73,8 @@ void ImageViewerApp::createUI(void* parent) {
 
 	m_image = lv_image_create(content);
 	lv_image_set_src(m_image, m_lvglPath.c_str());
+	lv_obj_set_size(m_image, lv_pct(100), lv_pct(100));
+	lv_image_set_inner_align(m_image, LV_IMAGE_ALIGN_CONTAIN);
 	lv_obj_set_style_image_recolor_opa(m_image, LV_OPA_TRANSP, 0);
 
 	// Check if image loaded successfully

@@ -20,6 +20,7 @@ inline lv_obj_t* create_page_container(lv_obj_t* parent) {
 	lv_obj_set_style_pad_all(cont, 0, 0);
 	lv_obj_set_style_border_width(cont, 0, 0);
 	lv_obj_set_flex_flow(cont, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_gap(cont, 0, 0);
 	return cont;
 }
 

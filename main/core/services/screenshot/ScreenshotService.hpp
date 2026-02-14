@@ -3,6 +3,8 @@
 #include "core/common/Singleton.hpp"
 #include "core/services/IService.hpp"
 #include "core/services/ServiceManifest.hpp"
+#include "lvgl.h"
+#include <functional>
 #include <string>
 
 namespace System::Services {
@@ -43,10 +45,43 @@ public:
 	 */
 	std::string generateFilename(const std::string& basePath);
 
+	/**
+	 * Get the default delay in seconds for taking a screenshot.
+	 */
+	uint32_t getDefaultDelay() const;
+
+	/**
+	 * Get the default storage path (SD card if mounted, else /data).
+	 */
+	std::string getDefaultStoragePath() const;
+
+	using CaptureCallback = std::function<void(bool success, const std::string& path)>;
+
+	/**
+	 * Schedule a screenshot capture after a delay.
+	 * Shows a countdown overlay in the status bar if delay > 0.
+	 * @param delaySec  Delay in seconds (0 = instant capture).
+	 * @param storagePath  Base storage path (e.g. "/data" or SD mount point).
+	 *                     If empty, uses getDefaultStoragePath().
+	 * @param onComplete Optional callback when capture finishes/fails.
+	 */
+	void scheduleCapture(uint32_t delaySec, const std::string& storagePath = "", CaptureCallback onComplete = nullptr);
+
+	/**
+	 * Cancel any pending scheduled capture.
+	 */
+	void cancelCapture();
+
 private:
 
-	ScreenshotService() = default;
-	~ScreenshotService() = default;
+	ScreenshotService();
+	~ScreenshotService();
+
+	lv_timer_t* m_timer {nullptr};
+	int m_countdownRemaining {0};
+	std::string m_storagePath;
+	CaptureCallback m_onComplete {nullptr};
+	void onTimerTick();
 };
 
 } // namespace System::Services
