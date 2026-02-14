@@ -4,6 +4,22 @@
 
 namespace System::Apps {
 
+using namespace flx::apps;
+
+const AppManifest CalendarApp::manifest = {
+	.appId = "com.flxos.calendar",
+	.appName = "Calendar",
+	.appIcon = LV_SYMBOL_LEFT,
+	.appVersionName = "1.0.0",
+	.appVersionCode = 1,
+	.category = AppCategory::User,
+	.flags = AppFlags::None,
+	.location = AppLocation::internal(),
+	.description = "View calendar and dates",
+	.sortPriority = 50,
+	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<CalendarApp>(); }
+};
+
 static constexpr const char* TAG = "CalendarApp";
 
 bool CalendarApp::onStart() {

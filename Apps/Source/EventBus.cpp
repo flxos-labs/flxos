@@ -1,7 +1,7 @@
-#include "EventBus.hpp"
+#include <flx/apps/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 
-namespace System::Apps {
+namespace flx::apps {
 
 static constexpr const char* TAG = "EventBus";
 
@@ -56,4 +56,4 @@ void EventBus::publish(const std::string& event, const Bundle& data) {
 	}
 }
 
-} // namespace System::Apps
+} // namespace flx::apps

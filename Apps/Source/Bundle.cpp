@@ -1,6 +1,6 @@
-#include "Bundle.hpp"
+#include <flx/apps/Bundle.hpp>
 
-namespace System::Apps {
+namespace flx::apps {
 
 // ============================================================
 // Value copy constructor & assignment (deep copy nested Bundle)
@@ -300,4 +300,4 @@ std::vector<std::string> Bundle::keys() const {
 	return result;
 }
 
-} // namespace System::Apps
+} // namespace flx::apps

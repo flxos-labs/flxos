@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/apps/AppManager.hpp"
-#include "core/apps/AppManifest.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "lvgl.h"
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <functional>
 #include <string>
 
@@ -13,9 +13,13 @@
 #include "implementation/Screenshot.hpp"
 #include "implementation/Stopwatch.hpp"
 
+// Use flx::apps namespace elements
+using flx::apps::App;
+using flx::apps::AppManifest;
+
 namespace System::Apps {
 
-class ToolsApp : public App {
+class ToolsApp : public flx::apps::App {
 public:
 
 	ToolsApp() = default;

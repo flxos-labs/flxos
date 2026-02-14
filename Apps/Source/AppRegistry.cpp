@@ -1,10 +1,10 @@
-#include "AppRegistry.hpp"
 #include "esp_log.h"
 #include <algorithm>
+#include <flx/apps/AppRegistry.hpp>
 
 static const char* TAG = "AppRegistry";
 
-namespace System::Apps {
+namespace flx::apps {
 
 AppRegistry& AppRegistry::getInstance() {
 	static AppRegistry instance;
@@ -154,4 +154,4 @@ bool AppRegistry::matchesMimeType(const std::string& pattern, const std::string&
 	return false;
 }
 
-} // namespace System::Apps
+} // namespace flx::apps

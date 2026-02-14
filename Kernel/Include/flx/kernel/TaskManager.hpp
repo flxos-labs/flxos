@@ -29,13 +29,17 @@ public:
 	void suspend() {
 		TaskHandle_t h = m_handle.load();
 		if (h) {
+#if INCLUDE_vTaskSuspend
 			vTaskSuspend(h);
+#endif
 		}
 	}
 	void resume() {
 		TaskHandle_t h = m_handle.load();
 		if (h) {
+#if INCLUDE_vTaskSuspend
 			vTaskResume(h);
+#endif
 		}
 	}
 	void join() const;
@@ -52,7 +56,11 @@ public:
 
 	uint32_t getStackHighWaterMark() {
 		TaskHandle_t h = m_handle.load();
+#if INCLUDE_uxTaskGetStackHighWaterMark
 		return h ? uxTaskGetStackHighWaterMark(h) : 0;
+#else
+		return 0;
+#endif
 	}
 	uint32_t getStackSize() const { return m_stackSize; }
 

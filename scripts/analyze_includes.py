@@ -10,7 +10,7 @@ import sys
 from collections import defaultdict
 from typing import Dict, List, Set, Tuple
 
-SEARCH_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'main')
+SEARCH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def get_includes(filepath: str) -> List[Tuple[str, int, str]]:
     """Extract includes from a file. Returns list of (include_path, line_num, type)."""
@@ -32,7 +32,12 @@ def build_dependency_graph() -> Dict[str, Set[str]]:
     graph = defaultdict(set)
     file_map = {}  # Map basename to full path
     
-    for root, _, files in os.walk(SEARCH_DIR):
+    target_dirs = {'main', 'Apps', 'Kernel', 'Services', 'Core'}
+    
+    for root, dirs, files in os.walk(SEARCH_DIR):
+        if root == SEARCH_DIR:
+             dirs[:] = [d for d in dirs if d in target_dirs]
+
         for file in files:
             if file.endswith(('.hpp', '.h', '.cpp', '.c')):
                 filepath = os.path.join(root, file)
@@ -149,7 +154,12 @@ def main():
     order_issues = []
     guard_issues = []
     
-    for root, _, files in os.walk(SEARCH_DIR):
+    target_dirs = {'main', 'Apps', 'Kernel', 'Services', 'Core'}
+
+    for root, dirs, files in os.walk(SEARCH_DIR):
+        if root == SEARCH_DIR:
+             dirs[:] = [d for d in dirs if d in target_dirs]
+
         for file in files:
             if file.endswith(('.hpp', '.h', '.cpp', '.c')):
                 filepath = os.path.join(root, file)

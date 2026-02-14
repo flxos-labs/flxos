@@ -13,8 +13,6 @@ set(CORE_SRCS
     "core/system/theme/ThemeManager.cpp"
     "core/system/time/TimeManager.cpp"
     "core/system/power/PowerManager.cpp"
-    "core/apps/Bundle.cpp"
-    "core/apps/EventBus.cpp"
     "core/system/device/DeviceProfiles.cpp"
     "core/services/device/DeviceProfileService.cpp"
 )
@@ -35,12 +33,10 @@ if(NOT CONFIG_FLXOS_HEADLESS_MODE)
         "core/ui/keyboard/VirtualKeyboard.cpp"
         "core/ui/theming/theme_engine/ThemeEngine.cpp"
         "core/ui/theming/themes/Themes.cpp"
-        "core/apps/AppManager.cpp"
-        "core/apps/AppRegistry.cpp"
-        "core/apps/AppContext.cpp"
         "core/apps/files/FilesApp.cpp"
         "core/apps/system_info/SystemInfoApp.cpp"
         "core/apps/calendar/CalendarApp.cpp"
+        "core/apps/settings/SettingsApp.cpp"
         "core/apps/settings/wifi/WiFiSettings.cpp"
         "core/apps/settings/hotspot/HotspotSettings.cpp"
         "core/apps/text_editor/TextEditorApp.cpp"
@@ -88,7 +84,7 @@ set(PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event es
 idf_component_register(SRCS ${CORE_SRCS}
     INCLUDE_DIRS ${INCLUDE_DIRS}
     PRIV_REQUIRES ${PRIV_REQUIRES}
-    REQUIRES ${COMPONENT_REQUIRES} Core Kernel Services
+    REQUIRES ${COMPONENT_REQUIRES} Core Kernel Services Apps
 )
 
 # LVGL configuration (only in GUI mode)

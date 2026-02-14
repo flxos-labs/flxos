@@ -1,7 +1,7 @@
 #pragma once
 
-#include <flx/kernel/TaskManager.hpp>
 #include <atomic>
+#include <flx/kernel/TaskManager.hpp>
 
 namespace flx::kernel {
 class ResourceMonitorTask : public Task {

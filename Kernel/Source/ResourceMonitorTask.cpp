@@ -1,8 +1,8 @@
-#include <flx/kernel/ResourceMonitorTask.hpp>
-#include <flx/core/Logger.hpp>
 #include "esp_heap_caps.h"
 #include "freertos/projdefs.h"
 #include "freertos/task.h"
+#include <flx/core/Logger.hpp>
+#include <flx/kernel/ResourceMonitorTask.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "ResourceMonitor";

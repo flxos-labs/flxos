@@ -97,7 +97,7 @@ while IFS= read -r -d '' file; do
             echo "  ⚠️  $WARNINGS warnings, $ERRORS errors"
         fi
     fi
-done < <(find "$PROJECT_ROOT/main" -name "*.cpp" -print0)
+done < <(find "$PROJECT_ROOT/main" "$PROJECT_ROOT/Apps" "$PROJECT_ROOT/Kernel" "$PROJECT_ROOT/Services" "$PROJECT_ROOT/Core" -name "*.cpp" -print0)
 
 # Generate summary
 {

@@ -4,11 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "core/apps/AppManager.hpp"
 #include "lvgl.h"
+#include <flx/apps/AppManager.hpp>
 #include <flx/core/Singleton.hpp>
 
-class WindowManager : public System::Apps::AppStateObserver, public flx::Singleton<WindowManager> {
+class WindowManager : public flx::apps::AppStateObserver, public flx::Singleton<WindowManager> {
 	friend class flx::Singleton<WindowManager>;
 
 public:
@@ -54,8 +54,8 @@ private:
 
 	// Window management helpers
 	bool activateIfOpen(const std::string& packageName);
-	lv_obj_t* createAndConfigureAppButton(lv_obj_t* win, System::Apps::App* app);
-	void setupWindowHeader(lv_obj_t* win, System::Apps::App* app);
+	lv_obj_t* createAndConfigureAppButton(lv_obj_t* win, flx::apps::App* app);
+	void setupWindowHeader(lv_obj_t* win, flx::apps::App* app);
 
 	void closeWindow_internal(lv_obj_t* w);
 	lv_obj_t* findWindowByPackage(const std::string& packageName) const;

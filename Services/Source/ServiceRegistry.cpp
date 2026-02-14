@@ -1,6 +1,6 @@
-#include <flx/services/ServiceRegistry.hpp>
-#include <flx/core/Logger.hpp>
 #include <algorithm>
+#include <flx/core/Logger.hpp>
+#include <flx/services/ServiceRegistry.hpp>
 #include <queue>
 #include <unordered_set>
 

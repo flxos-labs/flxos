@@ -1,16 +1,21 @@
 #pragma once
 
-#include "core/apps/AppManager.hpp"
-#include "core/apps/AppManifest.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/apps/settings/bluetooth/BluetoothSettings.hpp"
 #include "core/apps/settings/display/DisplaySettings.hpp"
 #include "core/apps/settings/hotspot/HotspotSettings.hpp"
 #include "core/apps/settings/wifi/WiFiSettings.hpp"
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
+#include <flx/apps/AppManifest.hpp> // Ensure types are available
 #include <memory>
 
+// Use flx::apps namespace elements
+using flx::apps::App;
+using flx::apps::AppManifest;
+
 namespace System::Apps {
-class SettingsApp : public App {
+class SettingsApp : public flx::apps::App {
 public:
 
 	std::string getPackageName() const override { return "com.flxos.settings"; }

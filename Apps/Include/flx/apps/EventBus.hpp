@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace System::Apps {
+namespace flx::apps {
 
 /**
  * @brief System-wide publish/subscribe event bus
@@ -92,4 +92,4 @@ constexpr const char* APP_INSTALLED = "app.installed";
 constexpr const char* APP_UNINSTALLED = "app.uninstalled";
 } // namespace Events
 
-} // namespace System::Apps
+} // namespace flx::apps

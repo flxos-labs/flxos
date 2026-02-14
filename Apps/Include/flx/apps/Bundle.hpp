@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace System::Apps {
+namespace flx::apps {
 
 /**
  * @brief Typed key-value data container for inter-app communication
@@ -122,4 +122,4 @@ private:
 	const Value* findEntry(const std::string& key, Type expectedType) const;
 };
 
-} // namespace System::Apps
+} // namespace flx::apps

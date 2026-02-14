@@ -6,7 +6,7 @@
 #include <functional>
 #include <string>
 
-namespace System::Apps {
+namespace flx::apps {
 
 // Forward declarations
 struct AppManifest;
@@ -95,4 +95,4 @@ private:
 	ResultCallback m_resultCallback;
 };
 
-} // namespace System::Apps
+} // namespace flx::apps

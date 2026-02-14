@@ -4,8 +4,6 @@
 #include "../../../theming/theme_engine/ThemeEngine.hpp"
 #include "../../../theming/ui_constants/UiConstants.hpp"
 
-#include "core/apps/AppManager.hpp"
-#include "core/apps/Intent.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_pos.h"
 #include "core/lv_obj_style.h"
@@ -32,6 +30,8 @@
 #include "widgets/label/lv_label.h"
 #include "widgets/slider/lv_slider.h"
 #include <cstdint>
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/Intent.hpp>
 
 namespace UI::Modules {
 
@@ -117,8 +117,8 @@ void QuickAccessPanel::buildHeader() {
 
 	lv_obj_add_event_cb(settings_btn, [](lv_event_t* e) {
         System::FocusManager::getInstance().dismissAllPanels();
-        System::Apps::AppManager::getInstance().startApp(
-            System::Apps::Intent::forApp("com.flxos.settings")
+        flx::apps::AppManager::getInstance().startApp(
+            flx::apps::Intent::forApp("com.flxos.settings")
         ); }, LV_EVENT_CLICKED, nullptr);
 
 	lv_obj_set_style_text_color(settings_btn, Themes::GetConfig(ThemeEngine::get_current_theme()).text_primary, 0);

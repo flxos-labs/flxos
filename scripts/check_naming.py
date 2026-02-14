@@ -9,7 +9,7 @@ import re
 import sys
 from typing import List, Tuple
 
-SEARCH_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'main')
+SEARCH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def is_pascal_case(name: str) -> bool:
     """Check if name is PascalCase."""
@@ -88,7 +88,12 @@ def main():
     all_issues = []
     file_count = 0
     
-    for root, _, files in os.walk(SEARCH_DIR):
+    target_dirs = {'main', 'Apps', 'Kernel', 'Services', 'Core'}
+    
+    for root, dirs, files in os.walk(SEARCH_DIR):
+        if root == SEARCH_DIR:
+             dirs[:] = [d for d in dirs if d in target_dirs]
+
         for file in files:
             if file.endswith(('.cpp', '.hpp', '.c', '.h')):
                 filepath = os.path.join(root, file)

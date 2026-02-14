@@ -3,8 +3,8 @@ idf_component_register(
         "Source/TaskManager.cpp"
         "Source/ResourceMonitorTask.cpp"
     INCLUDE_DIRS Include
-    REQUIRES Core
-    PRIV_REQUIRES freertos esp_timer esp_system
+    REQUIRES Core freertos
+    PRIV_REQUIRES esp_timer esp_system
 )
 
 message(STATUS "FlxOS: Registered Kernel module (Task management and scheduling)")

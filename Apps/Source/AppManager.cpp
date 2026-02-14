@@ -1,138 +1,18 @@
-#include "AppManager.hpp"
-#include "AppManifest.hpp"
-#include "AppRegistry.hpp"
-#include "EventBus.hpp"
-#include "calendar/CalendarApp.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
-#include "core/ui/desktop/Desktop.hpp"
 #include "esp_system.h"
-#include "files/FilesApp.hpp"
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include "freertos/semphr.h"
-#include "image_viewer/ImageViewerApp.hpp"
 #include "portmacro.h"
-#include "settings/SettingsApp.hpp"
-#include "system_info/SystemInfoApp.hpp"
-#include "text_editor/TextEditorApp.hpp"
-#include "tools/ToolsApp.hpp"
 #include <algorithm> // Explicitly include for std::find_if
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
+#include <flx/apps/AppRegistry.hpp>
+#include <flx/apps/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
 
-namespace System::Apps {
-
-// ============================================================
-// Static manifest definitions for all built-in apps
-// ============================================================
-
-const AppManifest SettingsApp::manifest = {
-	.appId = "com.flxos.settings",
-	.appName = "Settings",
-	.appIcon = LV_SYMBOL_SETTINGS,
-	.appVersionName = "1.1.0",
-	.appVersionCode = 2,
-	.category = AppCategory::System,
-	.flags = AppFlags::SingleInstance,
-	.location = AppLocation::internal(),
-	.description = "System configuration and preferences",
-	.sortPriority = 10,
-	.capabilities = AppCapability::WiFi | AppCapability::Bluetooth,
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<SettingsApp>(); }
-};
-
-const AppManifest FilesApp::manifest = {
-	.appId = "com.flxos.files",
-	.appName = "Files",
-	.appIcon = LV_SYMBOL_DIRECTORY,
-	.appVersionName = "1.0.0",
-	.appVersionCode = 1,
-	.category = AppCategory::System,
-	.flags = AppFlags::None,
-	.location = AppLocation::internal(),
-	.description = "Browse and manage files on device storage",
-	.sortPriority = 20,
-	.capabilities = AppCapability::Storage,
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<FilesApp>(); }
-};
-
-const AppManifest SystemInfoApp::manifest = {
-	.appId = "com.flxos.systeminfo",
-	.appName = "System Info",
-	.appIcon = LV_SYMBOL_TINT,
-	.appVersionName = "1.0.0",
-	.appVersionCode = 1,
-	.category = AppCategory::System,
-	.flags = AppFlags::SingleInstance,
-	.location = AppLocation::internal(),
-	.description = "System diagnostics and hardware information",
-	.sortPriority = 30,
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<SystemInfoApp>(); }
-};
-
-const AppManifest CalendarApp::manifest = {
-	.appId = "com.flxos.calendar",
-	.appName = "Calendar",
-	.appIcon = LV_SYMBOL_LEFT,
-	.appVersionName = "1.0.0",
-	.appVersionCode = 1,
-	.category = AppCategory::User,
-	.flags = AppFlags::None,
-	.location = AppLocation::internal(),
-	.description = "View calendar and dates",
-	.sortPriority = 50,
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<CalendarApp>(); }
-};
-
-const AppManifest TextEditorApp::manifest = {
-	.appId = "com.flxos.texteditor",
-	.appName = "Text Editor",
-	.appIcon = LV_SYMBOL_EDIT,
-	.appVersionName = "1.0.0",
-	.appVersionCode = 1,
-	.category = AppCategory::User,
-	.flags = AppFlags::None,
-	.location = AppLocation::internal(),
-	.description = "Create and edit text files",
-	.sortPriority = 40,
-	.capabilities = AppCapability::Storage,
-	.supportedMimeTypes = {"text/plain", "text/*"},
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<TextEditorApp>(); }
-};
-
-const AppManifest ToolsApp::manifest = {
-	.appId = "com.flxos.tools",
-	.appName = "Tools",
-	.appIcon = LV_SYMBOL_LIST,
-	.appVersionName = "1.0.0",
-	.appVersionCode = 1,
-	.category = AppCategory::Tools,
-	.flags = AppFlags::None,
-	.location = AppLocation::internal(),
-	.description = "Calculator, Stopwatch, Flashlight, Display Tester",
-	.sortPriority = 45,
-	.capabilities = AppCapability::GPIO,
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ToolsApp>(); }
-};
-
-const AppManifest ImageViewerApp::manifest = {
-	.appId = "com.flxos.imageviewer",
-	.appName = "Image Viewer",
-	.appIcon = LV_SYMBOL_IMAGE,
-	.appVersionName = "1.0.0",
-	.appVersionCode = 1,
-	.category = AppCategory::System,
-	.flags = AppFlags::Hidden,
-	.location = AppLocation::internal(),
-	.description = "View image files",
-	.sortPriority = 100,
-	.capabilities = AppCapability::Storage,
-	.supportedMimeTypes = {"image/bmp", "image/*"},
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ImageViewerApp>(); }
-};
-
-// ============================================================
+namespace flx::apps {
 
 class AppExecutor : public flx::kernel::Task {
 public:
@@ -155,20 +35,37 @@ protected:
 
 AppManager::AppManager() : m_mutex(xSemaphoreCreateMutex()) {}
 
+// Callback storage
+static GuiLockCallback s_guiLock;
+static GuiUnlockCallback s_guiUnlock;
+static WindowOpenCallback s_windowOpen;
+static WindowCloseCallback s_windowClose;
+
+void AppManager::setGuiCallbacks(GuiLockCallback lock, GuiUnlockCallback unlock) {
+	s_guiLock = lock;
+	s_guiUnlock = unlock;
+}
+
+void AppManager::setWindowCallbacks(WindowOpenCallback open, WindowCloseCallback close) {
+	s_windowOpen = open;
+	s_windowClose = close;
+}
+
+static void lockGui() {
+	if (s_guiLock) s_guiLock();
+}
+
+static void unlockGui() {
+	if (s_guiUnlock) s_guiUnlock();
+}
+
 void AppManager::init() {
 	Log::info("AppManager", "Initializing AppManager...");
 
-	// Register all built-in app manifests to the AppRegistry
-	auto& registry = AppRegistry::getInstance();
-	registry.addApp(SettingsApp::manifest);
-	registry.addApp(FilesApp::manifest);
-	registry.addApp(SystemInfoApp::manifest);
-	registry.addApp(CalendarApp::manifest);
-	registry.addApp(TextEditorApp::manifest);
-	registry.addApp(ToolsApp::manifest);
-	registry.addApp(ImageViewerApp::manifest);
+	// Note: Built-in apps are now registered externally (e.g. in SystemManager or Main)
 
 	// Instantiate apps from registry
+	auto& registry = AppRegistry::getInstance();
 	for (const auto& manifest: registry.getAll()) {
 		if (manifest.createApp) {
 			registerApp(manifest.createApp());
@@ -291,13 +188,12 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 			// For now, let's just update the intent in the context if possible or ignore
 		}
 
-		// Pause current top if specific
 		if (!m_appStack.empty()) {
 			auto current = m_appStack.back().app;
 			if (current) {
-				GuiTask::lock();
+				lockGui();
 				current->onPause();
-				GuiTask::unlock();
+				unlockGui();
 			}
 		}
 
@@ -308,13 +204,13 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 		xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 
 		// Resume
-		GuiTask::lock();
+		lockGui();
 		if (app) {
 			app->setActive(true);
 			app->onResume();
 		}
-		Desktop::getInstance().openApp(manifest.appId);
-		GuiTask::unlock();
+		if (s_windowOpen) s_windowOpen(manifest.appId);
+		unlockGui();
 
 		return launchId;
 	}
@@ -325,9 +221,9 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 	if (!m_appStack.empty()) {
 		auto current = m_appStack.back().app;
 		if (current) {
-			GuiTask::lock();
+			lockGui();
 			current->onPause();
-			GuiTask::unlock();
+			unlockGui();
 		}
 	}
 
@@ -350,16 +246,16 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 
 	// 4. Start lifecycle
-	GuiTask::lock();
+	lockGui();
 	if (!app->onStart()) {
 		Log::error("AppManager", "Failed to start app: %s", manifest.appId.c_str());
 		stopApp(manifest.appId, true); // Cleanup
-		GuiTask::unlock();
+		unlockGui();
 		return LAUNCH_ID_INVALID;
 	}
 	app->setActive(true);
 	app->onResume();
-	GuiTask::unlock();
+	unlockGui();
 
 	Log::info("AppManager", "Started app: %s (launchId=%lu, action=%s)", manifest.appId.c_str(), (unsigned long)launchId, intent.action.c_str());
 
@@ -369,11 +265,9 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 	Log::info("AppManager", "startAppForResult: Requesting Desktop openApp");
 
 	// 5. Open UI
-	// Desktop will call WindowManager::openApp -> WindowManager creates window -> Calls app->createUI
-	// WindowManager should NOT call AppManager::startApp() anymore.
-	GuiTask::lock();
-	Desktop::getInstance().openApp(manifest.appId);
-	GuiTask::unlock();
+	lockGui();
+	if (s_windowOpen) s_windowOpen(manifest.appId);
+	unlockGui();
 
 	Log::info("AppManager", "startAppForResult: Start complete");
 
@@ -413,11 +307,11 @@ void AppManager::finishApp(LaunchId id, ResultCode resultCode, const Bundle& res
 
 	// If active, stop lifecycle
 	if (wasActive && app) {
-		GuiTask::lock();
+		lockGui();
 		app->onPause();
 		app->onStop();
 		app->setActive(false);
-		GuiTask::unlock();
+		unlockGui();
 	}
 
 	if (app) app->setContext(nullptr);
@@ -442,19 +336,19 @@ void AppManager::finishApp(LaunchId id, ResultCode resultCode, const Bundle& res
 
 	// Deliver to parent app if stack not empty and was active
 	if (wasActive && parentApp) {
-		GuiTask::lock();
+		lockGui();
 		parentApp->onResult(resultCode, resultData);
 		parentApp->onResume();
-		GuiTask::unlock();
+		unlockGui();
 	}
 
 	notifyAppStopped(pkg);
 	publishAppEvent(Events::APP_STOPPED, pkg);
 
 	// Close UI
-	GuiTask::lock();
-	Desktop::getInstance().closeApp(pkg);
-	GuiTask::unlock();
+	lockGui();
+	if (s_windowClose) s_windowClose(pkg);
+	unlockGui();
 }
 
 bool AppManager::stopApp(const std::string& packageName, bool closeUI) {
@@ -484,13 +378,13 @@ bool AppManager::stopApp(const std::string& packageName, bool closeUI) {
 	LaunchId id = forward_it->launchId; // Capture ID
 
 	// Lifecycle
-	GuiTask::lock();
+	lockGui();
 	if (app->isActive()) {
 		app->onPause();
 		app->onStop();
 		app->setActive(false);
 	}
-	GuiTask::unlock();
+	unlockGui();
 
 	if (app) app->setContext(nullptr);
 
@@ -508,15 +402,15 @@ bool AppManager::stopApp(const std::string& packageName, bool closeUI) {
 	publishAppEvent(Events::APP_STOPPED, packageName);
 
 	if (wasActive && newTop) {
-		GuiTask::lock();
+		lockGui();
 		newTop->onResume();
-		GuiTask::unlock();
+		unlockGui();
 	}
 
 	if (closeUI) {
-		GuiTask::lock();
-		Desktop::getInstance().closeApp(packageName);
-		GuiTask::unlock();
+		lockGui();
+		if (s_windowClose) s_windowClose(packageName);
+		unlockGui();
 	}
 
 	return true;
@@ -592,9 +486,9 @@ void AppManager::update() {
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 
 	if (activeApp) {
-		GuiTask::lock();
+		lockGui();
 		activeApp->update();
-		GuiTask::unlock();
+		unlockGui();
 	}
 }
 
@@ -674,9 +568,10 @@ void AppManager::performHealthCheck() {
 	size_t stackSize = m_appStack.size();
 	std::string topApp = stackSize > 0 ? m_appStack.back().app->getPackageName() : "None";
 
-	Log::info("AppManager", "Health: %d apps registered, %zu in stack, Top: %s", (int)m_apps.size(), stackSize, topApp.c_str());
+	int appCount = (int)m_apps.size();
+	Log::info("AppManager", "Health: %d apps registered, %zu in stack, Top: %s", appCount, stackSize, topApp.c_str());
 
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 }
 
-} // namespace System::Apps
+} // namespace flx::apps

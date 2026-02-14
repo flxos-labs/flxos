@@ -31,6 +31,8 @@
 #include "widgets/textarea/lv_textarea.h"
 #include <cstdint>
 #include <cstring>
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <flx/core/ClipboardManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/TaskManager.hpp>
@@ -38,7 +40,24 @@
 
 static constexpr std::string_view TAG = "FilesApp";
 
+using namespace flx::apps;
+
 namespace System::Apps {
+
+const flx::apps::AppManifest FilesApp::manifest = {
+	.appId = "com.flxos.files",
+	.appName = "Files",
+	.appIcon = LV_SYMBOL_DIRECTORY,
+	.appVersionName = "1.0.0",
+	.appVersionCode = 1,
+	.category = flx::apps::AppCategory::System,
+	.flags = flx::apps::AppFlags::None,
+	.location = flx::apps::AppLocation::internal(),
+	.description = "Browse and manage files on device storage",
+	.sortPriority = 20,
+	.capabilities = flx::apps::AppCapability::Storage,
+	.createApp = []() -> std::shared_ptr<flx::apps::App> { return std::make_shared<FilesApp>(); }
+};
 
 // Helper: Create a styled message box
 static void showMsgBox(const char* title, const char* text) {
@@ -535,13 +554,13 @@ void FilesApp::onFileClick(const std::string& name) {
 		if (ext == "png" || ext == "jpg" || ext == "jpeg") {
 			std::string mimeType = "image/" + (ext == "jpg" ? std::string("jpeg") : ext);
 			Intent intent = Intent::view(vfsPath, mimeType);
-			AppManager::getInstance().startApp(intent);
+			flx::apps::AppManager::getInstance().startApp(intent);
 			return;
 		}
 
 		if (ext == "txt" || ext == "log" || ext == "json" || ext == "csv" || ext == "md") {
 			Intent intent = Intent::view(vfsPath, "text/plain");
-			AppManager::getInstance().startApp(intent);
+			flx::apps::AppManager::getInstance().startApp(intent);
 			return;
 		}
 	}

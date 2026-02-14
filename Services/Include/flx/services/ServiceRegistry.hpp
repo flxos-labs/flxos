@@ -3,11 +3,11 @@
 #include "IService.hpp"
 #include "ServiceManifest.hpp"
 #include <flx/core/Singleton.hpp>
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <functional>
 
 namespace flx::services {
 

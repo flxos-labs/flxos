@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace System::Apps {
+namespace flx::apps {
 
 /**
  * @brief Central registry for all app manifests
@@ -59,4 +59,4 @@ private:
 	static bool matchesMimeType(const std::string& pattern, const std::string& type);
 };
 
-} // namespace System::Apps
+} // namespace flx::apps

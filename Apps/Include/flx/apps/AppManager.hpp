@@ -9,10 +9,16 @@
 #include <string>
 #include <vector>
 
-namespace System::Apps {
+namespace flx::apps {
 
 // Forward declaration
 class App;
+
+// UI Callbacks
+using GuiLockCallback = std::function<void()>;
+using GuiUnlockCallback = std::function<void()>;
+using WindowOpenCallback = std::function<void(const std::string&)>;
+using WindowCloseCallback = std::function<void(const std::string&)>;
 
 // Observer interface for app state changes
 class AppStateObserver {
@@ -84,6 +90,10 @@ public:
 	void init();
 	void registerApp(std::shared_ptr<App> app);
 	const std::vector<std::shared_ptr<App>>& getInstalledApps() const;
+
+	// === UI Integration ===
+	void setGuiCallbacks(GuiLockCallback lock, GuiUnlockCallback unlock);
+	void setWindowCallbacks(WindowOpenCallback open, WindowCloseCallback close);
 
 	// === Intent-based app lifecycle (Phase 2) ===
 
@@ -173,4 +183,4 @@ private:
 	// bool startApp(std::shared_ptr<App> app);
 };
 
-} // namespace System::Apps
+} // namespace flx::apps

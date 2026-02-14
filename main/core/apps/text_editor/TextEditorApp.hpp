@@ -1,16 +1,20 @@
 #pragma once
 
-#include "core/apps/AppManager.hpp"
-#include "core/apps/AppManifest.hpp"
 #include "core/ui/components/FileBrowser.hpp"
 #include "lvgl.h"
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <functional>
 #include <memory>
 #include <string>
 
+// Use flx::apps namespace elements
+using flx::apps::App;
+using flx::apps::AppManifest;
+
 namespace System::Apps {
 
-class TextEditorApp : public App {
+class TextEditorApp : public flx::apps::App {
 public:
 
 	TextEditorApp() = default;

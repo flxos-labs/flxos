@@ -30,7 +30,23 @@ static constexpr std::string_view TAG = "SystemInfoApp";
 
 static constexpr uint32_t UPDATE_INTERVAL_MS = 1000;
 
+using namespace flx::apps;
+
 namespace System::Apps {
+
+const AppManifest SystemInfoApp::manifest = {
+	.appId = "com.flxos.systeminfo",
+	.appName = "System Info",
+	.appIcon = LV_SYMBOL_TINT,
+	.appVersionName = "1.0.0",
+	.appVersionCode = 1,
+	.category = AppCategory::System,
+	.flags = AppFlags::SingleInstance,
+	.location = AppLocation::internal(),
+	.description = "System diagnostics and hardware information",
+	.sortPriority = 30,
+	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<SystemInfoApp>(); }
+};
 
 SystemInfoApp::SystemInfoApp() {
 	m_cpu_bars.clear();

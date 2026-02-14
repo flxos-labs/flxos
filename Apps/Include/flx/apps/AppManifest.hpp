@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace System::Apps {
+namespace flx::apps {
 
 // Forward declaration
 class App;
@@ -115,4 +115,4 @@ struct AppManifest {
 	std::function<std::shared_ptr<App>()> createApp;
 };
 
-} // namespace System::Apps
+} // namespace flx::apps

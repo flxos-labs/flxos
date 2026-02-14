@@ -8,6 +8,24 @@
 
 namespace System::Apps {
 
+using namespace flx::apps;
+
+const AppManifest TextEditorApp::manifest = {
+	.appId = "com.flxos.texteditor",
+	.appName = "Text Editor",
+	.appIcon = LV_SYMBOL_EDIT,
+	.appVersionName = "1.0.0",
+	.appVersionCode = 1,
+	.category = AppCategory::User,
+	.flags = AppFlags::None,
+	.location = AppLocation::internal(),
+	.description = "Create and edit text files",
+	.sortPriority = 40,
+	.capabilities = AppCapability::Storage,
+	.supportedMimeTypes = {"text/plain", "text/*"},
+	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<TextEditorApp>(); }
+};
+
 static constexpr const char* TAG = "TextEditorApp";
 static constexpr size_t MAX_FILE_SIZE = 32 * 1024; // 32KB max file size
 

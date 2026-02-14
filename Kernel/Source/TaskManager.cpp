@@ -1,6 +1,4 @@
-#include <flx/kernel/TaskManager.hpp>
 #include "FreeRTOSConfig.h"
-#include <flx/core/Logger.hpp>
 #include "esp_err.h"
 #include "esp_heap_caps.h"
 #include "esp_system.h"
@@ -12,6 +10,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <flx/core/Logger.hpp>
+#include <flx/kernel/TaskManager.hpp>
 #include <string_view>
 
 static constexpr std::string_view TASK_TAG = "Task";

@@ -2,9 +2,6 @@
 #include "../../../theming/StyleUtils.hpp"
 #include "../../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../../theming/ui_constants/UiConstants.hpp"
-#include "core/apps/AppManager.hpp"
-#include "core/apps/AppManifest.hpp"
-#include "core/apps/AppRegistry.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_pos.h"
 #include "core/lv_obj_style.h"
@@ -16,6 +13,9 @@
 #include "misc/lv_text.h"
 #include "misc/lv_types.h"
 #include "widgets/label/lv_label.h"
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
+#include <flx/apps/AppRegistry.hpp>
 
 namespace UI::Modules {
 
@@ -52,11 +52,11 @@ void Launcher::create() {
 	lv_obj_set_style_pad_all(m_list, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_style_pad_row(m_list, lv_dpx(UiConstants::PAD_TINY), 0);
 
-	auto apps = System::Apps::AppManager::getInstance().getInstalledApps();
+	auto apps = flx::apps::AppManager::getInstance().getInstalledApps();
 	for (auto& app: apps) {
 		// Skip hidden apps (e.g. Image Viewer — launched via intent only)
-		auto manifest = System::Apps::AppRegistry::getInstance().findById(app->getPackageName());
-		if (manifest && (manifest->flags & System::Apps::AppFlags::Hidden)) {
+		auto manifest = flx::apps::AppRegistry::getInstance().findById(app->getPackageName());
+		if (manifest && (manifest->flags & flx::apps::AppFlags::Hidden)) {
 			continue;
 		}
 		lv_obj_t* btn = lv_button_create(m_list);

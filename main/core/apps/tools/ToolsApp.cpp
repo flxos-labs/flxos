@@ -7,6 +7,23 @@ static constexpr std::string_view TAG = "ToolsApp";
 
 namespace System::Apps {
 
+using namespace flx::apps;
+
+const AppManifest ToolsApp::manifest = {
+	.appId = "com.flxos.tools",
+	.appName = "Tools",
+	.appIcon = LV_SYMBOL_LIST,
+	.appVersionName = "1.0.0",
+	.appVersionCode = 1,
+	.category = AppCategory::Tools,
+	.flags = AppFlags::None,
+	.location = AppLocation::internal(),
+	.description = "Calculator, Stopwatch, Flashlight, Display Tester",
+	.sortPriority = 45,
+	.capabilities = AppCapability::GPIO,
+	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ToolsApp>(); }
+};
+
 bool ToolsApp::onStart() {
 	Log::info(TAG, "Tools app started");
 	return true;

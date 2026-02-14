@@ -1,5 +1,4 @@
 #include "SystemManager.hpp"
-#include "core/apps/EventBus.hpp"
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/power/PowerManager.hpp"
@@ -12,6 +11,7 @@
 #include "nvs_flash.h"
 #include "sdkconfig.h"
 #include "wear_levelling.h"
+#include <flx/apps/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/ResourceMonitorTask.hpp>
 #include <flx/kernel/TaskManager.hpp>
@@ -31,9 +31,19 @@
 #include <unistd.h>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-#include "core/apps/AppManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "core/ui/LvglBridgeHelpers.hpp"
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppRegistry.hpp>
+
+// App includes for registration
+#include "core/apps/calendar/CalendarApp.hpp"
+#include "core/apps/files/FilesApp.hpp"
+#include "core/apps/image_viewer/ImageViewerApp.hpp"
+#include "core/apps/settings/SettingsApp.hpp"
+#include "core/apps/system_info/SystemInfoApp.hpp"
+#include "core/apps/text_editor/TextEditorApp.hpp"
+#include "core/apps/tools/ToolsApp.hpp"
 #endif
 
 static constexpr std::string_view TAG = "SystemManager";
@@ -75,9 +85,9 @@ void SystemManager::registerServices() {
 
 	// Decoupled event publishing
 	registry.setEventCallback([](const char* event, const std::string& serviceId) {
-		System::Apps::Bundle data;
+		flx::apps::Bundle data;
 		data.putString("serviceId", serviceId);
-		System::Apps::EventBus::getInstance().publish(event, data);
+		flx::apps::EventBus::getInstance().publish(event, data);
 	});
 
 	// Core managers (as shared_ptr wrapping the singletons — prevent deletion)
@@ -132,7 +142,17 @@ esp_err_t SystemManager::initGuiState() {
 	// Let ServiceRegistry call onGuiInit() on all started services
 	flx::services::ServiceRegistry::getInstance().initGuiServices();
 
-	Apps::AppManager::getInstance().init();
+	// Register built-in apps
+	auto& registry = flx::apps::AppRegistry::getInstance();
+	registry.addApp(System::Apps::SettingsApp::manifest);
+	registry.addApp(System::Apps::FilesApp::manifest);
+	registry.addApp(System::Apps::SystemInfoApp::manifest);
+	registry.addApp(System::Apps::CalendarApp::manifest);
+	registry.addApp(System::Apps::TextEditorApp::manifest);
+	registry.addApp(System::Apps::ToolsApp::manifest);
+	registry.addApp(System::Apps::ImageViewerApp::manifest);
+
+	flx::apps::AppManager::getInstance().init();
 
 	GuiTask::unlock();
 	return ESP_OK;

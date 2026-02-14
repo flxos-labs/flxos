@@ -3,8 +3,6 @@
 #include "../theming/layout_constants/LayoutConstants.hpp"
 #include "../theming/theme_engine/ThemeEngine.hpp"
 #include "../theming/ui_constants/UiConstants.hpp"
-#include "core/apps/AppManager.hpp"
-#include "core/apps/Intent.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_style_gen.h"
@@ -13,6 +11,8 @@
 #include "core/system/focus/FocusManager.hpp"
 #include "core/system/system_core/SystemManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/Intent.hpp>
 #include <flx/core/Logger.hpp>
 
 #include "core/ui/theming/themes/Themes.hpp"
@@ -257,7 +257,7 @@ void Desktop::on_app_click(lv_event_t* e) {
 	auto* d = (Desktop*)lv_event_get_user_data(e);
 	lv_obj_t* btn = lv_event_get_target_obj(e);
 
-	auto* appPtr = (System::Apps::App*)lv_obj_get_user_data(btn);
+	auto* appPtr = (flx::apps::App*)lv_obj_get_user_data(btn);
 	if (!appPtr) {
 		return;
 	}
@@ -265,8 +265,8 @@ void Desktop::on_app_click(lv_event_t* e) {
 	std::string packageName = appPtr->getPackageName();
 
 	System::FocusManager::getInstance().dismissAllPanels();
-	System::Apps::AppManager::getInstance().startApp(
-		System::Apps::Intent::forApp(packageName)
+	flx::apps::AppManager::getInstance().startApp(
+		flx::apps::Intent::forApp(packageName)
 	);
 }
 

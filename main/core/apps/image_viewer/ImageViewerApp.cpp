@@ -11,6 +11,24 @@ static constexpr std::string_view TAG = "ImageViewer";
 
 namespace System::Apps {
 
+using namespace flx::apps;
+
+const AppManifest ImageViewerApp::manifest = {
+	.appId = "com.flxos.imageviewer",
+	.appName = "Image Viewer",
+	.appIcon = LV_SYMBOL_IMAGE,
+	.appVersionName = "1.0.0",
+	.appVersionCode = 1,
+	.category = AppCategory::System,
+	.flags = AppFlags::Hidden,
+	.location = AppLocation::internal(),
+	.description = "View image files",
+	.sortPriority = 100,
+	.capabilities = AppCapability::Storage,
+	.supportedMimeTypes = {"image/bmp", "image/*"},
+	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ImageViewerApp>(); }
+};
+
 std::string ImageViewerApp::getPackageName() const { return manifest.appId; }
 std::string ImageViewerApp::getAppName() const { return manifest.appName; }
 const void* ImageViewerApp::getIcon() const { return manifest.appIcon; }
@@ -44,7 +62,7 @@ void ImageViewerApp::createUI(void* parent) {
 		backBtn,
 		[](lv_event_t* e) {
 			auto* app = static_cast<ImageViewerApp*>(lv_event_get_user_data(e));
-			AppManager::getInstance().stopApp(app->getPackageName());
+			flx::apps::AppManager::getInstance().stopApp(app->getPackageName());
 		},
 		LV_EVENT_CLICKED, this
 	);

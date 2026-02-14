@@ -4,13 +4,13 @@
 #include <flx/core/Logger.hpp>
 
 #include "../modules/dock/Dock.hpp"
-#include "core/apps/AppManager.hpp"
-#include "core/apps/Intent.hpp"
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/focus/FocusManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
 #include <algorithm>
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/Intent.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "WindowManager";
@@ -34,7 +34,7 @@ void WindowManager::init(lv_obj_t* window_container, lv_obj_t* app_container, lv
 	lv_obj_set_style_pad_all(m_windowContainer, lv_dpx(UiConstants::PAD_SMALL), 0);
 
 	// Register as observer of AppManager for state synchronization
-	System::Apps::AppManager::getInstance().addObserver(this);
+	flx::apps::AppManager::getInstance().addObserver(this);
 
 	// Register rotation observer to update layout on display orientation changes
 	lv_subject_add_observer(
@@ -56,7 +56,7 @@ void WindowManager::openApp(const std::string& packageName) {
 	}
 
 	Log::info(TAG, "Opening app: %s", packageName.c_str());
-	auto app = System::Apps::AppManager::getInstance().getAppByPackageName(packageName);
+	auto app = flx::apps::AppManager::getInstance().getAppByPackageName(packageName);
 	if (!app) {
 		Log::error(TAG, "Failed to open app: %s (not found)", packageName.c_str());
 		GuiTask::unlock();
@@ -109,7 +109,7 @@ bool WindowManager::activateIfOpen(const std::string& packageName) {
 	return false;
 }
 
-lv_obj_t* WindowManager::createAndConfigureAppButton(lv_obj_t* win, System::Apps::App* app) {
+lv_obj_t* WindowManager::createAndConfigureAppButton(lv_obj_t* win, flx::apps::App* app) {
 	const char* iconSymbol = static_cast<const char*>(app->getIcon());
 	lv_obj_t* dock_btn = UI::Modules::Dock::create_dock_btn(
 		m_appContainer, iconSymbol, lv_pct(UiConstants::SIZE_DOCK_ICON_PCT), lv_pct(LayoutConstants::LIST_HEIGHT_PCT)
@@ -136,7 +136,7 @@ lv_obj_t* WindowManager::createAndConfigureAppButton(lv_obj_t* win, System::Apps
 	return dock_btn;
 }
 
-void WindowManager::setupWindowHeader(lv_obj_t* win, System::Apps::App* app) {
+void WindowManager::setupWindowHeader(lv_obj_t* win, flx::apps::App* app) {
 	lv_win_add_title(win, app->getAppName().c_str());
 	lv_obj_t* header = lv_win_get_header(win);
 	lv_obj_set_height(header, lv_pct(UiConstants::SIZE_WIN_HEADER_PCT));
@@ -194,8 +194,8 @@ void WindowManager::on_win_minimize(lv_event_t* e) {
 
 		System::FocusManager::getInstance().activateWindow(w);
 		if (wm->m_windowAppMap.contains(w)) {
-			System::Apps::AppManager::getInstance().startApp(
-				System::Apps::Intent::forApp(wm->m_windowAppMap[w])
+			flx::apps::AppManager::getInstance().startApp(
+				flx::apps::Intent::forApp(wm->m_windowAppMap[w])
 			);
 		}
 	} else {
@@ -246,7 +246,7 @@ void WindowManager::closeWindow_internal(lv_obj_t* win) {
 	if (m_windowAppMap.contains(win)) {
 		std::string pkg = m_windowAppMap[win];
 		m_windowAppMap.erase(win);
-		System::Apps::AppManager::getInstance().stopApp(pkg, false);
+		flx::apps::AppManager::getInstance().stopApp(pkg, false);
 	}
 
 	m_windowMaxBtnLabelMap.erase(win);

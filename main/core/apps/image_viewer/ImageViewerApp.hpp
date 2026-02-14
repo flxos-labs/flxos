@@ -1,13 +1,17 @@
 #pragma once
 
-#include "core/apps/AppManager.hpp"
-#include "core/apps/AppManifest.hpp"
 #include "lvgl.h"
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <string>
+
+// Use flx::apps namespace elements
+using flx::apps::App;
+using flx::apps::AppManifest;
 
 namespace System::Apps {
 
-class ImageViewerApp : public App {
+class ImageViewerApp : public flx::apps::App {
 public:
 
 	std::string getPackageName() const override;
