@@ -23,8 +23,8 @@ struct Notification {
 	bool isRead {};
 };
 
-class NotificationManager : public Singleton<NotificationManager>, public Services::IService {
-	friend class Singleton<NotificationManager>;
+class NotificationManager : public flx::Singleton<NotificationManager>, public Services::IService {
+	friend class flx::Singleton<NotificationManager>;
 
 public:
 

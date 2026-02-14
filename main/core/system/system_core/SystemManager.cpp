@@ -7,8 +7,8 @@
 #include "core/system/settings/SettingsManager.hpp"
 #include "core/system/theme/ThemeManager.hpp"
 #include "core/system/time/TimeManager.hpp"
-#include "core/tasks/TaskManager.hpp"
-#include "core/tasks/resource_monitor/ResourceMonitorTask.hpp"
+#include <flx/kernel/TaskManager.hpp>
+#include <flx/kernel/ResourceMonitorTask.hpp>
 #include "esp_err.h"
 #include "esp_vfs_fat.h"
 #include "nvs.h"
@@ -60,8 +60,8 @@ esp_err_t SystemManager::initHardware() {
 		Log::info(TAG, "System storage mounted successfully");
 	}
 
-	TaskManager::getInstance().initWatchdog();
-	ResourceMonitorTask::getInstance().start();
+	flx::kernel::TaskManager::getInstance().initWatchdog();
+	flx::kernel::ResourceMonitorTask::getInstance().start();
 	return ESP_OK;
 }
 

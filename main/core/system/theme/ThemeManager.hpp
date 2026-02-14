@@ -14,8 +14,8 @@
 
 namespace System {
 
-class ThemeManager : public Singleton<ThemeManager>, public Services::IService {
-	friend class Singleton<ThemeManager>;
+class ThemeManager : public flx::Singleton<ThemeManager>, public Services::IService {
+	friend class flx::Singleton<ThemeManager>;
 
 public:
 
@@ -31,11 +31,11 @@ public:
 	void onGuiInit() override;
 #endif
 
-	Observable<int32_t>& getThemeObservable() { return m_theme_subject; }
-	Observable<int32_t>& getGlassEnabledObservable() { return m_glass_enabled_subject; }
-	Observable<int32_t>& getTransparencyEnabledObservable() { return m_transparency_enabled_subject; }
-	Observable<int32_t>& getWallpaperEnabledObservable() { return m_wallpaper_enabled_subject; }
-	StringObservable& getWallpaperPathObservable() { return m_wallpaper_path_subject; }
+	flx::Observable<int32_t>& getThemeObservable() { return m_theme_subject; }
+	flx::Observable<int32_t>& getGlassEnabledObservable() { return m_glass_enabled_subject; }
+	flx::Observable<int32_t>& getTransparencyEnabledObservable() { return m_transparency_enabled_subject; }
+	flx::Observable<int32_t>& getWallpaperEnabledObservable() { return m_wallpaper_enabled_subject; }
+	flx::StringObservable& getWallpaperPathObservable() { return m_wallpaper_path_subject; }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	lv_subject_t& getThemeSubject() { return *m_theme_bridge->getSubject(); }
@@ -50,11 +50,11 @@ private:
 	ThemeManager() = default;
 	~ThemeManager() = default;
 
-	Observable<int32_t> m_theme_subject {1};
-	Observable<int32_t> m_glass_enabled_subject {0};
-	Observable<int32_t> m_transparency_enabled_subject {0};
-	Observable<int32_t> m_wallpaper_enabled_subject {0};
-	StringObservable m_wallpaper_path_subject {""};
+	flx::Observable<int32_t> m_theme_subject {1};
+	flx::Observable<int32_t> m_glass_enabled_subject {0};
+	flx::Observable<int32_t> m_transparency_enabled_subject {0};
+	flx::Observable<int32_t> m_wallpaper_enabled_subject {0};
+	flx::StringObservable m_wallpaper_path_subject {""};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_theme_bridge {};

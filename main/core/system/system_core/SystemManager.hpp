@@ -13,8 +13,8 @@
 #endif
 
 namespace System {
-class SystemManager : public Singleton<SystemManager> {
-	friend class Singleton<SystemManager>;
+class SystemManager : public flx::Singleton<SystemManager> {
+	friend class flx::Singleton<SystemManager>;
 
 public:
 
@@ -30,7 +30,7 @@ public:
 
 	bool isSafeMode() const { return m_isSafeMode; }
 
-	Observable<int32_t>& getUptimeObservable() { return m_uptime_subject; }
+	flx::Observable<int32_t>& getUptimeObservable() { return m_uptime_subject; }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// GUI-only: LVGL subject accessors
@@ -55,7 +55,7 @@ private:
 	bool m_isSafeMode = false;
 
 	// System state
-	Observable<int32_t> m_uptime_subject {0};
+	flx::Observable<int32_t> m_uptime_subject {0};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_uptime_bridge {};

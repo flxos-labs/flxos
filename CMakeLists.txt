@@ -30,6 +30,7 @@ endif()
 # Register FlxOS modules as extra components
 set(EXTRA_COMPONENT_DIRS
     "${CMAKE_SOURCE_DIR}/Core"
+    "${CMAKE_SOURCE_DIR}/Kernel"
 )
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

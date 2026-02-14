@@ -8,23 +8,23 @@
 namespace System {
 
 /**
- * @brief Bidirectional bridge between Observable<T> and LVGL observer pattern.
+ * @brief Bidirectional bridge between flx::Observable<T> and LVGL observer pattern.
  *
- * Creates an lv_subject_t that mirrors an Observable<T>.
+ * Creates an lv_subject_t that mirrors an flx::Observable<T>.
  * Changes in either direction are synchronized:
- * - Observable changes -> LVGL subject updated
- * - LVGL subject changes -> Observable updated
+ * - flx::Observable changes -> LVGL subject updated
+ * - LVGL subject changes -> flx::Observable updated
  */
 template<typename T>
 class LvglObserverBridge {
 public:
 
-	LvglObserverBridge(Observable<T>& observable) : m_observable(observable) {
+	LvglObserverBridge(flx::Observable<T>& observable) : m_observable(observable) {
 		// Initialize LVGL subject with current observable value
 		m_pending_val = observable.get();
 		lv_subject_init_int(&m_subject, static_cast<int32_t>(m_pending_val));
 
-		// Subscribe to Observable changes and update LVGL subject asynchronously
+		// Subscribe to flx::Observable changes and update LVGL subject asynchronously
 		observable.subscribe([this](const T& value) {
 			if (!m_updating) {
 				m_pending_val = value;
@@ -32,7 +32,7 @@ public:
 			}
 		});
 
-		// Subscribe to LVGL subject changes and update Observable
+		// Subscribe to LVGL subject changes and update flx::Observable
 		lv_subject_add_observer(&m_subject, [](lv_observer_t* obs, lv_subject_t* s) {
 			auto* self = static_cast<LvglObserverBridge*>(lv_observer_get_user_data(obs));
 			if (self) {
@@ -57,24 +57,24 @@ private:
 		}
 	}
 
-	Observable<T>& m_observable;
+	flx::Observable<T>& m_observable;
 	lv_subject_t m_subject {};
 	bool m_updating = false;
 	T m_pending_val {}; // Accessed by both threads, assumed atomic for word-sized types
 };
 
 /**
- * @brief Bidirectional bridge for StringObservable to lv_subject_t.
+ * @brief Bidirectional bridge for flx::StringObservable to lv_subject_t.
  */
 class LvglStringObserverBridge {
 public:
 
-	LvglStringObserverBridge(StringObservable& observable) : m_observable(observable) {
+	LvglStringObserverBridge(flx::StringObservable& observable) : m_observable(observable) {
 		// Store the initial string
 		m_buffer = observable.get();
 		lv_subject_init_pointer(&m_subject, (void*)m_buffer.c_str());
 
-		// Subscribe to Observable changes
+		// Subscribe to flx::Observable changes
 		observable.subscribe([this](const char* value) {
 			if (!m_updating) {
 				// Allocate data for async transfer
@@ -83,7 +83,7 @@ public:
 			}
 		});
 
-		// Subscribe to LVGL subject changes and update Observable
+		// Subscribe to LVGL subject changes and update flx::Observable
 		lv_subject_add_observer(&m_subject, [](lv_observer_t* obs, lv_subject_t* s) {
 			auto* self = static_cast<LvglStringObserverBridge*>(lv_observer_get_user_data(obs));
 			if (!self->m_updating) {
@@ -116,7 +116,7 @@ private:
 		delete data;
 	}
 
-	StringObservable& m_observable;
+	flx::StringObservable& m_observable;
 	lv_subject_t m_subject {};
 	std::string m_buffer {}; // Keep string alive for LVGL
 	bool m_updating = false; // Prevent infinite update loops

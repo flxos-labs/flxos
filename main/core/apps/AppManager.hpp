@@ -4,7 +4,7 @@
 #include "Bundle.hpp"
 #include "Intent.hpp"
 #include <flx/core/Singleton.hpp>
-#include "core/tasks/TaskManager.hpp"
+#include <flx/kernel/TaskManager.hpp>
 #include <memory>
 #include <string>
 #include <vector>
@@ -76,8 +76,8 @@ struct AppStackEntry {
 	ResultCallback resultCallback;
 };
 
-class AppManager : public Singleton<AppManager> {
-	friend class Singleton<AppManager>;
+class AppManager : public flx::Singleton<AppManager> {
+	friend class flx::Singleton<AppManager>;
 
 public:
 

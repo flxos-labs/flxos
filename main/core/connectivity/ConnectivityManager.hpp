@@ -19,8 +19,8 @@
 
 namespace System {
 
-class ConnectivityManager : public Singleton<ConnectivityManager>, public Services::IService {
-	friend class Singleton<ConnectivityManager>;
+class ConnectivityManager : public flx::Singleton<ConnectivityManager>, public Services::IService {
+	friend class flx::Singleton<ConnectivityManager>;
 
 public:
 
@@ -73,32 +73,32 @@ public:
 	esp_err_t enableBluetooth(bool enable);
 	bool isBluetoothEnabled();
 
-	// Observable subjects (headless-compatible getters)
-	Observable<int32_t>& getWiFiEnabledObservable() { return m_wifi_enabled_subject; }
-	Observable<int32_t>& getWiFiStatusObservable() { return m_wifi_status_subject; }
-	Observable<int32_t>& getWiFiConnectedObservable() { return m_wifi_connected_subject; }
-	StringObservable& getWiFiSsidObservable() { return m_wifi_ssid_subject; }
-	StringObservable& getWiFiIpObservable() { return m_wifi_ip_subject; }
-	Observable<int32_t>& getHotspotEnabledObservable() { return m_hotspot_enabled_subject; }
-	Observable<int32_t>& getHotspotClientsObservable() { return m_hotspot_clients_subject; }
-	Observable<int32_t>& getHotspotUsageSentSubject() { return m_hotspot_usage_sent_subject; }
-	Observable<int32_t>& getHotspotUsageReceivedSubject() { return m_hotspot_usage_received_subject; }
-	Observable<int32_t>& getHotspotUploadSpeedSubject() { return m_hotspot_upload_speed_subject; }
-	Observable<int32_t>& getHotspotDownloadSpeedSubject() { return m_hotspot_download_speed_subject; }
-	Observable<int32_t>& getHotspotUptimeSubject() { return m_hotspot_uptime_subject; }
-	Observable<int32_t>& getBluetoothEnabledObservable() { return m_bluetooth_enabled_subject; }
+	// flx::Observable subjects (headless-compatible getters)
+	flx::Observable<int32_t>& getWiFiEnabledObservable() { return m_wifi_enabled_subject; }
+	flx::Observable<int32_t>& getWiFiStatusObservable() { return m_wifi_status_subject; }
+	flx::Observable<int32_t>& getWiFiConnectedObservable() { return m_wifi_connected_subject; }
+	flx::StringObservable& getWiFiSsidObservable() { return m_wifi_ssid_subject; }
+	flx::StringObservable& getWiFiIpObservable() { return m_wifi_ip_subject; }
+	flx::Observable<int32_t>& getHotspotEnabledObservable() { return m_hotspot_enabled_subject; }
+	flx::Observable<int32_t>& getHotspotClientsObservable() { return m_hotspot_clients_subject; }
+	flx::Observable<int32_t>& getHotspotUsageSentSubject() { return m_hotspot_usage_sent_subject; }
+	flx::Observable<int32_t>& getHotspotUsageReceivedSubject() { return m_hotspot_usage_received_subject; }
+	flx::Observable<int32_t>& getHotspotUploadSpeedSubject() { return m_hotspot_upload_speed_subject; }
+	flx::Observable<int32_t>& getHotspotDownloadSpeedSubject() { return m_hotspot_download_speed_subject; }
+	flx::Observable<int32_t>& getHotspotUptimeSubject() { return m_hotspot_uptime_subject; }
+	flx::Observable<int32_t>& getBluetoothEnabledObservable() { return m_bluetooth_enabled_subject; }
 
 	// Config Settings (Persisted)
-	StringObservable& getHotspotSsidObservable() { return m_hotspot_ssid_subject; }
-	StringObservable& getHotspotPasswordObservable() { return m_hotspot_password_subject; }
-	Observable<int32_t>& getHotspotChannelObservable() { return m_hotspot_channel_subject; }
-	Observable<int32_t>& getHotspotMaxConnObservable() { return m_hotspot_max_conn_subject; }
-	Observable<int32_t>& getHotspotHiddenObservable() { return m_hotspot_hidden_subject; }
-	Observable<int32_t>& getHotspotAuthObservable() { return m_hotspot_auth_subject; }
-	Observable<int32_t>& getWiFiAutostartObservable() { return m_wifi_autostart_subject; }
-	Observable<int32_t>& getWiFiScanIntervalObservable() { return m_wifi_scan_interval_subject; }
-	StringObservable& getSavedWiFiSsidObservable() { return m_saved_wifi_ssid_subject; }
-	StringObservable& getSavedWiFiPasswordObservable() { return m_saved_wifi_password_subject; }
+	flx::StringObservable& getHotspotSsidObservable() { return m_hotspot_ssid_subject; }
+	flx::StringObservable& getHotspotPasswordObservable() { return m_hotspot_password_subject; }
+	flx::Observable<int32_t>& getHotspotChannelObservable() { return m_hotspot_channel_subject; }
+	flx::Observable<int32_t>& getHotspotMaxConnObservable() { return m_hotspot_max_conn_subject; }
+	flx::Observable<int32_t>& getHotspotHiddenObservable() { return m_hotspot_hidden_subject; }
+	flx::Observable<int32_t>& getHotspotAuthObservable() { return m_hotspot_auth_subject; }
+	flx::Observable<int32_t>& getWiFiAutostartObservable() { return m_wifi_autostart_subject; }
+	flx::Observable<int32_t>& getWiFiScanIntervalObservable() { return m_wifi_scan_interval_subject; }
+	flx::StringObservable& getSavedWiFiSsidObservable() { return m_saved_wifi_ssid_subject; }
+	flx::StringObservable& getSavedWiFiPasswordObservable() { return m_saved_wifi_password_subject; }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// GUI-only: LVGL subject accessors (for use with lv_subject_add_observer)
@@ -131,32 +131,32 @@ private:
 	ConnectivityManager() = default;
 	~ConnectivityManager() = default;
 
-	Observable<int32_t> m_wifi_enabled_subject {0};
-	Observable<int32_t> m_wifi_status_subject {0};
-	Observable<int32_t> m_wifi_connected_subject {0};
-	StringObservable m_wifi_ssid_subject {"Disconnected"};
-	StringObservable m_wifi_ip_subject {"0.0.0.0"};
+	flx::Observable<int32_t> m_wifi_enabled_subject {0};
+	flx::Observable<int32_t> m_wifi_status_subject {0};
+	flx::Observable<int32_t> m_wifi_connected_subject {0};
+	flx::StringObservable m_wifi_ssid_subject {"Disconnected"};
+	flx::StringObservable m_wifi_ip_subject {"0.0.0.0"};
 
-	Observable<int32_t> m_hotspot_enabled_subject {0};
-	Observable<int32_t> m_hotspot_clients_subject {0};
-	Observable<int32_t> m_hotspot_usage_sent_subject {0};
-	Observable<int32_t> m_hotspot_usage_received_subject {0};
-	Observable<int32_t> m_hotspot_upload_speed_subject {0};
-	Observable<int32_t> m_hotspot_download_speed_subject {0};
-	Observable<int32_t> m_hotspot_uptime_subject {0};
-	Observable<int32_t> m_bluetooth_enabled_subject {0};
+	flx::Observable<int32_t> m_hotspot_enabled_subject {0};
+	flx::Observable<int32_t> m_hotspot_clients_subject {0};
+	flx::Observable<int32_t> m_hotspot_usage_sent_subject {0};
+	flx::Observable<int32_t> m_hotspot_usage_received_subject {0};
+	flx::Observable<int32_t> m_hotspot_upload_speed_subject {0};
+	flx::Observable<int32_t> m_hotspot_download_speed_subject {0};
+	flx::Observable<int32_t> m_hotspot_uptime_subject {0};
+	flx::Observable<int32_t> m_bluetooth_enabled_subject {0};
 
 	// Config Settings (Persisted)
-	StringObservable m_hotspot_ssid_subject {"ESP32-Hotspot"};
-	StringObservable m_hotspot_password_subject {"12345678"};
-	Observable<int32_t> m_hotspot_channel_subject {1};
-	Observable<int32_t> m_hotspot_max_conn_subject {4};
-	Observable<int32_t> m_hotspot_hidden_subject {0};
-	Observable<int32_t> m_hotspot_auth_subject {1};
-	Observable<int32_t> m_wifi_autostart_subject {0};
-	Observable<int32_t> m_wifi_scan_interval_subject {0};
-	StringObservable m_saved_wifi_ssid_subject {""};
-	StringObservable m_saved_wifi_password_subject {""};
+	flx::StringObservable m_hotspot_ssid_subject {"ESP32-Hotspot"};
+	flx::StringObservable m_hotspot_password_subject {"12345678"};
+	flx::Observable<int32_t> m_hotspot_channel_subject {1};
+	flx::Observable<int32_t> m_hotspot_max_conn_subject {4};
+	flx::Observable<int32_t> m_hotspot_hidden_subject {0};
+	flx::Observable<int32_t> m_hotspot_auth_subject {1};
+	flx::Observable<int32_t> m_wifi_autostart_subject {0};
+	flx::Observable<int32_t> m_wifi_scan_interval_subject {0};
+	flx::StringObservable m_saved_wifi_ssid_subject {""};
+	flx::StringObservable m_saved_wifi_password_subject {""};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// LVGL bridges

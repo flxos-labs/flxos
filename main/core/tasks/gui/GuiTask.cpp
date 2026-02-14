@@ -2,7 +2,7 @@
 #include <flx/core/Logger.hpp>
 #include "core/lv_group.h"
 #include "core/system/system_core/SystemManager.hpp"
-#include "core/tasks/TaskManager.hpp"
+#include <flx/kernel/TaskManager.hpp>
 #include "core/ui/desktop/Desktop.hpp"
 #include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #include "display/lv_display.h"
@@ -31,7 +31,7 @@ lv_display_t* GuiTask::m_disp = nullptr;
 bool GuiTask::m_paused = false;
 bool GuiTask::m_resume_on_touch = false;
 
-GuiTask::GuiTask() : System::Task("gui_task", 32 * 1024, 5, 1) {
+GuiTask::GuiTask() : flx::kernel::Task("gui_task", 32 * 1024, 5, 1) {
 	if (!xGuiSemaphore) {
 		xGuiSemaphore = xSemaphoreCreateRecursiveMutex();
 	}

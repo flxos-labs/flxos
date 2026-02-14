@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../TaskManager.hpp"
+#include <flx/kernel/TaskManager.hpp>
 #include <atomic>
 
-namespace System {
+namespace flx::kernel {
 class ResourceMonitorTask : public Task {
 public:
 
@@ -35,4 +35,4 @@ private:
 	std::atomic<uint32_t> m_uptimeSeconds {0};
 };
 
-} // namespace System
+} // namespace flx::kernel

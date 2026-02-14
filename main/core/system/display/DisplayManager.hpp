@@ -13,8 +13,8 @@
 
 namespace System {
 
-class DisplayManager : public Singleton<DisplayManager>, public Services::IService {
-	friend class Singleton<DisplayManager>;
+class DisplayManager : public flx::Singleton<DisplayManager>, public Services::IService {
+	friend class flx::Singleton<DisplayManager>;
 
 public:
 
@@ -30,9 +30,9 @@ public:
 	void onGuiInit() override;
 #endif
 
-	Observable<int32_t>& getBrightnessObservable() { return m_brightness_subject; }
-	Observable<int32_t>& getRotationObservable() { return m_rotation_subject; }
-	Observable<int32_t>& getShowFpsObservable() { return m_show_fps_subject; }
+	flx::Observable<int32_t>& getBrightnessObservable() { return m_brightness_subject; }
+	flx::Observable<int32_t>& getRotationObservable() { return m_rotation_subject; }
+	flx::Observable<int32_t>& getShowFpsObservable() { return m_show_fps_subject; }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	lv_subject_t& getBrightnessSubject() { return *m_brightness_bridge->getSubject(); }
@@ -45,9 +45,9 @@ private:
 	DisplayManager() = default;
 	~DisplayManager() = default;
 
-	Observable<int32_t> m_brightness_subject {127};
-	Observable<int32_t> m_rotation_subject {90};
-	Observable<int32_t> m_show_fps_subject {0};
+	flx::Observable<int32_t> m_brightness_subject {127};
+	flx::Observable<int32_t> m_rotation_subject {90};
+	flx::Observable<int32_t> m_show_fps_subject {0};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_brightness_bridge {};

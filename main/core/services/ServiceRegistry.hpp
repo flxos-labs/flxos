@@ -27,8 +27,8 @@ namespace System::Services {
  *   3. SystemManager calls initGuiServices() — calls onGuiInit() on started services
  *   4. At shutdown, stopAll() stops in reverse order
  */
-class ServiceRegistry : public Singleton<ServiceRegistry> {
-	friend class Singleton<ServiceRegistry>;
+class ServiceRegistry : public flx::Singleton<ServiceRegistry> {
+	friend class flx::Singleton<ServiceRegistry>;
 
 public:
 

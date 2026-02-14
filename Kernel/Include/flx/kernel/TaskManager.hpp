@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace System {
+namespace flx::kernel {
 class Task {
 public:
 
@@ -112,4 +112,4 @@ private:
 	uint32_t m_checkIntervalMs = 1000;
 };
 
-} // namespace System
+} // namespace flx::kernel

@@ -1,4 +1,5 @@
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
+#include <flx/core/Compat.hpp>  // Namespace compatibility during migration
 #include "core/system/system_core/SystemManager.hpp"
 #include "sdkconfig.h"
 

@@ -1,4 +1,4 @@
-#include "TaskManager.hpp"
+#include <flx/kernel/TaskManager.hpp>
 #include "FreeRTOSConfig.h"
 #include <flx/core/Logger.hpp>
 #include "esp_err.h"
@@ -17,7 +17,7 @@
 static constexpr std::string_view TASK_TAG = "Task";
 static constexpr std::string_view TM_TAG = "TaskManager";
 
-namespace System {
+namespace flx::kernel {
 static uint64_t getMillis() { return esp_timer_get_time() / 1000; }
 
 Task::Task(const std::string& name, uint32_t stackSize, UBaseType_t priority, BaseType_t coreId)
@@ -185,4 +185,4 @@ void TaskManager::printTasks() {
 	}
 }
 
-} // namespace System
+} // namespace flx::kernel

@@ -5,7 +5,7 @@
 #include "calendar/CalendarApp.hpp"
 #include <flx/core/Logger.hpp>
 #include "core/services/ServiceRegistry.hpp"
-#include "core/tasks/TaskManager.hpp"
+#include <flx/kernel/TaskManager.hpp>
 #include "core/tasks/gui/GuiTask.hpp"
 #include "core/ui/desktop/Desktop.hpp"
 #include "esp_system.h"
@@ -134,10 +134,10 @@ const AppManifest ImageViewerApp::manifest = {
 
 // ============================================================
 
-class AppExecutor : public System::Task {
+class AppExecutor : public flx::kernel::Task {
 public:
 
-	AppExecutor() : System::Task("app_executor", 8 * 1024, 4) {
+	AppExecutor() : flx::kernel::Task("app_executor", 8 * 1024, 4) {
 		setRestartPolicy(RestartPolicy::RESTART_TASK);
 	}
 

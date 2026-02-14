@@ -21,12 +21,12 @@ enum class WiFiStatus {
 	NOT_FOUND
 };
 
-class WiFiManager : public Singleton<WiFiManager> {
-	friend class Singleton<WiFiManager>;
+class WiFiManager : public flx::Singleton<WiFiManager> {
+	friend class flx::Singleton<WiFiManager>;
 
 public:
 
-	esp_err_t init(Observable<int32_t>* connected_subject, StringObservable* ssid_subject, StringObservable* ip_subject, Observable<int32_t>* status_subject);
+	esp_err_t init(flx::Observable<int32_t>* connected_subject, flx::StringObservable* ssid_subject, flx::StringObservable* ip_subject, flx::Observable<int32_t>* status_subject);
 	esp_err_t connect(const char* ssid, const char* password);
 	esp_err_t disconnect();
 	bool isConnected() const;
@@ -59,10 +59,10 @@ private:
 	void handleStaConnected(void* event_data);
 	void handleScanDone();
 
-	Observable<int32_t>* m_connected_subject = nullptr;
-	StringObservable* m_ssid_subject = nullptr;
-	StringObservable* m_ip_subject = nullptr;
-	Observable<int32_t>* m_status_subject = nullptr;
+	flx::Observable<int32_t>* m_connected_subject = nullptr;
+	flx::StringObservable* m_ssid_subject = nullptr;
+	flx::StringObservable* m_ip_subject = nullptr;
+	flx::Observable<int32_t>* m_status_subject = nullptr;
 
 	bool m_is_init = false;
 	bool m_is_enabled = false;

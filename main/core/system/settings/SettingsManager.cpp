@@ -1,5 +1,5 @@
 #include "SettingsManager.hpp"
-#include "Observable.hpp"
+#include <flx/core/Observable.hpp>
 #include "cJSON.h"
 #include <flx/core/Logger.hpp>
 #include "esp_timer.h"
@@ -61,7 +61,7 @@ void SettingsManager::onStop() {
 	Log::info(TAG, "Settings service stopped");
 }
 
-void SettingsManager::registerSetting(const std::string& key, Observable<int32_t>& observable) {
+void SettingsManager::registerSetting(const std::string& key, flx::Observable<int32_t>& observable) {
 	m_registeredSettings[key] = {Setting::Type::INT, &observable};
 
 	// Subscribe to changes to trigger save
@@ -78,7 +78,7 @@ void SettingsManager::registerSetting(const std::string& key, Observable<int32_t
 	}
 }
 
-void SettingsManager::registerSetting(const std::string& key, StringObservable& observable) {
+void SettingsManager::registerSetting(const std::string& key, flx::StringObservable& observable) {
 	m_registeredSettings[key] = {Setting::Type::STRING, &observable};
 
 	// Subscribe to changes to trigger save
@@ -133,10 +133,10 @@ void SettingsManager::saveSettings() {
 
 	for (auto const& [key, setting]: m_registeredSettings) {
 		if (setting.type == Setting::Type::INT) {
-			auto* obs = (Observable<int32_t>*)setting.observable;
+			auto* obs = (flx::Observable<int32_t>*)setting.observable;
 			cJSON_AddNumberToObject(json, key.c_str(), obs->get());
 		} else {
-			auto* obs = (StringObservable*)setting.observable;
+			auto* obs = (flx::StringObservable*)setting.observable;
 			const char* val = obs->get();
 			cJSON_AddStringToObject(json, key.c_str(), val ? val : "");
 		}

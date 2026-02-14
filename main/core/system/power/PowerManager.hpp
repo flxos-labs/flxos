@@ -16,8 +16,8 @@ namespace System {
  * @brief Manages battery levels, charging status, and power-related subjects.
  * Bridges state from SystemInfoService to LVGL observers.
  */
-class PowerManager : public Singleton<PowerManager>, public Services::IService {
-	friend class Singleton<PowerManager>;
+class PowerManager : public flx::Singleton<PowerManager>, public Services::IService {
+	friend class flx::Singleton<PowerManager>;
 
 public:
 
@@ -39,9 +39,9 @@ public:
 	void refresh();
 
 	// Headless-compatible observables
-	Observable<int32_t>& getBatteryLevelObservable() { return m_batteryLevel; }
-	Observable<int32_t>& getIsChargingObservable() { return m_isCharging; }
-	Observable<int32_t>& getIsConfiguredObservable() { return m_isConfigured; }
+	flx::Observable<int32_t>& getBatteryLevelObservable() { return m_batteryLevel; }
+	flx::Observable<int32_t>& getIsChargingObservable() { return m_isCharging; }
+	flx::Observable<int32_t>& getIsConfiguredObservable() { return m_isConfigured; }
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// LVGL subject accessors
@@ -54,9 +54,9 @@ private:
 	PowerManager() = default;
 	~PowerManager() = default;
 
-	Observable<int32_t> m_batteryLevel {100};
-	Observable<int32_t> m_isCharging {0};
-	Observable<int32_t> m_isConfigured {0};
+	flx::Observable<int32_t> m_batteryLevel {100};
+	flx::Observable<int32_t> m_isCharging {0};
+	flx::Observable<int32_t> m_isConfigured {0};
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	std::unique_ptr<LvglObserverBridge<int32_t>> m_batteryLevelBridge {};

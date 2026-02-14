@@ -40,7 +40,7 @@ private:
 
 	std::string m_currentPath;
 	std::stack<std::string> m_history;
-	Task* m_guiTask = nullptr;
+	flx::kernel::Task* m_guiTask = nullptr;
 	uint32_t m_lastFeed = 0;
 
 	lv_obj_t* m_progressMbox = nullptr;

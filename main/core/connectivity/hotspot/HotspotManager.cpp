@@ -1,5 +1,5 @@
 #include "HotspotManager.hpp"
-#include "Observable.hpp"
+#include <flx/core/Observable.hpp>
 #include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/wifi/WiFiManager.hpp"
@@ -150,7 +150,7 @@ std::vector<HotspotManager::ClientInfo> HotspotManager::getConnectedClients() {
 	return m_clients;
 }
 
-esp_err_t HotspotManager::init(Observable<int32_t>* enabled_subject, Observable<int32_t>* client_count_subject) {
+esp_err_t HotspotManager::init(flx::Observable<int32_t>* enabled_subject, flx::Observable<int32_t>* client_count_subject) {
 	if (m_is_init) {
 		return ESP_OK;
 	}

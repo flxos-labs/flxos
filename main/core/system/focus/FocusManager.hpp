@@ -11,8 +11,8 @@ namespace System {
  *
  * Manages Z-order, visual feedback, and exclusive visibility.
  */
-class FocusManager : public Singleton<FocusManager> {
-	friend class Singleton<FocusManager>;
+class FocusManager : public flx::Singleton<FocusManager> {
+	friend class flx::Singleton<FocusManager>;
 
 public:
 

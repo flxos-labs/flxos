@@ -15,8 +15,8 @@ namespace System::Services {
  * Uses LVGL snapshot API with RGB888 color format and lodepng for PNG encoding.
  * Can be called programmatically from any app or tool.
  */
-class ScreenshotService : public IService, public Singleton<ScreenshotService> {
-	friend class Singleton<ScreenshotService>;
+class ScreenshotService : public IService, public flx::Singleton<ScreenshotService> {
+	friend class flx::Singleton<ScreenshotService>;
 
 public:
 

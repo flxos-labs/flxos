@@ -1,5 +1,5 @@
 #include "BluetoothManager.hpp"
-#include "Observable.hpp"
+#include <flx/core/Observable.hpp>
 #include <flx/core/Logger.hpp>
 #include "esp_err.h"
 #include <cstdint>
@@ -9,7 +9,7 @@ static constexpr std::string_view TAG = "BluetoothManager";
 
 namespace System {
 
-esp_err_t BluetoothManager::init(Observable<int32_t>* enabled_subject) {
+esp_err_t BluetoothManager::init(flx::Observable<int32_t>* enabled_subject) {
 	Log::info(TAG, "Initializing Bluetooth Manager...");
 	m_enabled_subject = enabled_subject;
 	m_is_init = true;

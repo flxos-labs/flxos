@@ -11,8 +11,8 @@
 
 namespace System {
 
-class TimeManager : public Singleton<TimeManager>, public Services::IService {
-	friend class Singleton<TimeManager>;
+class TimeManager : public flx::Singleton<TimeManager>, public Services::IService {
+	friend class flx::Singleton<TimeManager>;
 
 public:
 

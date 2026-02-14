@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../TaskManager.hpp"
+#include <flx/kernel/TaskManager.hpp>
 #include "freertos/semphr.h"
 
 typedef struct _lv_display_t lv_display_t;
 
-class GuiTask : public System::Task {
+class GuiTask : public flx::kernel::Task {
 public:
 
 	GuiTask();

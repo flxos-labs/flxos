@@ -1,5 +1,5 @@
 #include "WiFiManager.hpp"
-#include "Observable.hpp"
+#include <flx/core/Observable.hpp>
 #include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/time/TimeManager.hpp"
@@ -19,7 +19,7 @@ static constexpr std::string_view TAG = "WiFiManager";
 
 namespace System {
 
-esp_err_t WiFiManager::init(Observable<int32_t>* connected_subject, StringObservable* ssid_subject, StringObservable* ip_subject, Observable<int32_t>* status_subject) {
+esp_err_t WiFiManager::init(flx::Observable<int32_t>* connected_subject, flx::StringObservable* ssid_subject, flx::StringObservable* ip_subject, flx::Observable<int32_t>* status_subject) {
 	if (m_is_init) {
 		return ESP_OK;
 	}

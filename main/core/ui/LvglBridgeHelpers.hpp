@@ -10,7 +10,7 @@ namespace System {
  * Ensures the callback is invoked in the GUI context (Lock held).
  * 
  * @param bridge unique_ptr<LvglObserverBridge<int32_t>> member
- * @param observable Observable<int32_t> member
+ * @param observable flx::Observable<int32_t> member
  * @param callback Member function taking int32_t
  */
 #define INIT_INT_BRIDGE(bridge, observable, callback)                                                     \
@@ -25,7 +25,7 @@ namespace System {
  * @brief Initialize a string bridge.
  * 
  * @param bridge unique_ptr<LvglStringObserverBridge> member
- * @param observable StringObservable member
+ * @param observable flx::StringObservable member
  */
 #define INIT_STRING_BRIDGE(bridge, observable) \
 	bridge = std::make_unique<::System::LvglStringObserverBridge>(observable)
@@ -34,7 +34,7 @@ namespace System {
  * @brief Initialize a bridge without a callback.
  * 
  * @param bridge unique_ptr<LvglObserverBridge<int32_t>> member
- * @param observable Observable<int32_t> member
+ * @param observable flx::Observable<int32_t> member
  */
 #define INIT_BRIDGE(bridge, observable) \
 	bridge = std::make_unique<::System::LvglObserverBridge<int32_t>>(observable)

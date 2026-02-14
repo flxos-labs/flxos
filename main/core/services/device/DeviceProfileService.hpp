@@ -24,8 +24,8 @@ namespace System::Services {
  *   3. Loads NVS pin overrides
  *   4. Loads saved touch calibration from NVS
  */
-class DeviceProfileService : public IService, public Singleton<DeviceProfileService> {
-	friend class Singleton<DeviceProfileService>;
+class DeviceProfileService : public IService, public flx::Singleton<DeviceProfileService> {
+	friend class flx::Singleton<DeviceProfileService>;
 
 public:
 

@@ -1,5 +1,5 @@
 #include "FilesApp.hpp"
-#include "ClipboardManager.hpp"
+#include <flx/core/ClipboardManager.hpp>
 #include "core/apps/settings/SettingsCommon.hpp"
 #include <flx/core/Logger.hpp>
 #include "core/lv_obj.h"
@@ -10,7 +10,7 @@
 #include "core/lv_obj_tree.h"
 #include "core/lv_refr.h"
 #include "core/services/filesystem/FileSystemService.hpp"
-#include "core/tasks/TaskManager.hpp"
+#include <flx/kernel/TaskManager.hpp>
 #include "core/ui/theming/layout_constants/LayoutConstants.hpp"
 #include "display/lv_display.h"
 #include "esp_timer.h"
@@ -147,7 +147,7 @@ void FilesApp::feedWatchdog() {
 	auto const now = (uint32_t)(esp_timer_get_time() / 1000);
 	if (now - m_lastFeed >= 100) {
 		if (!m_guiTask) {
-			m_guiTask = TaskManager::getInstance().getTask("gui_task");
+			m_guiTask = flx::kernel::TaskManager::getInstance().getTask("gui_task");
 		}
 		if (m_guiTask) {
 			m_guiTask->heartbeat();
@@ -222,7 +222,7 @@ void FilesApp::refreshList() {
 	}
 
 	// Update Paste button visibility
-	if (ClipboardManager::getInstance().hasContent()) {
+	if (flx::ClipboardManager::getInstance().hasContent()) {
 		lv_obj_remove_flag(m_pasteBtn, LV_OBJ_FLAG_HIDDEN);
 	} else {
 		lv_obj_add_flag(m_pasteBtn, LV_OBJ_FLAG_HIDDEN);
@@ -316,10 +316,10 @@ void FilesApp::handleMenuAction(const std::string& action, const std::string& na
 		std::string fullPath = Services::FileSystemService::buildPath(basePath, name);
 		showMsgBox("File Info", fullPath.c_str());
 	} else if (action == "Copy") {
-		ClipboardManager::getInstance().set(Services::FileSystemService::buildPath(basePath, name), isDir, ClipboardOp::COPY);
+		flx::ClipboardManager::getInstance().set(Services::FileSystemService::buildPath(basePath, name), isDir, flx::ClipboardOp::COPY);
 		refreshList();
 	} else if (action == "Cut") {
-		ClipboardManager::getInstance().set(Services::FileSystemService::buildPath(basePath, name), isDir, ClipboardOp::CUT);
+		flx::ClipboardManager::getInstance().set(Services::FileSystemService::buildPath(basePath, name), isDir, flx::ClipboardOp::CUT);
 		refreshList();
 	} else if (action == "Rename") {
 		showInputDialog("Rename", name, [this, name](std::string newName) {
@@ -415,7 +415,7 @@ void FilesApp::showInputDialog(const char* title, const std::string& defaultVal,
 }
 
 void FilesApp::pasteItem() {
-	auto& cb = ClipboardManager::getInstance();
+	auto& cb = flx::ClipboardManager::getInstance();
 	if (!cb.hasContent()) {
 		return;
 	}
@@ -431,7 +431,7 @@ void FilesApp::pasteItem() {
 		return;
 	}
 
-	if (cb.get().op == ClipboardOp::CUT) {
+	if (cb.get().op == flx::ClipboardOp::CUT) {
 		if (!Services::FileSystemService::getInstance().move(srcPath, destPath)) {
 			showMsgBox("Error", "Could not move item.");
 		}

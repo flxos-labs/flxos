@@ -8,8 +8,8 @@
 #include <flx/core/Singleton.hpp>
 #include "lvgl.h"
 
-class WindowManager : public System::Apps::AppStateObserver, public System::Singleton<WindowManager> {
-	friend class System::Singleton<WindowManager>;
+class WindowManager : public System::Apps::AppStateObserver, public flx::Singleton<WindowManager> {
+	friend class flx::Singleton<WindowManager>;
 
 public:
 

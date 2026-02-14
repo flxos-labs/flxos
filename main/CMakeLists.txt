@@ -14,8 +14,6 @@ set(CORE_SRCS
     "core/system/theme/ThemeManager.cpp"
     "core/system/time/TimeManager.cpp"
     "core/system/power/PowerManager.cpp"
-    "core/tasks/TaskManager.cpp"
-    "core/tasks/resource_monitor/ResourceMonitorTask.cpp"
     "core/apps/Bundle.cpp"
     "core/apps/EventBus.cpp"
     "core/system/device/DeviceProfiles.cpp"
@@ -91,7 +89,7 @@ set(PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event es
 idf_component_register(SRCS ${CORE_SRCS}
     INCLUDE_DIRS ${INCLUDE_DIRS}
     PRIV_REQUIRES ${PRIV_REQUIRES}
-    REQUIRES ${COMPONENT_REQUIRES} Core
+    REQUIRES ${COMPONENT_REQUIRES} Core Kernel
 )
 
 # LVGL configuration (only in GUI mode)

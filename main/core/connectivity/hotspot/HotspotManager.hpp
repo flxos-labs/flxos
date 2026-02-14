@@ -14,12 +14,12 @@ extern "C" {
 
 namespace System {
 
-class HotspotManager : public Singleton<HotspotManager> {
-	friend class Singleton<HotspotManager>;
+class HotspotManager : public flx::Singleton<HotspotManager> {
+	friend class flx::Singleton<HotspotManager>;
 
 public:
 
-	esp_err_t init(Observable<int32_t>* enabled_subject, Observable<int32_t>* client_count_subject);
+	esp_err_t init(flx::Observable<int32_t>* enabled_subject, flx::Observable<int32_t>* client_count_subject);
 	esp_err_t start(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);
 	esp_err_t stop();
 	static bool isEnabled();
@@ -77,8 +77,8 @@ private:
 
 	static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
-	Observable<int32_t>* m_enabled_subject = nullptr;
-	Observable<int32_t>* m_client_count_subject = nullptr;
+	flx::Observable<int32_t>* m_enabled_subject = nullptr;
+	flx::Observable<int32_t>* m_client_count_subject = nullptr;
 
 	bool m_is_init = false;
 	bool m_nat_enabled = true;

@@ -13,8 +13,8 @@
 
 namespace System {
 
-class SettingsManager : public Singleton<SettingsManager>, public Services::IService {
-	friend class Singleton<SettingsManager>;
+class SettingsManager : public flx::Singleton<SettingsManager>, public Services::IService {
+	friend class flx::Singleton<SettingsManager>;
 
 public:
 
@@ -27,8 +27,8 @@ public:
 	void onStop() override;
 
 	// Registration
-	void registerSetting(const std::string& key, Observable<int32_t>& observable);
-	void registerSetting(const std::string& key, StringObservable& observable);
+	void registerSetting(const std::string& key, flx::Observable<int32_t>& observable);
+	void registerSetting(const std::string& key, flx::StringObservable& observable);
 
 	void triggerSave();
 	void saveSettings();
