@@ -1,6 +1,6 @@
 #include "TextEditorApp.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "misc/lv_style.h"
 #include <cstdio>
@@ -59,7 +59,7 @@ void TextEditorApp::createUI(void* parent) {
 	m_fileBrowser = std::make_unique<UI::FileBrowser>(
 		m_container, [this]() { showEditorScreen(); }
 	);
-	m_fileBrowser->setExtensions({".txt", ".md", ".log", ".json", ".xml", ".csv", ".cfg", ".ini", ".conf", ".sh", ".c", ".cpp", ".h", ".hpp", ".py", ".js"});
+	m_fileBrowser->setExtensions({".txt", ".md", ".log", ".json", ".xml", ".csv", ".yaml", ".yml", ".ini", ".cfg", ".conf", ".env", ".html", ".css", ".js", ".ts", ".py", ".java", ".c", ".cpp", ".h", ".hpp", ".cs", ".php", ".rb", ".go", ".rs", ".sh", ".bat", ".ps1", ".sql"});
 
 	// Create and show editor screen
 	createEditorScreen();

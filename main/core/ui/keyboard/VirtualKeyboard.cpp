@@ -1,6 +1,6 @@
 #include "VirtualKeyboard.hpp"
 #include "../theming/layout_constants/LayoutConstants.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_pos.h"

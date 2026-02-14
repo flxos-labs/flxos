@@ -3,7 +3,7 @@
 #include "core/apps/AppManager.hpp"
 #include "core/apps/AppManifest.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
-#include "core/common/ClipboardManager.hpp"
+#include <flx/core/ClipboardManager.hpp>
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

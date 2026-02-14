@@ -1,5 +1,5 @@
 #include "EventBus.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 
 namespace System::Apps {
 

@@ -1,7 +1,7 @@
 #include "FilesApp.hpp"
 #include "ClipboardManager.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_pos.h"

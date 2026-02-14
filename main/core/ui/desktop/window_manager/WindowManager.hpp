@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "core/apps/AppManager.hpp"
-#include "core/common/Singleton.hpp"
+#include <flx/core/Singleton.hpp>
 #include "lvgl.h"
 
 class WindowManager : public System::Apps::AppStateObserver, public System::Singleton<WindowManager> {

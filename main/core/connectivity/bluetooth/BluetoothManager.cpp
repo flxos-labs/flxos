@@ -1,6 +1,6 @@
 #include "BluetoothManager.hpp"
 #include "Observable.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "esp_err.h"
 #include <cstdint>
 #include <string_view>

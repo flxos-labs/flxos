@@ -3,7 +3,7 @@
 #include "AppRegistry.hpp"
 #include "EventBus.hpp"
 #include "calendar/CalendarApp.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/services/ServiceRegistry.hpp"
 #include "core/tasks/TaskManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"

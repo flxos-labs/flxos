@@ -1,7 +1,7 @@
 #include "ToolsApp.hpp"
 #include "../../ui/theming/layout_constants/LayoutConstants.hpp"
 #include "../../ui/theming/ui_constants/UiConstants.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 
 static constexpr std::string_view TAG = "ToolsApp";
 

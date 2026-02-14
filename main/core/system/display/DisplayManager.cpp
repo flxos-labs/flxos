@@ -1,5 +1,5 @@
 #include "DisplayManager.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/system/settings/SettingsManager.hpp"
 
 #if !CONFIG_FLXOS_HEADLESS_MODE

@@ -1,6 +1,6 @@
 #include "HotspotManager.hpp"
 #include "Observable.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/connectivity/wifi/WiFiManager.hpp"
 #include "dhcpserver/dhcpserver_hostname.h"

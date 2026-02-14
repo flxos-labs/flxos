@@ -1,5 +1,5 @@
 #include "ThemeManager.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/system/settings/SettingsManager.hpp"
 #include "core/ui/theming/themes/Themes.hpp"
 #include <cstdint>

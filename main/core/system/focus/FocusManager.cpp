@@ -1,6 +1,6 @@
 #include "FocusManager.hpp"
 #include "../../ui/theming/ui_constants/UiConstants.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/lv_group.h"
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"

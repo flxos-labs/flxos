@@ -1,5 +1,5 @@
 #include "DeviceProfileService.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/system/device/DeviceProfiles.hpp"
 #include "sdkconfig.h"
 

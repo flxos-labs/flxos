@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/common/Observable.hpp"
+#include <flx/core/Observable.hpp>
 #include "core/tasks/gui/GuiTask.hpp"
 #include "lvgl.h"
 #include "misc/lv_async.h"

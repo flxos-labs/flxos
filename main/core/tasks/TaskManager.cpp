@@ -1,6 +1,6 @@
 #include "TaskManager.hpp"
 #include "FreeRTOSConfig.h"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "esp_err.h"
 #include "esp_heap_caps.h"
 #include "esp_system.h"

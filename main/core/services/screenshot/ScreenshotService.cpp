@@ -1,5 +1,5 @@
 #include "ScreenshotService.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "core/system/notification/NotificationManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"

@@ -91,7 +91,7 @@ set(PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event es
 idf_component_register(SRCS ${CORE_SRCS}
     INCLUDE_DIRS ${INCLUDE_DIRS}
     PRIV_REQUIRES ${PRIV_REQUIRES}
-    REQUIRES ${COMPONENT_REQUIRES}
+    REQUIRES ${COMPONENT_REQUIRES} Core
 )
 
 # LVGL configuration (only in GUI mode)

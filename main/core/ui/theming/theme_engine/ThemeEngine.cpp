@@ -1,5 +1,5 @@
 #include "ThemeEngine.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/lv_obj_style.h"
 #include "core/lv_observer.h"
 #include "core/system/theme/ThemeManager.hpp"

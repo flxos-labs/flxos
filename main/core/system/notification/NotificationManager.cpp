@@ -1,5 +1,5 @@
 #include "NotificationManager.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/lv_observer.h"
 #include "core/tasks/gui/GuiTask.hpp"
 #include "esp_timer.h"

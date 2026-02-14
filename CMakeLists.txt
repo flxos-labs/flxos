@@ -6,6 +6,14 @@ if(CCACHE_PROGRAM)
     set(CCACHE_ENABLE 1)
 endif()
 
+# Include FlxOS buildscripts
+include(${CMAKE_CURRENT_SOURCE_DIR}/Buildscripts/module.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/Buildscripts/version.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/Buildscripts/device.cmake)
+
+# Embed version information
+flx_embed_version()
+
 # Read sdkconfig directly to check for headless mode before include()
 # This is needed because CONFIG_* variables are not available until after include()
 # EXCLUDE_COMPONENTS must be set BEFORE include($ENV{IDF_PATH}/tools/cmake/project.cmake)
@@ -18,6 +26,11 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/sdkconfig")
         endif()
     endforeach()
 endif()
+
+# Register FlxOS modules as extra components
+set(EXTRA_COMPONENT_DIRS
+    "${CMAKE_SOURCE_DIR}/Core"
+)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(FlxOS)

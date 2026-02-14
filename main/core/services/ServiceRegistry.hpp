@@ -2,7 +2,7 @@
 
 #include "IService.hpp"
 #include "ServiceManifest.hpp"
-#include "core/common/Singleton.hpp"
+#include <flx/core/Singleton.hpp>
 #include <memory>
 #include <string>
 #include <unordered_map>

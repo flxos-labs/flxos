@@ -1,5 +1,5 @@
 #include "PowerManager.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/services/system_info/SystemInfoService.hpp"
 #include "core/ui/LvglBridgeHelpers.hpp"
 

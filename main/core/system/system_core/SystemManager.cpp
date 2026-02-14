@@ -1,5 +1,5 @@
 #include "SystemManager.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/services/ServiceRegistry.hpp"
 #include "core/system/display/DisplayManager.hpp"

@@ -1,0 +1,29 @@
+#pragma once
+
+/**
+ * @file Compat.hpp
+ * @brief Namespace compatibility layer for incremental migration
+ * 
+ * This file provides namespace aliases to allow existing code using System::
+ * to work with the new flx:: namespace during the migration period.
+ * 
+ * This file will be removed once all code is migrated to flx::.
+ */
+
+#include <flx/core/Logger.hpp>
+#include <flx/core/Singleton.hpp>
+#include <flx/core/Observable.hpp>
+#include <flx/core/Types.hpp>
+#include <flx/core/ClipboardManager.hpp>
+
+// Namespace alias for backward compatibility
+namespace System {
+    // Import flx types into System namespace
+    using flx::Singleton;
+    using flx::Observable;
+    using flx::StringObservable;
+    using flx::Result;
+    using flx::ClipboardManager;
+    using flx::ClipboardOp;
+    using flx::ClipboardEntry;
+}

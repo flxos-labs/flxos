@@ -1,7 +1,7 @@
 #include "SettingsManager.hpp"
 #include "Observable.hpp"
 #include "cJSON.h"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "esp_timer.h"
 #include <cstdint>
 #include <cstdio>

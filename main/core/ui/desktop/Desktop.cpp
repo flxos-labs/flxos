@@ -5,7 +5,7 @@
 #include "../theming/ui_constants/UiConstants.hpp"
 #include "core/apps/AppManager.hpp"
 #include "core/apps/Intent.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_style_gen.h"

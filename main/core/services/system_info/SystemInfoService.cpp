@@ -1,5 +1,5 @@
 #include "SystemInfoService.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "display/lv_display.h"
 #include "esp_chip_info.h"

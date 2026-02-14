@@ -3,7 +3,7 @@
 #include "AppContext.hpp"
 #include "Bundle.hpp"
 #include "Intent.hpp"
-#include "core/common/Singleton.hpp"
+#include <flx/core/Singleton.hpp>
 #include "core/tasks/TaskManager.hpp"
 #include <memory>
 #include <string>

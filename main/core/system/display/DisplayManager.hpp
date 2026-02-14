@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/common/Observable.hpp"
-#include "core/common/Singleton.hpp"
+#include <flx/core/Observable.hpp>
+#include <flx/core/Singleton.hpp>
 #include "core/services/IService.hpp"
 #include "core/services/ServiceManifest.hpp"
 #include <memory>

@@ -1,5 +1,5 @@
 #include "Themes.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/lv_obj.h"
 #include "core/ui/keyboard/VirtualKeyboard.hpp"
 #include "misc/lv_color.h"

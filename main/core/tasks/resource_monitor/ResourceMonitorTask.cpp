@@ -1,5 +1,5 @@
 #include "ResourceMonitorTask.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/system/power/PowerManager.hpp"
 #include "core/tasks/TaskManager.hpp"
 #include "esp_heap_caps.h"

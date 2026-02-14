@@ -1,6 +1,6 @@
 #include "WiFiManager.hpp"
 #include "Observable.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/time/TimeManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"

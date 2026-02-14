@@ -1,6 +1,6 @@
 #include "ServiceRegistry.hpp"
 #include "core/apps/EventBus.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 #include <algorithm>
 #include <queue>
 #include <unordered_set>

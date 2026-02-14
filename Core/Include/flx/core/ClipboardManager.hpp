@@ -2,7 +2,7 @@
 #include <flx/core/Singleton.hpp>
 #include <string>
 
-namespace System {
+namespace flx {
 
 enum class ClipboardOp { NONE,
 						 COPY,
@@ -37,4 +37,4 @@ private:
 	ClipboardEntry m_entry;
 };
 
-} // namespace System
+} // namespace flx

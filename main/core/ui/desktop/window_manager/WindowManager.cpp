@@ -1,7 +1,7 @@
 #include "WindowManager.hpp"
 #include "../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../theming/ui_constants/UiConstants.hpp"
-#include "core/common/Logger.hpp"
+#include <flx/core/Logger.hpp>
 
 #include "../modules/dock/Dock.hpp"
 #include "core/apps/AppManager.hpp"

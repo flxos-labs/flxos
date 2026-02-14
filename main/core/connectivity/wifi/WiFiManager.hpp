@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/common/Observable.hpp"
-#include "core/common/Singleton.hpp"
+#include <flx/core/Observable.hpp>
+#include <flx/core/Singleton.hpp>
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_wifi.h"

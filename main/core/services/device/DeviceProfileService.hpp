@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/common/Singleton.hpp"
+#include <flx/core/Singleton.hpp>
 #include "core/services/IService.hpp"
 #include "core/services/ServiceManifest.hpp"
 #include "core/system/device/DeviceProfile.hpp"
