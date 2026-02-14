@@ -3,6 +3,8 @@
 #include "../../../theming/layout_constants/LayoutConstants.hpp"
 #include "../../../theming/ui_constants/UiConstants.hpp"
 #include "core/apps/AppManager.hpp"
+#include "core/apps/AppManifest.hpp"
+#include "core/apps/AppRegistry.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_pos.h"
 #include "core/lv_obj_style.h"
@@ -52,6 +54,11 @@ void Launcher::create() {
 
 	auto apps = System::Apps::AppManager::getInstance().getInstalledApps();
 	for (auto& app: apps) {
+		// Skip hidden apps (e.g. Image Viewer — launched via intent only)
+		auto manifest = System::Apps::AppRegistry::getInstance().findById(app->getPackageName());
+		if (manifest && (manifest->flags & System::Apps::AppFlags::Hidden)) {
+			continue;
+		}
 		lv_obj_t* btn = lv_button_create(m_list);
 		lv_obj_set_width(btn, lv_pct(100));
 		lv_obj_set_style_border_width(btn, 0, 0);

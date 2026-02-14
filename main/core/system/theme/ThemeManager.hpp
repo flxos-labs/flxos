@@ -50,9 +50,9 @@ private:
 	ThemeManager() = default;
 	~ThemeManager() = default;
 
-	Observable<int32_t> m_theme_subject {0};
+	Observable<int32_t> m_theme_subject {1};
 	Observable<int32_t> m_glass_enabled_subject {0};
-	Observable<int32_t> m_transparency_enabled_subject {1};
+	Observable<int32_t> m_transparency_enabled_subject {0};
 	Observable<int32_t> m_wallpaper_enabled_subject {0};
 	StringObservable m_wallpaper_path_subject {""};
 

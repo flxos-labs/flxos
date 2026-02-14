@@ -59,6 +59,11 @@ void TextEditorApp::createUI(void* parent) {
 	m_fileBrowser = std::make_unique<UI::FileBrowser>(
 		m_container, [this]() { showEditorScreen(); }
 	);
+	m_fileBrowser->setExtensions({
+		".txt", ".md", ".log", ".json", ".xml", ".csv",
+		".cfg", ".ini", ".conf", ".sh",
+		".c", ".cpp", ".h", ".hpp", ".py", ".js"
+	});
 
 	// Create and show editor screen
 	createEditorScreen();
