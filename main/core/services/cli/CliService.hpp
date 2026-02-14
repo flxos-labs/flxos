@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include "esp_err.h"
 #include <string>
 
@@ -14,14 +14,14 @@ namespace System {
  * using ESP-IDF's esp_console component. Designed for future GUI integration
  * where commands could be sent via other interfaces (e.g., serial terminal widget).
  */
-class CliService : public Services::IService {
+class CliService : public flx::services::IService {
 public:
 
 	static CliService& getInstance();
 
 	// ──── IService manifest ────
-	static const Services::ServiceManifest serviceManifest;
-	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
+	static const flx::services::ServiceManifest serviceManifest;
+	const flx::services::ServiceManifest& getManifest() const override { return serviceManifest; }
 
 	// ──── IService lifecycle ────
 	bool onStart() override;

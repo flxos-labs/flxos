@@ -137,7 +137,7 @@ void FileBrowser::refreshList() {
 			browser->navigateUp(); }, LV_EVENT_CLICKED, this);
 	}
 
-	auto entries = Services::FileSystemService::getInstance().listDirectory(m_currentPath);
+	auto entries = flx::services::FileSystemService::getInstance().listDirectory(m_currentPath);
 	for (const auto& entry: entries) {
 		// Apply extension filter if set
 		if (!entry.isDirectory && !m_extensions.empty()) {
@@ -198,7 +198,7 @@ void FileBrowser::navigateUp() {
 }
 
 void FileBrowser::enterDirectory(const std::string& name) {
-	m_currentPath = Services::FileSystemService::buildPath(m_currentPath, name);
+	m_currentPath = flx::services::FileSystemService::buildPath(m_currentPath, name);
 	refreshList();
 }
 
@@ -208,8 +208,8 @@ void FileBrowser::selectFile(const std::string& name) {
 		lv_textarea_set_text(m_filenameInput, name.c_str());
 	} else {
 		// In open mode, clicking a file opens it
-		std::string vfsPath = Services::FileSystemService::toVfsPath(
-			Services::FileSystemService::buildPath(m_currentPath, name)
+		std::string vfsPath = flx::services::FileSystemService::toVfsPath(
+			flx::services::FileSystemService::buildPath(m_currentPath, name)
 		);
 		if (m_onFileSelected) {
 			m_onFileSelected(vfsPath);
@@ -222,8 +222,8 @@ void FileBrowser::confirmSelection() {
 
 	const char* filename = lv_textarea_get_text(m_filenameInput);
 	if (filename && strlen(filename) > 0) {
-		std::string vfsPath = Services::FileSystemService::toVfsPath(
-			Services::FileSystemService::buildPath(m_currentPath, filename)
+		std::string vfsPath = flx::services::FileSystemService::toVfsPath(
+			flx::services::FileSystemService::buildPath(m_currentPath, filename)
 		);
 		if (m_onFileSelected) {
 			m_onFileSelected(vfsPath);

@@ -11,7 +11,7 @@ static constexpr const char* TAG = "PowerManager";
 
 namespace System {
 
-const Services::ServiceManifest PowerManager::serviceManifest = {
+const flx::services::ServiceManifest PowerManager::serviceManifest = {
 	.serviceId = "com.flxos.power",
 	.serviceName = "Power",
 	.dependencies = {},
@@ -19,7 +19,7 @@ const Services::ServiceManifest PowerManager::serviceManifest = {
 	.required = false,
 	.autoStart = true,
 	.guiRequired = false,
-	.capabilities = Services::ServiceCapability::None,
+	.capabilities = flx::services::ServiceCapability::None,
 	.description = "Battery level, charging status, and power management",
 };
 
@@ -43,7 +43,7 @@ void PowerManager::onGuiInit() {
 #endif
 
 void PowerManager::refresh() {
-	auto stats = Services::SystemInfoService::getInstance().getBatteryStats();
+	auto stats = flx::services::SystemInfoService::getInstance().getBatteryStats();
 
 	if (m_batteryLevel.get() != stats.level) {
 		m_batteryLevel.set(stats.level);

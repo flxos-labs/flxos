@@ -66,13 +66,13 @@ private:
 
 	// Helper methods
 	void updateInfo();
-	void updateUptime(const Services::SystemStats& sysStats);
-	void updateBattery(Services::SystemInfoService& service);
-	void updateCpuUsage(const std::vector<Services::TaskInfo>& tasks, int coreCount);
-	void updateHeap(Services::SystemInfoService& service);
-	void updateStorage(Services::SystemInfoService& service);
-	void updateWiFi(Services::SystemInfoService& service);
-	void updateTaskList(std::vector<Services::TaskInfo>& tasks);
+	void updateUptime(const flx::services::SystemStats& sysStats);
+	void updateBattery(flx::services::SystemInfoService& service);
+	void updateCpuUsage(const std::vector<flx::services::TaskInfo>& tasks, int coreCount);
+	void updateHeap(flx::services::SystemInfoService& service);
+	void updateStorage(flx::services::SystemInfoService& service);
+	void updateWiFi(flx::services::SystemInfoService& service);
+	void updateTaskList(std::vector<flx::services::TaskInfo>& tasks);
 	void createSystemTab(lv_obj_t* tab);
 	void createMemoryTab(lv_obj_t* tab);
 	void createNetworkTab(lv_obj_t* tab);

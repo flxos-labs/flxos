@@ -7,8 +7,9 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
-namespace System::Services {
+namespace flx::services {
 
 /**
  * @brief Central registry and lifecycle manager for all FlxOS services.
@@ -31,6 +32,14 @@ class ServiceRegistry : public flx::Singleton<ServiceRegistry> {
 	friend class flx::Singleton<ServiceRegistry>;
 
 public:
+
+	using EventCallback = std::function<void(const char* event, const std::string& serviceId)>;
+
+	/**
+	 * Set a callback for publishing service events.
+	 * This decouples ServiceRegistry from the main EventBus.
+	 */
+	void setEventCallback(EventCallback cb) { m_eventCallback = cb; }
 
 	// ──────── Registration ────────
 
@@ -129,9 +138,11 @@ private:
 	std::vector<std::string> findDependents(const std::string& serviceId) const;
 
 	/**
-	 * Publish a service lifecycle event to the EventBus.
+	 * Publish a service lifecycle event via callback
 	 */
 	void publishServiceEvent(const char* event, const std::string& serviceId);
+
+	EventCallback m_eventCallback;
 
 	std::vector<std::shared_ptr<IService>> m_services;
 	std::unordered_map<std::string, std::shared_ptr<IService>> m_serviceMap;
@@ -139,4 +150,4 @@ private:
 	bool m_requiredFailed = false;
 };
 
-} // namespace System::Services
+} // namespace flx::services

@@ -2,8 +2,8 @@
 
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include <memory>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
@@ -13,14 +13,14 @@
 
 namespace System {
 
-class DisplayManager : public flx::Singleton<DisplayManager>, public Services::IService {
+class DisplayManager : public flx::Singleton<DisplayManager>, public flx::services::IService {
 	friend class flx::Singleton<DisplayManager>;
 
 public:
 
 	// ──── IService manifest ────
-	static const Services::ServiceManifest serviceManifest;
-	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
+	static const flx::services::ServiceManifest serviceManifest;
+	const flx::services::ServiceManifest& getManifest() const override { return serviceManifest; }
 
 	// ──── IService lifecycle ────
 	bool onStart() override;

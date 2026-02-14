@@ -114,7 +114,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	lv_obj_set_style_pad_row(tab, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 
 	// Get initial system stats
-	auto stats = Services::SystemInfoService::getInstance().getSystemStats();
+	auto stats = flx::services::SystemInfoService::getInstance().getSystemStats();
 
 	// FlxOS Version
 	lv_obj_t* version_label = lv_label_create(tab);
@@ -125,7 +125,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	lv_label_set_text_fmt(build_label, "Build: %s", stats.buildDate.c_str());
 
 	// Device Profile
-	auto& profileService = Services::DeviceProfileService::getInstance();
+	auto& profileService = flx::services::DeviceProfileService::getInstance();
 	if (profileService.hasValidProfile()) {
 		const auto& profile = profileService.getActiveProfile();
 
@@ -243,9 +243,9 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 
 	// PSRAM info
 	m_psram_label = lv_label_create(tab);
-	auto memStats = Services::SystemInfoService::getInstance().getMemoryStats();
+	auto memStats = flx::services::SystemInfoService::getInstance().getMemoryStats();
 	if (memStats.hasPsram) {
-		lv_label_set_text_fmt(m_psram_label, "PSRAM: %s total", Services::SystemInfoService::formatBytes(memStats.totalPsram).c_str());
+		lv_label_set_text_fmt(m_psram_label, "PSRAM: %s total", flx::services::SystemInfoService::formatBytes(memStats.totalPsram).c_str());
 
 		lv_obj_t* psram_bar_label = lv_label_create(tab);
 		lv_label_set_text(psram_bar_label, "PSRAM Usage:");
@@ -299,7 +299,7 @@ void SystemInfoApp::createNetworkTab(lv_obj_t* tab) {
 	lv_label_set_text(m_wifi_ip_label, "IP Address: --");
 
 	m_wifi_mac_label = lv_label_create(tab);
-	auto wifiStats = Services::SystemInfoService::getInstance().getWiFiStats();
+	auto wifiStats = flx::services::SystemInfoService::getInstance().getWiFiStats();
 	lv_label_set_text_fmt(m_wifi_mac_label, "MAC: %02X:%02X:%02X:%02X:%02X:%02X", wifiStats.mac[0], wifiStats.mac[1], wifiStats.mac[2], wifiStats.mac[3], wifiStats.mac[4], wifiStats.mac[5]);
 
 	m_wifi_rssi_label = lv_label_create(tab);
@@ -342,7 +342,7 @@ void SystemInfoApp::createTasksTab(lv_obj_t* tab) {
 void SystemInfoApp::updateInfo() {
 	Log::verbose(TAG, "Refreshing system stats...");
 	// Get system stats
-	auto& service = Services::SystemInfoService::getInstance(); // Use reference for convenience
+	auto& service = flx::services::SystemInfoService::getInstance(); // Use reference for convenience
 	auto sysStats = service.getSystemStats();
 
 	updateUptime(sysStats);
@@ -358,7 +358,7 @@ void SystemInfoApp::updateInfo() {
 	updateTaskList(tasks);
 }
 
-void SystemInfoApp::updateUptime(const Services::SystemStats& sysStats) {
+void SystemInfoApp::updateUptime(const flx::services::SystemStats& sysStats) {
 	if (m_uptime_label) {
 		int const uptime_s = sysStats.uptimeSeconds;
 		int const h = uptime_s / 3600;
@@ -368,7 +368,7 @@ void SystemInfoApp::updateUptime(const Services::SystemStats& sysStats) {
 	}
 }
 
-void SystemInfoApp::updateBattery(Services::SystemInfoService& service) {
+void SystemInfoApp::updateBattery(flx::services::SystemInfoService& service) {
 	if (m_battery_label) {
 		auto batStats = service.getBatteryStats();
 		if (batStats.isConfigured) {
@@ -379,7 +379,7 @@ void SystemInfoApp::updateBattery(Services::SystemInfoService& service) {
 	}
 }
 
-void SystemInfoApp::updateCpuUsage(const std::vector<Services::TaskInfo>& tasks, int coreCount) {
+void SystemInfoApp::updateCpuUsage(const std::vector<flx::services::TaskInfo>& tasks, int coreCount) {
 	std::vector<float> core_usage(coreCount, 0.0f);
 	for (const auto& task: tasks) {
 		if (task.coreID >= 0 && task.coreID < (int)core_usage.size()) {
@@ -401,7 +401,7 @@ void SystemInfoApp::updateCpuUsage(const std::vector<Services::TaskInfo>& tasks,
 	}
 }
 
-void SystemInfoApp::updateHeap(Services::SystemInfoService& service) {
+void SystemInfoApp::updateHeap(flx::services::SystemInfoService& service) {
 	if (m_heap_label && m_heap_bar) {
 		auto memStats = service.getMemoryStats();
 
@@ -416,7 +416,7 @@ void SystemInfoApp::updateHeap(Services::SystemInfoService& service) {
 	}
 }
 
-void SystemInfoApp::updateStorage(Services::SystemInfoService& service) {
+void SystemInfoApp::updateStorage(flx::services::SystemInfoService& service) {
 	if (m_storage_system_label && m_storage_data_label) {
 		auto storageStats = service.getStorageStats();
 		for (const auto& stat: storageStats) {
@@ -432,7 +432,7 @@ void SystemInfoApp::updateStorage(Services::SystemInfoService& service) {
 	}
 }
 
-void SystemInfoApp::updateWiFi(Services::SystemInfoService& service) {
+void SystemInfoApp::updateWiFi(flx::services::SystemInfoService& service) {
 	if (m_wifi_status_label) {
 		auto wifiStats = service.getWiFiStats();
 		lv_label_set_text_fmt(m_wifi_status_label, "WiFi: %s", wifiStats.connected ? "Connected" : "Disconnected");
@@ -449,10 +449,10 @@ void SystemInfoApp::updateWiFi(Services::SystemInfoService& service) {
 	}
 }
 
-void SystemInfoApp::updateTaskList(std::vector<Services::TaskInfo>& tasks) {
+void SystemInfoApp::updateTaskList(std::vector<flx::services::TaskInfo>& tasks) {
 	if (m_tasks_table) {
 		// Sort tasks by stack high water mark (descending) - sort a copy to not affect CPU calculation
-		std::sort(tasks.begin(), tasks.end(), [](const Services::TaskInfo& a, const Services::TaskInfo& b) {
+		std::sort(tasks.begin(), tasks.end(), [](const flx::services::TaskInfo& a, const flx::services::TaskInfo& b) {
 			return a.stackHighWaterMark > b.stackHighWaterMark;
 		});
 

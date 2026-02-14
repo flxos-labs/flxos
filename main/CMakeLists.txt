@@ -5,7 +5,6 @@ set(CORE_SRCS
     "core/connectivity/bluetooth/BluetoothManager.cpp"
     "core/connectivity/hotspot/HotspotManager.cpp"
     "core/connectivity/wifi/WiFiManager.cpp"
-    "core/services/ServiceRegistry.cpp"
     "core/services/filesystem/FileSystemService.cpp"
     "core/services/system_info/SystemInfoService.cpp"
     "core/system/system_core/SystemManager.cpp"
@@ -89,7 +88,7 @@ set(PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event es
 idf_component_register(SRCS ${CORE_SRCS}
     INCLUDE_DIRS ${INCLUDE_DIRS}
     PRIV_REQUIRES ${PRIV_REQUIRES}
-    REQUIRES ${COMPONENT_REQUIRES} Core Kernel
+    REQUIRES ${COMPONENT_REQUIRES} Core Kernel Services
 )
 
 # LVGL configuration (only in GUI mode)

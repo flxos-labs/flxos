@@ -4,7 +4,7 @@
 #include "EventBus.hpp"
 #include "calendar/CalendarApp.hpp"
 #include <flx/core/Logger.hpp>
-#include "core/services/ServiceRegistry.hpp"
+#include <flx/services/ServiceRegistry.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include "core/tasks/gui/GuiTask.hpp"
 #include "core/ui/desktop/Desktop.hpp"
@@ -246,8 +246,8 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 
 	// Check required services are running
 	for (const auto& svcId: manifest.requiredServices) {
-		auto state = Services::ServiceRegistry::getInstance().getServiceState(svcId);
-		if (state != Services::ServiceState::Started) {
+		auto state = flx::services::ServiceRegistry::getInstance().getServiceState(svcId);
+		if (state != flx::services::ServiceState::Started) {
 			Log::error("AppManager", "App '%s' requires service '%s' which is not running", manifest.appId.c_str(), svcId.c_str());
 			return LAUNCH_ID_INVALID;
 		}

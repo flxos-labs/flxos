@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <string>
 
-namespace System::Services {
+namespace flx::services {
 
 /**
  * @brief Runtime stats for a service (service metrics)
@@ -144,4 +144,4 @@ protected:
 	int32_t m_heapDeltaBytes = 0; ///< Heap change from last start (negative = consumed)
 };
 
-} // namespace System::Services
+} // namespace flx::services

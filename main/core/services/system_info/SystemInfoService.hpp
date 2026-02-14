@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace System::Services {
+namespace flx::services {
 
 struct SystemStats {
 	std::string flxosVersion {};
@@ -138,4 +138,4 @@ private:
 	void* m_adcCaliHandle = nullptr;
 };
 
-} // namespace System::Services
+} // namespace flx::services

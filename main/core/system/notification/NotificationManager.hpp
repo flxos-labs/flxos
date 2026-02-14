@@ -1,8 +1,8 @@
 #pragma once
 
 #include <flx/core/Singleton.hpp>
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include "lvgl.h"
 #include <functional>
 #include <memory>
@@ -23,14 +23,14 @@ struct Notification {
 	bool isRead {};
 };
 
-class NotificationManager : public flx::Singleton<NotificationManager>, public Services::IService {
+class NotificationManager : public flx::Singleton<NotificationManager>, public flx::services::IService {
 	friend class flx::Singleton<NotificationManager>;
 
 public:
 
 	// ──── IService manifest ────
-	static const Services::ServiceManifest serviceManifest;
-	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
+	static const flx::services::ServiceManifest serviceManifest;
+	const flx::services::ServiceManifest& getManifest() const override { return serviceManifest; }
 
 	// ──── IService lifecycle ────
 	bool onStart() override;

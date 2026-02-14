@@ -10,7 +10,7 @@ static constexpr std::string_view TAG = "TimeManager";
 
 namespace System {
 
-const Services::ServiceManifest TimeManager::serviceManifest = {
+const flx::services::ServiceManifest TimeManager::serviceManifest = {
 	.serviceId = "com.flxos.time",
 	.serviceName = "Time",
 	.dependencies = {"com.flxos.connectivity"},
@@ -18,7 +18,7 @@ const Services::ServiceManifest TimeManager::serviceManifest = {
 	.required = false,
 	.autoStart = true,
 	.guiRequired = false,
-	.capabilities = Services::ServiceCapability::WiFi,
+	.capabilities = flx::services::ServiceCapability::WiFi,
 	.description = "SNTP time synchronization",
 };
 

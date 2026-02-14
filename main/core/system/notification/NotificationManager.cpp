@@ -13,7 +13,7 @@ static constexpr std::string_view TAG = "Notification";
 
 namespace System {
 
-const Services::ServiceManifest NotificationManager::serviceManifest = {
+const flx::services::ServiceManifest NotificationManager::serviceManifest = {
 	.serviceId = "com.flxos.notifications",
 	.serviceName = "Notifications",
 	.dependencies = {},
@@ -21,7 +21,7 @@ const Services::ServiceManifest NotificationManager::serviceManifest = {
 	.required = false,
 	.autoStart = true,
 	.guiRequired = true,
-	.capabilities = Services::ServiceCapability::None,
+	.capabilities = flx::services::ServiceCapability::None,
 	.description = "System notification management",
 };
 

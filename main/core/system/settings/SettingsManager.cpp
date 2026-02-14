@@ -15,7 +15,7 @@ static constexpr const char* SETTINGS_TMP_PATH = "/system/settings.tmp";
 
 namespace System {
 
-const Services::ServiceManifest SettingsManager::serviceManifest = {
+const flx::services::ServiceManifest SettingsManager::serviceManifest = {
 	.serviceId = "com.flxos.settings",
 	.serviceName = "Settings",
 	.dependencies = {},
@@ -23,7 +23,7 @@ const Services::ServiceManifest SettingsManager::serviceManifest = {
 	.required = true,
 	.autoStart = true,
 	.guiRequired = false,
-	.capabilities = Services::ServiceCapability::None,
+	.capabilities = flx::services::ServiceCapability::None,
 	.description = "Persistent key-value settings storage",
 };
 

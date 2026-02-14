@@ -11,7 +11,7 @@
 
 static constexpr const char* TAG = "DeviceProfile";
 
-namespace System::Services {
+namespace flx::services {
 
 // NVS namespace names (max 15 chars)
 const std::string DeviceProfileService::NVS_NAMESPACE_PINS = "flxos_pins";
@@ -49,7 +49,7 @@ bool DeviceProfileService::onStart() {
 	Log::info(TAG, "Loading device profile: %s", profileId.c_str());
 
 	// 2. Look up in built-in registry
-	m_activeProfile = DeviceProfiles::findById(profileId);
+	m_activeProfile = System::DeviceProfiles::findById(profileId);
 
 	if (m_activeProfile) {
 		Log::info(TAG, "Profile loaded: %s %s (%s)", m_activeProfile->vendor.c_str(), m_activeProfile->boardName.c_str(), m_activeProfile->chipTarget.c_str());
@@ -77,7 +77,7 @@ bool DeviceProfileService::onStart() {
 		Log::info(TAG, "Saved touch calibration found in NVS");
 	}
 
-	Log::info(TAG, "Device profile service started (%zu profiles available)", DeviceProfiles::count());
+	Log::info(TAG, "Device profile service started (%zu profiles available)", System::DeviceProfiles::count());
 	return true;
 }
 
@@ -90,12 +90,12 @@ void DeviceProfileService::onStop() {
 // Profile Queries
 // ============================================================================
 
-const DeviceProfile& DeviceProfileService::getActiveProfile() const {
+const System::DeviceProfile& DeviceProfileService::getActiveProfile() const {
 	if (m_activeProfile) {
 		return *m_activeProfile;
 	}
 	// Should never happen after onStart()
-	static const DeviceProfile empty {};
+	static const System::DeviceProfile empty {};
 	return empty;
 }
 
@@ -326,4 +326,4 @@ DeviceProfileService::scanI2CBus(int sdaPin, int sclPin, int port) const {
 	return results;
 }
 
-} // namespace System::Services
+} // namespace flx::services

@@ -257,10 +257,10 @@ void QuickAccessPanel::buildToggles() {
 				lv_obj_add_event_cb(shot_btn, [](lv_event_t* e) {
                     System::FocusManager::getInstance().dismissAllPanels();
 
-                    uint32_t delaySec = System::Services::ScreenshotService::getInstance().getDefaultDelay();
+                    uint32_t delaySec = flx::services::ScreenshotService::getInstance().getDefaultDelay();
                     if (delaySec < 1) delaySec = 1;
 
-                    System::Services::ScreenshotService::getInstance().scheduleCapture(delaySec); }, LV_EVENT_CLICKED, nullptr);
+                    flx::services::ScreenshotService::getInstance().scheduleCapture(delaySec); }, LV_EVENT_CLICKED, nullptr);
 			}
 
 			lv_obj_t* shot_label = lv_label_create(shot_cont);

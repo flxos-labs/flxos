@@ -1,7 +1,8 @@
 #include "SystemManager.hpp"
+#include "core/apps/EventBus.hpp"
 #include <flx/core/Logger.hpp>
 #include "core/connectivity/ConnectivityManager.hpp"
-#include "core/services/ServiceRegistry.hpp"
+#include <flx/services/ServiceRegistry.hpp>
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/power/PowerManager.hpp"
 #include "core/system/settings/SettingsManager.hpp"
@@ -70,25 +71,32 @@ esp_err_t SystemManager::initHardware() {
  * Services declare their own dependencies so the registry resolves boot order.
  */
 void SystemManager::registerServices() {
-	auto& registry = Services::ServiceRegistry::getInstance();
+	auto& registry = flx::services::ServiceRegistry::getInstance();
+
+	// Decoupled event publishing
+	registry.setEventCallback([](const char* event, const std::string& serviceId) {
+		System::Apps::Bundle data;
+		data.putString("serviceId", serviceId);
+		System::Apps::EventBus::getInstance().publish(event, data);
+	});
 
 	// Core managers (as shared_ptr wrapping the singletons — prevent deletion)
 	auto noDelete = [](auto*) {}; // Custom deleter that does nothing
-	registry.addService(std::shared_ptr<Services::IService>(&SettingsManager::getInstance(), noDelete));
-	registry.addService(std::shared_ptr<Services::IService>(&DisplayManager::getInstance(), noDelete));
-	registry.addService(std::shared_ptr<Services::IService>(&ThemeManager::getInstance(), noDelete));
-	registry.addService(std::shared_ptr<Services::IService>(&ConnectivityManager::getInstance(), noDelete));
-	registry.addService(std::shared_ptr<Services::IService>(&PowerManager::getInstance(), noDelete));
-	registry.addService(std::shared_ptr<Services::IService>(&TimeManager::getInstance(), noDelete));
-	registry.addService(std::shared_ptr<Services::IService>(&Services::DeviceProfileService::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&SettingsManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&DisplayManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&ThemeManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&ConnectivityManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&PowerManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&TimeManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::DeviceProfileService::getInstance(), noDelete));
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
-	registry.addService(std::shared_ptr<Services::IService>(&Services::SdCardService::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::SdCardService::getInstance(), noDelete));
 #endif
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	registry.addService(std::shared_ptr<Services::IService>(&NotificationManager::getInstance(), noDelete));
-	registry.addService(std::shared_ptr<Services::IService>(&Services::ScreenshotService::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
 #endif
 }
 
@@ -96,7 +104,7 @@ esp_err_t SystemManager::initServices() {
 	Log::info(TAG, "Registering services with ServiceRegistry...");
 	registerServices();
 
-	auto& registry = Services::ServiceRegistry::getInstance();
+	auto& registry = flx::services::ServiceRegistry::getInstance();
 
 	bool guiMode = true;
 #if CONFIG_FLXOS_HEADLESS_MODE
@@ -122,7 +130,7 @@ esp_err_t SystemManager::initGuiState() {
 	INIT_BRIDGE(m_uptime_bridge, m_uptime_subject);
 
 	// Let ServiceRegistry call onGuiInit() on all started services
-	Services::ServiceRegistry::getInstance().initGuiServices();
+	flx::services::ServiceRegistry::getInstance().initGuiServices();
 
 	Apps::AppManager::getInstance().init();
 

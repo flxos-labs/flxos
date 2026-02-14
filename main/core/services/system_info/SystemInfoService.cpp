@@ -31,7 +31,7 @@ static constexpr std::string_view TAG = "SystemInfo";
 
 static constexpr const char* FLXOS_VERSION = "0.1.0-alpha";
 
-namespace System::Services {
+namespace flx::services {
 
 SystemInfoService& SystemInfoService::getInstance() {
 	static SystemInfoService instance;
@@ -301,7 +301,7 @@ BatteryStats SystemInfoService::getBatteryStats() {
 WiFiStats SystemInfoService::getWiFiStats() {
 	WiFiStats stats;
 
-	stats.connected = ConnectivityManager::getInstance().isWiFiConnected();
+	stats.connected = System::ConnectivityManager::getInstance().isWiFiConnected();
 
 	// Initialize defaults
 	stats.ssid = "";
@@ -331,7 +331,7 @@ WiFiStats SystemInfoService::getWiFiStats() {
 		}
 
 		// Retrieve IP address from ConnectivityManager
-		const char* ip = ConnectivityManager::getInstance().getWiFiIpObservable().get();
+		const char* ip = System::ConnectivityManager::getInstance().getWiFiIpObservable().get();
 		stats.ipAddress = ip ? std::string(ip) : "0.0.0.0";
 	}
 
@@ -471,4 +471,4 @@ std::string SystemInfoService::getResetReason() {
 	}
 }
 
-} // namespace System::Services
+} // namespace flx::services

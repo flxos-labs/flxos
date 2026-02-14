@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace System::Services {
+namespace flx::services {
 
 struct FileEntry {
 	std::string name {};
@@ -86,4 +86,4 @@ private:
 	int removeRecursive(const char* path, ProgressCallback callback);
 };
 
-} // namespace System::Services
+} // namespace flx::services

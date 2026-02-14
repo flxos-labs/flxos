@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include "sdkconfig.h"
 #include <string>
 
@@ -9,7 +9,7 @@
 struct sdmmc_card_t;
 #endif
 
-namespace System::Services {
+namespace flx::services {
 
 class SdCardService : public IService {
 public:
@@ -44,4 +44,4 @@ private:
 #endif
 };
 
-} // namespace System::Services
+} // namespace flx::services

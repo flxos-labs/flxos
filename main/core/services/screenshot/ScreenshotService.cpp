@@ -24,7 +24,7 @@ const char* lodepng_error_text(unsigned code);
 
 static constexpr std::string_view TAG = "ScreenshotService";
 
-namespace System::Services {
+namespace flx::services {
 
 const ServiceManifest ScreenshotService::serviceManifest = {
 	.serviceId = "com.flxos.screenshot",
@@ -255,4 +255,4 @@ void ScreenshotService::onTimerTick() {
 	}
 }
 
-} // namespace System::Services
+} // namespace flx::services

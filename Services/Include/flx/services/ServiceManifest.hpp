@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace System::Services {
+namespace flx::services {
 
 /**
  * @brief Service capability flags (mirrors AppCapability for consistency)
@@ -98,4 +98,4 @@ struct ServiceManifest {
 	std::string description {};
 };
 
-} // namespace System::Services
+} // namespace flx::services

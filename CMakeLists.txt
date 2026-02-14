@@ -31,6 +31,7 @@ endif()
 set(EXTRA_COMPONENT_DIRS
     "${CMAKE_SOURCE_DIR}/Core"
     "${CMAKE_SOURCE_DIR}/Kernel"
+    "${CMAKE_SOURCE_DIR}/Services"
 )
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

@@ -1,13 +1,13 @@
 #pragma once
 
 #include <flx/core/Singleton.hpp>
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include "lvgl.h"
 #include <functional>
 #include <string>
 
-namespace System::Services {
+namespace flx::services {
 
 /**
  * @brief Service for capturing screenshots as PNG files.
@@ -84,4 +84,4 @@ private:
 	void onTimerTick();
 };
 
-} // namespace System::Services
+} // namespace flx::services

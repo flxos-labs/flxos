@@ -12,7 +12,7 @@
 
 static constexpr std::string_view TAG = "SdCard";
 
-namespace System::Services {
+namespace flx::services {
 
 const ServiceManifest SdCardService::serviceManifest = {
 	.serviceId = "com.flxos.sdcard",
@@ -160,4 +160,4 @@ void SdCardService::unmount() {
 #endif
 }
 
-} // namespace System::Services
+} // namespace flx::services

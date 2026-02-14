@@ -1,8 +1,8 @@
 #pragma once
 
 #include <flx/core/Singleton.hpp>
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -11,14 +11,14 @@
 
 namespace System {
 
-class TimeManager : public flx::Singleton<TimeManager>, public Services::IService {
+class TimeManager : public flx::Singleton<TimeManager>, public flx::services::IService {
 	friend class flx::Singleton<TimeManager>;
 
 public:
 
 	// ──── IService manifest ────
-	static const Services::ServiceManifest serviceManifest;
-	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
+	static const flx::services::ServiceManifest serviceManifest;
+	const flx::services::ServiceManifest& getManifest() const override { return serviceManifest; }
 
 	// ──── IService lifecycle ────
 	bool onStart() override;

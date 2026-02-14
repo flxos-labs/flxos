@@ -229,7 +229,7 @@ void FilesApp::refreshList() {
 	}
 
 	// Use FileSystemService to list directory
-	auto entries = Services::FileSystemService::getInstance().listDirectory(m_currentPath);
+	auto entries = flx::services::FileSystemService::getInstance().listDirectory(m_currentPath);
 
 	if (entries.empty()) {
 		lv_list_add_text(m_list, "Empty directory");
@@ -311,15 +311,15 @@ void FilesApp::addListItem(const std::string& name, bool isDir) {
 }
 
 void FilesApp::handleMenuAction(const std::string& action, const std::string& name, bool isDir) {
-	std::string basePath = Services::FileSystemService::toVfsPath(m_currentPath);
+	std::string basePath = flx::services::FileSystemService::toVfsPath(m_currentPath);
 	if (action == "Info") {
-		std::string fullPath = Services::FileSystemService::buildPath(basePath, name);
+		std::string fullPath = flx::services::FileSystemService::buildPath(basePath, name);
 		showMsgBox("File Info", fullPath.c_str());
 	} else if (action == "Copy") {
-		flx::ClipboardManager::getInstance().set(Services::FileSystemService::buildPath(basePath, name), isDir, flx::ClipboardOp::COPY);
+		flx::ClipboardManager::getInstance().set(flx::services::FileSystemService::buildPath(basePath, name), isDir, flx::ClipboardOp::COPY);
 		refreshList();
 	} else if (action == "Cut") {
-		flx::ClipboardManager::getInstance().set(Services::FileSystemService::buildPath(basePath, name), isDir, flx::ClipboardOp::CUT);
+		flx::ClipboardManager::getInstance().set(flx::services::FileSystemService::buildPath(basePath, name), isDir, flx::ClipboardOp::CUT);
 		refreshList();
 	} else if (action == "Rename") {
 		showInputDialog("Rename", name, [this, name](std::string newName) {
@@ -423,8 +423,8 @@ void FilesApp::pasteItem() {
 	std::string srcPath = cb.get().path;
 	Log::info(TAG, "Pasting item from clipboard: %s", srcPath.c_str());
 	std::string name = srcPath.substr(srcPath.find_last_of('/') + 1);
-	std::string destBase = Services::FileSystemService::toVfsPath(m_currentPath);
-	std::string destPath = Services::FileSystemService::buildPath(destBase, name);
+	std::string destBase = flx::services::FileSystemService::toVfsPath(m_currentPath);
+	std::string destPath = flx::services::FileSystemService::buildPath(destBase, name);
 
 	if (srcPath == destPath) {
 		showMsgBox("Error", "Source and destination are the same.");
@@ -432,7 +432,7 @@ void FilesApp::pasteItem() {
 	}
 
 	if (cb.get().op == flx::ClipboardOp::CUT) {
-		if (!Services::FileSystemService::getInstance().move(srcPath, destPath)) {
+		if (!flx::services::FileSystemService::getInstance().move(srcPath, destPath)) {
 			showMsgBox("Error", "Could not move item.");
 		}
 		cb.clear();
@@ -444,7 +444,7 @@ void FilesApp::pasteItem() {
 			this->feedWatchdog();
 		};
 
-		if (!Services::FileSystemService::getInstance().copy(srcPath, destPath, progressCb)) {
+		if (!flx::services::FileSystemService::getInstance().copy(srcPath, destPath, progressCb)) {
 			showMsgBox("Error", "Copy failed.");
 		}
 		closeProgressDialog();
@@ -453,8 +453,8 @@ void FilesApp::pasteItem() {
 }
 
 void FilesApp::deleteItem(const std::string& name, bool /*isDir*/) {
-	std::string fullPath = Services::FileSystemService::buildPath(
-		Services::FileSystemService::toVfsPath(m_currentPath), name
+	std::string fullPath = flx::services::FileSystemService::buildPath(
+		flx::services::FileSystemService::toVfsPath(m_currentPath), name
 	);
 	showProgressDialog("Deleting");
 
@@ -463,7 +463,7 @@ void FilesApp::deleteItem(const std::string& name, bool /*isDir*/) {
 		this->feedWatchdog();
 	};
 
-	bool success = Services::FileSystemService::getInstance().remove(fullPath, progressCb);
+	bool success = flx::services::FileSystemService::getInstance().remove(fullPath, progressCb);
 	closeProgressDialog();
 
 	if (!success) {
@@ -476,11 +476,11 @@ void FilesApp::renameItem(const std::string& oldName, const std::string& newName
 	if (newName.empty() || oldName == newName) {
 		return;
 	}
-	std::string basePath = Services::FileSystemService::toVfsPath(m_currentPath);
-	std::string oldPath = Services::FileSystemService::buildPath(basePath, oldName);
-	std::string newPath = Services::FileSystemService::buildPath(basePath, newName);
+	std::string basePath = flx::services::FileSystemService::toVfsPath(m_currentPath);
+	std::string oldPath = flx::services::FileSystemService::buildPath(basePath, oldName);
+	std::string newPath = flx::services::FileSystemService::buildPath(basePath, newName);
 	Log::info(TAG, "Renaming item: %s -> %s", oldName.c_str(), newName.c_str());
-	if (!Services::FileSystemService::getInstance().move(oldPath, newPath)) {
+	if (!flx::services::FileSystemService::getInstance().move(oldPath, newPath)) {
 		showMsgBox("Error", "Could not rename item.");
 	}
 	refreshList();
@@ -490,10 +490,10 @@ void FilesApp::createFolder(const std::string& name) {
 	if (name.empty()) {
 		return;
 	}
-	std::string fullPath = Services::FileSystemService::buildPath(
-		Services::FileSystemService::toVfsPath(m_currentPath), name
+	std::string fullPath = flx::services::FileSystemService::buildPath(
+		flx::services::FileSystemService::toVfsPath(m_currentPath), name
 	);
-	if (!Services::FileSystemService::getInstance().mkdir(fullPath)) {
+	if (!flx::services::FileSystemService::getInstance().mkdir(fullPath)) {
 		showMsgBox("Error", "Could not create folder.");
 	}
 	refreshList();
@@ -501,7 +501,7 @@ void FilesApp::createFolder(const std::string& name) {
 
 void FilesApp::enterDir(const std::string& name) {
 	m_history.push(m_currentPath);
-	m_currentPath = Services::FileSystemService::buildPath(m_currentPath, name);
+	m_currentPath = flx::services::FileSystemService::buildPath(m_currentPath, name);
 	refreshList();
 }
 
@@ -521,8 +521,8 @@ void FilesApp::goHome() {
 }
 
 void FilesApp::onFileClick(const std::string& name) {
-	std::string vfsPath = Services::FileSystemService::buildPath(
-		Services::FileSystemService::toVfsPath(m_currentPath), name
+	std::string vfsPath = flx::services::FileSystemService::buildPath(
+		flx::services::FileSystemService::toVfsPath(m_currentPath), name
 	);
 
 	// Check file extension

@@ -14,7 +14,7 @@ static constexpr const char* TAG = "ThemeManager";
 
 namespace System {
 
-const Services::ServiceManifest ThemeManager::serviceManifest = {
+const flx::services::ServiceManifest ThemeManager::serviceManifest = {
 	.serviceId = "com.flxos.theme",
 	.serviceName = "Theme",
 	.dependencies = {"com.flxos.settings"},
@@ -22,7 +22,7 @@ const Services::ServiceManifest ThemeManager::serviceManifest = {
 	.required = false,
 	.autoStart = true,
 	.guiRequired = false,
-	.capabilities = Services::ServiceCapability::None,
+	.capabilities = flx::services::ServiceCapability::None,
 	.description = "Theme engine, wallpaper, and glass effects",
 };
 

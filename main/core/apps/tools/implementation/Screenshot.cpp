@@ -55,11 +55,11 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 
 	m_delaySlider = lv_slider_create(delayRow);
 	lv_slider_set_range(m_delaySlider, 0, 10);
-	lv_slider_set_value(m_delaySlider, Services::ScreenshotService::getInstance().getDefaultDelay(), LV_ANIM_OFF);
+	lv_slider_set_value(m_delaySlider, flx::services::ScreenshotService::getInstance().getDefaultDelay(), LV_ANIM_OFF);
 	lv_obj_set_flex_grow(m_delaySlider, 1);
 
 	m_delayValueLabel = lv_label_create(delayRow);
-	lv_label_set_text_fmt(m_delayValueLabel, "%ds", (int)Services::ScreenshotService::getInstance().getDefaultDelay());
+	lv_label_set_text_fmt(m_delayValueLabel, "%ds", (int)flx::services::ScreenshotService::getInstance().getDefaultDelay());
 	lv_obj_set_style_min_width(m_delayValueLabel, lv_dpx(30), 0);
 
 	lv_obj_add_event_cb(
@@ -89,12 +89,12 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	// Build dropdown options based on available storage
 	std::string options = "Internal Flash";
 	int defaultSel = 0;
-	std::string defaultPath = Services::ScreenshotService::getInstance().getDefaultStoragePath();
+	std::string defaultPath = flx::services::ScreenshotService::getInstance().getDefaultStoragePath();
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
-	if (Services::SdCardService::getInstance().isMounted()) {
+	if (flx::services::SdCardService::getInstance().isMounted()) {
 		options += "\nSD Card";
-		if (defaultPath == Services::SdCardService::getInstance().getMountPoint()) {
+		if (defaultPath == flx::services::SdCardService::getInstance().getMountPoint()) {
 			defaultSel = 1;
 		}
 	}
@@ -139,7 +139,7 @@ void Screenshot::startCapture() {
 	std::string storagePath = getSelectedBasePath();
 
 	// Use service to schedule capture with completion callback
-	Services::ScreenshotService::getInstance().scheduleCapture(
+	flx::services::ScreenshotService::getInstance().scheduleCapture(
 		delaySec,
 		storagePath,
 		[this](bool success, const std::string& path) {
@@ -166,8 +166,8 @@ std::string Screenshot::getSelectedBasePath() {
 	uint32_t sel = lv_dropdown_get_selected(m_pathDropdown);
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
-	if (sel == 1 && Services::SdCardService::getInstance().isMounted()) {
-		return Services::SdCardService::getInstance().getMountPoint();
+	if (sel == 1 && flx::services::SdCardService::getInstance().isMounted()) {
+		return flx::services::SdCardService::getInstance().getMountPoint();
 	}
 #endif
 
@@ -200,7 +200,7 @@ void Screenshot::hide() {
 
 void Screenshot::destroy() {
 	// Cancel any pending capture to prevent callback on destroyed object
-	Services::ScreenshotService::getInstance().cancelCapture();
+	flx::services::ScreenshotService::getInstance().cancelCapture();
 
 	if (m_view) {
 		lv_obj_del(m_view);

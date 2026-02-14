@@ -2,8 +2,8 @@
 
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include <functional>
 #include <map>
 #include <memory>
@@ -13,14 +13,14 @@
 
 namespace System {
 
-class SettingsManager : public flx::Singleton<SettingsManager>, public Services::IService {
+class SettingsManager : public flx::Singleton<SettingsManager>, public flx::services::IService {
 	friend class flx::Singleton<SettingsManager>;
 
 public:
 
 	// ──── IService manifest ────
-	static const Services::ServiceManifest serviceManifest;
-	const Services::ServiceManifest& getManifest() const override { return serviceManifest; }
+	static const flx::services::ServiceManifest serviceManifest;
+	const flx::services::ServiceManifest& getManifest() const override { return serviceManifest; }
 
 	// ──── IService lifecycle ────
 	bool onStart() override;

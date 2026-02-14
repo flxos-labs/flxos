@@ -22,7 +22,7 @@ static constexpr std::string_view TAG = "Connectivity";
 
 namespace System {
 
-const Services::ServiceManifest ConnectivityManager::serviceManifest = {
+const flx::services::ServiceManifest ConnectivityManager::serviceManifest = {
 	.serviceId = "com.flxos.connectivity",
 	.serviceName = "Connectivity",
 	.dependencies = {"com.flxos.settings"},
@@ -30,7 +30,7 @@ const Services::ServiceManifest ConnectivityManager::serviceManifest = {
 	.required = false,
 	.autoStart = true,
 	.guiRequired = false,
-	.capabilities = Services::ServiceCapability::WiFi | Services::ServiceCapability::Bluetooth,
+	.capabilities = flx::services::ServiceCapability::WiFi | flx::services::ServiceCapability::Bluetooth,
 	.description = "WiFi, Hotspot, and Bluetooth connectivity",
 };
 

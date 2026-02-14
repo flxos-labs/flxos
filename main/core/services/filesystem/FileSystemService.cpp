@@ -13,7 +13,7 @@
 
 static constexpr std::string_view TAG = "FileSystem";
 
-namespace System::Services {
+namespace flx::services {
 
 FileSystemService& FileSystemService::getInstance() {
 	static FileSystemService instance;
@@ -276,4 +276,4 @@ bool FileSystemService::mkdir(const std::string& path) {
 	return false;
 }
 
-} // namespace System::Services
+} // namespace flx::services

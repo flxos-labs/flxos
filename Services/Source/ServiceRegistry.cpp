@@ -1,5 +1,4 @@
-#include "ServiceRegistry.hpp"
-#include "core/apps/EventBus.hpp"
+#include <flx/services/ServiceRegistry.hpp>
 #include <flx/core/Logger.hpp>
 #include <algorithm>
 #include <queue>
@@ -7,7 +6,7 @@
 
 static constexpr const char* TAG = "ServiceRegistry";
 
-namespace System::Services {
+namespace flx::services {
 
 // Event names for service lifecycle
 namespace Events {
@@ -292,9 +291,9 @@ void ServiceRegistry::dumpServiceStates() const {
 }
 
 void ServiceRegistry::publishServiceEvent(const char* event, const std::string& serviceId) {
-	System::Apps::Bundle data;
-	data.putString("serviceId", serviceId);
-	System::Apps::EventBus::getInstance().publish(event, data);
+	if (m_eventCallback) {
+		m_eventCallback(event, serviceId);
+	}
 }
 
-} // namespace System::Services
+} // namespace flx::services

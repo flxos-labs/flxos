@@ -1,14 +1,14 @@
 #pragma once
 
 #include <flx/core/Singleton.hpp>
-#include "core/services/IService.hpp"
-#include "core/services/ServiceManifest.hpp"
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include "core/system/device/DeviceProfile.hpp"
 #include <cstdint>
 #include <string>
 #include <vector>
 
-namespace System::Services {
+namespace flx::services {
 
 /**
  * @brief Service for device profile management.
@@ -40,7 +40,7 @@ public:
 	// ──── Profile Queries ────
 
 	/** Get the active device profile */
-	const DeviceProfile& getActiveProfile() const;
+	const System::DeviceProfile& getActiveProfile() const;
 
 	/** Get the active profile ID */
 	const std::string& getActiveProfileId() const;
@@ -112,11 +112,11 @@ private:
 	DeviceProfileService() = default;
 	~DeviceProfileService() = default;
 
-	const DeviceProfile* m_activeProfile = nullptr;
-	DeviceProfile m_fallbackProfile; ///< Used if no matching profile found
+	const System::DeviceProfile* m_activeProfile = nullptr;
+	System::DeviceProfile m_fallbackProfile; ///< Used if no matching profile found
 
 	static const std::string NVS_NAMESPACE_PINS;
 	static const std::string NVS_NAMESPACE_TOUCH;
 };
 
-} // namespace System::Services
+} // namespace flx::services

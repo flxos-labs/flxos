@@ -16,7 +16,7 @@ static constexpr const char* TAG = "DisplayManager";
 
 namespace System {
 
-const Services::ServiceManifest DisplayManager::serviceManifest = {
+const flx::services::ServiceManifest DisplayManager::serviceManifest = {
 	.serviceId = "com.flxos.display",
 	.serviceName = "Display",
 	.dependencies = {"com.flxos.settings"},
@@ -24,7 +24,7 @@ const Services::ServiceManifest DisplayManager::serviceManifest = {
 	.required = true,
 	.autoStart = true,
 	.guiRequired = false,
-	.capabilities = Services::ServiceCapability::Display,
+	.capabilities = flx::services::ServiceCapability::Display,
 	.description = "Display brightness, rotation, and FPS monitoring",
 };
 

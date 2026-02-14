@@ -71,7 +71,7 @@ static std::string resolvePath(const std::string& base, const std::string& part)
 
 namespace System {
 
-const Services::ServiceManifest CliService::serviceManifest = {
+const flx::services::ServiceManifest CliService::serviceManifest = {
 	.serviceId = "com.flxos.cli",
 	.serviceName = "CLI",
 	.dependencies = {},
@@ -79,7 +79,7 @@ const Services::ServiceManifest CliService::serviceManifest = {
 	.required = false,
 	.autoStart = false,
 	.guiRequired = false,
-	.capabilities = Services::ServiceCapability::None,
+	.capabilities = flx::services::ServiceCapability::None,
 	.description = "Interactive serial console CLI",
 };
 
@@ -90,7 +90,7 @@ CliService& CliService::getInstance() {
 
 // Command: sysinfo - Display system information
 static int cmdSysInfo(int /*argc*/, char** /*argv*/) {
-	auto& sys_info = Services::SystemInfoService::getInstance();
+	auto& sys_info = flx::services::SystemInfoService::getInstance();
 	auto sys_stats = sys_info.getSystemStats();
 	auto mem_stats = sys_info.getMemoryStats();
 
@@ -110,7 +110,7 @@ static int cmdSysInfo(int /*argc*/, char** /*argv*/) {
 
 // Command: heap - Display heap memory statistics
 static int cmdHeap(int /*argc*/, char** /*argv*/) {
-	auto& sys_info = Services::SystemInfoService::getInstance();
+	auto& sys_info = flx::services::SystemInfoService::getInstance();
 	auto mem_stats = sys_info.getMemoryStats();
 
 	printf("\n=== Heap Memory ===\n");
@@ -143,7 +143,7 @@ static int cmdUptime(int /*argc*/, char** /*argv*/) {
 
 // Command: tasks - List FreeRTOS tasks
 static int cmdTasks(int /*argc*/, char** /*argv*/) {
-	auto& sys_info = Services::SystemInfoService::getInstance();
+	auto& sys_info = flx::services::SystemInfoService::getInstance();
 	auto task_list = sys_info.getTaskList();
 
 	printf("\n=== Task List (%zu tasks) ===\n", task_list.size());
@@ -159,7 +159,7 @@ static int cmdTasks(int /*argc*/, char** /*argv*/) {
 
 // Command: storage - Display filesystem usage
 static int cmdStorage(int /*argc*/, char** /*argv*/) {
-	auto& sys_info = Services::SystemInfoService::getInstance();
+	auto& sys_info = flx::services::SystemInfoService::getInstance();
 	auto storage_stats = sys_info.getStorageStats();
 
 	printf("\n=== Storage Statistics ===\n");
@@ -169,7 +169,7 @@ static int cmdStorage(int /*argc*/, char** /*argv*/) {
 		printf("%-10s %-12s %-12s %-12s\n", "Partition", "Total", "Used", "Free");
 		printf("--------------------------------------------------\n");
 		for (const auto& stat: storage_stats) {
-			printf("%-10s %-12s %-12s %-12s\n", stat.name.c_str(), Services::SystemInfoService::formatBytes(stat.totalBytes).c_str(), Services::SystemInfoService::formatBytes(stat.usedBytes).c_str(), Services::SystemInfoService::formatBytes(stat.freeBytes).c_str());
+			printf("%-10s %-12s %-12s %-12s\n", stat.name.c_str(), flx::services::SystemInfoService::formatBytes(stat.totalBytes).c_str(), flx::services::SystemInfoService::formatBytes(stat.usedBytes).c_str(), flx::services::SystemInfoService::formatBytes(stat.freeBytes).c_str());
 		}
 	}
 	printf("==========================\n\n");
@@ -178,16 +178,16 @@ static int cmdStorage(int /*argc*/, char** /*argv*/) {
 
 // Command: psram - Display PSRAM statistics
 static int cmdPsram(int /*argc*/, char** /*argv*/) {
-	auto& sys_info = Services::SystemInfoService::getInstance();
+	auto& sys_info = flx::services::SystemInfoService::getInstance();
 	auto mem_stats = sys_info.getMemoryStats();
 
 	printf("\n=== PSRAM Statistics ===\n");
 	if (!mem_stats.hasPsram) {
 		printf("PSRAM not detected or disabled.\n");
 	} else {
-		printf("Total PSRAM:    %u bytes (%s)\n", (unsigned int)mem_stats.totalPsram, Services::SystemInfoService::formatBytes(mem_stats.totalPsram).c_str());
-		printf("Free PSRAM:     %u bytes (%s)\n", (unsigned int)mem_stats.freePsram, Services::SystemInfoService::formatBytes(mem_stats.freePsram).c_str());
-		printf("Used PSRAM:     %u bytes (%s)\n", (unsigned int)mem_stats.usedPsram, Services::SystemInfoService::formatBytes(mem_stats.usedPsram).c_str());
+		printf("Total PSRAM:    %u bytes (%s)\n", (unsigned int)mem_stats.totalPsram, flx::services::SystemInfoService::formatBytes(mem_stats.totalPsram).c_str());
+		printf("Free PSRAM:     %u bytes (%s)\n", (unsigned int)mem_stats.freePsram, flx::services::SystemInfoService::formatBytes(mem_stats.freePsram).c_str());
+		printf("Used PSRAM:     %u bytes (%s)\n", (unsigned int)mem_stats.usedPsram, flx::services::SystemInfoService::formatBytes(mem_stats.usedPsram).c_str());
 		printf("Usage:          %d%%\n", mem_stats.usagePercentPsram);
 	}
 	printf("========================\n\n");
@@ -196,7 +196,7 @@ static int cmdPsram(int /*argc*/, char** /*argv*/) {
 
 // Command: version - Display version information
 static int cmdVersion(int /*argc*/, char** /*argv*/) {
-	auto& sys_info = Services::SystemInfoService::getInstance();
+	auto& sys_info = flx::services::SystemInfoService::getInstance();
 	auto sys_stats = sys_info.getSystemStats();
 
 	printf("\n=== Version Information ===\n");
@@ -210,7 +210,7 @@ static int cmdVersion(int /*argc*/, char** /*argv*/) {
 
 // Command: chip - Display chip information
 static int cmdChip(int /*argc*/, char** /*argv*/) {
-	auto& sys_info = Services::SystemInfoService::getInstance();
+	auto& sys_info = flx::services::SystemInfoService::getInstance();
 	auto sys_stats = sys_info.getSystemStats();
 
 	printf("\n=== Chip Information ===\n");
@@ -227,7 +227,7 @@ static int cmdChip(int /*argc*/, char** /*argv*/) {
 // WiFi Helpers
 static int cmdWiFiStatus() {
 	auto& wifi_mgr = System::WiFiManager::getInstance();
-	auto wifi_stats = Services::SystemInfoService::getInstance().getWiFiStats();
+	auto wifi_stats = flx::services::SystemInfoService::getInstance().getWiFiStats();
 	printf("\n=== WiFi Status ===\n");
 	printf("State:          %s\n", wifi_mgr.isEnabled() ? "Enabled" : "Disabled");
 	printf("Connected:      %s\n", wifi_stats.connected ? "Yes" : "No");
@@ -373,7 +373,7 @@ static int cmdHotspot(int argc, char** argv) {
 
 // Command: ls - List directory contents
 static int cmdLs(int argc, char** argv) {
-	auto& fs = Services::FileSystemService::getInstance();
+	auto& fs = flx::services::FileSystemService::getInstance();
 	auto& cli = CliService::getInstance();
 
 	std::string path;
@@ -397,7 +397,7 @@ static int cmdLs(int argc, char** argv) {
 		printf("%-20s %-8s %-10s\n", "Name", "Type", "Size");
 		printf("----------------------------------------\n");
 		for (const auto& entry: entries) {
-			printf("%-20s %-8s %s\n", entry.name.c_str(), entry.isDirectory ? "DIR" : "FILE", entry.isDirectory ? "-" : Services::SystemInfoService::formatBytes(entry.size).c_str());
+			printf("%-20s %-8s %s\n", entry.name.c_str(), entry.isDirectory ? "DIR" : "FILE", entry.isDirectory ? "-" : flx::services::SystemInfoService::formatBytes(entry.size).c_str());
 		}
 	}
 	printf("========================\n\n");
@@ -433,7 +433,7 @@ static int cmdMkdir(int argc, char** argv) {
 		printf("Usage: mkdir <path>\n");
 		return 1;
 	}
-	auto& fs = Services::FileSystemService::getInstance();
+	auto& fs = flx::services::FileSystemService::getInstance();
 	auto& cli = CliService::getInstance();
 	std::string path = resolvePath(cli.getCurrentDirectory(), argv[1]);
 
@@ -451,7 +451,7 @@ static int cmdRm(int argc, char** argv) {
 		printf("Usage: rm <path>\n");
 		return 1;
 	}
-	auto& fs = Services::FileSystemService::getInstance();
+	auto& fs = flx::services::FileSystemService::getInstance();
 	auto& cli = CliService::getInstance();
 	std::string path = resolvePath(cli.getCurrentDirectory(), argv[1]);
 

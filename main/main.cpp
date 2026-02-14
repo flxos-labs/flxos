@@ -10,7 +10,7 @@
 #endif
 
 #if CONFIG_FLXOS_CLI_ENABLED
-#include "core/services/ServiceRegistry.hpp"
+#include <flx/services/ServiceRegistry.hpp>
 #include "core/services/cli/CliService.hpp"
 #include <memory>
 #endif
@@ -28,8 +28,8 @@ extern "C" void app_main(void) {
 #if CONFIG_FLXOS_CLI_ENABLED
 	// CLI is autoStart=false, so start it explicitly
 	auto noDelete = [](auto*) {};
-	auto& registry = System::Services::ServiceRegistry::getInstance();
-	registry.addService(std::shared_ptr<System::Services::IService>(&System::CliService::getInstance(), noDelete));
+	auto& registry = flx::services::ServiceRegistry::getInstance();
+	registry.addService(std::shared_ptr<flx::services::IService>(&System::CliService::getInstance(), noDelete));
 	System::CliService::getInstance().start();
 #endif
 
