@@ -82,7 +82,7 @@ void SettingsManager::registerSetting(const std::string& key, flx::StringObserva
 	m_registeredSettings[key] = {Setting::Type::STRING, &observable};
 
 	// Subscribe to changes to trigger save
-	observable.subscribe([this](const char*) {
+	observable.subscribe([this](const std::string&) {
 		this->triggerSave();
 	});
 
@@ -137,8 +137,8 @@ void SettingsManager::saveSettings() {
 			cJSON_AddNumberToObject(json, key.c_str(), obs->get());
 		} else {
 			auto* obs = (flx::StringObservable*)setting.observable;
-			const char* val = obs->get();
-			cJSON_AddStringToObject(json, key.c_str(), val ? val : "");
+			std::string val = obs->get();
+			cJSON_AddStringToObject(json, key.c_str(), val.c_str());
 		}
 	}
 

@@ -69,10 +69,10 @@ bool ConnectivityManager::onStart() {
 		setWiFiEnabled(true);
 
 		if (hasSavedWiFiCredentials()) {
-			const char* saved_ssid = m_saved_wifi_ssid_subject.get();
-			const char* saved_pass = m_saved_wifi_password_subject.get();
-			Log::info(TAG, "Auto-connecting to saved network: %s", saved_ssid);
-			WiFiManager::getInstance().connect(saved_ssid, saved_pass);
+			std::string saved_ssid = m_saved_wifi_ssid_subject.get();
+			std::string saved_pass = m_saved_wifi_password_subject.get();
+			Log::info(TAG, "Auto-connecting to saved network: %s", saved_ssid.c_str());
+			WiFiManager::getInstance().connect(saved_ssid.c_str(), saved_pass.c_str());
 		}
 	}
 
@@ -224,8 +224,8 @@ void ConnectivityManager::clearSavedWiFiCredentials() {
 }
 
 bool ConnectivityManager::hasSavedWiFiCredentials() const {
-	const char* ssid = m_saved_wifi_ssid_subject.get();
-	return ssid != nullptr && ssid[0] != '\0';
+	std::string ssid = m_saved_wifi_ssid_subject.get();
+	return !ssid.empty();
 }
 
 } // namespace System

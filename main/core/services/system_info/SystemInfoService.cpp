@@ -331,8 +331,8 @@ WiFiStats SystemInfoService::getWiFiStats() {
 		}
 
 		// Retrieve IP address from ConnectivityManager
-		const char* ip = System::ConnectivityManager::getInstance().getWiFiIpObservable().get();
-		stats.ipAddress = ip ? std::string(ip) : "0.0.0.0";
+		std::string ip = System::ConnectivityManager::getInstance().getWiFiIpObservable().get();
+		stats.ipAddress = !ip.empty() ? ip : "0.0.0.0";
 	}
 
 	return stats;

@@ -1,5 +1,6 @@
 #include "esp_heap_caps.h"
-#include "freertos/projdefs.h"
+
+#include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/ResourceMonitorTask.hpp>

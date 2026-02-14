@@ -81,8 +81,8 @@ void WiFiSettings::createUI() {
 				auto& cm = ConnectivityManager::getInstance();
 				if (cm.hasSavedWiFiCredentials()) {
 					cm.connectWiFi(
-						cm.getSavedWiFiSsid(),
-						cm.getSavedWiFiPassword(),
+						cm.getSavedWiFiSsid().c_str(),
+						cm.getSavedWiFiPassword().c_str(),
 						false // Don't re-save, already saved
 					);
 					// Mark pending auto-scan for when connection completes
