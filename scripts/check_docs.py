@@ -10,6 +10,7 @@ import sys
 from typing import List, Dict
 
 SEARCH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODULE_DIRS = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core'}
 
 def check_file_header(filepath: str) -> bool:
     """Check if file has a header comment."""
@@ -79,10 +80,9 @@ def check_function_docs(filepath: str) -> List[str]:
 def check_readme_presence() -> Dict[str, bool]:
     """Check for README.md in each major module directory."""
     readme_status = {}
-    module_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core'}
     for item in os.listdir(SEARCH_DIR):
         item_path = os.path.join(SEARCH_DIR, item)
-        if os.path.isdir(item_path) and item in module_dirs:
+        if os.path.isdir(item_path) and item in MODULE_DIRS:
             readme_path = os.path.join(item_path, 'README.md')
             readme_status[item] = os.path.exists(readme_path)
     return readme_status
@@ -95,11 +95,9 @@ def main():
     undoc_functions = []
     file_count = 0
     
-    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core'}
-    
     for root, dirs, files in os.walk(SEARCH_DIR):
         if root == SEARCH_DIR:
-             dirs[:] = [d for d in dirs if d in target_dirs]
+             dirs[:] = [d for d in dirs if d in MODULE_DIRS]
 
         for file in files:
             if file.endswith(('.cpp', '.hpp', '.c', '.h')):

@@ -35,13 +35,20 @@ def check_file(filepath: str) -> List[str]:
     except Exception:
         return issues
     
-    # Check class names (exclude namespace declarations)
+    # Check class names (exclude namespace qualifiers and namespace declarations)
     for match in re.finditer(r'\b(?:class|struct)\s+(\w+)', content):
         name = match.group(1)
-        # Skip if this is actually a namespace declaration
+        # Skip if the name is followed by '::' (it's a namespace qualifier, not a class name)
+        end_pos = match.end()
+        if end_pos < len(content) and content[end_pos:end_pos+2] == '::':
+            continue
+        # Skip if this line is a namespace declaration
         line_start = content.rfind('\n', 0, match.start()) + 1
-        line_text = content[line_start:match.start()]
-        if 'namespace' in line_text:
+        line_end = content.find('\n', match.start())
+        if line_end == -1:
+            line_end = len(content)
+        line_text = content[line_start:line_end]
+        if re.match(r'\s*namespace\b', line_text):
             continue
         if not is_pascal_case(name) and name not in ['__attribute__']:
             line_num = content[:match.start()].count('\n') + 1

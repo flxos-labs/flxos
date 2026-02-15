@@ -15,6 +15,6 @@ idf_component_register(
          "Source/services/SystemInfoService.cpp"
          "Source/device/DeviceProfiles.cpp"
     INCLUDE_DIRS Include
-    REQUIRES Core Services Kernel Connectivity wear_levelling esp_timer
+    REQUIRES Core Services Kernel Connectivity wear_levelling esp_timer lvgl
     PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console json
 )

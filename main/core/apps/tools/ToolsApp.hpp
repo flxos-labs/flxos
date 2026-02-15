@@ -15,8 +15,6 @@
 
 namespace System::Apps {
 
-using flx::app::AppManifest;
-
 class ToolsApp : public flx::app::App {
 public:
 
@@ -34,7 +32,7 @@ public:
 	std::string getAppName() const override { return "Tools"; }
 	const void* getIcon() const override { return LV_SYMBOL_LIST; }
 
-	static const AppManifest manifest;
+	static const flx::app::AppManifest manifest;
 
 private:
 

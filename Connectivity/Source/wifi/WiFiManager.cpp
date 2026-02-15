@@ -12,6 +12,7 @@
 #include <cstring>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
+#include <string>
 #include <string_view>
 
 static constexpr std::string_view TAG = "WiFiManager";
@@ -261,9 +262,11 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 
 void WiFiManager::handleStaConnected(void* event_data) {
 	auto* event = (wifi_event_sta_connected_t*)event_data;
-	Log::info(TAG, "STA connected to SSID: %s", (char*)event->ssid);
+	// event->ssid is uint8_t[32] and may not be null-terminated; use ssid_len
+	std::string ssid(reinterpret_cast<const char*>(event->ssid), event->ssid_len);
+	Log::info(TAG, "STA connected to SSID: %s", ssid.c_str());
 	if (m_ssid_subject) {
-		m_ssid_subject->set((char*)event->ssid);
+		m_ssid_subject->set(ssid.c_str());
 	}
 }
 
