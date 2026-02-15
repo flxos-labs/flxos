@@ -19,9 +19,11 @@
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
 #include <flx/system/SystemManager.hpp>
+#include <flx/system/managers/DisplayManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/app/AppManager.hpp>
 #include <flx/ui/desktop/Desktop.hpp>
+#include <flx/ui/theming/UiThemeManager.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <string_view>
 
@@ -85,7 +87,73 @@ void GuiTask::run(void* /*data*/) {
 	flx::services::ServiceRegistry::getInstance().initGuiServices();
 	flx::app::AppManager::getInstance().init();
 
+	flx::ui::theming::UiThemeManager::getInstance().init();
 	UI::Desktop::getInstance().init();
+
+	// Initialize brightness from settings
+	auto& displayMgr = flx::system::DisplayManager::getInstance();
+	auto& brightnessObs = displayMgr.getBrightnessObservable();
+
+	// Apply initial value
+	int32_t currentBrightness = brightnessObs.get();
+	auto* tft = getDisplayDriver();
+	if (tft) {
+		tft->setBrightness(currentBrightness);
+	}
+
+	// Subscribe to changes
+	brightnessObs.subscribe([](const int32_t& val) {
+		GuiTask::perform([val]() {
+			auto* tft = getDisplayDriver();
+			if (tft) {
+				tft->setBrightness(val);
+			}
+		});
+	});
+
+	// Initialize rotation from settings
+	auto& rotationObs = displayMgr.getRotationObservable();
+
+	// Apply initial value
+	int32_t currentRotation = rotationObs.get();
+	if (m_disp) {
+		lv_display_set_rotation(m_disp, (lv_display_rotation_t)(currentRotation / 90));
+	}
+
+	// Subscribe to changes
+	rotationObs.subscribe([](const int32_t& val) {
+		GuiTask::perform([val]() {
+			if (m_disp) {
+				lv_display_set_rotation(m_disp, (lv_display_rotation_t)(val / 90));
+			}
+		});
+	});
+
+	// Initialize Show FPS from settings
+	auto& showFpsObs = displayMgr.getShowFpsObservable();
+
+	// Apply initial value
+	int32_t showFps = showFpsObs.get();
+	if (m_disp) {
+		if (showFps) {
+			lv_sysmon_show_performance(m_disp);
+		} else {
+			lv_sysmon_hide_performance(m_disp);
+		}
+	}
+
+	// Subscribe to changes
+	showFpsObs.subscribe([](const int32_t& val) {
+		GuiTask::perform([val]() {
+			if (m_disp) {
+				if (val) {
+					lv_sysmon_show_performance(m_disp);
+				} else {
+					lv_sysmon_hide_performance(m_disp);
+				}
+			}
+		});
+	});
 
 	// Subscribe to GUI control events
 	flx::core::EventBus::getInstance().subscribe("ui.gui.set_paused", [](const std::string& /*event*/, const flx::core::Bundle& data) {

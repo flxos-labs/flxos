@@ -6,7 +6,7 @@
 #include <string>
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
-struct sdmmc_card_t;
+#include "sdmmc_cmd.h"
 #endif
 
 namespace flx::services {

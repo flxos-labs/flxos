@@ -1,9 +1,9 @@
 #pragma once
 
-#include <flx/ui/components/FileBrowser.hpp>
 #include "lvgl.h"
 #include <flx/ui/app/AppManager.hpp>
 #include <flx/ui/app/AppManifest.hpp>
+#include <flx/ui/components/FileBrowser.hpp>
 #include <functional>
 #include <memory>
 #include <string>

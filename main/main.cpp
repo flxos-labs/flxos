@@ -1,17 +1,28 @@
-#include <flx/system/SystemManager.hpp>
 #include "sdkconfig.h"
 #include <flx/core/Compat.hpp> // Namespace compatibility during migration
 #include <flx/core/Logger.hpp>
+#include <flx/system/SystemManager.hpp>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
+#include "font/lv_symbol_def.h"
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/ui/GuiTask.hpp>
-#include "font/lv_symbol_def.h"
+#endif
+
+#if !CONFIG_FLXOS_HEADLESS_MODE
+#include "core/apps/calendar/CalendarApp.hpp"
+#include "core/apps/files/FilesApp.hpp"
+#include "core/apps/image_viewer/ImageViewerApp.hpp"
+#include "core/apps/settings/SettingsApp.hpp"
+#include "core/apps/system_info/SystemInfoApp.hpp"
+#include "core/apps/text_editor/TextEditorApp.hpp"
+#include "core/apps/tools/ToolsApp.hpp"
+#include <flx/ui/app/AppRegistry.hpp>
 #endif
 
 #if CONFIG_FLXOS_CLI_ENABLED
-#include <flx/system/services/CliService.hpp>
 #include <flx/services/ServiceRegistry.hpp>
+#include <flx/system/services/CliService.hpp>
 #include <memory>
 #endif
 
@@ -34,6 +45,16 @@ extern "C" void app_main(void) {
 #endif
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
+	Log::info(TAG, "Registering apps with AppRegistry...");
+	auto& appRegistry = flx::app::AppRegistry::getInstance();
+	appRegistry.addApp(System::Apps::SettingsApp::manifest);
+	appRegistry.addApp(System::Apps::CalendarApp::manifest);
+	appRegistry.addApp(System::Apps::FilesApp::manifest);
+	appRegistry.addApp(System::Apps::ImageViewerApp::manifest);
+	appRegistry.addApp(System::Apps::SystemInfoApp::manifest);
+	appRegistry.addApp(System::Apps::TextEditorApp::manifest);
+	appRegistry.addApp(System::Apps::ToolsApp::manifest);
+
 	Log::info(TAG, "Sending welcome notification");
 	flx::system::NotificationManager::getInstance().addNotification("Welcome", "FlxOS initialized successfully!", "System", LV_SYMBOL_OK, 1);
 

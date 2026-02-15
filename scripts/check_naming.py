@@ -88,7 +88,7 @@ def main():
     all_issues = []
     file_count = 0
     
-    target_dirs = {'main', 'Apps', 'Kernel', 'Services', 'Core'}
+    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core'}
     
     for root, dirs, files in os.walk(SEARCH_DIR):
         if root == SEARCH_DIR:

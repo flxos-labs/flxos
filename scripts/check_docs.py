@@ -9,7 +9,7 @@ import re
 import sys
 from typing import List, Dict
 
-SEARCH_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'main')
+SEARCH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def check_file_header(filepath: str) -> bool:
     """Check if file has a header comment."""
@@ -94,7 +94,12 @@ def main():
     undoc_functions = []
     file_count = 0
     
-    for root, _, files in os.walk(SEARCH_DIR):
+    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core'}
+    
+    for root, dirs, files in os.walk(SEARCH_DIR):
+        if root == SEARCH_DIR:
+             dirs[:] = [d for d in dirs if d in target_dirs]
+
         for file in files:
             if file.endswith(('.cpp', '.hpp', '.c', '.h')):
                 filepath = os.path.join(root, file)

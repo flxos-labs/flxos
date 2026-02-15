@@ -1,11 +1,11 @@
-#include <flx/ui/theming/themes/Themes.hpp>
 #include "core/lv_obj.h"
-#include <flx/ui/keyboard/VirtualKeyboard.hpp>
 #include "misc/lv_color.h"
 #include "misc/lv_palette.h"
 #include "misc/lv_types.h"
 #include "widgets/textarea/lv_textarea.h"
 #include <flx/core/Logger.hpp>
+#include <flx/ui/keyboard/VirtualKeyboard.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "Themes";

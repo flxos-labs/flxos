@@ -42,4 +42,4 @@ private:
 	void setCompileTime();
 };
 
-} // namespace System
+} // namespace flx::system

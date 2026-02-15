@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
+#include <flx/ui/LvglObserverBridge.hpp>
+#include <memory>
 
 namespace flx::ui::theming {
 
@@ -26,13 +28,11 @@ private:
 	~UiThemeManager();
 
 	// LVGL subjects (integers)
-	lv_subject_t m_theme_subject;
-	lv_subject_t m_glass_enabled_subject;
-	lv_subject_t m_transparency_enabled_subject;
-	lv_subject_t m_wallpaper_enabled_subject;
-
-	// Helper to sync Flx Observable -> LVGL Subject
-	void syncFromSystem(int32_t value, lv_subject_t* subject);
+	// LVGL Bridges
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_theme_bridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_glass_enabled_bridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_transparency_enabled_bridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wallpaper_enabled_bridge;
 };
 
 } // namespace flx::ui::theming

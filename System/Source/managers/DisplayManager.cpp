@@ -36,15 +36,15 @@ void DisplayManager::onStop() {
 }
 
 void DisplayManager::applyBrightness(int32_t val) {
-	// Hardware control via HAL/UI will be implemented later
+	// Hardware control is handled by GuiTask via subscription to m_brightness_subject
 }
 
 void DisplayManager::applyRotation(int32_t rot) {
-	// Hardware control via HAL/UI will be implemented later
+	// Hardware control is handled by GuiTask via subscription to m_rotation_subject
 }
 
 void DisplayManager::applyShowFps(int32_t show) {
-	// FPS monitoring via UI will be implemented later
+	// FPS monitoring is handled by GuiTask via subscription to m_show_fps_subject
 }
 
 } // namespace flx::system

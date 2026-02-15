@@ -1,8 +1,8 @@
 #pragma once
 #include "core/apps/settings/SettingsPageBase.hpp"
-#include <flx/ui/LvglObserverBridge.hpp>
 #include "lvgl.h"
 #include <cstring>
+#include <flx/ui/LvglObserverBridge.hpp>
 #include <functional>
 #include <memory>
 #include <string>
@@ -53,7 +53,7 @@ private:
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_uploadSpeedBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_downloadSpeedBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_uptimeBridge;
- 
+
 	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_ssidBridge;
 	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_passwordBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_channelBridge;

@@ -97,7 +97,7 @@ private:
 
 			lv_obj_t* hotspotBtn =
 				add_list_btn(m_mainList, LV_SYMBOL_WIFI,
-									   "Hotspot"); // LV_SYMBOL_WIFI is used for
+							 "Hotspot"); // LV_SYMBOL_WIFI is used for
 			// hotspot too if no specific one
 			lv_obj_add_event_cb(
 				hotspotBtn,

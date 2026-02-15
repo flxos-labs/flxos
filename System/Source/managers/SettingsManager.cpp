@@ -1,4 +1,3 @@
-#include <flx/system/managers/SettingsManager.hpp>
 #include "cJSON.h"
 #include "esp_timer.h"
 #include <cstdint>
@@ -6,6 +5,7 @@
 #include <cstdlib>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
+#include <flx/system/managers/SettingsManager.hpp>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -166,4 +166,4 @@ void SettingsManager::saveSettings() {
 	cJSON_Delete(json);
 }
 
-} // namespace System
+} // namespace flx::system

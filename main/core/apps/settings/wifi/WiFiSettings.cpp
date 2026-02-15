@@ -6,9 +6,6 @@
 #include "core/lv_obj_style_gen.h"
 #include "core/lv_obj_tree.h"
 #include "core/lv_observer.h"
-#include <flx/ui/GuiTask.hpp>
-#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
-#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include "display/lv_display.h"
 #include "esp_err.h"
 #include "esp_wifi.h"
@@ -28,7 +25,10 @@
 #include "widgets/textarea/lv_textarea.h"
 #include <algorithm>
 #include <cstdint>
+#include <flx/ui/GuiTask.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
 using namespace flx::ui;
 using namespace flx::ui::common;

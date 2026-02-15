@@ -185,7 +185,18 @@ void QuickAccessPanel::buildToggles() {
 				lv_obj_set_width(m_themeLabel, lv_pct(100));
 				lv_label_set_long_mode(m_themeLabel, LV_LABEL_LONG_SCROLL_CIRCULAR);
 				lv_obj_set_style_text_align(m_themeLabel, LV_TEXT_ALIGN_CENTER, 0);
-				lv_label_bind_text(m_themeLabel, uiTheme.getThemeSubject(), "%d");
+
+				lv_subject_add_observer_obj(
+					uiTheme.getThemeSubject(),
+					[](lv_observer_t* observer, lv_subject_t* subject) {
+						lv_obj_t* label = lv_observer_get_target_obj(observer);
+						if (label && subject) {
+							ThemeType theme = (ThemeType)lv_subject_get_int(subject);
+							lv_label_set_text(label, Themes::ToString(theme));
+						}
+					},
+					m_themeLabel, nullptr
+				);
 			}
 		}
 	}

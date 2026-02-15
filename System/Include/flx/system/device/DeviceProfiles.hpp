@@ -41,4 +41,4 @@ private:
 	DeviceProfiles() = delete; // Static only
 };
 
-} // namespace System
+} // namespace flx::system

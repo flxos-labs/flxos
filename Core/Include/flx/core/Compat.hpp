@@ -26,4 +26,4 @@ using flx::Observable;
 using flx::Result;
 using flx::Singleton;
 using flx::StringObservable;
-} // namespace System
+} // namespace flx::system

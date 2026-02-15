@@ -1,7 +1,7 @@
 #pragma once
 
-#include <flx/system/services/SystemInfoService.hpp>
 #include "lvgl.h"
+#include <flx/system/services/SystemInfoService.hpp>
 #include <flx/ui/app/AppManager.hpp>
 #include <flx/ui/app/AppManifest.hpp>
 #include <vector>

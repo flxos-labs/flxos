@@ -120,5 +120,8 @@ void ThemeEngine::apply_theme(ThemeType theme, lv_display_t* disp) {
 	engine_themes[disp] = new_themes_vec;
 
 	lv_obj_report_style_change(nullptr);
+	lv_obj_invalidate(lv_screen_active());
+	lv_obj_invalidate(lv_layer_top());
+	lv_obj_invalidate(lv_layer_sys());
 	GuiTask::unlock();
 }

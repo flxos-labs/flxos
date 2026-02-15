@@ -1,10 +1,10 @@
 #pragma once
 #include "core/apps/settings/SettingsPageBase.hpp"
-#include <flx/ui/LvglObserverBridge.hpp>
 #include "esp_timer.h"
 #include "esp_wifi.h"
 #include "lvgl.h"
 #include <cstring>
+#include <flx/ui/LvglObserverBridge.hpp>
 #include <memory>
 #include <string>
 #include <vector>

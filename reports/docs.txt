@@ -1,50 +1,69 @@
 === FlxOS Documentation Coverage Check ===
 
-⚠️  Files Without Headers (84):
-  main.cpp
-  hal/os/lv_os_custom.c
-  hal/display/lv_lgfx_user.hpp
-  core/connectivity/ConnectivityManager.hpp
-  core/connectivity/ConnectivityManager.cpp
-  core/connectivity/hotspot/HotspotManager.cpp
-  core/connectivity/hotspot/HotspotManager.hpp
-  core/connectivity/wifi/WiFiManager.hpp
-  core/connectivity/wifi/WiFiManager.cpp
-  core/connectivity/bluetooth/BluetoothManager.hpp
+⚠️  Files Without Headers (134):
+  System/Include/flx/system/SystemManager.hpp
+  System/Include/flx/system/services/DeviceProfileService.hpp
+  System/Include/flx/system/services/ScreenshotService.hpp
+  System/Include/flx/system/services/SdCardService.hpp
+  System/Include/flx/system/services/SystemInfoService.hpp
+  System/Include/flx/system/services/CliService.hpp
+  System/Include/flx/system/services/FileSystemService.hpp
+  System/Include/flx/system/device/DeviceProfile.hpp
+  System/Include/flx/system/device/DeviceProfiles.hpp
+  System/Include/flx/system/managers/NotificationManager.hpp
 
-📝 TODO/FIXME Comments (4):
-  TODO: 1, FIXME: 0, HACK/XXX: 3
+📝 TODO/FIXME Comments (6):
+  TODO: 2, FIXME: 0, HACK/XXX: 4
 
   Recent items:
-    [XXX] hal/display/lv_lgfx_user.hpp:105: )
-    [XXX] hal/display/lv_lgfx_user.hpp:123: )
-    [XXX] hal/display/lv_lgfx_user.hpp:124: 
-    [TODO] core/services/cli/CliService.cpp:446: Add confirmation?
+    [XXX] System/Source/services/DeviceProfileService.cpp:274: "}, // Hynitron capacitive touch
+    [TODO] System/Source/services/CliService.cpp:459: Add confirmation?
+    [XXX] main/hal/display/lv_lgfx_user.hpp:105: )
+    [XXX] main/hal/display/lv_lgfx_user.hpp:123: )
+    [XXX] main/hal/display/lv_lgfx_user.hpp:124: 
+    [TODO] Kernel/Source/ResourceMonitorTask.cpp:37: Implement self-updating mechanism in PowerManager or use Eve
 
-⚠️  Undocumented Public Functions (161):
-  core/connectivity/ConnectivityManager.hpp:32: 'getWifiMutex' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:49: 'getHotspotClientsList' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:63: 'getWiFiEnabledObservable' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:64: 'getWiFiStatusObservable' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:65: 'getWiFiConnectedObservable' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:66: 'getWiFiSsidObservable' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:67: 'getWiFiIpObservable' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:68: 'getHotspotEnabledObservable' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:69: 'getHotspotClientsObservable' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:70: 'getHotspotUsageSentSubject' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:71: 'getHotspotUsageReceivedSubject' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:72: 'getHotspotUploadSpeedSubject' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:73: 'getHotspotDownloadSpeedSubject' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:74: 'getHotspotUptimeSubject' lacks documentation
-  core/connectivity/ConnectivityManager.hpp:75: 'getBluetoothEnabledObservable' lacks documentation
+⚠️  Undocumented Public Functions (260):
+  System/Include/flx/system/SystemManager.hpp:20: 'getUptimeObservable' lacks documentation
+  System/Include/flx/system/SystemManager.hpp:21: 'isSafeMode' lacks documentation
+  System/Include/flx/system/services/DeviceProfileService.hpp:35: 'getManifest' lacks documentation
+  System/Include/flx/system/services/DeviceProfileService.hpp:37: 'onStart' lacks documentation
+  System/Include/flx/system/services/DeviceProfileService.hpp:38: 'onStop' lacks documentation
+  System/Include/flx/system/services/ScreenshotService.hpp:26: 'getManifest' lacks documentation
+  System/Include/flx/system/services/ScreenshotService.hpp:28: 'onStart' lacks documentation
+  System/Include/flx/system/services/ScreenshotService.hpp:29: 'onStop' lacks documentation
+  System/Include/flx/system/services/SdCardService.hpp:21: 'getManifest' lacks documentation
+  System/Include/flx/system/services/SdCardService.hpp:24: 'onStart' lacks documentation
+  System/Include/flx/system/services/SdCardService.hpp:25: 'onStop' lacks documentation
+  System/Include/flx/system/services/SdCardService.hpp:27: 'isMounted' lacks documentation
+  System/Include/flx/system/services/SdCardService.hpp:28: 'getMountPoint' lacks documentation
+  System/Include/flx/system/services/CliService.hpp:24: 'getManifest' lacks documentation
+  System/Include/flx/system/services/CliService.hpp:27: 'onStart' lacks documentation
 
 📁 Module README Status:
-  ✅ core/README.md
-  ❌ hal/README.md
+  ❌ .cache/README.md
+  ❌ .devcontainer/README.md
+  ❌ .git/README.md
+  ❌ .github/README.md
+  ❌ .vscode/README.md
+  ❌ Buildscripts/README.md
+  ❌ Connectivity/README.md
+  ❌ Core/README.md
+  ❌ Kernel/README.md
+  ❌ Services/README.md
+  ❌ System/README.md
+  ❌ UI/README.md
+  ❌ assets/README.md
+  ❌ build/README.md
+  ❌ components/README.md
+  ❌ main/README.md
+  ❌ reports/README.md
+  ❌ scripts/README.md
+  ❌ simulator/README.md
 
 === Summary ===
-Files checked: 84
-Files without headers: 84
-TODO/FIXME comments: 4
-Undocumented functions: 161
-Missing READMEs: 1
+Files checked: 134
+Files without headers: 134
+TODO/FIXME comments: 6
+Undocumented functions: 260
+Missing READMEs: 19

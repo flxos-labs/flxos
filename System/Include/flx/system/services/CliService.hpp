@@ -49,4 +49,4 @@ private:
 	std::string m_currentDirectory = "/";
 };
 
-} // namespace System
+} // namespace flx::system

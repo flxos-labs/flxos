@@ -6,7 +6,6 @@
 #include "core/lv_obj_style_gen.h"
 #include "core/lv_obj_tree.h"
 #include "core/lv_refr.h"
-#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include "display/lv_display.h"
 #include "esp_timer.h"
 #include "font/lv_symbol_def.h"
@@ -36,6 +35,7 @@
 #include <flx/ui/app/AppManager.hpp>
 #include <flx/ui/app/AppManifest.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "FilesApp";
