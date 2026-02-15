@@ -252,7 +252,7 @@ void FilesApp::refreshList() {
 	// Use FileSystemService to list directory
 	Log::info(TAG, "Listing directory: %s", m_currentPath.c_str());
 	auto entries = flx::services::FileSystemService::getInstance().listDirectory(m_currentPath);
-	Log::info(TAG, "Found %d entries", entries.size());
+	Log::info(TAG, "Found %zu entries", entries.size());
 
 	if (entries.empty()) {
 		lv_list_add_text(m_list, "Empty directory");

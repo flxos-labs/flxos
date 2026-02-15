@@ -35,14 +35,18 @@ std::string FileSystemService::buildPath(const std::string& base, const std::str
 std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path) {
 	std::vector<FileEntry> entries;
 
+	// Synchronize with GUI task to prevent SPI bus contention if SD is on shared bus
+	flx::core::GuiLock::lock();
+
 	// Special handling for root "A:/" which may not exist as a real directory
 	if (path == "A:/" || path == "A:") {
 		// Check if actual directories exist, otherwise return defaults
-		lv_fs_dir_t dir;
-		lv_fs_res_t res = lv_fs_dir_open(&dir, path.c_str());
+		lv_fs_dir_t rootDir;
+		lv_fs_res_t rootRes = lv_fs_dir_open(&rootDir, path.c_str());
 
-		if (res != LV_FS_RES_OK) {
+		if (rootRes != LV_FS_RES_OK) {
 			Log::warn(TAG, "Failed to open root A:/, returning defaults");
+			flx::core::GuiLock::unlock();
 			// Return default directories
 			entries.push_back({"system", true, 0});
 			entries.push_back({"data", true, 0});
@@ -53,11 +57,8 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 #endif
 			return entries;
 		}
-		lv_fs_dir_close(&dir);
+		lv_fs_dir_close(&rootDir);
 	}
-
-	// Synchronize with GUI task to prevent SPI bus contention if SD is on shared bus
-	flx::core::GuiLock::lock();
 
 	lv_fs_dir_t dir;
 	Log::info(TAG, "Opening LVGL directory: %s", path.c_str());
@@ -74,9 +75,9 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 	int count = 0;
 	Log::info(TAG, "Starting directory read loop");
 	while (true) {
-		lv_fs_res_t res = lv_fs_dir_read(&dir, fn, sizeof(fn));
-		if (res != LV_FS_RES_OK) {
-			Log::info(TAG, "End of directory or error (res=%d)", res);
+		lv_fs_res_t readRes = lv_fs_dir_read(&dir, fn, sizeof(fn));
+		if (readRes != LV_FS_RES_OK) {
+			Log::info(TAG, "End of directory or error (res=%d)", readRes);
 			break;
 		}
 
