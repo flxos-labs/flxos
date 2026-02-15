@@ -67,6 +67,12 @@ void GuiTask::display_init() {
 		vTaskDelete(nullptr);
 		return;
 	}
+
+	// Release the bus lock that lv_lovyan_gfx_create leaves open
+	auto* tft = getDisplayDriver();
+	if (tft) {
+		tft->endWrite();
+	}
 	Log::info("GuiTask", "Display initialized: %dx%d", CONFIG_FLXOS_DISPLAY_WIDTH, CONFIG_FLXOS_DISPLAY_HEIGHT);
 	lv_display_set_rotation(
 		disp, (lv_display_rotation_t)(CONFIG_FLXOS_DISPLAY_ROTATION / 90)
