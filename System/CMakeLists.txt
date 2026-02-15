@@ -1,3 +1,9 @@
+# Set component requirements based on build mode
+set(SYSTEM_REQUIRES Core Services Kernel Connectivity wear_levelling esp_timer)
+if(NOT CONFIG_FLXOS_HEADLESS_MODE)
+    list(APPEND SYSTEM_REQUIRES lvgl)
+endif()
+
 idf_component_register(
     SRCS "Source/SystemManager.cpp"
          "Source/managers/SettingsManager.cpp"
@@ -15,6 +21,6 @@ idf_component_register(
          "Source/services/SystemInfoService.cpp"
          "Source/device/DeviceProfiles.cpp"
     INCLUDE_DIRS Include
-    REQUIRES Core Services Kernel Connectivity wear_levelling esp_timer lvgl
+    REQUIRES ${SYSTEM_REQUIRES}
     PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console json
 )

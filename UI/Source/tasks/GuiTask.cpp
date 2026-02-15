@@ -28,7 +28,7 @@
 #include <string_view>
 
 static constexpr std::string_view TAG = "GuiTask";
-#include "hal/display/lv_lgfx_user.hpp"
+#include "lv_lgfx_user.hpp"
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
 
 namespace flx::ui {

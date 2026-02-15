@@ -32,6 +32,7 @@ NotificationPanel::NotificationPanel(lv_obj_t* parent, lv_obj_t* statusBar)
 }
 
 NotificationPanel::~NotificationPanel() {
+	*m_alive = false;
 	flx::system::NotificationManager::getInstance().getUpdateObservable().unsubscribe(m_observerId);
 }
 
@@ -74,10 +75,13 @@ void NotificationPanel::create() {
 	lv_obj_set_style_pad_all(m_list, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 	lv_obj_set_style_pad_row(m_list, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 
+	std::weak_ptr<bool> weak_alive = m_alive;
 	m_observerId = flx::system::NotificationManager::getInstance().getUpdateObservable().subscribe(
-		[this](int32_t) {
-			flx::ui::GuiTask::perform([this] {
-				this->update_list();
+		[this, weak_alive](int32_t) {
+			flx::ui::GuiTask::perform([this, weak_alive] {
+				if (auto alive = weak_alive.lock(); alive && *alive) {
+					this->update_list();
+				}
 			});
 		}
 	);

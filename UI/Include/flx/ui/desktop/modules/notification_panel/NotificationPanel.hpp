@@ -1,5 +1,6 @@
 #pragma once
 #include "lvgl.h"
+#include <memory>
 #include <string>
 
 namespace UI::Modules {
@@ -27,6 +28,7 @@ private:
 	lv_obj_t* m_list = nullptr;
 	lv_obj_t* m_clearAllBtn = nullptr;
 	size_t m_observerId = 0;
+	std::shared_ptr<bool> m_alive = std::make_shared<bool>(true);
 };
 
 } // namespace UI::Modules
