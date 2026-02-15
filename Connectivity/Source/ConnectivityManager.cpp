@@ -1,5 +1,4 @@
 #include "flx/connectivity/ConnectivityManager.hpp"
-#include "core/system/settings/SettingsManager.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_netif.h"
@@ -11,6 +10,7 @@
 #include "flx/connectivity/wifi/WiFiManager.hpp"
 #include <cstdint>
 #include <flx/core/Logger.hpp>
+#include <flx/system/managers/SettingsManager.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "Connectivity";
@@ -44,16 +44,16 @@ bool ConnectivityManager::onStart() {
 	BluetoothManager::getInstance().init(&m_bluetooth_enabled_subject);
 
 	// Register config settings for persistence
-	System::SettingsManager::getInstance().registerSetting("hs_ssid", m_hotspot_ssid_subject);
-	System::SettingsManager::getInstance().registerSetting("hs_pass", m_hotspot_password_subject);
-	System::SettingsManager::getInstance().registerSetting("hs_chan", m_hotspot_channel_subject);
-	System::SettingsManager::getInstance().registerSetting("hs_max", m_hotspot_max_conn_subject);
-	System::SettingsManager::getInstance().registerSetting("hs_hide", m_hotspot_hidden_subject);
-	System::SettingsManager::getInstance().registerSetting("hs_auth", m_hotspot_auth_subject);
-	System::SettingsManager::getInstance().registerSetting("wifi_autostart", m_wifi_autostart_subject);
-	System::SettingsManager::getInstance().registerSetting("wifi_scan_int", m_wifi_scan_interval_subject);
-	System::SettingsManager::getInstance().registerSetting("wifi_ssid", m_saved_wifi_ssid_subject);
-	System::SettingsManager::getInstance().registerSetting("wifi_pass", m_saved_wifi_password_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("hs_ssid", m_hotspot_ssid_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("hs_pass", m_hotspot_password_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("hs_chan", m_hotspot_channel_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("hs_max", m_hotspot_max_conn_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("hs_hide", m_hotspot_hidden_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("hs_auth", m_hotspot_auth_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("wifi_autostart", m_wifi_autostart_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("wifi_scan_int", m_wifi_scan_interval_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("wifi_ssid", m_saved_wifi_ssid_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("wifi_pass", m_saved_wifi_password_subject);
 
 	ESP_ERROR_CHECK(setWifiMode(WIFI_MODE_NULL));
 	Log::info(TAG, "Connectivity service started");

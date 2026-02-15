@@ -1,7 +1,7 @@
 #pragma once
 
-#include "SettingsCommon.hpp"
 #include "lvgl.h"
+#include <flx/ui/common/SettingsCommon.hpp>
 #include <functional>
 
 namespace System::Apps::Settings {

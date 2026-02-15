@@ -1,20 +1,22 @@
 #include "Calculator.hpp"
-#include "../../ui/theming/layout_constants/LayoutConstants.hpp"
-#include "../../ui/theming/ui_constants/UiConstants.hpp"
-#include "core/apps/settings/SettingsCommon.hpp"
 #include <cmath>
 #include <cstdio>
+#include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
+
+using namespace flx::ui::common;
 
 namespace System::Apps::Tools {
 
 void Calculator::createView(lv_obj_t* parent, std::function<void()> onBack) {
-	m_view = Settings::create_page_container(parent);
+	m_view = create_page_container(parent);
 
 	lv_obj_t* backBtn = nullptr;
-	Settings::create_header(m_view, "Calculator", &backBtn);
+	create_header(m_view, "Calculator", &backBtn);
 
 	m_onBack = onBack;
-	Settings::add_back_button_event_cb(backBtn, &m_onBack);
+	add_back_button_event_cb(backBtn, &m_onBack);
 
 	// Content area
 	lv_obj_t* content = lv_obj_create(m_view);

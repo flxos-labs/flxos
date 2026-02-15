@@ -1,13 +1,13 @@
 #pragma once
 
-#include "core/apps/settings/SettingsCommon.hpp"
-#include "core/services/filesystem/FileSystemService.hpp"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lvgl.h"
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
 #include <flx/core/ClipboardManager.hpp>
+#include <flx/system/services/FileSystemService.hpp>
+#include <flx/ui/app/AppManager.hpp>
+#include <flx/ui/app/AppManifest.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
 #include <functional>
 #include <memory>
 #include <stack>
@@ -16,14 +16,14 @@
 
 namespace System::Apps {
 
-class FilesApp : public flx::apps::App {
+class FilesApp : public flx::app::App {
 public:
 
 	std::string getPackageName() const override;
 	std::string getAppName() const override;
 	const void* getIcon() const override;
 
-	static const flx::apps::AppManifest manifest;
+	static const flx::app::AppManifest manifest;
 
 	void createUI(void* parent) override;
 	void onStop() override;

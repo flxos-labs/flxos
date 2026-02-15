@@ -1,5 +1,4 @@
 #include "WiFiSettings.hpp"
-#include "core/apps/settings/SettingsCommon.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_pos.h"
@@ -7,9 +6,9 @@
 #include "core/lv_obj_style_gen.h"
 #include "core/lv_obj_tree.h"
 #include "core/lv_observer.h"
-#include "core/tasks/gui/GuiTask.hpp"
-#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
-#include "core/ui/theming/ui_constants/UiConstants.hpp"
+#include <flx/ui/GuiTask.hpp>
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include "display/lv_display.h"
 #include "esp_err.h"
 #include "esp_wifi.h"
@@ -29,6 +28,10 @@
 #include "widgets/textarea/lv_textarea.h"
 #include <algorithm>
 #include <cstdint>
+#include <flx/ui/common/SettingsCommon.hpp>
+
+using namespace flx::ui;
+using namespace flx::ui::common;
 
 namespace System::Apps::Settings {
 
@@ -39,11 +42,11 @@ void WiFiSettings::createUI() {
 	lv_obj_set_style_pad_gap(m_container, 0, 0);
 
 	auto& cm = flx::connectivity::ConnectivityManager::getInstance();
-	m_wifiEnabledBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiEnabledObservable());
-	m_wifiStatusBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiStatusObservable());
-	m_wifiConnectedBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiConnectedObservable());
-	m_wifiScanIntervalBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiScanIntervalObservable());
-	m_wifiAutostartBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiAutostartObservable());
+	m_wifiEnabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiEnabledObservable());
+	m_wifiStatusBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiStatusObservable());
+	m_wifiConnectedBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiConnectedObservable());
+	m_wifiScanIntervalBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiScanIntervalObservable());
+	m_wifiAutostartBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiAutostartObservable());
 
 	lv_obj_t* backBtn = nullptr;
 	lv_obj_t* header = create_header(m_container, "Wi-Fi", &backBtn);
@@ -170,16 +173,16 @@ void WiFiSettings::createUI() {
 				esp_timer_create_args_t timer_args = {
 					.callback = [](void* arg) {
 						auto* inst = static_cast<WiFiSettings*>(arg);
-						GuiTask::lock();
+						flx::ui::GuiTask::lock();
 						if (inst->m_destroying) {
-							GuiTask::unlock();
+							flx::ui::GuiTask::unlock();
 							return;
 						}
 						bool should_scan = flx::connectivity::ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
 						if (should_scan) {
 							inst->refreshScan();
 						}
-						GuiTask::unlock();
+						flx::ui::GuiTask::unlock();
 					},
 					.arg = instance,
 					.dispatch_method = ESP_TIMER_TASK,
@@ -199,16 +202,16 @@ void WiFiSettings::createUI() {
 		esp_timer_create_args_t timer_args = {
 			.callback = [](void* arg) {
 				auto* inst = static_cast<WiFiSettings*>(arg);
-				GuiTask::lock();
+				flx::ui::GuiTask::lock();
 				if (inst->m_destroying) {
-					GuiTask::unlock();
+					flx::ui::GuiTask::unlock();
 					return;
 				}
 				bool should_scan = flx::connectivity::ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
 				if (should_scan) {
 					inst->refreshScan();
 				}
-				GuiTask::unlock();
+				flx::ui::GuiTask::unlock();
 			},
 			.arg = this,
 			.dispatch_method = ESP_TIMER_TASK,
@@ -293,17 +296,17 @@ void WiFiSettings::refreshScan() {
 
 	flx::connectivity::WiFiManager::getInstance().scan(
 		[this](std::vector<wifi_ap_record_t> networks) {
-			GuiTask::lock();
+			flx::ui::GuiTask::lock();
 			m_isScanning = false;
 			if (m_list == nullptr) {
-				GuiTask::unlock();
+				flx::ui::GuiTask::unlock();
 				return;
 			}
 			lv_obj_clean(m_list);
 
 			if (networks.empty()) {
 				lv_list_add_text(m_list, "No networks found");
-				GuiTask::unlock();
+				flx::ui::GuiTask::unlock();
 				return;
 			}
 
@@ -356,7 +359,7 @@ void WiFiSettings::refreshScan() {
 					lv_obj_align(rssi_label, LV_ALIGN_RIGHT_MID, 0, 0);
 				}
 			}
-			GuiTask::unlock();
+			flx::ui::GuiTask::unlock();
 		}
 	);
 }

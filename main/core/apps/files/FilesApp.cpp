@@ -1,5 +1,4 @@
 #include "FilesApp.hpp"
-#include "core/apps/settings/SettingsCommon.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_pos.h"
@@ -7,8 +6,7 @@
 #include "core/lv_obj_style_gen.h"
 #include "core/lv_obj_tree.h"
 #include "core/lv_refr.h"
-#include "core/services/filesystem/FileSystemService.hpp"
-#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include "display/lv_display.h"
 #include "esp_timer.h"
 #include "font/lv_symbol_def.h"
@@ -31,32 +29,36 @@
 #include "widgets/textarea/lv_textarea.h"
 #include <cstdint>
 #include <cstring>
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
 #include <flx/core/ClipboardManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/TaskManager.hpp>
+#include <flx/system/services/FileSystemService.hpp>
+#include <flx/ui/app/AppManager.hpp>
+#include <flx/ui/app/AppManifest.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "FilesApp";
 
-using namespace flx::apps;
+using namespace flx::app;
+
+using namespace flx::ui::common;
 
 namespace System::Apps {
 
-const flx::apps::AppManifest FilesApp::manifest = {
+const flx::app::AppManifest FilesApp::manifest = {
 	.appId = "com.flxos.files",
 	.appName = "Files",
 	.appIcon = LV_SYMBOL_DIRECTORY,
 	.appVersionName = "1.0.0",
 	.appVersionCode = 1,
-	.category = flx::apps::AppCategory::System,
-	.flags = flx::apps::AppFlags::None,
-	.location = flx::apps::AppLocation::internal(),
+	.category = flx::app::AppCategory::System,
+	.flags = flx::app::AppFlags::None,
+	.location = flx::app::AppLocation::internal(),
 	.description = "Browse and manage files on device storage",
 	.sortPriority = 20,
-	.capabilities = flx::apps::AppCapability::Storage,
-	.createApp = []() -> std::shared_ptr<flx::apps::App> { return std::make_shared<FilesApp>(); }
+	.capabilities = flx::app::AppCapability::Storage,
+	.createApp = []() -> std::shared_ptr<flx::app::App> { return std::make_shared<FilesApp>(); }
 };
 
 // Helper: Create a styled message box
@@ -77,10 +79,10 @@ const void* FilesApp::getIcon() const { return LV_SYMBOL_DIRECTORY; }
 void FilesApp::createUI(void* parent) {
 	m_container = (lv_obj_t*)parent;
 
-	m_page = Settings::create_page_container(m_container);
+	m_page = create_page_container(m_container);
 
 	lv_obj_t* backBtn = nullptr;
-	m_header = Settings::create_header(m_page, "", &backBtn);
+	m_header = create_header(m_page, "", &backBtn);
 	m_backBtn = backBtn;
 
 	// Add a Home button
@@ -143,7 +145,7 @@ void FilesApp::createUI(void* parent) {
 		LV_EVENT_CLICKED, this
 	);
 
-	m_list = Settings::create_settings_list(m_page);
+	m_list = create_settings_list(m_page);
 
 	if (m_currentPath.empty()) {
 		m_currentPath = "A:/";
@@ -554,13 +556,13 @@ void FilesApp::onFileClick(const std::string& name) {
 		if (ext == "png" || ext == "jpg" || ext == "jpeg") {
 			std::string mimeType = "image/" + (ext == "jpg" ? std::string("jpeg") : ext);
 			Intent intent = Intent::view(vfsPath, mimeType);
-			flx::apps::AppManager::getInstance().startApp(intent);
+			flx::app::AppManager::getInstance().startApp(intent);
 			return;
 		}
 
 		if (ext == "txt" || ext == "log" || ext == "json" || ext == "csv" || ext == "md") {
 			Intent intent = Intent::view(vfsPath, "text/plain");
-			flx::apps::AppManager::getInstance().startApp(intent);
+			flx::app::AppManager::getInstance().startApp(intent);
 			return;
 		}
 	}

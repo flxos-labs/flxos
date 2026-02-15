@@ -1,16 +1,16 @@
-#include "core/system/system_core/SystemManager.hpp"
+#include <flx/system/SystemManager.hpp>
 #include "sdkconfig.h"
 #include <flx/core/Compat.hpp> // Namespace compatibility during migration
 #include <flx/core/Logger.hpp>
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-#include "core/system/notification/NotificationManager.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
+#include <flx/system/managers/NotificationManager.hpp>
+#include <flx/ui/GuiTask.hpp>
 #include "font/lv_symbol_def.h"
 #endif
 
 #if CONFIG_FLXOS_CLI_ENABLED
-#include "core/services/cli/CliService.hpp"
+#include <flx/system/services/CliService.hpp>
 #include <flx/services/ServiceRegistry.hpp>
 #include <memory>
 #endif
@@ -22,23 +22,23 @@ static constexpr std::string_view TAG = "Main";
 
 extern "C" void app_main(void) {
 	Log::info(TAG, "Starting FlxOS...");
-	System::SystemManager::getInstance().initHardware();
-	System::SystemManager::getInstance().initServices();
+	flx::system::SystemManager::getInstance().initHardware();
+	flx::system::SystemManager::getInstance().initServices();
 
 #if CONFIG_FLXOS_CLI_ENABLED
 	// CLI is autoStart=false, so start it explicitly
 	auto noDelete = [](auto*) {};
 	auto& registry = flx::services::ServiceRegistry::getInstance();
-	registry.addService(std::shared_ptr<flx::services::IService>(&System::CliService::getInstance(), noDelete));
-	System::CliService::getInstance().start();
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::system::CliService::getInstance(), noDelete));
+	flx::system::CliService::getInstance().start();
 #endif
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	Log::info(TAG, "Sending welcome notification");
-	System::NotificationManager::getInstance().addNotification("Welcome", "FlxOS initialized successfully!", "System", LV_SYMBOL_OK, 1);
+	flx::system::NotificationManager::getInstance().addNotification("Welcome", "FlxOS initialized successfully!", "System", LV_SYMBOL_OK, 1);
 
 	Log::info(TAG, "Starting GuiTask...");
-	auto* guiTask = new GuiTask();
+	auto* guiTask = new flx::ui::GuiTask();
 	guiTask->start();
 #else
 	Log::info(TAG, "Running in headless mode - GUI disabled");

@@ -1,15 +1,20 @@
 #pragma once
 #include <cstring>
 
-#include "core/apps/settings/SettingsCommon.hpp"
 #include "core/apps/settings/SettingsPageBase.hpp"
-#include "core/system/display/DisplayManager.hpp"
-#include "core/system/system_core/SystemManager.hpp"
-#include "core/system/theme/ThemeManager.hpp"
-#include "core/ui/components/FileBrowser.hpp"
-#include "core/ui/theming/theme_engine/ThemeEngine.hpp"
 #include "lvgl.h"
+#include <flx/system/SystemManager.hpp>
+#include <flx/system/managers/DisplayManager.hpp>
+#include <flx/system/managers/ThemeManager.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/components/FileBrowser.hpp>
+#include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
 #include <functional>
+#include <memory>
+
+using namespace flx::ui::common;
+using namespace flx::system;
 
 namespace System::Apps::Settings {
 
@@ -21,6 +26,18 @@ public:
 protected:
 
 	void createUI() override {
+		auto& dm = DisplayManager::getInstance();
+		auto& tm = ThemeManager::getInstance();
+
+		m_brightnessBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getBrightnessObservable());
+		m_rotationBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getRotationObservable());
+		m_fpsBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getShowFpsObservable());
+		m_themeBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getThemeObservable());
+		m_wpEnabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getWallpaperEnabledObservable());
+		m_wpPathBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(tm.getWallpaperPathObservable());
+		m_transpBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getTransparencyEnabledObservable());
+		m_glassBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getGlassEnabledObservable());
+
 		m_container = create_page_container(m_parent);
 
 		lv_obj_t* backBtn = nullptr;
@@ -34,9 +51,7 @@ protected:
 		lv_obj_t* slider = lv_slider_create(brightnessBtn);
 		lv_obj_set_flex_grow(slider, 1);
 		lv_slider_set_range(slider, 0, 255);
-		lv_slider_bind_value(
-			slider, &DisplayManager::getInstance().getBrightnessSubject()
-		);
+		lv_slider_bind_value(slider, m_brightnessBridge->getSubject());
 
 		lv_obj_t* themeBtn = add_list_btn(m_list, LV_SYMBOL_IMAGE, "Theme");
 		lv_obj_set_flex_grow(lv_obj_get_child(themeBtn, 1), 1);
@@ -47,7 +62,7 @@ protected:
 		lv_label_set_text(themeLabel, Themes::ToString(ThemeEngine::get_current_theme()));
 
 		lv_subject_add_observer_obj(
-			&ThemeManager::getInstance().getThemeSubject(),
+			m_themeBridge->getSubject(),
 			[](lv_observer_t* observer, lv_subject_t* subject) {
 				lv_obj_t* label = lv_observer_get_target_obj(observer);
 				if (label) {
@@ -59,7 +74,7 @@ protected:
 		);
 
 		lv_obj_add_subject_toggle_event(
-			themeValBtn, &ThemeManager::getInstance().getThemeSubject(),
+			themeValBtn, m_themeBridge->getSubject(),
 			LV_EVENT_CLICKED
 		);
 
@@ -70,11 +85,11 @@ protected:
 		lv_obj_set_size(rotValBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 		lv_obj_t* rotLabel = lv_label_create(rotValBtn);
 		lv_label_bind_text(
-			rotLabel, &DisplayManager::getInstance().getRotationSubject(), "%d°"
+			rotLabel, m_rotationBridge->getSubject(), "%d°"
 		);
 
 		lv_subject_increment_dsc_t* rot_dsc = lv_obj_add_subject_increment_event(
-			rotValBtn, &DisplayManager::getInstance().getRotationSubject(),
+			rotValBtn, m_rotationBridge->getSubject(),
 			LV_EVENT_CLICKED, 90
 		);
 		lv_obj_set_subject_increment_event_min_value(rotValBtn, rot_dsc, 0);
@@ -84,15 +99,13 @@ protected:
 		lv_obj_t* fpsBtn = add_list_btn(m_list, LV_SYMBOL_PLAY, "Show FPS");
 		lv_obj_set_flex_grow(lv_obj_get_child(fpsBtn, 1), 1);
 		lv_obj_t* fpsSw = lv_switch_create(fpsBtn);
-		lv_obj_bind_checked(fpsSw, &DisplayManager::getInstance().getShowFpsSubject());
+		lv_obj_bind_checked(fpsSw, m_fpsBridge->getSubject());
 
 		lv_obj_t* wpBtn =
 			add_list_btn(m_list, LV_SYMBOL_IMAGE, "Enable Wallpaper");
 		lv_obj_set_flex_grow(lv_obj_get_child(wpBtn, 1), 1);
 		lv_obj_t* wpSw = lv_switch_create(wpBtn);
-		lv_obj_bind_checked(
-			wpSw, &ThemeManager::getInstance().getWallpaperEnabledSubject()
-		);
+		lv_obj_bind_checked(wpSw, m_wpEnabledBridge->getSubject());
 
 		lv_obj_t* chooseWpBtn =
 			add_list_btn(m_list, LV_SYMBOL_DIRECTORY, "Choose Wallpaper");
@@ -102,7 +115,7 @@ protected:
 		lv_label_set_text(wpValLabel, "");
 
 		lv_subject_add_observer_obj(
-			&ThemeManager::getInstance().getWallpaperPathSubject(),
+			m_wpPathBridge->getSubject(),
 			[](lv_observer_t* observer, lv_subject_t* subject) {
 				lv_obj_t* label = lv_observer_get_target_obj(observer);
 				const char* path = (const char*)lv_subject_get_pointer(subject);
@@ -130,14 +143,12 @@ protected:
 		// Initial state
 		update_chooser_state(
 			chooseWpBtn,
-			lv_subject_get_int(
-				&ThemeManager::getInstance().getWallpaperEnabledSubject()
-			)
+			lv_subject_get_int(m_wpEnabledBridge->getSubject())
 		);
 
 		// Observer for changes
 		lv_subject_add_observer_obj(
-			&ThemeManager::getInstance().getWallpaperEnabledSubject(),
+			m_wpEnabledBridge->getSubject(),
 			[](lv_observer_t* observer, lv_subject_t* subject) {
 				lv_obj_t* btn = lv_observer_get_target_obj(observer);
 				int32_t const val = lv_subject_get_int(subject);
@@ -165,7 +176,7 @@ protected:
 					strncpy(path_buf, path.c_str(), sizeof(path_buf) - 1);
 					path_buf[sizeof(path_buf) - 1] = '\0';
 					lv_subject_set_pointer(
-						&ThemeManager::getInstance().getWallpaperPathSubject(),
+						self->m_wpPathBridge->getSubject(),
 						path_buf
 					);
 					self->m_fileBrowser->hide();
@@ -178,22 +189,17 @@ protected:
 			add_list_btn(m_list, LV_SYMBOL_EYE_OPEN, "Transparency");
 		lv_obj_set_flex_grow(lv_obj_get_child(transpBtn, 1), 1);
 		lv_obj_t* transpSw = lv_switch_create(transpBtn);
-		lv_obj_bind_checked(
-			transpSw,
-			&ThemeManager::getInstance().getTransparencyEnabledSubject()
-		);
+		lv_obj_bind_checked(transpSw, m_transpBridge->getSubject());
 
 		lv_obj_t* glassBtn =
 			add_list_btn(m_list, LV_SYMBOL_IMAGE, "Glass Effect");
 		lv_obj_set_flex_grow(lv_obj_get_child(glassBtn, 1), 1);
 		lv_obj_t* glassSw = lv_switch_create(glassBtn);
-		lv_obj_bind_checked(
-			glassSw, &ThemeManager::getInstance().getGlassEnabledSubject()
-		);
+		lv_obj_bind_checked(glassSw, m_glassBridge->getSubject());
 
 		// observer to disable glass setting if transparency is off
 		lv_subject_add_observer_obj(
-			&ThemeManager::getInstance().getTransparencyEnabledSubject(),
+			m_transpBridge->getSubject(),
 			[](lv_observer_t* observer, lv_subject_t* subject) {
 				lv_obj_t* glassSw = lv_observer_get_target_obj(observer);
 				lv_obj_t* glassBtn = lv_obj_get_parent(glassSw);
@@ -222,6 +228,15 @@ protected:
 private:
 
 	UI::FileBrowser* m_fileBrowser {nullptr};
+
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_brightnessBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_rotationBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_fpsBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_themeBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wpEnabledBridge;
+	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_wpPathBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_transpBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_glassBridge;
 };
 
 } // namespace System::Apps::Settings

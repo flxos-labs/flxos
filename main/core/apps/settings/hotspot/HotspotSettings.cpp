@@ -1,5 +1,4 @@
 #include "HotspotSettings.hpp"
-#include "core/apps/settings/SettingsCommon.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_pos.h"
@@ -7,9 +6,6 @@
 #include "core/lv_obj_style_gen.h"
 #include "core/lv_obj_tree.h"
 #include "core/lv_observer.h"
-#include "core/tasks/gui/GuiTask.hpp"
-#include "core/ui/theming/layout_constants/LayoutConstants.hpp"
-#include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include "display/lv_display.h"
 #include "esp_err.h"
 #include "esp_wifi_types_generic.h"
@@ -31,6 +27,13 @@
 #include "widgets/switch/lv_switch.h"
 #include "widgets/textarea/lv_textarea.h"
 #include <cstdint>
+#include <flx/ui/GuiTask.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
+
+using namespace flx::ui;
+using namespace flx::ui::common;
 
 namespace System::Apps::Settings {
 
@@ -40,20 +43,20 @@ void HotspotSettings::createUI() {
 	m_container = create_page_container(m_parent);
 
 	auto& cm = flx::connectivity::ConnectivityManager::getInstance();
-	m_hotspotEnabledBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotEnabledObservable());
-	m_clientCountBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotClientsObservable());
-	m_usageSentBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotUsageSentSubject());
-	m_usageReceivedBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotUsageReceivedSubject());
-	m_uploadSpeedBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotUploadSpeedSubject());
-	m_downloadSpeedBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotDownloadSpeedSubject());
-	m_uptimeBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotUptimeSubject());
+	m_hotspotEnabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotEnabledObservable());
+	m_clientCountBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotClientsObservable());
+	m_usageSentBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotUsageSentSubject());
+	m_usageReceivedBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotUsageReceivedSubject());
+	m_uploadSpeedBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotUploadSpeedSubject());
+	m_downloadSpeedBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotDownloadSpeedSubject());
+	m_uptimeBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotUptimeSubject());
 
-	m_ssidBridge = std::make_unique<System::LvglStringObserverBridge>(cm.getHotspotSsidObservable());
-	m_passwordBridge = std::make_unique<System::LvglStringObserverBridge>(cm.getHotspotPasswordObservable());
-	m_channelBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotChannelObservable());
-	m_maxConnBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotMaxConnObservable());
-	m_hiddenBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotHiddenObservable());
-	m_authBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotAuthObservable());
+	m_ssidBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(cm.getHotspotSsidObservable());
+	m_passwordBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(cm.getHotspotPasswordObservable());
+	m_channelBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotChannelObservable());
+	m_maxConnBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotMaxConnObservable());
+	m_hiddenBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotHiddenObservable());
+	m_authBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getHotspotAuthObservable());
 	// m_autoShutdownBridge - not observable in ConnectivityManager? HotspotSettings checks it directly from HotspotManager.
 
 	createMainPage();
@@ -584,14 +587,14 @@ void HotspotSettings::applyHotspotSettings() {
 	strncpy(ssid_buf, ssid, sizeof(ssid_buf) - 1);
 	strncpy(pass_buf, pass, sizeof(pass_buf) - 1);
 
-	GuiTask::lock();
+	flx::ui::GuiTask::lock();
 	lv_subject_set_pointer(m_ssidBridge->getSubject(), ssid_buf);
 	lv_subject_set_pointer(m_passwordBridge->getSubject(), pass_buf);
 	lv_subject_set_int(m_channelBridge->getSubject(), channel);
 	lv_subject_set_int(m_maxConnBridge->getSubject(), max_conn);
 	lv_subject_set_int(m_hiddenBridge->getSubject(), hidden ? 1 : 0);
 	lv_subject_set_int(m_authBridge->getSubject(), auth_idx);
-	GuiTask::unlock();
+	flx::ui::GuiTask::unlock();
 
 	flx::connectivity::ConnectivityManager::getInstance().setHotspotNatEnabled(nat_enabled);
 	flx::connectivity::HotspotManager::getInstance().setAutoShutdownTimeout(

@@ -1,17 +1,18 @@
 #include "ImageViewerApp.hpp"
-#include "core/apps/settings/SettingsCommon.hpp"
-#include "core/ui/theming/ui_constants/UiConstants.hpp"
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include "font/lv_symbol_def.h"
 #include "widgets/image/lv_image.h"
 #include "widgets/label/lv_label.h"
 #include <flx/core/Logger.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "ImageViewer";
 
 namespace System::Apps {
 
-using namespace flx::apps;
+using namespace flx::app;
+using namespace flx::ui::common;
 
 const AppManifest ImageViewerApp::manifest = {
 	.appId = "com.flxos.imageviewer",
@@ -44,7 +45,7 @@ std::string ImageViewerApp::getFileName(const std::string& path) {
 void ImageViewerApp::createUI(void* parent) {
 	auto* parentObj = static_cast<lv_obj_t*>(parent);
 
-	m_container = Settings::create_page_container(parentObj);
+	m_container = create_page_container(parentObj);
 
 	// Get the file path from the intent data
 	if (m_context) {
@@ -55,14 +56,14 @@ void ImageViewerApp::createUI(void* parent) {
 
 	// Header with back button and filename
 	lv_obj_t* backBtn = nullptr;
-	Settings::create_header(m_container, title.c_str(), &backBtn);
+	create_header(m_container, title.c_str(), &backBtn);
 
 	// Back button closes the app
 	lv_obj_add_event_cb(
 		backBtn,
 		[](lv_event_t* e) {
 			auto* app = static_cast<ImageViewerApp*>(lv_event_get_user_data(e));
-			flx::apps::AppManager::getInstance().stopApp(app->getPackageName());
+			flx::app::AppManager::getInstance().stopApp(app->getPackageName());
 		},
 		LV_EVENT_CLICKED, this
 	);

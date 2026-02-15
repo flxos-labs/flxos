@@ -1,13 +1,13 @@
 #pragma once
 
-#include "core/apps/settings/SettingsCommon.hpp"
 #include "core/apps/settings/SettingsPageBase.hpp"
-#include "core/ui/LvglObserverBridge.hpp"
-#include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include "flx/connectivity/ConnectivityManager.hpp"
 #include "flx/connectivity/bluetooth/BluetoothManager.hpp"
 #include "lvgl.h"
-#include <functional>
+#include <flx/ui/LvglObserverBridge.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
+using namespace flx::ui;
+using namespace flx::ui::common;
 
 namespace System::Apps::Settings {
 
@@ -30,7 +30,7 @@ protected:
 		lv_obj_set_flex_grow(title, 1);
 
 		auto& cm = flx::connectivity::ConnectivityManager::getInstance();
-		m_btEnabledBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getBluetoothEnabledObservable());
+		m_btEnabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getBluetoothEnabledObservable());
 
 		m_btSwitch = lv_switch_create(header);
 		lv_obj_bind_checked(
@@ -144,7 +144,7 @@ private:
 	lv_obj_t* m_btSwitch = nullptr;
 	lv_obj_t* m_statusLabel = nullptr;
 
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_btEnabledBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_btEnabledBridge;
 };
 
 } // namespace System::Apps::Settings

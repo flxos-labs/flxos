@@ -1,6 +1,6 @@
 #pragma once
 #include "core/apps/settings/SettingsPageBase.hpp"
-#include "core/ui/LvglObserverBridge.hpp"
+#include <flx/ui/LvglObserverBridge.hpp>
 #include "lvgl.h"
 #include <cstring>
 #include <functional>
@@ -46,21 +46,21 @@ private:
 	lv_timer_t* m_refreshTimer = nullptr;
 	bool m_ignore_events = false;
 
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_hotspotEnabledBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_clientCountBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_usageSentBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_usageReceivedBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_uploadSpeedBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_downloadSpeedBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_uptimeBridge;
-
-	std::unique_ptr<System::LvglStringObserverBridge> m_ssidBridge;
-	std::unique_ptr<System::LvglStringObserverBridge> m_passwordBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_channelBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_maxConnBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_hiddenBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_authBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_autoShutdownBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_hotspotEnabledBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_clientCountBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_usageSentBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_usageReceivedBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_uploadSpeedBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_downloadSpeedBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_uptimeBridge;
+ 
+	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_ssidBridge;
+	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_passwordBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_channelBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_maxConnBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_hiddenBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_authBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_autoShutdownBridge;
 };
 
 } // namespace System::Apps::Settings

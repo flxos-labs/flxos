@@ -1,14 +1,15 @@
 #include "TextEditorApp.hpp"
-#include "core/apps/settings/SettingsCommon.hpp"
-#include "core/services/filesystem/FileSystemService.hpp"
 #include "misc/lv_style.h"
 #include <cstdio>
 #include <cstring>
 #include <flx/core/Logger.hpp>
+#include <flx/system/services/FileSystemService.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
+
+using namespace flx::app;
+using namespace flx::ui::common;
 
 namespace System::Apps {
-
-using namespace flx::apps;
 
 const AppManifest TextEditorApp::manifest = {
 	.appId = "com.flxos.texteditor",
@@ -93,7 +94,7 @@ void TextEditorApp::createUI(void* parent) {
 }
 
 void TextEditorApp::createEditorScreen() {
-	m_editorScreen = Settings::create_page_container(m_container);
+	m_editorScreen = create_page_container(m_container);
 
 	// Create toolbar at top
 	createToolbar(m_editorScreen);

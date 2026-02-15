@@ -1,15 +1,15 @@
 #pragma once
 
 #include "lvgl.h"
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
+#include <flx/ui/app/AppManager.hpp>
+#include <flx/ui/app/AppManifest.hpp>
 #include <string>
 
 namespace System::Apps {
 
-using flx::apps::AppManifest;
+using flx::app::AppManifest;
 
-class ImageViewerApp : public flx::apps::App {
+class ImageViewerApp : public flx::app::App {
 public:
 
 	std::string getPackageName() const override;

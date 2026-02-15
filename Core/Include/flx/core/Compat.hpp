@@ -17,7 +17,7 @@
 #include <flx/core/Types.hpp>
 
 // Namespace alias for backward compatibility
-namespace System {
+namespace flx::system {
 // Import flx types into System namespace
 using flx::ClipboardEntry;
 using flx::ClipboardManager;

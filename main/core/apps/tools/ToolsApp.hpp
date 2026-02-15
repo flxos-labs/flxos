@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/apps/settings/SettingsCommon.hpp"
 #include "lvgl.h"
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
+#include <flx/ui/app/AppManager.hpp>
+#include <flx/ui/app/AppManifest.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
 #include <functional>
 #include <string>
 
@@ -15,9 +15,9 @@
 
 namespace System::Apps {
 
-using flx::apps::AppManifest;
+using flx::app::AppManifest;
 
-class ToolsApp : public flx::apps::App {
+class ToolsApp : public flx::app::App {
 public:
 
 	ToolsApp() = default;

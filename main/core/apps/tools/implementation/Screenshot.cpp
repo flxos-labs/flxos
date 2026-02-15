@@ -1,15 +1,15 @@
 #include "Screenshot.hpp"
-#include "../../ui/theming/ui_constants/UiConstants.hpp"
-#include "core/apps/settings/SettingsCommon.hpp"
-#include "core/services/filesystem/FileSystemService.hpp"
-#include "core/services/screenshot/ScreenshotService.hpp"
-#include "core/tasks/gui/GuiTask.hpp"
 #include <flx/core/Logger.hpp>
+#include <flx/system/services/FileSystemService.hpp>
+#include <flx/system/services/ScreenshotService.hpp>
+#include <flx/ui/GuiTask.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
 #include "sdkconfig.h"
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
-#include "core/services/storage/SdCardService.hpp"
+#include <flx/system/services/SdCardService.hpp>
 #endif
 
 #include <cstdio>
@@ -19,6 +19,8 @@
 
 static constexpr std::string_view TAG = "Screenshot";
 
+using namespace flx::ui::common;
+
 namespace System::Apps::Tools {
 
 // ──────────────────────────────────────────────────────
@@ -26,13 +28,13 @@ namespace System::Apps::Tools {
 // ──────────────────────────────────────────────────────
 
 void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
-	m_view = Settings::create_page_container(parent);
+	m_view = create_page_container(parent);
 
 	lv_obj_t* backBtn = nullptr;
-	Settings::create_header(m_view, "Screenshot", &backBtn);
+	create_header(m_view, "Screenshot", &backBtn);
 
 	m_onBack = onBack;
-	Settings::add_back_button_event_cb(backBtn, &m_onBack);
+	add_back_button_event_cb(backBtn, &m_onBack);
 
 	// --- Content area ---
 	lv_obj_t* content = lv_obj_create(m_view);

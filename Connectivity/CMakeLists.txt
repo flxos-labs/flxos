@@ -4,6 +4,6 @@ idf_component_register(
          "Source/bluetooth/BluetoothManager.cpp"
          "Source/hotspot/HotspotManager.cpp"
     INCLUDE_DIRS Include
-    REQUIRES Core Services
-    PRIV_REQUIRES esp_wifi esp_event esp_netif lwip nvs_flash dhcpserver
+    REQUIRES Core Services System esp_wifi esp_event esp_netif lwip dhcpserver
+    PRIV_REQUIRES nvs_flash
 )

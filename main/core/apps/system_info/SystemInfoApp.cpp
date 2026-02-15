@@ -1,12 +1,8 @@
 #include "SystemInfoApp.hpp"
-#include "../../ui/theming/layout_constants/LayoutConstants.hpp"
-#include "../../ui/theming/ui_constants/UiConstants.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_pos.h"
 #include "core/lv_obj_style.h"
 #include "core/lv_obj_style_gen.h"
-#include "core/services/device/DeviceProfileService.hpp"
-#include "core/services/system_info/SystemInfoService.hpp"
 #include "display/lv_display.h"
 #include "esp_timer.h"
 #include "font/lv_font.h"
@@ -24,13 +20,17 @@
 #include <cstddef>
 #include <cstdint>
 #include <flx/core/Logger.hpp>
+#include <flx/system/services/DeviceProfileService.hpp>
+#include <flx/system/services/SystemInfoService.hpp>
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "SystemInfoApp";
 
 static constexpr uint32_t UPDATE_INTERVAL_MS = 1000;
 
-using namespace flx::apps;
+using namespace flx::app;
 
 namespace System::Apps {
 
@@ -170,12 +170,13 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 
 		// Feature flags
 		std::string caps;
-		if (profile.hasWifi()) caps += "WiFi ";
-		if (profile.hasBluetooth()) caps += profile.connectivity.bleOnly ? "BLE " : "BT ";
-		if (profile.hasPsram()) caps += "PSRAM ";
-		if (profile.hasSdCard()) caps += "SD ";
-		if (profile.hasBattery()) caps += "Battery ";
-		if (profile.features.hasRgbLed) caps += "RGB ";
+		if (profile.connectivity.wifi) caps += "WiFi ";
+		if (profile.connectivity.bluetooth) caps += profile.connectivity.bleOnly ? "BLE " : "BT ";
+		if (profile.connectivity.psramSizeKb > 0) caps += "PSRAM ";
+		if (profile.sdCard.supported) caps += "SD ";
+		// Note: hasBattery and features.hasRgbLed are no longer in DeviceProfile
+		// if (profile.hasBattery()) caps += "Battery ";
+		// if (profile.features.hasRgbLed) caps += "RGB ";
 
 		lv_obj_t* caps_label = lv_label_create(tab);
 		lv_label_set_text_fmt(caps_label, "Features: %s", caps.c_str());

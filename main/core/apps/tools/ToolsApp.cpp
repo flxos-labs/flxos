@@ -1,13 +1,15 @@
 #include "ToolsApp.hpp"
-#include "../../ui/theming/layout_constants/LayoutConstants.hpp"
-#include "../../ui/theming/ui_constants/UiConstants.hpp"
 #include <flx/core/Logger.hpp>
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
 static constexpr std::string_view TAG = "ToolsApp";
 
+using namespace flx::ui::common;
+
 namespace System::Apps {
 
-using namespace flx::apps;
+using namespace flx::app;
 
 const AppManifest ToolsApp::manifest = {
 	.appId = "com.flxos.tools",
@@ -85,29 +87,29 @@ void ToolsApp::showMainList() {
 
 		lv_list_add_text(m_mainList, "Utilities");
 
-		lv_obj_t* calcBtn = Settings::add_list_btn(m_mainList, LV_SYMBOL_CHARGE, "Calculator");
+		lv_obj_t* calcBtn = add_list_btn(m_mainList, LV_SYMBOL_CHARGE, "Calculator");
 		lv_obj_add_event_cb(calcBtn, [](lv_event_t* e) {
 			auto* app = static_cast<ToolsApp*>(lv_event_get_user_data(e));
 			app->showCalculator(); }, LV_EVENT_CLICKED, this);
 
-		lv_obj_t* stopwatchBtn = Settings::add_list_btn(m_mainList, LV_SYMBOL_PLAY, "Stopwatch");
+		lv_obj_t* stopwatchBtn = add_list_btn(m_mainList, LV_SYMBOL_PLAY, "Stopwatch");
 		lv_obj_add_event_cb(stopwatchBtn, [](lv_event_t* e) {
 			auto* app = static_cast<ToolsApp*>(lv_event_get_user_data(e));
 			app->showStopwatch(); }, LV_EVENT_CLICKED, this);
 
 		lv_list_add_text(m_mainList, "Display Tools");
 
-		lv_obj_t* flashBtn = Settings::add_list_btn(m_mainList, LV_SYMBOL_EYE_OPEN, "Flashlight");
+		lv_obj_t* flashBtn = add_list_btn(m_mainList, LV_SYMBOL_EYE_OPEN, "Flashlight");
 		lv_obj_add_event_cb(flashBtn, [](lv_event_t* e) {
 			auto* app = static_cast<ToolsApp*>(lv_event_get_user_data(e));
 			app->showFlashlight(); }, LV_EVENT_CLICKED, this);
 
-		lv_obj_t* rgbBtn = Settings::add_list_btn(m_mainList, LV_SYMBOL_IMAGE, "Display Tester");
+		lv_obj_t* rgbBtn = add_list_btn(m_mainList, LV_SYMBOL_IMAGE, "Display Tester");
 		lv_obj_add_event_cb(rgbBtn, [](lv_event_t* e) {
 			auto* app = static_cast<ToolsApp*>(lv_event_get_user_data(e));
 			app->showDisplayTester(); }, LV_EVENT_CLICKED, this);
 
-		lv_obj_t* screenshotBtn = Settings::add_list_btn(m_mainList, LV_SYMBOL_IMAGE, "Screenshot");
+		lv_obj_t* screenshotBtn = add_list_btn(m_mainList, LV_SYMBOL_IMAGE, "Screenshot");
 		lv_obj_add_event_cb(screenshotBtn, [](lv_event_t* e) {
 			auto* app = static_cast<ToolsApp*>(lv_event_get_user_data(e));
 			app->showScreenshot(); }, LV_EVENT_CLICKED, this);

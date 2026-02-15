@@ -1,14 +1,14 @@
 #pragma once
 
 #include "lvgl.h"
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
+#include <flx/ui/app/AppManager.hpp>
+#include <flx/ui/app/AppManifest.hpp>
 
 namespace System::Apps {
 
-using flx::apps::AppManifest;
+using flx::app::AppManifest;
 
-class CalendarApp : public flx::apps::App {
+class CalendarApp : public flx::app::App {
 public:
 
 	CalendarApp() = default;

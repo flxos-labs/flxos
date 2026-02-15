@@ -1,18 +1,18 @@
 #pragma once
 
-#include "core/ui/components/FileBrowser.hpp"
+#include <flx/ui/components/FileBrowser.hpp>
 #include "lvgl.h"
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
+#include <flx/ui/app/AppManager.hpp>
+#include <flx/ui/app/AppManifest.hpp>
 #include <functional>
 #include <memory>
 #include <string>
 
 namespace System::Apps {
 
-using flx::apps::AppManifest;
+using flx::app::AppManifest;
 
-class TextEditorApp : public flx::apps::App {
+class TextEditorApp : public flx::app::App {
 public:
 
 	TextEditorApp() = default;

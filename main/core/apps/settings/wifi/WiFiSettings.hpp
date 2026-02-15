@@ -1,6 +1,6 @@
 #pragma once
 #include "core/apps/settings/SettingsPageBase.hpp"
-#include "core/ui/LvglObserverBridge.hpp"
+#include <flx/ui/LvglObserverBridge.hpp>
 #include "esp_timer.h"
 #include "esp_wifi.h"
 #include "lvgl.h"
@@ -49,11 +49,11 @@ private:
 	esp_timer_handle_t m_scanTimer = nullptr;
 	std::vector<wifi_ap_record_t> m_scanResults;
 
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_wifiEnabledBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_wifiStatusBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_wifiConnectedBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_wifiScanIntervalBridge;
-	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_wifiAutostartBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiEnabledBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiStatusBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiConnectedBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiScanIntervalBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiAutostartBridge;
 };
 
 } // namespace System::Apps::Settings

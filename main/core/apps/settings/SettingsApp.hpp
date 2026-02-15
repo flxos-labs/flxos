@@ -1,18 +1,20 @@
 #pragma once
 
-#include "core/apps/settings/SettingsCommon.hpp"
 #include "core/apps/settings/bluetooth/BluetoothSettings.hpp"
 #include "core/apps/settings/display/DisplaySettings.hpp"
 #include "core/apps/settings/hotspot/HotspotSettings.hpp"
 #include "core/apps/settings/wifi/WiFiSettings.hpp"
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
+#include <flx/ui/app/AppManager.hpp>
+#include <flx/ui/app/AppManifest.hpp>
+#include <flx/ui/common/SettingsCommon.hpp>
 #include <memory>
+
+using namespace flx::ui::common;
 
 namespace System::Apps {
 
-using flx::apps::AppManifest;
-class SettingsApp : public flx::apps::App {
+using flx::app::AppManifest;
+class SettingsApp : public flx::app::App {
 public:
 
 	std::string getPackageName() const override { return "com.flxos.settings"; }
@@ -83,7 +85,7 @@ private:
 
 			lv_list_add_text(m_mainList, "Connectivity");
 			lv_obj_t* wifiBtn =
-				Settings::add_list_btn(m_mainList, LV_SYMBOL_WIFI, "Wi-Fi");
+				add_list_btn(m_mainList, LV_SYMBOL_WIFI, "Wi-Fi");
 			lv_obj_add_event_cb(
 				wifiBtn,
 				[](lv_event_t* e) {
@@ -94,7 +96,7 @@ private:
 			);
 
 			lv_obj_t* hotspotBtn =
-				Settings::add_list_btn(m_mainList, LV_SYMBOL_WIFI,
+				add_list_btn(m_mainList, LV_SYMBOL_WIFI,
 									   "Hotspot"); // LV_SYMBOL_WIFI is used for
 			// hotspot too if no specific one
 			lv_obj_add_event_cb(
@@ -107,7 +109,7 @@ private:
 			);
 
 			lv_obj_t* btBtn =
-				Settings::add_list_btn(m_mainList, LV_SYMBOL_BLUETOOTH, "Bluetooth");
+				add_list_btn(m_mainList, LV_SYMBOL_BLUETOOTH, "Bluetooth");
 			lv_obj_add_event_cb(
 				btBtn,
 				[](lv_event_t* e) {
@@ -119,7 +121,7 @@ private:
 
 			lv_list_add_text(m_mainList, "System");
 			lv_obj_t* displayBtn =
-				Settings::add_list_btn(m_mainList, LV_SYMBOL_IMAGE, "Display");
+				add_list_btn(m_mainList, LV_SYMBOL_IMAGE, "Display");
 			lv_obj_add_event_cb(
 				displayBtn,
 				[](lv_event_t* e) {

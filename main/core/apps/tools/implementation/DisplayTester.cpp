@@ -1,19 +1,21 @@
 #include "DisplayTester.hpp"
-#include "../../ui/theming/layout_constants/LayoutConstants.hpp"
-#include "../../ui/theming/ui_constants/UiConstants.hpp"
-#include "core/apps/settings/SettingsCommon.hpp"
 #include <cstdint>
+#include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
 namespace System::Apps::Tools {
 
+using namespace flx::ui::common;
+
 void DisplayTester::createView(lv_obj_t* parent, std::function<void()> onBack) {
-	m_view = Settings::create_page_container(parent);
+	m_view = create_page_container(parent);
 
 	lv_obj_t* backBtn = nullptr;
-	Settings::create_header(m_view, "Display Tester", &backBtn);
+	create_header(m_view, "Display Tester", &backBtn);
 
 	m_onBack = onBack;
-	Settings::add_back_button_event_cb(backBtn, &m_onBack);
+	add_back_button_event_cb(backBtn, &m_onBack);
 
 	// Color display
 	m_rgbDisplay = lv_obj_create(m_view);

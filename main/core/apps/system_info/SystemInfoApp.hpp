@@ -1,16 +1,16 @@
 #pragma once
 
-#include "core/services/system_info/SystemInfoService.hpp"
+#include <flx/system/services/SystemInfoService.hpp>
 #include "lvgl.h"
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
+#include <flx/ui/app/AppManager.hpp>
+#include <flx/ui/app/AppManifest.hpp>
 #include <vector>
 
 namespace System::Apps {
 
-using flx::apps::AppManifest;
+using flx::app::AppManifest;
 
-class SystemInfoApp : public flx::apps::App {
+class SystemInfoApp : public flx::app::App {
 public:
 
 	SystemInfoApp();
