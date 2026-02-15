@@ -29,6 +29,7 @@ private:
 
 	GuiLock() {
 		m_semaphore = xSemaphoreCreateRecursiveMutex();
+		configASSERT(m_semaphore != nullptr);
 	}
 	~GuiLock() {
 		if (m_semaphore) {

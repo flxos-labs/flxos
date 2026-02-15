@@ -157,7 +157,7 @@ void GuiTask::run(void* /*data*/) {
 
 	// Subscribe to GUI control events
 	flx::core::EventBus::getInstance().subscribe("ui.gui.set_paused", [](const std::string& /*event*/, const flx::core::Bundle& data) {
-		setPaused(data.getInt32("paused"));
+		setPaused(data.getBool("paused"));
 	});
 
 	flx::core::EventBus::getInstance().subscribe("ui.gui.run_display_test", [](const std::string& /*event*/, const flx::core::Bundle& data) {

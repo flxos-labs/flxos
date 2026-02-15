@@ -39,7 +39,6 @@ private:
 	flx::Observable<int32_t> m_wallpaper_enabled_subject {0};
 	flx::StringObservable m_wallpaper_path_subject {""};
 
-	static void applyTheme(int32_t theme);
 };
 
 } // namespace flx::system

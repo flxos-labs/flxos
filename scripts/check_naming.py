@@ -35,9 +35,14 @@ def check_file(filepath: str) -> List[str]:
     except Exception:
         return issues
     
-    # Check class names
+    # Check class names (exclude namespace declarations)
     for match in re.finditer(r'\b(?:class|struct)\s+(\w+)', content):
         name = match.group(1)
+        # Skip if this is actually a namespace declaration
+        line_start = content.rfind('\n', 0, match.start()) + 1
+        line_text = content[line_start:match.start()]
+        if 'namespace' in line_text:
+            continue
         if not is_pascal_case(name) and name not in ['__attribute__']:
             line_num = content[:match.start()].count('\n') + 1
             issues.append(f"{rel_path}:{line_num}: class/struct '{name}' should be PascalCase")

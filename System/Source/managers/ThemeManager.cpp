@@ -26,17 +26,12 @@ bool ThemeManager::onStart() {
 	SettingsManager::getInstance().registerSetting("wp_enabled", m_wallpaper_enabled_subject);
 	SettingsManager::getInstance().registerSetting("wp_path", m_wallpaper_path_subject);
 
-	applyTheme(m_theme_subject.get());
 	Log::info(TAG, "Theme service started");
 	return true;
 }
 
 void ThemeManager::onStop() {
 	Log::info(TAG, "Theme service stopped");
-}
-
-void ThemeManager::applyTheme(int32_t theme) {
-	// Theme application handled by UI component based on observable state
 }
 
 } // namespace flx::system

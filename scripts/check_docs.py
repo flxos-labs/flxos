@@ -77,11 +77,12 @@ def check_function_docs(filepath: str) -> List[str]:
     return undocumented
 
 def check_readme_presence() -> Dict[str, bool]:
-    """Check for README.md in each major directory."""
+    """Check for README.md in each major module directory."""
     readme_status = {}
+    module_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core'}
     for item in os.listdir(SEARCH_DIR):
         item_path = os.path.join(SEARCH_DIR, item)
-        if os.path.isdir(item_path):
+        if os.path.isdir(item_path) and item in module_dirs:
             readme_path = os.path.join(item_path, 'README.md')
             readme_status[item] = os.path.exists(readme_path)
     return readme_status

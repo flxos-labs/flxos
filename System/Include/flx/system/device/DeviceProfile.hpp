@@ -13,31 +13,31 @@ struct DeviceProfile {
 	std::string description;
 
 	struct Display {
-		int width;
-		int height;
+		int width = 0;
+		int height = 0;
 		std::string driver;
 		std::string bus;
-		float sizeInches;
+		float sizeInches = 0.0f;
 	} display;
 
 	struct Touch {
-		bool enabled;
+		bool enabled = false;
 		std::string driver;
 		std::string bus;
-		bool separateBus;
+		bool separateBus = false;
 	} touch;
 
 	struct SdCard {
-		bool supported;
+		bool supported = false;
 		std::string mode;
 	} sdCard;
 
 	struct Connectivity {
-		bool wifi;
-		bool bluetooth;
-		bool bleOnly;
-		size_t flashSizeKb;
-		size_t psramSizeKb;
+		bool wifi = false;
+		bool bluetooth = false;
+		bool bleOnly = false;
+		size_t flashSizeKb = 0;
+		size_t psramSizeKb = 0;
 	} connectivity;
 };
 

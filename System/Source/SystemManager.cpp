@@ -30,9 +30,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <sys/stat.h>
-#include <unistd.h>
-
 static constexpr std::string_view TAG = "SystemManager";
 
 namespace flx::system {

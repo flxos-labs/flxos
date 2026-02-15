@@ -18,7 +18,7 @@
 
 // Namespace alias for backward compatibility
 namespace flx::system {
-// Import flx types into System namespace
+// Import flx types into flx::system namespace
 using flx::ClipboardEntry;
 using flx::ClipboardManager;
 using flx::ClipboardOp;

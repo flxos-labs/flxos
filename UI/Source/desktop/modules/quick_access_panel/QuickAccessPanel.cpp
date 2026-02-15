@@ -28,18 +28,13 @@
 #include <cstdint>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
-#include <flx/system/managers/ThemeManager.hpp> // Keep this for ThemeType enum if needed, but subject usage moves to UiThemeManager
+#include <flx/system/managers/ThemeManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #include <flx/ui/app/AppManager.hpp>
 #include <flx/ui/app/Intent.hpp>
 #include <flx/ui/desktop/modules/dock/Dock.hpp>
 #include <flx/ui/managers/FocusManager.hpp>
-#include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
-#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
-#include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
-#include <flx/ui/theming/themes/Themes.hpp>
-#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
 namespace UI::Modules {
 

@@ -140,7 +140,7 @@ size_t NotificationManager::getUnreadCount() const {
 void NotificationManager::updateSubjects() {
 	m_unread_count_subject.set((int32_t)getUnreadCount());
 	int32_t const current = m_update_subject.get();
-	m_update_subject.set(current + 1);
+	m_update_subject.setAndNotify(current + 1);
 }
 
 } // namespace flx::system

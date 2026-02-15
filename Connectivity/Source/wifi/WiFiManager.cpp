@@ -244,23 +244,27 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 
 	if (is_auth_failure) {
 		m_should_reconnect = false;
-
+		setStatus(WiFiStatus::AUTH_FAILED);
 	} else if (m_should_reconnect && m_retry_count < MAX_RETRIES) {
-
+		setStatus(WiFiStatus::CONNECTING);
 		esp_err_t const err = esp_wifi_connect();
 		if (err == ESP_OK) {
 			m_retry_count++;
 		}
 	} else if (m_retry_count >= MAX_RETRIES) {
 		m_should_reconnect = false;
-
+		setStatus(WiFiStatus::NOT_FOUND);
 	} else {
+		setStatus(WiFiStatus::DISCONNECTED);
 	}
 }
 
 void WiFiManager::handleStaConnected(void* event_data) {
 	auto* event = (wifi_event_sta_connected_t*)event_data;
 	Log::info(TAG, "STA connected to SSID: %s", (char*)event->ssid);
+	if (m_ssid_subject) {
+		m_ssid_subject->set((char*)event->ssid);
+	}
 }
 
 void WiFiManager::handleScanDone() {
@@ -283,6 +287,7 @@ void WiFiManager::handleScanDone() {
 
 	m_is_scanning.store(false);
 	m_scan_callback = nullptr;
+	setStatus(isConnected() ? WiFiStatus::CONNECTED : (m_is_enabled ? WiFiStatus::DISCONNECTED : WiFiStatus::DISABLED));
 }
 
 void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, int32_t event_id, void* event_data) {
@@ -293,6 +298,15 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 		char ip_str[16];
 		esp_ip4addr_ntoa(&event->ip_info.ip, ip_str, sizeof(ip_str));
 		Log::info(TAG, "Got IP: %s", ip_str);
+
+		if (self->m_ip_subject) {
+			self->m_ip_subject->set(ip_str);
+		}
+		if (self->m_connected_subject) {
+			self->m_connected_subject->set(1);
+		}
+		self->m_retry_count = 0;
+		self->setStatus(WiFiStatus::CONNECTED);
 
 		if (self->m_got_ip_callback) {
 			self->m_got_ip_callback();

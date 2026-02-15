@@ -301,7 +301,7 @@ void StatusBar::create() {
 	localtime_r(&now, &timeinfo);
 	lv_label_set_text_fmt(m_timeLabel, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
 
-	lv_timer_create(
+	m_timer = lv_timer_create(
 		[](lv_timer_t* t) {
 			auto* label = (lv_obj_t*)lv_timer_get_user_data(t);
 			time_t now = 0;
