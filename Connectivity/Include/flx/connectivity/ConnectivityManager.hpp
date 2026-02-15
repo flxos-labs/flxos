@@ -2,8 +2,8 @@
 
 #include "esp_err.h"
 #include "esp_event.h"
-#include "hotspot/HotspotManager.hpp"
-#include "wifi/WiFiManager.hpp"
+#include "flx/connectivity/hotspot/HotspotManager.hpp"
+#include "flx/connectivity/wifi/WiFiManager.hpp"
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
 #include <flx/services/IService.hpp>
@@ -13,11 +13,7 @@
 #include <string>
 #include <vector>
 
-#if !CONFIG_FLXOS_HEADLESS_MODE
-#include "core/ui/LvglObserverBridge.hpp"
-#endif
-
-namespace System {
+namespace flx::connectivity {
 
 class ConnectivityManager : public flx::Singleton<ConnectivityManager>, public flx::services::IService {
 	friend class flx::Singleton<ConnectivityManager>;
@@ -31,10 +27,6 @@ public:
 	// ──── IService lifecycle ────
 	bool onStart() override;
 	void onStop() override;
-
-#if !CONFIG_FLXOS_HEADLESS_MODE
-	void onGuiInit() override;
-#endif
 
 	// Mode management
 	esp_err_t setWifiMode(wifi_mode_t mode, bool auto_start = true);
@@ -100,32 +92,6 @@ public:
 	flx::StringObservable& getSavedWiFiSsidObservable() { return m_saved_wifi_ssid_subject; }
 	flx::StringObservable& getSavedWiFiPasswordObservable() { return m_saved_wifi_password_subject; }
 
-#if !CONFIG_FLXOS_HEADLESS_MODE
-	// GUI-only: LVGL subject accessors (for use with lv_subject_add_observer)
-	lv_subject_t& getWiFiEnabledSubject() { return *m_wifi_enabled_bridge->getSubject(); }
-	lv_subject_t& getWiFiStatusSubject() { return *m_wifi_status_bridge->getSubject(); }
-	lv_subject_t& getWiFiConnectedSubject() { return *m_wifi_connected_bridge->getSubject(); }
-	lv_subject_t& getWiFiSsidSubject() { return *m_wifi_ssid_bridge->getSubject(); }
-	lv_subject_t& getWiFiIpSubject() { return *m_wifi_ip_bridge->getSubject(); }
-	lv_subject_t& getHotspotEnabledSubject() { return *m_hotspot_enabled_bridge->getSubject(); }
-	lv_subject_t& getHotspotClientsSubject() { return *m_hotspot_clients_bridge->getSubject(); }
-	lv_subject_t& getHotspotUsageSentLvglSubject() { return *m_hotspot_usage_sent_bridge->getSubject(); }
-	lv_subject_t& getHotspotUsageReceivedLvglSubject() { return *m_hotspot_usage_received_bridge->getSubject(); }
-	lv_subject_t& getHotspotUploadSpeedLvglSubject() { return *m_hotspot_upload_speed_bridge->getSubject(); }
-	lv_subject_t& getHotspotDownloadSpeedLvglSubject() { return *m_hotspot_download_speed_bridge->getSubject(); }
-	lv_subject_t& getHotspotUptimeLvglSubject() { return *m_hotspot_uptime_bridge->getSubject(); }
-	lv_subject_t& getBluetoothEnabledSubject() { return *m_bluetooth_enabled_bridge->getSubject(); }
-
-	lv_subject_t& getHotspotSsidSubject() { return *m_hotspot_ssid_bridge->getSubject(); }
-	lv_subject_t& getHotspotPasswordSubject() { return *m_hotspot_password_bridge->getSubject(); }
-	lv_subject_t& getHotspotChannelSubject() { return *m_hotspot_channel_bridge->getSubject(); }
-	lv_subject_t& getHotspotMaxConnSubject() { return *m_hotspot_max_conn_bridge->getSubject(); }
-	lv_subject_t& getHotspotHiddenSubject() { return *m_hotspot_hidden_bridge->getSubject(); }
-	lv_subject_t& getHotspotAuthSubject() { return *m_hotspot_auth_bridge->getSubject(); }
-	lv_subject_t& getWiFiAutostartSubject() { return *m_wifi_autostart_bridge->getSubject(); }
-	lv_subject_t& getWiFiScanIntervalSubject() { return *m_wifi_scan_interval_bridge->getSubject(); }
-#endif
-
 private:
 
 	ConnectivityManager() = default;
@@ -158,33 +124,7 @@ private:
 	flx::StringObservable m_saved_wifi_ssid_subject {""};
 	flx::StringObservable m_saved_wifi_password_subject {""};
 
-#if !CONFIG_FLXOS_HEADLESS_MODE
-	// LVGL bridges
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_enabled_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_status_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_connected_bridge {};
-	std::unique_ptr<LvglStringObserverBridge> m_wifi_ssid_bridge {};
-	std::unique_ptr<LvglStringObserverBridge> m_wifi_ip_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_enabled_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_clients_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_usage_sent_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_usage_received_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_upload_speed_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_download_speed_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_uptime_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_bluetooth_enabled_bridge {};
-
-	std::unique_ptr<LvglStringObserverBridge> m_hotspot_ssid_bridge {};
-	std::unique_ptr<LvglStringObserverBridge> m_hotspot_password_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_channel_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_max_conn_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_hidden_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_hotspot_auth_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_autostart_bridge {};
-	std::unique_ptr<LvglObserverBridge<int32_t>> m_wifi_scan_interval_bridge {};
-#endif
-
 	std::recursive_mutex m_wifi_mutex {};
 };
 
-} // namespace System
+} // namespace flx::connectivity

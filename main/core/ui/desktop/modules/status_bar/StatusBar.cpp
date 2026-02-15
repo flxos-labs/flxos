@@ -1,5 +1,4 @@
 #include "StatusBar.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_pos.h"
 #include "core/lv_obj_scroll.h"
@@ -16,6 +15,7 @@
 #include "core/ui/theming/themes/Themes.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
 #include "display/lv_display.h"
+#include "flx/connectivity/ConnectivityManager.hpp"
 #include "font/lv_symbol_def.h"
 #include "layouts/flex/lv_flex.h"
 #include "misc/lv_area.h"
@@ -56,6 +56,13 @@ void StatusBar::create() {
 	lv_obj_set_flex_flow(m_statusBar, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(m_statusBar, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
+	auto& cm = flx::connectivity::ConnectivityManager::getInstance();
+	m_wifiConnectedBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiConnectedObservable());
+	m_wifiEnabledBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiEnabledObservable());
+	m_hotspotEnabledBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotEnabledObservable());
+	m_hotspotClientsBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotClientsObservable());
+	m_bluetoothEnabledBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getBluetoothEnabledObservable());
+
 	lv_obj_t* left_group = lv_obj_create(m_statusBar);
 	lv_obj_remove_style_all(left_group);
 	lv_obj_set_size(left_group, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -81,13 +88,15 @@ void StatusBar::create() {
 	lv_obj_center(wifi_slash);
 	lv_obj_add_flag(wifi_slash, LV_OBJ_FLAG_HIDDEN);
 
-	lv_observer_cb_t wifi_update_cb = [](lv_observer_t* observer, lv_subject_t* /*subject*/) {
+	// Redefine callback to capture this and use bridges
+	auto wifi_update_cb = [](lv_observer_t* observer, lv_subject_t* /*subject*/) {
+		StatusBar* instance = (StatusBar*)lv_observer_get_user_data(observer);
 		lv_obj_t* cont = lv_observer_get_target_obj(observer);
 		lv_obj_t* icon = lv_obj_get_child(cont, 0);
 		lv_obj_t* slash = lv_obj_get_child(cont, 1);
 
-		bool const connected = lv_subject_get_int(&System::ConnectivityManager::getInstance().getWiFiConnectedSubject()) != 0;
-		bool const enabled = lv_subject_get_int(&System::ConnectivityManager::getInstance().getWiFiEnabledSubject()) != 0;
+		bool const connected = lv_subject_get_int(instance->m_wifiConnectedBridge->getSubject()) != 0;
+		bool const enabled = lv_subject_get_int(instance->m_wifiEnabledBridge->getSubject()) != 0;
 
 		if (connected) {
 			lv_obj_set_style_opa(icon, UiConstants::OPA_COVER, 0);
@@ -102,8 +111,8 @@ void StatusBar::create() {
 		}
 	};
 
-	lv_subject_add_observer_obj(&System::ConnectivityManager::getInstance().getWiFiConnectedSubject(), wifi_update_cb, wifi_cont, nullptr);
-	lv_subject_add_observer_obj(&System::ConnectivityManager::getInstance().getWiFiEnabledSubject(), wifi_update_cb, wifi_cont, nullptr);
+	lv_subject_add_observer_obj(m_wifiConnectedBridge->getSubject(), wifi_update_cb, wifi_cont, this);
+	lv_subject_add_observer_obj(m_wifiEnabledBridge->getSubject(), wifi_update_cb, wifi_cont, this);
 
 	lv_obj_t* hotspot_icon = lv_obj_create(left_group);
 	lv_obj_remove_style_all(hotspot_icon);
@@ -133,7 +142,7 @@ void StatusBar::create() {
 	lv_obj_t* hotspot_label = lv_label_create(hotspot_icon);
 
 	lv_subject_add_observer_obj(
-		&System::ConnectivityManager::getInstance().getHotspotEnabledSubject(),
+		m_hotspotEnabledBridge->getSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			lv_obj_t* cont = lv_observer_get_target_obj(observer);
 			lv_obj_t* icon1 = lv_obj_get_child(cont, 0);
@@ -154,7 +163,7 @@ void StatusBar::create() {
 	);
 
 	lv_subject_add_observer_obj(
-		&System::ConnectivityManager::getInstance().getHotspotClientsSubject(),
+		m_hotspotClientsBridge->getSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			lv_obj_t* label = lv_observer_get_target_obj(observer);
 			int32_t const clients = lv_subject_get_int(subject);
@@ -177,7 +186,7 @@ void StatusBar::create() {
 	lv_obj_center(bt_slash);
 	lv_obj_add_flag(bt_slash, LV_OBJ_FLAG_HIDDEN);
 	lv_subject_add_observer_obj(
-		&System::ConnectivityManager::getInstance().getBluetoothEnabledSubject(),
+		m_bluetoothEnabledBridge->getSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			lv_obj_t* cont = lv_observer_get_target_obj(observer);
 			lv_obj_t* icon = lv_obj_get_child(cont, 0);

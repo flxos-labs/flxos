@@ -2,9 +2,10 @@
 
 #include "core/apps/settings/SettingsCommon.hpp"
 #include "core/apps/settings/SettingsPageBase.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
-#include "core/connectivity/bluetooth/BluetoothManager.hpp"
+#include "core/ui/LvglObserverBridge.hpp"
 #include "core/ui/theming/ui_constants/UiConstants.hpp"
+#include "flx/connectivity/ConnectivityManager.hpp"
+#include "flx/connectivity/bluetooth/BluetoothManager.hpp"
 #include "lvgl.h"
 #include <functional>
 
@@ -28,10 +29,13 @@ protected:
 		lv_obj_t* title = lv_obj_get_child(header, 1);
 		lv_obj_set_flex_grow(title, 1);
 
+		auto& cm = flx::connectivity::ConnectivityManager::getInstance();
+		m_btEnabledBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getBluetoothEnabledObservable());
+
 		m_btSwitch = lv_switch_create(header);
 		lv_obj_bind_checked(
 			m_btSwitch,
-			&ConnectivityManager::getInstance().getBluetoothEnabledSubject()
+			m_btEnabledBridge->getSubject()
 		);
 
 		lv_obj_add_event_cb(
@@ -40,7 +44,7 @@ protected:
 				auto* sw = lv_event_get_target_obj(e);
 				auto* instance = (BluetoothSettings*)lv_event_get_user_data(e);
 				bool const enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
-				BluetoothManager::getInstance().enable(enabled);
+				flx::connectivity::BluetoothManager::getInstance().enable(enabled);
 				instance->refresh();
 			},
 			LV_EVENT_VALUE_CHANGED, this
@@ -62,7 +66,7 @@ protected:
 		lv_obj_set_flex_grow(m_statusLabel, 1);
 		lv_label_set_text(
 			m_statusLabel,
-			BluetoothManager::getInstance().isEnabled() ? "Ready" : "Disabled"
+			flx::connectivity::BluetoothManager::getInstance().isEnabled() ? "Ready" : "Disabled"
 		);
 
 		lv_obj_t* refreshBtn = lv_button_create(statusCont);
@@ -93,7 +97,7 @@ protected:
 private:
 
 	void startScan() {
-		if (!BluetoothManager::getInstance().isEnabled()) {
+		if (!flx::connectivity::BluetoothManager::getInstance().isEnabled()) {
 			return;
 		}
 		lv_obj_clean(m_list);
@@ -124,7 +128,7 @@ private:
 		}
 		lv_obj_clean(m_list);
 
-		bool const enabled = BluetoothManager::getInstance().isEnabled();
+		bool const enabled = flx::connectivity::BluetoothManager::getInstance().isEnabled();
 		if (m_statusLabel) lv_label_set_text(m_statusLabel, enabled ? "Ready" : "Disabled");
 
 		if (enabled) {
@@ -139,6 +143,8 @@ private:
 
 	lv_obj_t* m_btSwitch = nullptr;
 	lv_obj_t* m_statusLabel = nullptr;
+
+	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_btEnabledBridge;
 };
 
 } // namespace System::Apps::Settings

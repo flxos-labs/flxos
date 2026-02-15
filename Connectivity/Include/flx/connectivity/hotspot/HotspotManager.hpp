@@ -12,7 +12,7 @@ extern "C" {
 #include <string>
 #include <vector>
 
-namespace System {
+namespace flx::connectivity {
 
 class HotspotManager : public flx::Singleton<HotspotManager> {
 	friend class flx::Singleton<HotspotManager>;
@@ -105,4 +105,4 @@ private:
 	mutable std::mutex m_mutex {};
 };
 
-} // namespace System
+} // namespace flx::connectivity

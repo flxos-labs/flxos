@@ -1,5 +1,7 @@
 #pragma once
+#include "core/ui/LvglObserverBridge.hpp"
 #include "lvgl.h"
+#include <memory>
 
 namespace UI::Modules {
 
@@ -24,6 +26,12 @@ private:
 	lv_obj_t* m_statusBar = nullptr;
 	lv_obj_t* m_timeLabel = nullptr;
 	lv_timer_t* m_timer = nullptr;
+
+	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_wifiConnectedBridge;
+	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_wifiEnabledBridge;
+	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_hotspotEnabledBridge;
+	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_hotspotClientsBridge;
+	std::unique_ptr<System::LvglObserverBridge<int32_t>> m_bluetoothEnabledBridge;
 
 	static lv_obj_t* s_overlayLabel;
 	static lv_obj_t* s_statusBarInstance;

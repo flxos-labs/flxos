@@ -9,7 +9,7 @@
 #include <functional>
 #include <vector>
 
-namespace System {
+namespace flx::connectivity {
 
 enum class WiFiStatus {
 	DISABLED,
@@ -75,4 +75,4 @@ private:
 	GotIPCallback m_got_ip_callback = nullptr;
 };
 
-} // namespace System
+} // namespace flx::connectivity

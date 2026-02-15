@@ -4,7 +4,7 @@
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
 
-namespace System {
+namespace flx::connectivity {
 
 class BluetoothManager : public flx::Singleton<BluetoothManager> {
 	friend class flx::Singleton<BluetoothManager>;
@@ -25,4 +25,4 @@ private:
 	bool m_is_enabled = false;
 };
 
-} // namespace System
+} // namespace flx::connectivity

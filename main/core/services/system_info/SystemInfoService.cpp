@@ -1,5 +1,4 @@
 #include "SystemInfoService.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
 #include "display/lv_display.h"
 #include "esp_chip_info.h"
 #include "esp_err.h"
@@ -11,6 +10,7 @@
 #include "esp_vfs_fat.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
+#include "flx/connectivity/ConnectivityManager.hpp"
 #include "freertos/task.h"
 #include <flx/core/Logger.hpp>
 #if defined(CONFIG_FLXOS_BATTERY_ENABLED)
@@ -301,7 +301,7 @@ BatteryStats SystemInfoService::getBatteryStats() {
 WiFiStats SystemInfoService::getWiFiStats() {
 	WiFiStats stats;
 
-	stats.connected = System::ConnectivityManager::getInstance().isWiFiConnected();
+	stats.connected = flx::connectivity::ConnectivityManager::getInstance().isWiFiConnected();
 
 	// Initialize defaults
 	stats.ssid = "";
@@ -331,7 +331,7 @@ WiFiStats SystemInfoService::getWiFiStats() {
 		}
 
 		// Retrieve IP address from ConnectivityManager
-		std::string ip = System::ConnectivityManager::getInstance().getWiFiIpObservable().get();
+		std::string ip = flx::connectivity::ConnectivityManager::getInstance().getWiFiIpObservable().get();
 		stats.ipAddress = !ip.empty() ? ip : "0.0.0.0";
 	}
 

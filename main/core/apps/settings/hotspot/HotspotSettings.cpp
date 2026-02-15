@@ -1,7 +1,5 @@
 #include "HotspotSettings.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
-#include "core/connectivity/hotspot/HotspotManager.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_pos.h"
@@ -15,6 +13,8 @@
 #include "display/lv_display.h"
 #include "esp_err.h"
 #include "esp_wifi_types_generic.h"
+#include "flx/connectivity/ConnectivityManager.hpp"
+#include "flx/connectivity/hotspot/HotspotManager.hpp"
 #include "font/lv_symbol_def.h"
 #include "layouts/flex/lv_flex.h"
 #include "misc/lv_anim.h"
@@ -38,6 +38,24 @@ namespace System::Apps::Settings {
 
 void HotspotSettings::createUI() {
 	m_container = create_page_container(m_parent);
+
+	auto& cm = flx::connectivity::ConnectivityManager::getInstance();
+	m_hotspotEnabledBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotEnabledObservable());
+	m_clientCountBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotClientsObservable());
+	m_usageSentBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotUsageSentSubject());
+	m_usageReceivedBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotUsageReceivedSubject());
+	m_uploadSpeedBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotUploadSpeedSubject());
+	m_downloadSpeedBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotDownloadSpeedSubject());
+	m_uptimeBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotUptimeSubject());
+
+	m_ssidBridge = std::make_unique<System::LvglStringObserverBridge>(cm.getHotspotSsidObservable());
+	m_passwordBridge = std::make_unique<System::LvglStringObserverBridge>(cm.getHotspotPasswordObservable());
+	m_channelBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotChannelObservable());
+	m_maxConnBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotMaxConnObservable());
+	m_hiddenBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotHiddenObservable());
+	m_authBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getHotspotAuthObservable());
+	// m_autoShutdownBridge - not observable in ConnectivityManager? HotspotSettings checks it directly from HotspotManager.
+
 	createMainPage();
 	createConfigPage();
 	showMainPage();
@@ -81,7 +99,7 @@ void HotspotSettings::createMainPage() {
 
 	m_hotspotSwitch = lv_switch_create(header);
 	lv_subject_add_observer_obj(
-		&ConnectivityManager::getInstance().getHotspotEnabledSubject(),
+		m_hotspotEnabledBridge->getSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			auto* sw = lv_observer_get_target_obj(o);
 			auto* instance = (HotspotSettings*)lv_observer_get_user_data(o);
@@ -107,7 +125,7 @@ void HotspotSettings::createMainPage() {
 			if (lv_obj_has_state(sw, LV_STATE_CHECKED)) {
 				instance->applyHotspotSettings();
 			} else {
-				ConnectivityManager::getInstance().stopHotspot();
+				flx::connectivity::ConnectivityManager::getInstance().stopHotspot();
 			}
 		},
 		LV_EVENT_VALUE_CHANGED, this
@@ -153,7 +171,7 @@ void HotspotSettings::createMainPage() {
 	lv_obj_t* uptimeLabel = lv_label_create(usageCont);
 	lv_label_set_text(uptimeLabel, "Uptime: 0s");
 	lv_subject_add_observer_obj(
-		&ConnectivityManager::getInstance().getHotspotUptimeLvglSubject(),
+		m_uptimeBridge->getSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
 			int32_t const sec = lv_subject_get_int(s);
@@ -174,7 +192,7 @@ void HotspotSettings::createMainPage() {
 	lv_obj_t* downSpeedLabel = lv_label_create(usageCont);
 	lv_label_set_text(downSpeedLabel, "Download: 0 KB/s");
 	lv_subject_add_observer_obj(
-		&ConnectivityManager::getInstance().getHotspotDownloadSpeedLvglSubject(),
+		m_downloadSpeedBridge->getSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
 			int32_t const kb = lv_subject_get_int(s);
@@ -190,7 +208,7 @@ void HotspotSettings::createMainPage() {
 	lv_obj_t* upSpeedLabel = lv_label_create(usageCont);
 	lv_label_set_text(upSpeedLabel, "Upload: 0 KB/s");
 	lv_subject_add_observer_obj(
-		&ConnectivityManager::getInstance().getHotspotUploadSpeedLvglSubject(),
+		m_uploadSpeedBridge->getSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
 			int32_t const kb = lv_subject_get_int(s);
@@ -206,7 +224,7 @@ void HotspotSettings::createMainPage() {
 	lv_obj_t* sentLabel = lv_label_create(usageCont);
 	lv_label_set_text(sentLabel, "Sent: 0 KB");
 	lv_subject_add_observer_obj(
-		&ConnectivityManager::getInstance().getHotspotUsageSentLvglSubject(),
+		m_usageSentBridge->getSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
 			int32_t const kb = lv_subject_get_int(s);
@@ -222,7 +240,7 @@ void HotspotSettings::createMainPage() {
 	lv_obj_t* recvLabel = lv_label_create(usageCont);
 	lv_label_set_text(recvLabel, "Received: 0 KB");
 	lv_subject_add_observer_obj(
-		&ConnectivityManager::getInstance().getHotspotUsageReceivedLvglSubject(),
+		m_usageReceivedBridge->getSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
 			int32_t const kb = lv_subject_get_int(s);
@@ -242,7 +260,7 @@ void HotspotSettings::createMainPage() {
 	lv_obj_add_event_cb(
 		resetUsageBtn,
 		[](lv_event_t* /*e*/) {
-			HotspotManager::getInstance().resetUsage();
+			flx::connectivity::HotspotManager::getInstance().resetUsage();
 		},
 		LV_EVENT_CLICKED, nullptr
 	);
@@ -252,7 +270,7 @@ void HotspotSettings::createMainPage() {
 	lv_obj_set_style_margin_top(clientsHeader, lv_dpx(LayoutConstants::MARGIN_SECTION), 0);
 
 	lv_subject_add_observer_obj(
-		&ConnectivityManager::getInstance().getHotspotClientsSubject(),
+		m_clientCountBridge->getSubject(),
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
 			lv_label_set_text_fmt(
@@ -278,7 +296,7 @@ void HotspotSettings::createMainPage() {
 
 				lv_obj_clean(instance->m_clientsCont);
 				auto clients =
-					ConnectivityManager::getInstance().getHotspotClientsList();
+					flx::connectivity::ConnectivityManager::getInstance().getHotspotClientsList();
 				if (clients.empty()) {
 					lv_label_set_text(lv_label_create(instance->m_clientsCont), "No clients connected");
 				} else {
@@ -367,7 +385,7 @@ void HotspotSettings::createConfigPage() {
 	m_ssidTa = lv_textarea_create(content);
 	lv_textarea_set_one_line(m_ssidTa, true);
 
-	const char* saved_ssid = (const char*)lv_subject_get_pointer(&ConnectivityManager::getInstance().getHotspotSsidSubject());
+	const char* saved_ssid = (const char*)lv_subject_get_pointer(m_ssidBridge->getSubject());
 	lv_textarea_set_text(m_ssidTa, saved_ssid ? saved_ssid : "ESP32-Hotspot");
 	lv_obj_set_width(m_ssidTa, lv_pct(100));
 
@@ -378,7 +396,7 @@ void HotspotSettings::createConfigPage() {
 	lv_textarea_set_one_line(m_passwordTa, true);
 	lv_textarea_set_password_mode(m_passwordTa, true);
 
-	const char* saved_pass = (const char*)lv_subject_get_pointer(&ConnectivityManager::getInstance().getHotspotPasswordSubject());
+	const char* saved_pass = (const char*)lv_subject_get_pointer(m_passwordBridge->getSubject());
 	lv_textarea_set_text(m_passwordTa, saved_pass ? saved_pass : "12345678");
 	lv_obj_set_width(m_passwordTa, lv_pct(100));
 
@@ -397,7 +415,7 @@ void HotspotSettings::createConfigPage() {
 	lv_label_set_text(channelLabel, "WiFi Channel:");
 	m_channelDropdown = lv_dropdown_create(channelCont);
 	lv_dropdown_set_options(m_channelDropdown, "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13");
-	int const saved_chan = lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotChannelSubject());
+	int const saved_chan = lv_subject_get_int(m_channelBridge->getSubject());
 	if (saved_chan >= 1 && saved_chan <= 13) lv_dropdown_set_selected(m_channelDropdown, saved_chan - 1);
 	lv_obj_set_width(m_channelDropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_WIDTH_SMALL));
 	lv_dropdown_set_dir(m_channelDropdown, LV_DIR_LEFT);
@@ -414,7 +432,7 @@ void HotspotSettings::createConfigPage() {
 	m_maxConnSlider = lv_slider_create(maxConnCont);
 	lv_obj_set_flex_grow(m_maxConnSlider, 1);
 	lv_slider_set_range(m_maxConnSlider, 1, 10);
-	int const saved_max = lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotMaxConnSubject());
+	int const saved_max = lv_subject_get_int(m_maxConnBridge->getSubject());
 	lv_slider_set_value(m_maxConnSlider, saved_max > 0 ? saved_max : 4, LV_ANIM_OFF);
 	lv_obj_t* maxConnValLabel = lv_label_create(maxConnCont);
 	lv_label_set_text_fmt(maxConnValLabel, "%d", saved_max > 0 ? saved_max : 4);
@@ -439,7 +457,7 @@ void HotspotSettings::createConfigPage() {
 	lv_obj_t* hiddenLabel = lv_label_create(hiddenCont);
 	lv_label_set_text(hiddenLabel, "Hide SSID:");
 	m_hiddenSwitch = lv_switch_create(hiddenCont);
-	if (lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotHiddenSubject())) {
+	if (lv_subject_get_int(m_hiddenBridge->getSubject())) {
 		lv_obj_add_state(m_hiddenSwitch, LV_STATE_CHECKED);
 	}
 
@@ -453,7 +471,7 @@ void HotspotSettings::createConfigPage() {
 	lv_obj_t* natLabel = lv_label_create(natCont);
 	lv_label_set_text(natLabel, "Internet Sharing (NAT):");
 	m_natSwitch = lv_switch_create(natCont);
-	if (ConnectivityManager::getInstance().isHotspotNatEnabled()) {
+	if (flx::connectivity::ConnectivityManager::getInstance().isHotspotNatEnabled()) {
 		lv_obj_add_state(m_natSwitch, LV_STATE_CHECKED);
 	}
 
@@ -468,7 +486,7 @@ void HotspotSettings::createConfigPage() {
 	lv_label_set_text(secLabel, "Security:");
 	m_securityDropdown = lv_dropdown_create(secCont);
 	lv_dropdown_set_options(m_securityDropdown, "Open\nWPA2 PSK\nWPA3 PSK\nWPA2/WPA3");
-	lv_dropdown_set_selected(m_securityDropdown, lv_subject_get_int(&ConnectivityManager::getInstance().getHotspotAuthSubject()));
+	lv_dropdown_set_selected(m_securityDropdown, lv_subject_get_int(m_authBridge->getSubject()));
 	lv_obj_set_width(m_securityDropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_WIDTH_LARGE));
 	lv_dropdown_set_dir(m_securityDropdown, LV_DIR_LEFT);
 
@@ -508,7 +526,7 @@ void HotspotSettings::createConfigPage() {
 	lv_obj_t* autoShutLabel = lv_label_create(autoShutCont);
 	lv_label_set_text(autoShutLabel, "Auto-Shutdown (5 min):");
 	m_autoShutdownSwitch = lv_switch_create(autoShutCont);
-	if (HotspotManager::getInstance().getAutoShutdownTimeout() > 0) {
+	if (flx::connectivity::HotspotManager::getInstance().getAutoShutdownTimeout() > 0) {
 		lv_obj_add_state(m_autoShutdownSwitch, LV_STATE_CHECKED);
 	}
 }
@@ -567,22 +585,22 @@ void HotspotSettings::applyHotspotSettings() {
 	strncpy(pass_buf, pass, sizeof(pass_buf) - 1);
 
 	GuiTask::lock();
-	lv_subject_set_pointer(&ConnectivityManager::getInstance().getHotspotSsidSubject(), ssid_buf);
-	lv_subject_set_pointer(&ConnectivityManager::getInstance().getHotspotPasswordSubject(), pass_buf);
-	lv_subject_set_int(&ConnectivityManager::getInstance().getHotspotChannelSubject(), channel);
-	lv_subject_set_int(&ConnectivityManager::getInstance().getHotspotMaxConnSubject(), max_conn);
-	lv_subject_set_int(&ConnectivityManager::getInstance().getHotspotHiddenSubject(), hidden ? 1 : 0);
-	lv_subject_set_int(&ConnectivityManager::getInstance().getHotspotAuthSubject(), auth_idx);
+	lv_subject_set_pointer(m_ssidBridge->getSubject(), ssid_buf);
+	lv_subject_set_pointer(m_passwordBridge->getSubject(), pass_buf);
+	lv_subject_set_int(m_channelBridge->getSubject(), channel);
+	lv_subject_set_int(m_maxConnBridge->getSubject(), max_conn);
+	lv_subject_set_int(m_hiddenBridge->getSubject(), hidden ? 1 : 0);
+	lv_subject_set_int(m_authBridge->getSubject(), auth_idx);
 	GuiTask::unlock();
 
-	ConnectivityManager::getInstance().setHotspotNatEnabled(nat_enabled);
-	HotspotManager::getInstance().setAutoShutdownTimeout(
+	flx::connectivity::ConnectivityManager::getInstance().setHotspotNatEnabled(nat_enabled);
+	flx::connectivity::HotspotManager::getInstance().setAutoShutdownTimeout(
 		lv_obj_has_state(m_autoShutdownSwitch, LV_STATE_CHECKED) ? 300 : 0
 	);
 
 	// Only start/restart if the switch is ON
 	if (lv_obj_has_state(m_hotspotSwitch, LV_STATE_CHECKED)) {
-		esp_err_t const err = ConnectivityManager::getInstance().startHotspot(
+		esp_err_t const err = flx::connectivity::ConnectivityManager::getInstance().startHotspot(
 			ssid, pass, channel, max_conn, hidden, auth, tx_power
 		);
 		if (err != ESP_OK) {

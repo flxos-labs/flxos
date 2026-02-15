@@ -1,6 +1,4 @@
-#include "HotspotManager.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
-#include "core/connectivity/wifi/WiFiManager.hpp"
+#include "flx/connectivity/hotspot/HotspotManager.hpp"
 #include "dhcpserver/dhcpserver_hostname.h"
 #include "esp_err.h"
 #include "esp_event.h"
@@ -9,6 +7,8 @@
 #include "esp_netif_types.h"
 #include "esp_timer.h"
 #include "esp_wifi.h"
+#include "flx/connectivity/ConnectivityManager.hpp"
+#include "flx/connectivity/wifi/WiFiManager.hpp"
 #include <cstdint>
 #include <cstring>
 #include <flx/core/Logger.hpp>
@@ -30,7 +30,7 @@ struct netif* esp_netif_get_netif_impl(esp_netif_t* esp_netif);
 
 static constexpr std::string_view TAG = "HotspotManager";
 
-namespace System {
+namespace flx::connectivity {
 
 // Static hooks to capture traffic
 static err_t netif_input_hook(struct pbuf* p, struct netif* netif) {
@@ -483,4 +483,4 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 	}
 }
 
-} // namespace System
+} // namespace flx::connectivity

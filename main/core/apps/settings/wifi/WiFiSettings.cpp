@@ -1,7 +1,5 @@
 #include "WiFiSettings.hpp"
 #include "core/apps/settings/SettingsCommon.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
-#include "core/connectivity/wifi/WiFiManager.hpp"
 #include "core/lv_obj.h"
 #include "core/lv_obj_event.h"
 #include "core/lv_obj_pos.h"
@@ -16,6 +14,8 @@
 #include "esp_err.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
+#include "flx/connectivity/ConnectivityManager.hpp"
+#include "flx/connectivity/wifi/WiFiManager.hpp"
 #include "font/lv_symbol_def.h"
 #include "layouts/flex/lv_flex.h"
 #include "misc/lv_area.h"
@@ -37,6 +37,13 @@ namespace System::Apps::Settings {
 void WiFiSettings::createUI() {
 	m_container = create_page_container(m_parent);
 	lv_obj_set_style_pad_gap(m_container, 0, 0);
+
+	auto& cm = flx::connectivity::ConnectivityManager::getInstance();
+	m_wifiEnabledBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiEnabledObservable());
+	m_wifiStatusBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiStatusObservable());
+	m_wifiConnectedBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiConnectedObservable());
+	m_wifiScanIntervalBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiScanIntervalObservable());
+	m_wifiAutostartBridge = std::make_unique<System::LvglObserverBridge<int32_t>>(cm.getWiFiAutostartObservable());
 
 	lv_obj_t* backBtn = nullptr;
 	lv_obj_t* header = create_header(m_container, "Wi-Fi", &backBtn);
@@ -62,7 +69,7 @@ void WiFiSettings::createUI() {
 	m_wifiSwitch = lv_switch_create(header);
 	lv_obj_bind_checked(
 		m_wifiSwitch,
-		&ConnectivityManager::getInstance().getWiFiEnabledSubject()
+		m_wifiEnabledBridge->getSubject()
 	);
 
 	lv_obj_add_event_cb(
@@ -71,14 +78,13 @@ void WiFiSettings::createUI() {
 			auto* sw = lv_event_get_target_obj(e);
 			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
 			bool const enabled = lv_obj_has_state(sw, LV_STATE_CHECKED);
-			ConnectivityManager::getInstance().setWiFiEnabled(enabled);
+			flx::connectivity::ConnectivityManager::getInstance().setWiFiEnabled(enabled);
 			if (!enabled) {
 				instance->m_isScanning = false;
 				lv_obj_clean(instance->m_list);
 				lv_list_add_text(instance->m_list, "Wi-Fi is disabled");
 			} else {
-				// Auto-connect to saved network if available
-				auto& cm = ConnectivityManager::getInstance();
+				auto& cm = flx::connectivity::ConnectivityManager::getInstance();
 				if (cm.hasSavedWiFiCredentials()) {
 					cm.connectWiFi(
 						cm.getSavedWiFiSsid().c_str(),
@@ -132,7 +138,7 @@ void WiFiSettings::createUI() {
 
 	// Observer for WiFi status changes - triggers auto-scan after connection
 	m_statusObserver = lv_subject_add_observer_obj(
-		&ConnectivityManager::getInstance().getWiFiConnectedSubject(),
+		m_wifiConnectedBridge->getSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			auto* instance = (WiFiSettings*)lv_observer_get_user_data(observer);
 			int32_t connected = lv_subject_get_int(subject);
@@ -147,7 +153,7 @@ void WiFiSettings::createUI() {
 
 	// Observer for scan interval setting changes
 	m_scanIntervalObserver = lv_subject_add_observer_obj(
-		&ConnectivityManager::getInstance().getWiFiScanIntervalSubject(),
+		m_wifiScanIntervalBridge->getSubject(),
 		[](lv_observer_t* observer, lv_subject_t* subject) {
 			auto* instance = (WiFiSettings*)lv_observer_get_user_data(observer);
 			int32_t interval = lv_subject_get_int(subject);
@@ -169,7 +175,7 @@ void WiFiSettings::createUI() {
 							GuiTask::unlock();
 							return;
 						}
-						bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
+						bool should_scan = flx::connectivity::ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
 						if (should_scan) {
 							inst->refreshScan();
 						}
@@ -188,7 +194,7 @@ void WiFiSettings::createUI() {
 	);
 
 	// Trigger initial timer setup based on current setting
-	int32_t initial_interval = lv_subject_get_int(&ConnectivityManager::getInstance().getWiFiScanIntervalSubject());
+	int32_t initial_interval = lv_subject_get_int(m_wifiScanIntervalBridge->getSubject());
 	if (initial_interval > 0) {
 		esp_timer_create_args_t timer_args = {
 			.callback = [](void* arg) {
@@ -198,7 +204,7 @@ void WiFiSettings::createUI() {
 					GuiTask::unlock();
 					return;
 				}
-				bool should_scan = ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
+				bool should_scan = flx::connectivity::ConnectivityManager::getInstance().isWiFiEnabled() && !inst->m_isScanning;
 				if (should_scan) {
 					inst->refreshScan();
 				}
@@ -250,14 +256,14 @@ void WiFiSettings::showConfig() {
 	add_switch_item(
 		list,
 		"Auto-start on Boot",
-		&ConnectivityManager::getInstance().getWiFiAutostartSubject()
+		m_wifiAutostartBridge->getSubject()
 	);
 
 	// Auto-scan interval slider (0 = disabled, 10-120 seconds)
 	add_slider_item(
 		list,
 		"Scan Interval (s)",
-		&ConnectivityManager::getInstance().getWiFiScanIntervalSubject(),
+		m_wifiScanIntervalBridge->getSubject(),
 		0, 120 // 0 = disabled, max 2 minutes
 	);
 }
@@ -277,7 +283,7 @@ void WiFiSettings::refreshScan() {
 	// Clear list
 	lv_obj_clean(m_list);
 
-	if (!ConnectivityManager::getInstance().isWiFiEnabled()) {
+	if (!flx::connectivity::ConnectivityManager::getInstance().isWiFiEnabled()) {
 		lv_list_add_text(m_list, "Wi-Fi is disabled");
 		return;
 	}
@@ -285,7 +291,7 @@ void WiFiSettings::refreshScan() {
 	m_isScanning = true;
 	lv_list_add_text(m_list, "Scanning...");
 
-	ConnectivityManager::getInstance().scanWiFi(
+	flx::connectivity::WiFiManager::getInstance().scan(
 		[this](std::vector<wifi_ap_record_t> networks) {
 			GuiTask::lock();
 			m_isScanning = false;
@@ -322,7 +328,7 @@ void WiFiSettings::refreshScan() {
 				}
 
 				if (authmode == WIFI_AUTH_OPEN) {
-					ConnectivityManager::getInstance().connectWiFi(ssid, "");
+					flx::connectivity::ConnectivityManager::getInstance().connectWiFi(ssid, "");
 					instance->updateStatus();
 				} else {
 					instance->showConnectScreen(ssid);
@@ -370,23 +376,23 @@ void WiFiSettings::updateStatus() {
 		return;
 	}
 
-	auto const status = static_cast<System::WiFiStatus>(lv_subject_get_int(
-		&ConnectivityManager::getInstance().getWiFiStatusSubject()
+	auto const status = static_cast<flx::connectivity::WiFiStatus>(lv_subject_get_int(
+		m_wifiStatusBridge->getSubject()
 	));
 
 	switch (status) {
-		case System::WiFiStatus::DISABLED:
+		case flx::connectivity::WiFiStatus::DISABLED:
 			lv_label_set_text(m_statusLabel, "Disabled");
 			break;
-		case System::WiFiStatus::DISCONNECTED:
+		case flx::connectivity::WiFiStatus::DISCONNECTED:
 			lv_label_set_text(m_statusLabel, "Disconnected");
 			break;
-		case System::WiFiStatus::SCANNING:
+		case flx::connectivity::WiFiStatus::SCANNING:
 			break;
-		case System::WiFiStatus::CONNECTING:
+		case flx::connectivity::WiFiStatus::CONNECTING:
 			lv_label_set_text(m_statusLabel, "Connecting...");
 			break;
-		case System::WiFiStatus::CONNECTED: {
+		case flx::connectivity::WiFiStatus::CONNECTED: {
 			wifi_ap_record_t ap_info;
 			if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
 				const char* auth_symbol = (ap_info.authmode == WIFI_AUTH_OPEN)
@@ -398,10 +404,10 @@ void WiFiSettings::updateStatus() {
 			}
 			break;
 		}
-		case System::WiFiStatus::AUTH_FAILED:
+		case flx::connectivity::WiFiStatus::AUTH_FAILED:
 			lv_label_set_text(m_statusLabel, "Authentication Failed");
 			break;
-		case System::WiFiStatus::NOT_FOUND:
+		case flx::connectivity::WiFiStatus::NOT_FOUND:
 			lv_label_set_text(m_statusLabel, "Network Not Found");
 			break;
 	}
@@ -470,7 +476,7 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
 			const char* password = lv_textarea_get_text(instance->m_passwordTa);
 			bool save = lv_obj_has_state(instance->m_saveSwitch, LV_STATE_CHECKED);
-			ConnectivityManager::getInstance().connectWiFi(
+			flx::connectivity::ConnectivityManager::getInstance().connectWiFi(
 				instance->m_connectSsid.c_str(), password, save
 			);
 			lv_obj_delete(instance->m_connectContainer);

@@ -1,5 +1,4 @@
 #include "SystemManager.hpp"
-#include "core/connectivity/ConnectivityManager.hpp"
 #include "core/system/display/DisplayManager.hpp"
 #include "core/system/power/PowerManager.hpp"
 #include "core/system/settings/SettingsManager.hpp"
@@ -7,6 +6,7 @@
 #include "core/system/time/TimeManager.hpp"
 #include "esp_err.h"
 #include "esp_vfs_fat.h"
+#include "flx/connectivity/ConnectivityManager.hpp"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "sdkconfig.h"
@@ -95,7 +95,8 @@ void SystemManager::registerServices() {
 	registry.addService(std::shared_ptr<flx::services::IService>(&SettingsManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&DisplayManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&ThemeManager::getInstance(), noDelete));
-	registry.addService(std::shared_ptr<flx::services::IService>(&ConnectivityManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::connectivity::ConnectivityManager::getInstance(), noDelete));
+
 	registry.addService(std::shared_ptr<flx::services::IService>(&PowerManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&TimeManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::DeviceProfileService::getInstance(), noDelete));

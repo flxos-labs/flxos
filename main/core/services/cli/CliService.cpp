@@ -16,11 +16,11 @@
 #include <string>
 #include <vector>
 
-#include "core/connectivity/ConnectivityManager.hpp"
-#include "core/connectivity/wifi/WiFiManager.hpp"
 #include "core/services/filesystem/FileSystemService.hpp"
 #include "core/system/display/DisplayManager.hpp"
 #include "core/tasks/gui/GuiTask.hpp"
+#include "flx/connectivity/ConnectivityManager.hpp"
+#include "flx/connectivity/wifi/WiFiManager.hpp"
 #include <sstream>
 #include <sys/time.h>
 #include <time.h>
@@ -226,7 +226,7 @@ static int cmdChip(int /*argc*/, char** /*argv*/) {
 // Command: wifi - WiFi management
 // WiFi Helpers
 static int cmdWiFiStatus() {
-	auto& wifi_mgr = System::WiFiManager::getInstance();
+	auto& wifi_mgr = flx::connectivity::WiFiManager::getInstance();
 	auto wifi_stats = flx::services::SystemInfoService::getInstance().getWiFiStats();
 	printf("\n=== WiFi Status ===\n");
 	printf("State:          %s\n", wifi_mgr.isEnabled() ? "Enabled" : "Disabled");
@@ -240,20 +240,20 @@ static int cmdWiFiStatus() {
 }
 
 static int cmdWiFiOn() {
-	System::WiFiManager::getInstance().setEnabled(true);
+	flx::connectivity::WiFiManager::getInstance().setEnabled(true);
 	printf("WiFi enabled.\n");
 	return 0;
 }
 
 static int cmdWiFiOff() {
-	System::WiFiManager::getInstance().setEnabled(false);
+	flx::connectivity::WiFiManager::getInstance().setEnabled(false);
 	printf("WiFi disabled.\n");
 	return 0;
 }
 
 static int cmdWiFiScan() {
 	printf("Starting WiFi scan...\n");
-	System::WiFiManager::getInstance().scan([](const std::vector<wifi_ap_record_t>& aps) {
+	flx::connectivity::WiFiManager::getInstance().scan([](const std::vector<wifi_ap_record_t>& aps) {
 		printf("\n=== Scan Results (%zu APs) ===\n", aps.size());
 		printf("%-32s %-6s %-6s %-20s\n", "SSID", "RSSI", "Chan", "Auth");
 		printf("------------------------------------------------------------------\n");
@@ -286,12 +286,12 @@ static int cmdWiFiConnect(int argc, char** argv) {
 	std::string ssid = argv[2];
 	std::string pass = argv[3];
 	printf("Connecting to '%s'...\n", ssid.c_str());
-	System::WiFiManager::getInstance().connect(ssid.c_str(), pass.c_str());
+	flx::connectivity::WiFiManager::getInstance().connect(ssid.c_str(), pass.c_str());
 	return 0;
 }
 
 static int cmdWiFiDisconnect() {
-	System::WiFiManager::getInstance().disconnect();
+	flx::connectivity::WiFiManager::getInstance().disconnect();
 	printf("Disconnected from WiFi.\n");
 	return 0;
 }
@@ -326,7 +326,7 @@ static int cmdWiFi(int argc, char** argv) {
 
 // Command: hotspot - Hotspot management
 static int cmdHotspot(int argc, char** argv) {
-	auto& conn_mgr = System::ConnectivityManager::getInstance();
+	auto& conn_mgr = flx::connectivity::ConnectivityManager::getInstance();
 
 	if (argc == 1 || (argc > 1 && strcmp(argv[1], "status") == 0)) {
 		bool enabled = conn_mgr.isHotspotEnabled();

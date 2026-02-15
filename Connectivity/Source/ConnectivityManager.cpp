@@ -1,5 +1,4 @@
-#include "ConnectivityManager.hpp"
-#include "bluetooth/BluetoothManager.hpp"
+#include "flx/connectivity/ConnectivityManager.hpp"
 #include "core/system/settings/SettingsManager.hpp"
 #include "esp_err.h"
 #include "esp_event.h"
@@ -7,20 +6,16 @@
 #include "esp_wifi.h"
 #include "esp_wifi_default.h"
 #include "esp_wifi_types_generic.h"
-#include "hotspot/HotspotManager.hpp"
-#include "wifi/WiFiManager.hpp"
+#include "flx/connectivity/bluetooth/BluetoothManager.hpp"
+#include "flx/connectivity/hotspot/HotspotManager.hpp"
+#include "flx/connectivity/wifi/WiFiManager.hpp"
 #include <cstdint>
 #include <flx/core/Logger.hpp>
 #include <string_view>
 
-#if !CONFIG_FLXOS_HEADLESS_MODE
-#include "core/tasks/gui/GuiTask.hpp"
-#include "core/ui/LvglBridgeHelpers.hpp"
-#endif
-
 static constexpr std::string_view TAG = "Connectivity";
 
-namespace System {
+namespace flx::connectivity {
 
 const flx::services::ServiceManifest ConnectivityManager::serviceManifest = {
 	.serviceId = "com.flxos.connectivity",
@@ -49,16 +44,16 @@ bool ConnectivityManager::onStart() {
 	BluetoothManager::getInstance().init(&m_bluetooth_enabled_subject);
 
 	// Register config settings for persistence
-	SettingsManager::getInstance().registerSetting("hs_ssid", m_hotspot_ssid_subject);
-	SettingsManager::getInstance().registerSetting("hs_pass", m_hotspot_password_subject);
-	SettingsManager::getInstance().registerSetting("hs_chan", m_hotspot_channel_subject);
-	SettingsManager::getInstance().registerSetting("hs_max", m_hotspot_max_conn_subject);
-	SettingsManager::getInstance().registerSetting("hs_hide", m_hotspot_hidden_subject);
-	SettingsManager::getInstance().registerSetting("hs_auth", m_hotspot_auth_subject);
-	SettingsManager::getInstance().registerSetting("wifi_autostart", m_wifi_autostart_subject);
-	SettingsManager::getInstance().registerSetting("wifi_scan_int", m_wifi_scan_interval_subject);
-	SettingsManager::getInstance().registerSetting("wifi_ssid", m_saved_wifi_ssid_subject);
-	SettingsManager::getInstance().registerSetting("wifi_pass", m_saved_wifi_password_subject);
+	System::SettingsManager::getInstance().registerSetting("hs_ssid", m_hotspot_ssid_subject);
+	System::SettingsManager::getInstance().registerSetting("hs_pass", m_hotspot_password_subject);
+	System::SettingsManager::getInstance().registerSetting("hs_chan", m_hotspot_channel_subject);
+	System::SettingsManager::getInstance().registerSetting("hs_max", m_hotspot_max_conn_subject);
+	System::SettingsManager::getInstance().registerSetting("hs_hide", m_hotspot_hidden_subject);
+	System::SettingsManager::getInstance().registerSetting("hs_auth", m_hotspot_auth_subject);
+	System::SettingsManager::getInstance().registerSetting("wifi_autostart", m_wifi_autostart_subject);
+	System::SettingsManager::getInstance().registerSetting("wifi_scan_int", m_wifi_scan_interval_subject);
+	System::SettingsManager::getInstance().registerSetting("wifi_ssid", m_saved_wifi_ssid_subject);
+	System::SettingsManager::getInstance().registerSetting("wifi_pass", m_saved_wifi_password_subject);
 
 	ESP_ERROR_CHECK(setWifiMode(WIFI_MODE_NULL));
 	Log::info(TAG, "Connectivity service started");
@@ -94,38 +89,6 @@ void ConnectivityManager::onStop() {
 	}
 	Log::info(TAG, "Connectivity service stopped");
 }
-
-#if !CONFIG_FLXOS_HEADLESS_MODE
-void ConnectivityManager::onGuiInit() {
-	Log::info(TAG, "Initializing LVGL bridges for connectivity...");
-
-	INIT_BRIDGE(m_wifi_enabled_bridge, m_wifi_enabled_subject);
-	INIT_BRIDGE(m_wifi_status_bridge, m_wifi_status_subject);
-	INIT_BRIDGE(m_wifi_connected_bridge, m_wifi_connected_subject);
-
-	INIT_STRING_BRIDGE(m_wifi_ssid_bridge, m_wifi_ssid_subject);
-	INIT_STRING_BRIDGE(m_wifi_ip_bridge, m_wifi_ip_subject);
-
-	INIT_BRIDGE(m_hotspot_enabled_bridge, m_hotspot_enabled_subject);
-	INIT_BRIDGE(m_hotspot_clients_bridge, m_hotspot_clients_subject);
-	INIT_BRIDGE(m_hotspot_usage_sent_bridge, m_hotspot_usage_sent_subject);
-	INIT_BRIDGE(m_hotspot_usage_received_bridge, m_hotspot_usage_received_subject);
-	INIT_BRIDGE(m_hotspot_download_speed_bridge, m_hotspot_download_speed_subject);
-	INIT_BRIDGE(m_hotspot_upload_speed_bridge, m_hotspot_upload_speed_subject);
-	INIT_BRIDGE(m_hotspot_uptime_bridge, m_hotspot_uptime_subject);
-	INIT_BRIDGE(m_bluetooth_enabled_bridge, m_bluetooth_enabled_subject);
-
-	INIT_STRING_BRIDGE(m_hotspot_ssid_bridge, m_hotspot_ssid_subject);
-	INIT_STRING_BRIDGE(m_hotspot_password_bridge, m_hotspot_password_subject);
-
-	INIT_BRIDGE(m_hotspot_channel_bridge, m_hotspot_channel_subject);
-	INIT_BRIDGE(m_hotspot_max_conn_bridge, m_hotspot_max_conn_subject);
-	INIT_BRIDGE(m_hotspot_hidden_bridge, m_hotspot_hidden_subject);
-	INIT_BRIDGE(m_hotspot_auth_bridge, m_hotspot_auth_subject);
-	INIT_BRIDGE(m_wifi_autostart_bridge, m_wifi_autostart_subject);
-	INIT_BRIDGE(m_wifi_scan_interval_bridge, m_wifi_scan_interval_subject);
-}
-#endif
 
 esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode, bool auto_start) {
 	std::lock_guard<std::recursive_mutex> lock(m_wifi_mutex);
@@ -176,13 +139,6 @@ esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
 	Log::info(TAG, "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
 	esp_err_t const err = WiFiManager::getInstance().setEnabled(enabled);
 	if (err == ESP_OK) {
-#if !CONFIG_FLXOS_HEADLESS_MODE
-		GuiTask::lock();
-#endif
-		m_wifi_enabled_subject.set(enabled ? 1 : 0);
-#if !CONFIG_FLXOS_HEADLESS_MODE
-		GuiTask::unlock();
-#endif
 	}
 	return err;
 }
@@ -228,4 +184,4 @@ bool ConnectivityManager::hasSavedWiFiCredentials() const {
 	return !ssid.empty();
 }
 
-} // namespace System
+} // namespace flx::connectivity
