@@ -23,6 +23,7 @@ public:
 	// ──── IService lifecycle ────
 	bool onStart() override;
 	void onStop() override;
+	void onGuiInit() override;
 
 	bool isMounted() const { return m_mounted; }
 	const std::string& getMountPoint() const { return m_mountPoint; }
@@ -40,7 +41,6 @@ private:
 
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
 	sdmmc_card_t* m_card = nullptr;
-	bool m_busInitializedHere = false;
 #endif
 };
 

@@ -724,7 +724,7 @@ menu "Hardware Configuration"
 					config FLXOS_SD_MAX_FREQ_KHZ
 						int "SD Card Max SPI Frequency (kHz)"
 						range 400 40000
-						default 4000
+						default 20000
 						help
 							Maximum SPI clock frequency for SD card in kHz.
 							Typical values: 4000 (4MHz) or 20000 (20MHz).

@@ -1,5 +1,6 @@
 #include "misc/lv_fs.h"
 #include "sdkconfig.h"
+#include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
@@ -55,16 +56,31 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 		lv_fs_dir_close(&dir);
 	}
 
+	// Synchronize with GUI task to prevent SPI bus contention if SD is on shared bus
+	flx::core::GuiLock::lock();
+
 	lv_fs_dir_t dir;
+	Log::info(TAG, "Opening LVGL directory: %s", path.c_str());
 	lv_fs_res_t res = lv_fs_dir_open(&dir, path.c_str());
 
 	if (res != LV_FS_RES_OK) {
-		Log::error(TAG, "Failed to open directory: %s", path.c_str());
+		Log::error(TAG, "Failed to open directory: %s (res=%d)", path.c_str(), res);
+		flx::core::GuiLock::unlock();
 		return entries;
 	}
+	Log::info(TAG, "Directory opened successfully");
 
 	char fn[256];
-	while (lv_fs_dir_read(&dir, fn, sizeof(fn)) == LV_FS_RES_OK) {
+	int count = 0;
+	Log::info(TAG, "Starting directory read loop");
+	while (true) {
+		lv_fs_res_t res = lv_fs_dir_read(&dir, fn, sizeof(fn));
+		if (res != LV_FS_RES_OK) {
+			Log::info(TAG, "End of directory or error (res=%d)", res);
+			break;
+		}
+
+		Log::info(TAG, "Read entry %d: %s", count++, fn);
 		if (fn[0] == '\0') {
 			break;
 		}
@@ -95,6 +111,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 	}
 
 	lv_fs_dir_close(&dir);
+	flx::core::GuiLock::unlock();
 	return entries;
 }
 

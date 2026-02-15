@@ -43,6 +43,7 @@ GuiTask::GuiTask() : flx::kernel::Task("gui_task", 32 * 1024, 5, 1) {
 void GuiTask::display_init() {
 	lv_init();
 	lv_fs_stdio_init();
+	Log::info(TAG, "LVGL FS Driver Initialized. Letter: '%c', Path: '%s'", LV_FS_STDIO_LETTER, LV_FS_STDIO_PATH);
 	const uint32_t SZ =
 		CONFIG_FLXOS_DISPLAY_WIDTH * CONFIG_FLXOS_DISPLAY_HEIGHT / 10 * 2;
 	void* buf = heap_caps_malloc(SZ, MALLOC_CAP_DMA);

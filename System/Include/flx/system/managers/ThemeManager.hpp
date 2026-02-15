@@ -38,7 +38,6 @@ private:
 	flx::Observable<int32_t> m_transparency_enabled_subject {0};
 	flx::Observable<int32_t> m_wallpaper_enabled_subject {0};
 	flx::StringObservable m_wallpaper_path_subject {""};
-
 };
 
 } // namespace flx::system
