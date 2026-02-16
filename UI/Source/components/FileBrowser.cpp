@@ -5,7 +5,7 @@
 #include <flx/ui/common/SettingsCommon.hpp> // Required for create_page_container etc.
 #include <flx/ui/components/FileBrowser.hpp>
 
-namespace System::UI {
+namespace flx::ui {
 
 FileBrowser::FileBrowser(lv_obj_t* parent, BackCallback onBack)
 	: m_parent(parent), m_onBack(std::move(onBack)) {}
@@ -241,4 +241,4 @@ bool FileBrowser::hasExtension(const std::string& fileName, const std::string& e
 	return toLower(fileName.substr(fileName.length() - ext.length())) == toLower(ext);
 }
 
-} // namespace System::UI
+} // namespace flx::ui

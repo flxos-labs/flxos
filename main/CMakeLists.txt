@@ -36,10 +36,10 @@ endif()
 
 # Set include directories based on mode
 if(CONFIG_FLXOS_HEADLESS_MODE)
-    set(INCLUDE_DIRS "." "hal/os" "core/common")
+    set(INCLUDE_DIRS "." "core/common")
     set(COMPONENT_REQUIRES dhcpserver)
 else()
-    set(INCLUDE_DIRS "." "hal/display" "hal/os" "core/common")
+    set(INCLUDE_DIRS "." "core/common")
     set(COMPONENT_REQUIRES LovyanGFX lvgl dhcpserver)
 endif()
 
@@ -50,15 +50,12 @@ set(PRIV_REQUIRES esp_psram fatfs wear_levelling spi_flash esp_wifi esp_event es
 idf_component_register(SRCS ${CORE_SRCS}
     INCLUDE_DIRS ${INCLUDE_DIRS}
     PRIV_REQUIRES ${PRIV_REQUIRES}
-    REQUIRES ${COMPONENT_REQUIRES} Core Kernel Services System UI Connectivity
+    REQUIRES ${COMPONENT_REQUIRES} Core Kernel Services Apps Connectivity System UI HAL
 )
 
 # LVGL configuration (only in GUI mode)
 if(NOT CONFIG_FLXOS_HEADLESS_MODE)
     idf_component_get_property(lvgl_lib lvgl COMPONENT_LIB)
-    if(CONFIG_LV_OS_IDLE_PERCENT_CUSTOM)
-        target_sources(${lvgl_lib} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/hal/os/lv_os_custom.c)
-    endif()
 
     if(CONFIG_LV_USE_LOVYAN_GFX)
         target_link_libraries(${lvgl_lib} PUBLIC idf::LovyanGFX)

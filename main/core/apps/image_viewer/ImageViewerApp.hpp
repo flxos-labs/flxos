@@ -1,22 +1,20 @@
 #pragma once
 
 #include "lvgl.h"
-#include <flx/ui/app/AppManager.hpp>
-#include <flx/ui/app/AppManifest.hpp>
+#include <flx/apps/App.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <string>
 
 namespace System::Apps {
 
-using flx::app::AppManifest;
-
-class ImageViewerApp : public flx::app::App {
+class ImageViewerApp : public flx::apps::App {
 public:
 
 	std::string getPackageName() const override;
 	std::string getAppName() const override;
 	const void* getIcon() const override;
 
-	static const AppManifest manifest;
+	static const flx::apps::AppManifest manifest;
 
 	void createUI(void* parent) override;
 	void onStop() override;

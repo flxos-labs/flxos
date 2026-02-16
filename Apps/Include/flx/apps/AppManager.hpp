@@ -9,10 +9,12 @@
 #include <string>
 #include <vector>
 
-namespace flx::app {
+#include "App.hpp"
+
+namespace flx::apps {
 
 // Forward declaration
-class App;
+// class App; // Removed as we include App.hpp
 
 // UI Callbacks
 using GuiLockCallback = std::function<void()>;
@@ -27,46 +29,6 @@ public:
 	virtual void onAppStarted(const std::string& packageName) = 0;
 	virtual void onAppStopped(const std::string& packageName) = 0;
 	virtual ~AppStateObserver() = default;
-};
-
-class App {
-public:
-
-	virtual ~App() = default;
-
-	virtual bool onStart() { return true; }
-	virtual bool onResume() { return true; }
-	virtual void onPause() {}
-	virtual void onStop() {}
-	virtual void update() {}
-
-	/**
-	 * Called when a child app finishes and delivers a result.
-	 * Override this to receive results from apps you launched via startAppForResult().
-	 */
-	virtual void onResult(ResultCode resultCode, const flx::core::Bundle& data) {
-		(void)resultCode;
-		(void)data;
-	}
-
-	virtual std::string getPackageName() const = 0;
-	virtual std::string getAppName() const = 0;
-	virtual const void* getIcon() const { return nullptr; }
-	virtual void createUI(void* parent) {}
-	virtual std::string getVersion() const { return "1.0.0"; }
-
-	bool isActive() const { return m_isActive; }
-	void setActive(bool active) { m_isActive = active; }
-
-	// === Context access ===
-
-	void setContext(AppContext* ctx) { m_context = ctx; }
-	AppContext* getContext() const { return m_context; }
-
-protected:
-
-	bool m_isActive = false;
-	AppContext* m_context = nullptr;
 };
 
 /**
@@ -183,4 +145,4 @@ private:
 	// bool startApp(std::shared_ptr<App> app);
 };
 
-} // namespace flx::app
+} // namespace flx::apps

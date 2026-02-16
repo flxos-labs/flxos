@@ -13,6 +13,7 @@
 #include "tick/lv_tick.h"
 #include <cstddef>
 #include <cstdint>
+#include <flx/apps/AppManager.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
@@ -21,15 +22,14 @@
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
 #include <flx/ui/GuiTask.hpp>
-#include <flx/ui/app/AppManager.hpp>
 #include <flx/ui/desktop/Desktop.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "GuiTask";
-#include "lv_lgfx_user.hpp"
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
+#include <flx/hal/lv_lgfx_user.hpp>
 
 namespace flx::ui {
 
@@ -92,7 +92,7 @@ void GuiTask::run(void* /*data*/) {
 
 	// Initialize GUI-dependent services and apps
 	flx::services::ServiceRegistry::getInstance().initGuiServices();
-	flx::app::AppManager::getInstance().init();
+	flx::apps::AppManager::getInstance().init();
 
 	flx::ui::theming::UiThemeManager::getInstance().init();
 	UI::Desktop::getInstance().init();
@@ -142,22 +142,28 @@ void GuiTask::run(void* /*data*/) {
 	// Apply initial value
 	int32_t showFps = showFpsObs.get();
 	if (m_disp) {
-		if (showFps) {
-			lv_sysmon_show_performance(m_disp);
-		} else {
-			lv_sysmon_hide_performance(m_disp);
-		}
+#if LV_USE_SYSMON
+			if (showFps) {
+				lv_sysmon_show_performance(m_disp);
+			} else {
+				lv_sysmon_hide_performance(m_disp);
+			}
+#endif
 	}
 
 	// Subscribe to changes
 	showFpsObs.subscribe([](const int32_t& val) {
 		GuiTask::perform([val]() {
 			if (m_disp) {
-				if (val) {
-					lv_sysmon_show_performance(m_disp);
-				} else {
-					lv_sysmon_hide_performance(m_disp);
-				}
+#if LV_USE_SYSMON
+#if LV_USE_SYSMON
+					if (val) {
+						lv_sysmon_show_performance(m_disp);
+					} else {
+						lv_sysmon_hide_performance(m_disp);
+					}
+#endif
+#endif
 			}
 		});
 	});

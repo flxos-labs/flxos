@@ -4,8 +4,8 @@
 #include "core/apps/settings/display/DisplaySettings.hpp"
 #include "core/apps/settings/hotspot/HotspotSettings.hpp"
 #include "core/apps/settings/wifi/WiFiSettings.hpp"
-#include <flx/ui/app/AppManager.hpp>
-#include <flx/ui/app/AppManifest.hpp>
+#include <flx/apps/App.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <memory>
 
@@ -13,8 +13,8 @@ using namespace flx::ui::common;
 
 namespace System::Apps {
 
-using flx::app::AppManifest;
-class SettingsApp : public flx::app::App {
+using flx::apps::AppManifest;
+class SettingsApp : public flx::apps::App {
 public:
 
 	std::string getPackageName() const override { return "com.flxos.settings"; }

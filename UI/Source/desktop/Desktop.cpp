@@ -1,10 +1,10 @@
 #include <ctime>
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
 #include <flx/ui/GuiTask.hpp>
-#include <flx/ui/app/AppManager.hpp>
-#include <flx/ui/app/Intent.hpp>
 #include <flx/ui/desktop/Desktop.hpp>
 #include <flx/ui/desktop/window_manager/WindowManager.hpp>
 #include <flx/ui/managers/FocusManager.hpp>
@@ -159,12 +159,12 @@ void Desktop::init() {
 		flx::ui::FocusManager::getInstance().setNotificationPanel(m_notification_panel);
 
 		// Register AppManager callbacks
-		flx::app::AppManager::getInstance().setWindowCallbacks(
+		flx::apps::AppManager::getInstance().setWindowCallbacks(
 			[this](const std::string& pkg) { this->openApp(pkg); },
 			[this](const std::string& pkg) { this->closeApp(pkg); }
 		);
 
-		flx::app::AppManager::getInstance().setGuiCallbacks(
+		flx::apps::AppManager::getInstance().setGuiCallbacks(
 			[]() { flx::ui::GuiTask::lock(); },
 			[]() { flx::ui::GuiTask::unlock(); }
 		);
@@ -241,7 +241,7 @@ void Desktop::on_app_click(lv_event_t* e) {
 	auto* d = (Desktop*)lv_event_get_user_data(e);
 	lv_obj_t* btn = lv_event_get_target_obj(e);
 
-	auto* appPtr = (flx::app::App*)lv_obj_get_user_data(btn);
+	auto* appPtr = (flx::apps::App*)lv_obj_get_user_data(btn);
 	if (!appPtr) {
 		return;
 	}
@@ -249,8 +249,8 @@ void Desktop::on_app_click(lv_event_t* e) {
 	std::string packageName = appPtr->getPackageName();
 
 	flx::ui::FocusManager::getInstance().dismissAllPanels();
-	flx::app::AppManager::getInstance().startApp(
-		flx::app::Intent::forApp(packageName)
+	flx::apps::AppManager::getInstance().startApp(
+		flx::apps::Intent::forApp(packageName)
 	);
 }
 

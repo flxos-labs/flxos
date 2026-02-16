@@ -1,8 +1,8 @@
 #pragma once
 
 #include "lvgl.h"
-#include <flx/ui/app/AppManager.hpp>
-#include <flx/ui/app/AppManifest.hpp>
+#include <flx/apps/App.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <functional>
 #include <string>
@@ -15,7 +15,7 @@
 
 namespace System::Apps {
 
-class ToolsApp : public flx::app::App {
+class ToolsApp : public flx::apps::App {
 public:
 
 	ToolsApp() = default;
@@ -32,7 +32,7 @@ public:
 	std::string getAppName() const override { return "Tools"; }
 	const void* getIcon() const override { return LV_SYMBOL_LIST; }
 
-	static const flx::app::AppManifest manifest;
+	static const flx::apps::AppManifest manifest;
 
 private:
 

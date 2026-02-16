@@ -2,6 +2,7 @@
 #include "font/lv_symbol_def.h"
 #include "widgets/image/lv_image.h"
 #include "widgets/label/lv_label.h"
+#include <flx/apps/AppManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
@@ -11,10 +12,10 @@ static constexpr std::string_view TAG = "ImageViewer";
 
 namespace System::Apps {
 
-using namespace flx::app;
+using namespace flx::apps;
 using namespace flx::ui::common;
 
-const AppManifest ImageViewerApp::manifest = {
+const flx::apps::AppManifest ImageViewerApp::manifest = {
 	.appId = "com.flxos.imageviewer",
 	.appName = "Image Viewer",
 	.appIcon = LV_SYMBOL_IMAGE,
@@ -63,7 +64,7 @@ void ImageViewerApp::createUI(void* parent) {
 		backBtn,
 		[](lv_event_t* e) {
 			auto* app = static_cast<ImageViewerApp*>(lv_event_get_user_data(e));
-			flx::app::AppManager::getInstance().stopApp(app->getPackageName());
+			flx::apps::AppManager::getInstance().stopApp(app->getPackageName());
 		},
 		LV_EVENT_CLICKED, this
 	);

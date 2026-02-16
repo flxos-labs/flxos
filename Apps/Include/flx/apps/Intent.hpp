@@ -5,7 +5,7 @@
 #include <flx/core/Bundle.hpp>
 #include <string>
 
-namespace flx::app {
+namespace flx::apps {
 
 /**
  * @brief Standard intent actions
@@ -144,4 +144,4 @@ public:
 	}
 };
 
-} // namespace flx::app
+} // namespace flx::apps

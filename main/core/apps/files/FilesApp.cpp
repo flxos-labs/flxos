@@ -32,33 +32,33 @@
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/system/services/FileSystemService.hpp>
-#include <flx/ui/app/AppManager.hpp>
-#include <flx/ui/app/AppManifest.hpp>
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "FilesApp";
 
-using namespace flx::app;
+using namespace flx::apps;
 
 using namespace flx::ui::common;
 
 namespace System::Apps {
 
-const flx::app::AppManifest FilesApp::manifest = {
+const flx::apps::AppManifest FilesApp::manifest = {
 	.appId = "com.flxos.files",
 	.appName = "Files",
 	.appIcon = LV_SYMBOL_DIRECTORY,
 	.appVersionName = "1.0.0",
 	.appVersionCode = 1,
-	.category = flx::app::AppCategory::System,
-	.flags = flx::app::AppFlags::None,
-	.location = flx::app::AppLocation::internal(),
+	.category = flx::apps::AppCategory::System,
+	.flags = flx::apps::AppFlags::None,
+	.location = flx::apps::AppLocation::internal(),
 	.description = "Browse and manage files on device storage",
 	.sortPriority = 20,
-	.capabilities = flx::app::AppCapability::Storage,
-	.createApp = []() -> std::shared_ptr<flx::app::App> { return std::make_shared<FilesApp>(); }
+	.capabilities = flx::apps::AppCapability::Storage,
+	.createApp = []() -> std::shared_ptr<flx::apps::App> { return std::make_shared<FilesApp>(); }
 };
 
 // Helper: Create a styled message box
@@ -558,13 +558,13 @@ void FilesApp::onFileClick(const std::string& name) {
 		if (ext == "png" || ext == "jpg" || ext == "jpeg") {
 			std::string mimeType = "image/" + (ext == "jpg" ? std::string("jpeg") : ext);
 			Intent intent = Intent::view(vfsPath, mimeType);
-			flx::app::AppManager::getInstance().startApp(intent);
+			flx::apps::AppManager::getInstance().startApp(intent);
 			return;
 		}
 
 		if (ext == "txt" || ext == "log" || ext == "json" || ext == "csv" || ext == "md") {
 			Intent intent = Intent::view(vfsPath, "text/plain");
-			flx::app::AppManager::getInstance().startApp(intent);
+			flx::apps::AppManager::getInstance().startApp(intent);
 			return;
 		}
 	}

@@ -4,7 +4,7 @@
 
 namespace System::Apps {
 
-using namespace flx::app;
+using namespace flx::apps;
 
 const AppManifest CalendarApp::manifest = {
 	.appId = "com.flxos.calendar",

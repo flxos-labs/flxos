@@ -1,8 +1,8 @@
 #pragma once
 
 #include "lvgl.h"
-#include <flx/ui/app/AppManager.hpp>
-#include <flx/ui/app/AppManifest.hpp>
+#include <flx/apps/App.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <flx/ui/components/FileBrowser.hpp>
 #include <functional>
 #include <memory>
@@ -10,9 +10,9 @@
 
 namespace System::Apps {
 
-using flx::app::AppManifest;
+using flx::apps::AppManifest;
 
-class TextEditorApp : public flx::app::App {
+class TextEditorApp : public flx::apps::App {
 public:
 
 	TextEditorApp() = default;
@@ -46,7 +46,7 @@ private:
 	lv_obj_t* m_fileNameLabel {nullptr};
 
 	// File browser component
-	std::unique_ptr<UI::FileBrowser> m_fileBrowser;
+	std::unique_ptr<flx::ui::FileBrowser> m_fileBrowser;
 
 	std::string m_currentFilePath; // VFS path (e.g., "/data/file.txt")
 	bool m_isDirty {false};

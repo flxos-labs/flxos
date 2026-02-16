@@ -166,7 +166,7 @@ protected:
 			[](lv_event_t* e) {
 				auto* self = static_cast<DisplaySettings*>(lv_event_get_user_data(e));
 				if (!self->m_fileBrowser) {
-					self->m_fileBrowser = new UI::FileBrowser(self->m_parent, [self]() {
+					self->m_fileBrowser = new flx::ui::FileBrowser(self->m_parent, [self]() {
 						self->m_fileBrowser->hide();
 					});
 				}
@@ -227,7 +227,7 @@ protected:
 
 private:
 
-	UI::FileBrowser* m_fileBrowser {nullptr};
+	flx::ui::FileBrowser* m_fileBrowser {nullptr};
 
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_brightnessBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_rotationBridge;

@@ -9,9 +9,9 @@
 #include "misc/lv_text.h"
 #include "misc/lv_types.h"
 #include "widgets/label/lv_label.h"
-#include <flx/ui/app/AppManager.hpp>
-#include <flx/ui/app/AppManifest.hpp>
-#include <flx/ui/app/AppRegistry.hpp>
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
+#include <flx/apps/AppRegistry.hpp>
 #include <flx/ui/desktop/modules/launcher/Launcher.hpp>
 #include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
@@ -52,11 +52,11 @@ void Launcher::create() {
 	lv_obj_set_style_pad_all(m_list, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_style_pad_row(m_list, lv_dpx(UiConstants::PAD_TINY), 0);
 
-	auto apps = flx::app::AppManager::getInstance().getInstalledApps();
+	auto apps = flx::apps::AppManager::getInstance().getInstalledApps();
 	for (auto& app: apps) {
 		// Skip hidden apps (e.g. Image Viewer — launched via intent only)
-		auto manifest = flx::app::AppRegistry::getInstance().findById(app->getPackageName());
-		if (manifest && (manifest->flags & flx::app::AppFlags::Hidden)) {
+		auto manifest = flx::apps::AppRegistry::getInstance().findById(app->getPackageName());
+		if (manifest && (manifest->flags & flx::apps::AppFlags::Hidden)) {
 			continue;
 		}
 		lv_obj_t* btn = lv_button_create(m_list);

@@ -3,27 +3,28 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lvgl.h"
+#include <flx/apps/App.hpp>
+#include <flx/kernel/Task.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <flx/core/ClipboardManager.hpp>
 #include <flx/system/services/FileSystemService.hpp>
-#include <flx/ui/app/AppManager.hpp>
-#include <flx/ui/app/AppManifest.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <functional>
 #include <memory>
 #include <stack>
 #include <string>
-#include <vector>
+using namespace flx::apps;
 
 namespace System::Apps {
 
-class FilesApp : public flx::app::App {
+class FilesApp : public flx::apps::App {
 public:
 
 	std::string getPackageName() const override;
 	std::string getAppName() const override;
 	const void* getIcon() const override;
 
-	static const flx::app::AppManifest manifest;
+	static const flx::apps::AppManifest manifest;
 
 	void createUI(void* parent) override;
 	void onStop() override;

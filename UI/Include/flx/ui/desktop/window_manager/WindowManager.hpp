@@ -5,14 +5,14 @@
 #include <vector>
 
 #include "lvgl.h"
+#include <flx/apps/AppManager.hpp>
 #include <flx/core/Singleton.hpp>
 #include <flx/ui/LvglObserverBridge.hpp>
-#include <flx/ui/app/AppManager.hpp>
 #include <memory>
 
 namespace flx::ui::window_manager {
 
-class WindowManager : public flx::app::AppStateObserver, public flx::Singleton<WindowManager> {
+class WindowManager : public flx::apps::AppStateObserver, public flx::Singleton<WindowManager> {
 	friend class flx::Singleton<WindowManager>;
 
 public:
@@ -58,8 +58,8 @@ private:
 
 	// Window management helpers
 	bool activateIfOpen(const std::string& packageName);
-	lv_obj_t* createAndConfigureAppButton(lv_obj_t* win, flx::app::App* app);
-	void setupWindowHeader(lv_obj_t* win, flx::app::App* app);
+	lv_obj_t* createAndConfigureAppButton(lv_obj_t* win, flx::apps::App* app);
+	void setupWindowHeader(lv_obj_t* win, flx::apps::App* app);
 
 	void closeWindow_internal(lv_obj_t* w);
 	lv_obj_t* findWindowByPackage(const std::string& packageName) const;

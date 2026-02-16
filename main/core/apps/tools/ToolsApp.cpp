@@ -9,7 +9,7 @@ using namespace flx::ui::common;
 
 namespace System::Apps {
 
-using namespace flx::app;
+using namespace flx::apps;
 
 const AppManifest ToolsApp::manifest = {
 	.appId = "com.flxos.tools",

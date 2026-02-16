@@ -4,15 +4,15 @@
 #include "freertos/semphr.h"
 #include "portmacro.h"
 #include <algorithm> // Explicitly include for std::find_if
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
+#include <flx/apps/AppRegistry.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
-#include <flx/ui/app/AppManager.hpp>
-#include <flx/ui/app/AppManifest.hpp>
-#include <flx/ui/app/AppRegistry.hpp>
 
-namespace flx::app {
+namespace flx::apps {
 
 class AppExecutor : public flx::kernel::Task {
 public:
@@ -572,4 +572,4 @@ void AppManager::performHealthCheck() {
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 }
 
-} // namespace flx::app
+} // namespace flx::apps

@@ -9,7 +9,7 @@
 #include <string.h>
 #include <vector>
 
-namespace System::UI {
+namespace flx::ui {
 
 /**
  * FileBrowser - A screen-based file browser component for use in apps.
@@ -89,4 +89,4 @@ private:
 	static bool hasExtension(const std::string& fileName, const std::string& ext);
 };
 
-} // namespace System::UI
+} // namespace flx::ui

@@ -17,8 +17,9 @@
 #include "core/apps/system_info/SystemInfoApp.hpp"
 #include "core/apps/text_editor/TextEditorApp.hpp"
 #include "core/apps/tools/ToolsApp.hpp"
-#include <flx/ui/app/AppRegistry.hpp>
+#include <flx/apps/AppManager.hpp>
 #endif
+
 
 #if CONFIG_FLXOS_CLI_ENABLED
 #include <flx/services/ServiceRegistry.hpp>
@@ -29,7 +30,7 @@
 #include "freertos/task.h"
 #include <string_view>
 
-static constexpr std::string_view TAG = "Main";
+	static constexpr std::string_view TAG = "Main";
 
 extern "C" void app_main(void) {
 	Log::info(TAG, "Starting FlxOS...");
@@ -46,7 +47,7 @@ extern "C" void app_main(void) {
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	Log::info(TAG, "Registering apps with AppRegistry...");
-	auto& appRegistry = flx::app::AppRegistry::getInstance();
+	auto& appRegistry = flx::apps::AppRegistry::getInstance();
 	appRegistry.addApp(System::Apps::SettingsApp::manifest);
 	appRegistry.addApp(System::Apps::CalendarApp::manifest);
 	appRegistry.addApp(System::Apps::FilesApp::manifest);

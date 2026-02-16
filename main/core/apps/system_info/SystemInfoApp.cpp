@@ -30,7 +30,7 @@ static constexpr std::string_view TAG = "SystemInfoApp";
 
 static constexpr uint32_t UPDATE_INTERVAL_MS = 1000;
 
-using namespace flx::app;
+using namespace flx::apps;
 
 namespace System::Apps {
 

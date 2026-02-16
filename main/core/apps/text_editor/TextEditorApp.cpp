@@ -6,7 +6,7 @@
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 
-using namespace flx::app;
+using namespace flx::apps;
 using namespace flx::ui::common;
 
 namespace System::Apps {
@@ -75,7 +75,7 @@ void TextEditorApp::createUI(void* parent) {
 	m_container = static_cast<lv_obj_t*>(parent);
 
 	// Create file browser component
-	m_fileBrowser = std::make_unique<UI::FileBrowser>(
+	m_fileBrowser = std::make_unique<flx::ui::FileBrowser>(
 		m_container, [this]() { showEditorScreen(); }
 	);
 	m_fileBrowser->setExtensions({".txt", ".md", ".log", ".json", ".xml", ".csv", ".yaml", ".yml", ".ini", ".cfg", ".conf", ".env", ".html", ".css", ".js", ".ts", ".py", ".java", ".c", ".cpp", ".h", ".hpp", ".cs", ".php", ".rb", ".go", ".rs", ".sh", ".bat", ".ps1", ".sql"});
