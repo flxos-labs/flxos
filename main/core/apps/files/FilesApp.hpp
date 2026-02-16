@@ -13,7 +13,6 @@
 #include <memory>
 #include <stack>
 #include <string>
-using namespace flx::apps;
 
 namespace System::Apps {
 

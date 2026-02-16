@@ -12,6 +12,6 @@ endif()
 idf_component_register(
     SRCS ${APPS_SRCS}
     INCLUDE_DIRS Include
-    REQUIRES Core Kernel Services Connectivity
-    PRIV_REQUIRES freertos json
+    REQUIRES Core Kernel Services
+    PRIV_REQUIRES freertos
 )

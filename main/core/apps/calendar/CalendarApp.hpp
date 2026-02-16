@@ -3,7 +3,6 @@
 #include "lvgl.h"
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManager.hpp>
-using namespace flx::apps;
 
 namespace System::Apps {
 

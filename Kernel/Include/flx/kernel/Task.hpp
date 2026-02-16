@@ -47,13 +47,13 @@ public:
 
 	void heartbeat() { m_lastHeartbeat = esp_timer_get_time() / 1000; }
 	void setWatchdogTimeout(uint32_t timeoutMs) {
-		m_watchdogTimeoutMs = timeoutMs;
+		m_watchdogTimeoutMs.store(timeoutMs);
 	}
-	uint32_t getWatchdogTimeout() const { return m_watchdogTimeoutMs; }
+	uint32_t getWatchdogTimeout() const { return m_watchdogTimeoutMs.load(); }
 	uint64_t getLastHeartbeat() const { return m_lastHeartbeat; }
-	bool isWatchdogEnabled() const { return m_watchdogTimeoutMs > 0; }
+	bool isWatchdogEnabled() const { return m_watchdogTimeoutMs.load() > 0; }
 
-	uint32_t getStackHighWaterMark() {
+	uint32_t getStackHighWaterMark() const {
 		TaskHandle_t h = m_handle.load();
 #if INCLUDE_uxTaskGetStackHighWaterMark
 		return h ? uxTaskGetStackHighWaterMark(h) : 0;
@@ -63,8 +63,8 @@ public:
 	}
 	uint32_t getStackSize() const { return m_stackSize; }
 
-	void setRestartPolicy(RestartPolicy policy) { m_restartPolicy = policy; }
-	RestartPolicy getRestartPolicy() const { return m_restartPolicy; }
+	void setRestartPolicy(RestartPolicy policy) { m_restartPolicy.store(policy); }
+	RestartPolicy getRestartPolicy() const { return m_restartPolicy.load(); }
 
 	TaskHandle_t getHandle() const { return m_handle.load(); }
 	std::string getName() const { return m_name; }
@@ -85,8 +85,8 @@ private:
 	std::atomic<bool> m_stopRequested {false};
 	void* m_data = nullptr;
 	std::atomic<uint64_t> m_lastHeartbeat {0};
-	uint32_t m_watchdogTimeoutMs = 0;
-	RestartPolicy m_restartPolicy = RestartPolicy::REBOOT_SYSTEM;
+	std::atomic<uint32_t> m_watchdogTimeoutMs {0};
+	std::atomic<RestartPolicy> m_restartPolicy {RestartPolicy::REBOOT_SYSTEM};
 };
 
 } // namespace flx::kernel

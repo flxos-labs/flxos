@@ -34,12 +34,13 @@ if(CONFIG_FLXOS_SD_CARD_ENABLED)
     # SD Card Service moved to System component
 endif()
 
-# Set include directories based on mode
+# Set include directories (same for both modes)
+set(INCLUDE_DIRS "." "core/common")
+
+# Set component dependencies based on mode
 if(CONFIG_FLXOS_HEADLESS_MODE)
-    set(INCLUDE_DIRS "." "core/common")
     set(COMPONENT_REQUIRES dhcpserver)
 else()
-    set(INCLUDE_DIRS "." "core/common")
     set(COMPONENT_REQUIRES LovyanGFX lvgl dhcpserver)
 endif()
 

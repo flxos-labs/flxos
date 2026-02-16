@@ -4,10 +4,11 @@
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
-using namespace flx::apps;
 #include <vector>
 
 namespace System::Apps {
+
+using flx::apps::AppManifest;
 
 class SystemInfoApp : public flx::apps::App {
 public:
