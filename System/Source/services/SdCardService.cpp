@@ -1,0 +1,130 @@
+#include "sdkconfig.h"
+#include <flx/core/Logger.hpp>
+#include <flx/system/services/SdCardService.hpp>
+#include <string_view>
+
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#include "driver/gpio.h"
+#include "driver/sdspi_host.h"
+#include "driver/spi_common.h"
+#include "esp_vfs_fat.h"
+#include "sdmmc_cmd.h"
+#endif
+
+static constexpr std::string_view TAG = "SdCard";
+
+namespace flx::services {
+
+const ServiceManifest SdCardService::serviceManifest = {
+	.serviceId = "com.flxos.sdcard",
+	.serviceName = "SD Card",
+	.dependencies = {},
+	.priority = 15,
+	.required = false,
+	.autoStart = true,
+	.guiRequired = false,
+	.capabilities = ServiceCapability::Storage,
+	.description = "SD card mount/unmount via SPI",
+};
+
+SdCardService::SdCardService()
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+	: m_mountPoint(CONFIG_FLXOS_SD_MOUNT_POINT)
+#else
+	: m_mountPoint("/sdcard")
+#endif
+{
+}
+
+SdCardService& SdCardService::getInstance() {
+	static SdCardService instance;
+	return instance;
+}
+
+bool SdCardService::onStart() {
+	return true;
+}
+
+void SdCardService::onGuiInit() {
+	mount();
+}
+
+void SdCardService::onStop() {
+	unmount();
+}
+
+bool SdCardService::mount() {
+#if !defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+	Log::info(TAG, "SD card support disabled in config");
+	return false;
+#else
+	if (m_mounted) {
+		Log::warn(TAG, "SD card already mounted");
+		return true;
+	}
+
+	Log::info(TAG, "Mounting SD card at %s...", m_mountPoint.c_str());
+
+	esp_vfs_fat_sdmmc_mount_config_t mount_config = {
+		.format_if_mount_failed = false,
+		.max_files = 5,
+		.allocation_unit_size = 16 * 1024,
+		.disk_status_check_enable = false,
+		.use_one_fat = false,
+	};
+
+	m_card = nullptr;
+
+	// SPI host config - Assume SPI2_HOST managed by LGFX (lv_lgfx_user.hpp)
+	spi_host_device_t host_id = SPI2_HOST;
+
+	sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+	host.slot = host_id;
+	host.max_freq_khz = CONFIG_FLXOS_SD_MAX_FREQ_KHZ;
+
+	sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
+	slot_config.gpio_cs = (gpio_num_t)CONFIG_FLXOS_SD_PIN_CS;
+	slot_config.host_id = host_id;
+
+	// Use provided SPI bus initialization from LGFX
+	Log::info(TAG, "Using shared SPI bus (host_id=%d) for SD card. Max freq: %d kHz", host_id, host.max_freq_khz);
+
+	Log::info(TAG, "Calling esp_vfs_fat_sdspi_mount...");
+	esp_err_t ret = esp_vfs_fat_sdspi_mount(
+		m_mountPoint.c_str(), &host, &slot_config, &mount_config, &m_card
+	);
+	Log::info(TAG, "esp_vfs_fat_sdspi_mount returned: %s", esp_err_to_name(ret));
+
+	if (ret != ESP_OK) {
+		Log::error(TAG, "Failed to mount SD card: %s", esp_err_to_name(ret));
+		return false;
+	}
+
+	m_mounted = true;
+	Log::info(TAG, "SD card mounted at %s", m_mountPoint.c_str());
+	if (m_card) {
+		sdmmc_card_print_info(stdout, m_card);
+	}
+	return true;
+#endif
+}
+
+void SdCardService::unmount() {
+#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+	if (!m_mounted) {
+		return;
+	}
+
+	esp_err_t ret = esp_vfs_fat_sdcard_unmount(m_mountPoint.c_str(), m_card);
+	if (ret != ESP_OK) {
+		Log::error(TAG, "Failed to unmount SD card: %s", esp_err_to_name(ret));
+		return;
+	}
+
+	m_card = nullptr;
+	m_mounted = false;
+	Log::info(TAG, "SD card unmounted");
+#endif
+}
+
+} // namespace flx::services

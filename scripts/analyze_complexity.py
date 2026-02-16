@@ -10,7 +10,7 @@ import sys
 from dataclasses import dataclass
 from typing import List, Tuple
 
-SEARCH_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'main')
+SEARCH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Thresholds
 MAX_FUNCTION_LINES = 80
@@ -143,7 +143,12 @@ def main():
     all_functions = []
     file_count = 0
     
-    for root, _, files in os.walk(SEARCH_DIR):
+    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Apps', 'Applications', 'Firmware', 'HAL'}
+    
+    for root, dirs, files in os.walk(SEARCH_DIR):
+        if root == SEARCH_DIR:
+             dirs[:] = [d for d in dirs if d in target_dirs]
+             
         for file in files:
             if file.endswith(('.cpp', '.c')):
                 filepath = os.path.join(root, file)

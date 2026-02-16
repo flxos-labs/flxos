@@ -62,7 +62,7 @@ run_check() {
         echo "⚠️ **Issues Found**" >> "$REPORT_FILE"
         echo "" >> "$REPORT_FILE"
         echo '```' >> "$REPORT_FILE"
-        head -50 "$output_file" >> "$REPORT_FILE"
+        cat "$output_file" >> "$REPORT_FILE"
         echo '```' >> "$REPORT_FILE"
         echo "" >> "$REPORT_FILE"
         echo "[Full report]($output_file)" >> "$REPORT_FILE"
