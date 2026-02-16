@@ -49,7 +49,7 @@ def is_hardcoded(val):
 
 def find_hardcoded():
     results = []
-    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core'}
+    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Applications', 'Firmware', 'HAL'}
     for root, dirs, files in os.walk(search_dir):
         if root == search_dir:
              dirs[:] = [d for d in dirs if d in target_dirs]
