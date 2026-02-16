@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "Source/Main.cpp"
+    SRCS
     INCLUDE_DIRS "."
     REQUIRES Core Kernel Services Apps Connectivity System UI HAL Applications
 )

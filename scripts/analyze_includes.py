@@ -32,8 +32,8 @@ def build_dependency_graph() -> Dict[str, Set[str]]:
     graph = defaultdict(set)
     file_map = {}  # Map basename to full path
     
-    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Applications', 'Firmware', 'HAL'}
-    
+    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Apps', 'Applications', 'Firmware', 'HAL'}
+
     for root, dirs, files in os.walk(SEARCH_DIR):
         if root == SEARCH_DIR:
              dirs[:] = [d for d in dirs if d in target_dirs]
@@ -154,7 +154,7 @@ def main():
     order_issues = []
     guard_issues = []
     
-    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Applications', 'Firmware', 'HAL'}
+    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Apps', 'Applications', 'Firmware', 'HAL'}
 
     for root, dirs, files in os.walk(SEARCH_DIR):
         if root == SEARCH_DIR:
