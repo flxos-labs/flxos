@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/apps/settings/bluetooth/BluetoothSettings.hpp"
-#include "core/apps/settings/display/DisplaySettings.hpp"
-#include "core/apps/settings/hotspot/HotspotSettings.hpp"
-#include "core/apps/settings/wifi/WiFiSettings.hpp"
+#include "settings/bluetooth/BluetoothSettings.hpp"
+#include "settings/display/DisplaySettings.hpp"
+#include "settings/hotspot/HotspotSettings.hpp"
+#include "settings/wifi/WiFiSettings.hpp"
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>

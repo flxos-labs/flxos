@@ -10,13 +10,13 @@
 #endif
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-#include "core/apps/calendar/CalendarApp.hpp"
-#include "core/apps/files/FilesApp.hpp"
-#include "core/apps/image_viewer/ImageViewerApp.hpp"
-#include "core/apps/settings/SettingsApp.hpp"
-#include "core/apps/system_info/SystemInfoApp.hpp"
-#include "core/apps/text_editor/TextEditorApp.hpp"
-#include "core/apps/tools/ToolsApp.hpp"
+#include "calendar/CalendarApp.hpp"
+#include "files/FilesApp.hpp"
+#include "image_viewer/ImageViewerApp.hpp"
+#include "settings/SettingsApp.hpp"
+#include "system_info/SystemInfoApp.hpp"
+#include "text_editor/TextEditorApp.hpp"
+#include "tools/ToolsApp.hpp"
 #include <flx/apps/AppManager.hpp>
 #endif
 

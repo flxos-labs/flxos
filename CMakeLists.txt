@@ -34,6 +34,8 @@ set(EXTRA_COMPONENT_DIRS
     "${CMAKE_SOURCE_DIR}/Services"
     "${CMAKE_SOURCE_DIR}/Apps"
     "${CMAKE_SOURCE_DIR}/HAL"
+    "${CMAKE_SOURCE_DIR}/Applications"
+    "${CMAKE_SOURCE_DIR}/Firmware"
 
     "${CMAKE_SOURCE_DIR}/Connectivity"
     "${CMAKE_SOURCE_DIR}/System"

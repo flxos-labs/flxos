@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/apps/settings/SettingsPageBase.hpp"
+#include "settings/SettingsPageBase.hpp"
 #include "flx/connectivity/ConnectivityManager.hpp"
 #include "flx/connectivity/bluetooth/BluetoothManager.hpp"
 #include "lvgl.h"

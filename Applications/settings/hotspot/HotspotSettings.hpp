@@ -1,5 +1,5 @@
 #pragma once
-#include "core/apps/settings/SettingsPageBase.hpp"
+#include "settings/SettingsPageBase.hpp"
 #include "lvgl.h"
 #include <cstring>
 #include <flx/ui/LvglObserverBridge.hpp>

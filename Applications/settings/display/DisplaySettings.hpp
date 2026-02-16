@@ -1,7 +1,7 @@
 #pragma once
 #include <cstring>
 
-#include "core/apps/settings/SettingsPageBase.hpp"
+#include "settings/SettingsPageBase.hpp"
 #include "lvgl.h"
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>

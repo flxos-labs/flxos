@@ -1,5 +1,5 @@
 #pragma once
-#include "core/apps/settings/SettingsPageBase.hpp"
+#include "settings/SettingsPageBase.hpp"
 #include "esp_timer.h"
 #include "esp_wifi.h"
 #include "lvgl.h"
