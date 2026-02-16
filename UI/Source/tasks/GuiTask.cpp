@@ -143,11 +143,11 @@ void GuiTask::run(void* /*data*/) {
 	int32_t showFps = showFpsObs.get();
 	if (m_disp) {
 #if LV_USE_SYSMON
-			if (showFps) {
-				lv_sysmon_show_performance(m_disp);
-			} else {
-				lv_sysmon_hide_performance(m_disp);
-			}
+		if (showFps) {
+			lv_sysmon_show_performance(m_disp);
+		} else {
+			lv_sysmon_hide_performance(m_disp);
+		}
 #endif
 	}
 
@@ -157,11 +157,11 @@ void GuiTask::run(void* /*data*/) {
 			if (m_disp) {
 #if LV_USE_SYSMON
 #if LV_USE_SYSMON
-					if (val) {
-						lv_sysmon_show_performance(m_disp);
-					} else {
-						lv_sysmon_hide_performance(m_disp);
-					}
+				if (val) {
+					lv_sysmon_show_performance(m_disp);
+				} else {
+					lv_sysmon_hide_performance(m_disp);
+				}
 #endif
 #endif
 			}

@@ -28,12 +28,12 @@
 #include "widgets/textarea/lv_textarea.h"
 #include <cstdint>
 #include <cstring>
+#include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppManifest.hpp>
 #include <flx/core/ClipboardManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/system/services/FileSystemService.hpp>
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <string_view>

@@ -4,9 +4,9 @@
 #include "freertos/task.h"
 #include "lvgl.h"
 #include <flx/apps/App.hpp>
-#include <flx/kernel/Task.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/core/ClipboardManager.hpp>
+#include <flx/kernel/Task.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <functional>

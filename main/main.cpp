@@ -20,7 +20,6 @@
 #include <flx/apps/AppManager.hpp>
 #endif
 
-
 #if CONFIG_FLXOS_CLI_ENABLED
 #include <flx/services/ServiceRegistry.hpp>
 #include <flx/system/services/CliService.hpp>
@@ -30,7 +29,7 @@
 #include "freertos/task.h"
 #include <string_view>
 
-	static constexpr std::string_view TAG = "Main";
+static constexpr std::string_view TAG = "Main";
 
 extern "C" void app_main(void) {
 	Log::info(TAG, "Starting FlxOS...");
