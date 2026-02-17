@@ -45,6 +45,12 @@ menu "Hardware Configuration"
 			Disables LovyanGFX, LVGL, and all UI components.
 			Useful for headless deployments, testing, and CI/CD.
 
+	config FLXOS_REQUIRE_LVGL_LOVYAN
+		bool
+		default y
+		depends on !FLXOS_HEADLESS_MODE
+		select LV_USE_LOVYAN_GFX
+
 	config FLXOS_CLI_ENABLED
 		bool "Enable CLI (Command Line Interface)"
 		default y
@@ -550,8 +556,8 @@ menu "Hardware Configuration"
 						config FLXOS_PIN_TOUCH_INT
 							int "Touch INT Pin (-1 to disable)"
 							range -1 48
-							default -1 if IDF_TARGET_ESP32S3
-							default 16
+							default 6 if IDF_TARGET_ESP32S3
+							default -1
 					endmenu
 
 					menu "Touch Calibration"
@@ -670,7 +676,7 @@ menu "Hardware Configuration"
 				menu "SD Card Configuration"
 				config FLXOS_SD_CARD_ENABLED
 					bool "Enable SD Card Support"
-					default n
+					default y
 					help
 						Enable SD card storage via SPI bus.
 

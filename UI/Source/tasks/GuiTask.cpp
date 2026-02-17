@@ -28,8 +28,10 @@
 #include <string_view>
 
 static constexpr std::string_view TAG = "GuiTask";
+#if !CONFIG_FLXOS_HEADLESS_MODE
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
 #include <flx/hal/lv_lgfx_user.hpp>
+#endif
 
 namespace flx::ui {
 
@@ -44,6 +46,7 @@ void GuiTask::display_init() {
 	lv_init();
 	lv_fs_stdio_init();
 	Log::info(TAG, "LVGL FS Driver Initialized. Letter: '%c', Path: '%s'", LV_FS_STDIO_LETTER, LV_FS_STDIO_PATH);
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	const uint32_t SZ =
 		CONFIG_FLXOS_DISPLAY_WIDTH * CONFIG_FLXOS_DISPLAY_HEIGHT / 10 * 2;
 	void* buf = heap_caps_malloc(SZ, MALLOC_CAP_DMA);
@@ -77,6 +80,9 @@ void GuiTask::display_init() {
 	lv_display_set_rotation(
 		disp, (lv_display_rotation_t)(CONFIG_FLXOS_DISPLAY_ROTATION / 90)
 	);
+#else
+	Log::info(TAG, "Headless mode: Display driver not initialized");
+#endif
 
 	lv_group_t* g = lv_group_create();
 	lv_group_set_default(g);
@@ -103,18 +109,22 @@ void GuiTask::run(void* /*data*/) {
 
 	// Apply initial value
 	int32_t currentBrightness = brightnessObs.get();
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	auto* tft = getDisplayDriver();
 	if (tft) {
 		tft->setBrightness(currentBrightness);
 	}
+#endif
 
 	// Subscribe to changes
 	brightnessObs.subscribe([](const int32_t& val) {
 		GuiTask::perform([val]() {
+#if !CONFIG_FLXOS_HEADLESS_MODE
 			auto* tft = getDisplayDriver();
 			if (tft) {
 				tft->setBrightness(val);
 			}
+#endif
 		});
 	});
 
@@ -194,6 +204,7 @@ void GuiTask::run(void* /*data*/) {
 			vTaskDelay(pdMS_TO_TICKS(delay));
 		} else {
 			if (m_resume_on_touch) {
+#if !CONFIG_FLXOS_HEADLESS_MODE
 				LGFX* tft = getDisplayDriver();
 				int32_t x = 0, y = 0;
 				if (tft && tft->getTouch(&x, &y)) {
@@ -201,6 +212,7 @@ void GuiTask::run(void* /*data*/) {
 					setResumeOnTouch(false);
 					setPaused(false);
 				}
+#endif
 			}
 			vTaskDelay(pdMS_TO_TICKS(50));
 		}
@@ -208,6 +220,7 @@ void GuiTask::run(void* /*data*/) {
 }
 
 LGFX* GuiTask::getDisplayDriver() {
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	if (!m_disp) {
 		return nullptr;
 	}
@@ -218,6 +231,9 @@ LGFX* GuiTask::getDisplayDriver() {
 		return nullptr;
 	}
 	return driver_data->tft;
+#else
+	return nullptr;
+#endif
 }
 
 void GuiTask::setPaused(bool paused) {
@@ -238,6 +254,7 @@ void GuiTask::setResumeOnTouch(bool enable) {
 }
 
 void GuiTask::runDisplayTest(int color) {
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	auto* tft = GuiTask::getDisplayDriver();
 	if (tft == nullptr) {
 		Log::error(TAG, "Failed to get display driver for test!");
@@ -256,6 +273,9 @@ void GuiTask::runDisplayTest(int color) {
 
 	setResumeOnTouch(true);
 	unlock();
+#else
+	Log::warn(TAG, "Display test not available in headless mode");
+#endif
 }
 
 } // namespace flx::ui

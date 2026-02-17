@@ -1,7 +1,12 @@
+set(EXTRA_REQS "")
+if(NOT CONFIG_FLXOS_HEADLESS_MODE)
+    list(APPEND EXTRA_REQS UI Applications)
+endif()
+
 idf_component_register(
     SRCS "../Firmware/Source/Main.cpp"
     INCLUDE_DIRS "."
-    REQUIRES Core Kernel Services Apps Connectivity System UI HAL Applications Firmware
+    REQUIRES Core Kernel Services Apps Connectivity System HAL Firmware ${EXTRA_REQS}
 )
 
 if(CONFIG_LV_OS_IDLE_PERCENT_CUSTOM)

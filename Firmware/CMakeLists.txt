@@ -1,7 +1,12 @@
+set(EXTRA_REQS "")
+if(NOT CONFIG_FLXOS_HEADLESS_MODE)
+    list(APPEND EXTRA_REQS UI Applications)
+endif()
+
 idf_component_register(
     SRCS
     INCLUDE_DIRS "."
-    REQUIRES Core Kernel Services Apps Connectivity System UI HAL Applications
+    REQUIRES Core Kernel Services Apps Connectivity System HAL ${EXTRA_REQS}
 )
 
 # Inject LovyanGFX dependency into lvgl component
