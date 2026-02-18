@@ -4,6 +4,9 @@
 // Display Configuration (ILI9341)
 // ============================================================================
 #define FLXOS_DISPLAY_DRIVER        "ILI9341"
+#define FLXOS_DISPLAY_ILI9341       // Feature flag for LovyanGFX
+#define FLXOS_BUS_SPI               // Feature flag for Bus Type
+
 #define FLXOS_DISPLAY_WIDTH         320
 #define FLXOS_DISPLAY_HEIGHT        240
 #define FLXOS_DISPLAY_ROTATION      1
@@ -26,6 +29,7 @@
 #define FLXOS_SPI_FREQ_WRITE        40000000
 #define FLXOS_SPI_FREQ_READ         16000000
 #define FLXOS_SPI_3WIRE             false
+#define FLXOS_SPI_DMA_CHANNEL       0 // Auto
 
 // Display Pins
 #define FLXOS_PIN_CS                10
@@ -46,8 +50,11 @@
 // Touch Configuration (XPT2046)
 // ============================================================================
 #define FLXOS_TOUCH_DRIVER          "XPT2046"
-#define FLXOS_TOUCH_CS              5
-#define FLXOS_TOUCH_IRQ             6
+#define FLXOS_TOUCH_XPT2046         // Feature flag for LovyanGFX
+#define FLXOS_TOUCH_ENABLED         true // Explicitly enable touch
+
+#define FLXOS_PIN_TOUCH_CS          5
+#define FLXOS_PIN_TOUCH_INT         6
 #define FLXOS_TOUCH_SPI_FREQ        1000000
 #define FLXOS_TOUCH_BUS_SHARED      true
 

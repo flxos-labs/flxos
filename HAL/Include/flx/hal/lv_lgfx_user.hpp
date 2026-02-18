@@ -3,6 +3,162 @@
 #define LGFX_USE_V1
 #include <LovyanGFX.hpp>
 #include <sdkconfig.h>
+#include "Config.hpp"
+
+// Compatibility: Map Profile (FLXOS_*) macros to Kconfig (CONFIG_FLXOS_*) macros
+// if the Kconfig ones are missing (because the profile hides them in menuconfig).
+
+#if defined(FLXOS_DISPLAY_ILI9341) && !defined(CONFIG_FLXOS_DISPLAY_ILI9341)
+    #define CONFIG_FLXOS_DISPLAY_ILI9341 1
+#endif
+#if defined(FLXOS_BUS_SPI) && !defined(CONFIG_FLXOS_BUS_SPI)
+    #define CONFIG_FLXOS_BUS_SPI 1
+#endif
+#if defined(FLXOS_TOUCH_XPT2046) && !defined(CONFIG_FLXOS_TOUCH_XPT2046)
+    #define CONFIG_FLXOS_TOUCH_XPT2046 1
+#endif
+#if defined(FLXOS_TOUCH_ENABLED) && !defined(CONFIG_FLXOS_TOUCH_ENABLED)
+    #define CONFIG_FLXOS_TOUCH_ENABLED 1
+#endif
+#if defined(FLXOS_SPI_HOST) && !defined(CONFIG_FLXOS_SPI_HOST)
+    // Map SPI2_HOST etc to integer expected by logic?
+    // The logic expects CONFIG_FLXOS_SPI_HOST == 1 (SPI2) or 2 (SPI3).
+    // Config.hpp defines FLXOS_SPI_HOST as SPI2_HOST (which is likely an enum/macro from IDF).
+    // We need to check the value.
+    #if FLXOS_SPI_HOST == SPI2_HOST
+        #define CONFIG_FLXOS_SPI_HOST 1
+    #elif FLXOS_SPI_HOST == SPI3_HOST
+        #define CONFIG_FLXOS_SPI_HOST 2
+    #endif
+#endif
+#if defined(FLXOS_SPI_DMA_CHANNEL) && !defined(CONFIG_FLXOS_SPI_DMA_CHANNEL)
+     #define CONFIG_FLXOS_SPI_DMA_CHANNEL FLXOS_SPI_DMA_CHANNEL
+#endif
+// Map other values used in #if checks
+#if defined(FLXOS_BCKL_INVERT) && !defined(CONFIG_FLXOS_BCKL_INVERT)
+    #if FLXOS_BCKL_INVERT
+        #define CONFIG_FLXOS_BCKL_INVERT 1
+    #endif
+#endif
+#if defined(FLXOS_DISPLAY_INVERT) && !defined(CONFIG_FLXOS_DISPLAY_INVERT)
+    #if FLXOS_DISPLAY_INVERT
+        #define CONFIG_FLXOS_DISPLAY_INVERT 1
+    #endif
+#endif
+#if defined(FLXOS_DISPLAY_RGB_ORDER) && !defined(CONFIG_FLXOS_DISPLAY_RGB_ORDER)
+    #if FLXOS_DISPLAY_RGB_ORDER
+        #define CONFIG_FLXOS_DISPLAY_RGB_ORDER 1
+    #endif
+#endif
+#if defined(FLXOS_PANEL_READABLE) && !defined(CONFIG_FLXOS_PANEL_READABLE)
+    #if FLXOS_PANEL_READABLE
+        #define CONFIG_FLXOS_PANEL_READABLE 1
+    #endif
+#endif
+#if defined(FLXOS_PANEL_DLEN_16BIT) && !defined(CONFIG_FLXOS_PANEL_DLEN_16BIT)
+    #if FLXOS_PANEL_DLEN_16BIT
+        #define CONFIG_FLXOS_PANEL_DLEN_16BIT 1
+    #endif
+#endif
+#if defined(FLXOS_BUS_SHARED) && !defined(CONFIG_FLXOS_BUS_SHARED)
+    #if FLXOS_BUS_SHARED
+        #define CONFIG_FLXOS_BUS_SHARED 1
+    #endif
+#endif
+#if defined(FLXOS_TOUCH_BUS_SHARED) && !defined(CONFIG_FLXOS_TOUCH_BUS_SHARED)
+    #if FLXOS_TOUCH_BUS_SHARED
+        #define CONFIG_FLXOS_TOUCH_BUS_SHARED 1
+    #endif
+#endif
+
+// Map Pins and Values (The code uses CONFIG_FLXOS_PIN_* inside the class)
+// We need to define them if they match FLXOS_PIN_*
+#ifndef CONFIG_FLXOS_PIN_CS
+    #define CONFIG_FLXOS_PIN_CS FLXOS_PIN_CS
+#endif
+#ifndef CONFIG_FLXOS_PIN_RST
+    #define CONFIG_FLXOS_PIN_RST FLXOS_PIN_RST
+#endif
+#ifndef CONFIG_FLXOS_PIN_BUSY
+    #define CONFIG_FLXOS_PIN_BUSY FLXOS_PIN_BUSY
+#endif
+#ifndef CONFIG_FLXOS_DISPLAY_WIDTH
+    #define CONFIG_FLXOS_DISPLAY_WIDTH FLXOS_DISPLAY_WIDTH
+#endif
+#ifndef CONFIG_FLXOS_DISPLAY_HEIGHT
+    #define CONFIG_FLXOS_DISPLAY_HEIGHT FLXOS_DISPLAY_HEIGHT
+#endif
+#ifndef CONFIG_FLXOS_PANEL_OFFSET_X
+    #define CONFIG_FLXOS_PANEL_OFFSET_X FLXOS_PANEL_OFFSET_X
+#endif
+#ifndef CONFIG_FLXOS_PANEL_OFFSET_Y
+    #define CONFIG_FLXOS_PANEL_OFFSET_Y FLXOS_PANEL_OFFSET_Y
+#endif
+#ifndef CONFIG_FLXOS_PANEL_OFFSET_ROTATION
+    #define CONFIG_FLXOS_PANEL_OFFSET_ROTATION FLXOS_PANEL_OFFSET_ROTATION
+#endif
+#ifndef CONFIG_FLXOS_DUMMY_READ_PIXEL
+    #define CONFIG_FLXOS_DUMMY_READ_PIXEL FLXOS_DUMMY_READ_PIXEL
+#endif
+#ifndef CONFIG_FLXOS_DUMMY_READ_BITS
+    #define CONFIG_FLXOS_DUMMY_READ_BITS FLXOS_DUMMY_READ_BITS
+#endif
+#ifndef CONFIG_FLXOS_SPI_MODE
+    #define CONFIG_FLXOS_SPI_MODE FLXOS_SPI_MODE
+#endif
+#ifndef CONFIG_FLXOS_SPI_FREQ_WRITE
+    #define CONFIG_FLXOS_SPI_FREQ_WRITE FLXOS_SPI_FREQ_WRITE
+#endif
+#ifndef CONFIG_FLXOS_SPI_FREQ_READ
+    #define CONFIG_FLXOS_SPI_FREQ_READ FLXOS_SPI_FREQ_READ
+#endif
+#ifndef CONFIG_FLXOS_PIN_SCLK
+    #define CONFIG_FLXOS_PIN_SCLK FLXOS_PIN_SCLK
+#endif
+#ifndef CONFIG_FLXOS_PIN_MOSI
+    #define CONFIG_FLXOS_PIN_MOSI FLXOS_PIN_MOSI
+#endif
+#ifndef CONFIG_FLXOS_PIN_MISO
+    #define CONFIG_FLXOS_PIN_MISO FLXOS_PIN_MISO
+#endif
+#ifndef CONFIG_FLXOS_PIN_DC
+    #define CONFIG_FLXOS_PIN_DC FLXOS_PIN_DC
+#endif
+#ifndef CONFIG_FLXOS_PIN_BCKL
+    #define CONFIG_FLXOS_PIN_BCKL FLXOS_PIN_BCKL
+#endif
+#ifndef CONFIG_FLXOS_BCKL_FREQ
+    #define CONFIG_FLXOS_BCKL_FREQ FLXOS_BCKL_FREQ
+#endif
+#ifndef CONFIG_FLXOS_BCKL_PWM_CHANNEL
+    #define CONFIG_FLXOS_BCKL_PWM_CHANNEL FLXOS_BCKL_PWM_CHANNEL
+#endif
+#ifndef CONFIG_FLXOS_TOUCH_X_MIN
+    #define CONFIG_FLXOS_TOUCH_X_MIN FLXOS_TOUCH_X_MIN
+#endif
+#ifndef CONFIG_FLXOS_TOUCH_X_MAX
+    #define CONFIG_FLXOS_TOUCH_X_MAX FLXOS_TOUCH_X_MAX
+#endif
+#ifndef CONFIG_FLXOS_TOUCH_Y_MIN
+    #define CONFIG_FLXOS_TOUCH_Y_MIN FLXOS_TOUCH_Y_MIN
+#endif
+#ifndef CONFIG_FLXOS_TOUCH_Y_MAX
+    #define CONFIG_FLXOS_TOUCH_Y_MAX FLXOS_TOUCH_Y_MAX
+#endif
+#ifndef CONFIG_FLXOS_PIN_TOUCH_INT
+    #define CONFIG_FLXOS_PIN_TOUCH_INT FLXOS_PIN_TOUCH_INT
+#endif
+#ifndef CONFIG_FLXOS_TOUCH_OFFSET_ROTATION
+    #define CONFIG_FLXOS_TOUCH_OFFSET_ROTATION FLXOS_TOUCH_OFFSET_ROTATION
+#endif
+#ifndef CONFIG_FLXOS_PIN_TOUCH_CS
+    #define CONFIG_FLXOS_PIN_TOUCH_CS FLXOS_PIN_TOUCH_CS
+#endif
+#ifndef CONFIG_FLXOS_TOUCH_SPI_FREQ
+    #define CONFIG_FLXOS_TOUCH_SPI_FREQ FLXOS_TOUCH_SPI_FREQ
+#endif
+
+
 
 // ============================================================================
 // Display Panel Type Selection
@@ -171,6 +327,18 @@ class LGFX : public lgfx::LGFX_Device {
 #endif
 
 public:
+    // Explicitly expose base methods to workaround visibility issue in lv_lovyan_gfx.cpp
+    int32_t width() const { return lgfx::LGFX_Device::width(); }
+    int32_t height() const { return lgfx::LGFX_Device::height(); }
+    uint8_t getRotation() const { return lgfx::LGFX_Device::getRotation(); }
+    void setRotation(uint8_t r) { lgfx::LGFX_Device::setRotation(r); }
+    // Also expose getTouch/getTouchRaw if needed
+    
+    void test_inheritance() {
+        volatile int w = this->width();
+        (void)w;
+    }
+    #pragma message "Building LGFX User Header - LGFX Class Defined"
 
 	LGFX(void) {
 		// ====================================================================

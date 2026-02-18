@@ -6,7 +6,7 @@ endif()
 idf_component_register(
     SRCS
     INCLUDE_DIRS "."
-    REQUIRES Core Kernel Services Apps Connectivity System HAL ${EXTRA_REQS}
+    REQUIRES Core Kernel Services Apps Connectivity System HAL Profiles ${EXTRA_REQS}
 )
 
 # Inject LovyanGFX dependency into lvgl component

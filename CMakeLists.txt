@@ -40,7 +40,11 @@ set(EXTRA_COMPONENT_DIRS
     "${CMAKE_SOURCE_DIR}/Connectivity"
     "${CMAKE_SOURCE_DIR}/System"
     "${CMAKE_SOURCE_DIR}/UI"
+    "${CMAKE_SOURCE_DIR}/Profiles"
 )
+
+
+add_compile_definitions(LV_USE_LOVYAN_GFX=1)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(FlxOS)
