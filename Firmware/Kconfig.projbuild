@@ -1,41 +1,7 @@
 menu "Hardware Configuration"
 
-	choice FLXOS_DEVICE_PROFILE
-		prompt "Device Profile"
-		default FLXOS_PROFILE_GENERIC_ESP32
-		help
-			Select your hardware board. This loads metadata about display,
-			touch, SD card, and connectivity for the selected board.
-			Pin configuration is still handled by the options below.
-
-		config FLXOS_PROFILE_GENERIC_ESP32
-			bool "Generic ESP32"
-			help
-				Generic ESP32 board with no specific hardware assumptions.
-
-		config FLXOS_PROFILE_GENERIC_ESP32S3
-			bool "Generic ESP32-S3"
-			help
-				Generic ESP32-S3 board with PSRAM and USB-OTG.
-
-		config FLXOS_PROFILE_GENERIC_ESP32C3
-			bool "Generic ESP32-C3"
-			help
-				Generic ESP32-C3 RISC-V board (BLE only, no classic Bluetooth).
-
-		config FLXOS_PROFILE_CYD_2432S028R
-			bool "CYD 2432S028R (2.8\" ILI9341 + XPT2046)"
-			help
-				Cheap Yellow Display 2.8" with ILI9341 display and XPT2046
-				resistive touch (original v1 variant).
-	endchoice
-
-	config FLXOS_DEVICE_PROFILE_ID
-		string
-		default "generic-esp32"     if FLXOS_PROFILE_GENERIC_ESP32
-		default "generic-esp32s3"   if FLXOS_PROFILE_GENERIC_ESP32S3
-		default "generic-esp32c3"   if FLXOS_PROFILE_GENERIC_ESP32C3
-		default "cyd-2432s028r"     if FLXOS_PROFILE_CYD_2432S028R
+	# Device Profile selection is now handled via header files or build arguments.
+	# The Kconfig options below are for manual overrides or specific hardware settings.
 
 	config FLXOS_HEADLESS_MODE
 		bool "Headless Mode (No Display/GUI)"
@@ -45,60 +11,117 @@ menu "Hardware Configuration"
 			Disables LovyanGFX, LVGL, and all UI components.
 			Useful for headless deployments, testing, and CI/CD.
 
+	# FIX: Removed 'select LV_USE_LOVYAN_GFX' — that symbol is owned by the
+	# LovyanGFX component's own Kconfig.  Selecting an undefined symbol causes
+	# a Kconfig warning/error.  The dependency is expressed via 'depends on'
+	# below; your CMakeLists.txt / component logic should enable LovyanGFX when
+	# this config is y.
 	config FLXOS_REQUIRE_LVGL_LOVYAN
 		bool
 		default y
 		depends on !FLXOS_HEADLESS_MODE
-		select LV_USE_LOVYAN_GFX
 
 	config FLXOS_CLI_ENABLED
 		bool "Enable CLI (Command Line Interface)"
-		default y
+		default n
 		help
 			Enable interactive command-line interface via serial console.
 			Provides system commands like sysinfo, heap, uptime, reboot.
 			Works in both headless and GUI modes.
 
-	if !FLXOS_HEADLESS_MODE
+	choice FLXOS_DEVICE_PROFILE
+		prompt "Device Profile"
+		default FLXOS_PROFILE_CYD_2432S028R
+		help
+			Select your hardware profile.
+			- cyd-2432s028r:        Preset for ESP32-2432S028R (Cheap Yellow Display).
+			- esp32s3-ili9341-xpt:  Preset for ESP32-S3 + ILI9341 + XPT2046.
+			- custom:               Manually configure all hardware settings via Kconfig.
 
-		config FLXOS_DISPLAY_WIDTH
-			int "Display Width"
-			default 240
+		config FLXOS_PROFILE_CYD_2432S028R
+			bool "cyd-2432s028r"
+
+		config FLXOS_PROFILE_ESP32S3_ILI9341_XPT
+			bool "esp32s3-ili9341-xpt"
+
+		config FLXOS_PROFILE_CUSTOM
+			bool "custom"
+	endchoice
+
+	if !FLXOS_HEADLESS_MODE && FLXOS_PROFILE_CUSTOM
+
+		menu "Display Configuration"
+		config FLXOS_ENABLE_DISPLAY
+			bool "Enable Display Configuration"
+			default n
 			help
-				The horizontal resolution of the display.
+				Enable display driver, panel settings, and backlight configuration.
 
-		config FLXOS_DISPLAY_HEIGHT
-			int "Display Height"
-			default 320
-			help
-				The vertical resolution of the display.
-
-		config FLXOS_DISPLAY_ROTATION
-			int "Display Rotation (0, 90, 180, 270)"
-			range 0 270
-			default 90
-			help
-				Initial rotation of the display in degrees.
-
-		choice FLXOS_HARDWARE_MODE
-			prompt "Hardware Initialization Mode"
-			default FLXOS_HARDWARE_MANUAL
-			help
-				Choose between manual pin configuration or LovyanGFX AutoDetect.
-
-			config FLXOS_HARDWARE_MANUAL
-				bool "Manual Configuration"
+		if FLXOS_ENABLE_DISPLAY
+			config FLXOS_DISPLAY_WIDTH
+				int "Display Width (pixels)"
+				default 320
 				help
-					Manually specify pins and drivers.
+					Horizontal resolution of the display.
 
-			config FLXOS_HARDWARE_AUTODETECT
-				bool "AutoDetect (for known boards)"
+			config FLXOS_DISPLAY_HEIGHT
+				int "Display Height (pixels)"
+				default 240
 				help
-					Use LovyanGFX AutoDetect to find hardware at runtime.
-		endchoice
+					Vertical resolution of the display.
+
+			# FIX: Was 'int' with 'range 0 270' which allowed any value (e.g. 45, 91).
+			# Only 0 / 90 / 180 / 270 are valid LovyanGFX rotation values, so use a
+			# choice to make illegal values impossible at configuration time.
+			choice FLXOS_DISPLAY_ROTATION
+				prompt "Display Rotation"
+				default FLXOS_DISPLAY_ROTATION_0
+				help
+					Initial rotation of the display.
+					0   = portrait / default orientation.
+					90  = landscape, rotated 90° clockwise.
+					180 = portrait, flipped 180°.
+					270 = landscape, rotated 270° clockwise.
+
+				config FLXOS_DISPLAY_ROTATION_0
+					bool "0°"
+				config FLXOS_DISPLAY_ROTATION_90
+					bool "90°"
+				config FLXOS_DISPLAY_ROTATION_180
+					bool "180°"
+				config FLXOS_DISPLAY_ROTATION_270
+					bool "270°"
+			endchoice
+
+			# Numeric helper derived from the choice above — use this in C code.
+			config FLXOS_DISPLAY_ROTATION_VALUE
+				int
+				default 0   if FLXOS_DISPLAY_ROTATION_0
+				default 90  if FLXOS_DISPLAY_ROTATION_90
+				default 180 if FLXOS_DISPLAY_ROTATION_180
+				default 270 if FLXOS_DISPLAY_ROTATION_270
+
+			choice FLXOS_HARDWARE_MODE
+				prompt "Hardware Initialization Mode"
+				default FLXOS_HARDWARE_MANUAL
+				help
+					Choose between manual pin configuration or LovyanGFX AutoDetect.
+
+				config FLXOS_HARDWARE_MANUAL
+					bool "Manual Configuration"
+					help
+						Manually specify pins and drivers.
+
+				config FLXOS_HARDWARE_AUTODETECT
+					bool "AutoDetect (for known boards)"
+					help
+						Use LovyanGFX AutoDetect to find hardware at runtime.
+			endchoice
+		endif
 
 		if FLXOS_HARDWARE_MANUAL
 			menu "Display Driver Selection"
+				depends on FLXOS_ENABLE_DISPLAY
 				choice FLXOS_DISPLAY_DRIVER
 					prompt "Panel Driver"
 					default FLXOS_DISPLAY_ILI9341
@@ -205,18 +228,20 @@ menu "Hardware Configuration"
 					config FLXOS_BUS_PARALLEL8
 						bool "8-bit Parallel"
 					config FLXOS_BUS_PARALLEL16
-						bool "16-bit Parallel"
+						bool "16-bit Parallel (ESP32-S3 only)"
 				endchoice
 
 				if FLXOS_BUS_SPI
 					menu "SPI Bus Settings"
+						# FIX: Was 'default 0' which is outside 'range 1 2' — Kconfig
+						# warning/error.  Changed to 1 (SPI2/HSPI), the most common host.
 						config FLXOS_SPI_HOST
 							int "SPI Host (1=SPI2/HSPI, 2=SPI3/VSPI)"
 							range 1 2
 							default 1
 							help
 								SPI Host Selection.
-								ESP32: 1=HSPI, 2=VSPI.
+								ESP32:   1=HSPI, 2=VSPI.
 								ESP32-S3: 1=SPI2, 2=SPI3.
 
 						config FLXOS_SPI_MODE
@@ -224,17 +249,21 @@ menu "Hardware Configuration"
 							range 0 3
 							default 0
 							help
-								SPI mode: 0 (CPOL=0,CPHA=0), 1 (CPOL=0,CPHA=1), 2 (CPOL=1,CPHA=0), 3 (CPOL=1,CPHA=1)
+								SPI mode: 0 (CPOL=0,CPHA=0), 1 (CPOL=0,CPHA=1),
+								          2 (CPOL=1,CPHA=0), 3 (CPOL=1,CPHA=1).
 
 						config FLXOS_SPI_FREQ_WRITE
 							int "SPI Write Frequency (Hz)"
-							default 80000000
+							default 40000000
 							help
-								Default is 40MHz. Some displays support up to 80MHz.
+								Write clock speed. Many ILI9341/ST7789 panels support 40 MHz.
+								Some support up to 80 MHz — check your panel datasheet.
 
 						config FLXOS_SPI_FREQ_READ
 							int "SPI Read Frequency (Hz)"
-							default 40000000
+							default 16000000
+							help
+								Read clock speed. Usually lower than write speed.
 
 						config FLXOS_SPI_3WIRE
 							bool "Use 3-Wire SPI (no MISO)"
@@ -245,41 +274,42 @@ menu "Hardware Configuration"
 							range 0 2
 							default 0
 							help
-								0 = SPI_DMA_CH_AUTO, 1 = SPI_DMA_CH1, 2 = SPI_DMA_CH2
+								0 = SPI_DMA_CH_AUTO, 1 = SPI_DMA_CH1, 2 = SPI_DMA_CH2.
 
 						config FLXOS_PIN_SCLK
 							int "SPI SCLK Pin"
 							range -1 48
-							default 12 if IDF_TARGET_ESP32S3
-							default 6 if IDF_TARGET_ESP32C3
-							default 18
+							default 0
 							help
-								Clock pin. Default: S3=12, C3=6, ESP32=18 (VSPI).
+								Clock pin.
+								Typical defaults: ESP32=18 (VSPI), S3=12, C3=6.
 
 						config FLXOS_PIN_MOSI
 							int "SPI MOSI Pin"
 							range -1 48
-							default 11 if IDF_TARGET_ESP32S3
-							default 7 if IDF_TARGET_ESP32C3
-							default 23
+							default 0
 							help
-								Data out. Default: S3=11, C3=7, ESP32=23 (VSPI).
-								WARNING: On Standard ESP32, DO NOT use GPIO 6-11 (Flash Memory).
+								Data-out pin.
+								Typical defaults: ESP32=23 (VSPI), S3=11, C3=7.
+								WARNING: On standard ESP32 do NOT use GPIO 6-11 (Flash).
 
 						config FLXOS_PIN_MISO
 							int "SPI MISO Pin (-1 to disable)"
 							range -1 48
-							default 13 if IDF_TARGET_ESP32S3
-							default 2 if IDF_TARGET_ESP32C3
-							default 19
+							default 0
 							help
-								Data in. Default: S3=13, C3=2, ESP32=19 (VSPI).
+								Data-in pin.
+								Typical defaults: ESP32=19 (VSPI), S3=13, C3=2.
 
-						config FLXOS_PIN_DC
-							int "Display DC Pin"
+						# FIX: Was named FLXOS_PIN_DC — same symbol name used in the
+						# Parallel Bus menu below, which caused a silent merge/collision.
+						# Renamed to FLXOS_SPI_PIN_DC to be unique.
+						config FLXOS_SPI_PIN_DC
+							int "SPI Display DC (Data/Command) Pin"
 							range -1 48
-							default 9 if IDF_TARGET_ESP32S3
-							default 2
+							default 0
+							help
+								Data/Command select pin for SPI-connected display panels.
 					endmenu
 				endif
 
@@ -294,25 +324,23 @@ menu "Hardware Configuration"
 							int "I2C Frequency (Hz)"
 							default 400000
 							help
-								Standard: 100000, Fast: 400000, Fast Plus: 1000000
+								Standard: 100000, Fast: 400000, Fast Plus: 1000000.
 
 						config FLXOS_I2C_ADDR
 							hex "I2C Device Address"
 							default 0x3C
 							help
-								Common addresses: 0x3C or 0x3D for SSD1306
+								Common addresses: 0x3C or 0x3D for SSD1306.
 
 						config FLXOS_PIN_I2C_SDA
 							int "I2C SDA Pin"
 							range -1 48
-							default 21 if IDF_TARGET_ESP32
-							default 8
+							default 0
 
 						config FLXOS_PIN_I2C_SCL
 							int "I2C SCL Pin"
 							range -1 48
-							default 22 if IDF_TARGET_ESP32
-							default 9
+							default 0
 					endmenu
 				endif
 
@@ -320,55 +348,57 @@ menu "Hardware Configuration"
 					menu "Parallel Bus Settings"
 						config FLXOS_PARALLEL_FREQ
 							int "Parallel Bus Frequency (Hz)"
-							default 16000000
+							default 20000000
 
 						config FLXOS_PIN_WR
 							int "Write Strobe (WR) Pin"
 							range -1 48
-							default 4
+							default 0
 
 						config FLXOS_PIN_RD
 							int "Read Strobe (RD) Pin (-1 to disable)"
 							range -1 48
-							default -1
+							default 0
 
-						config FLXOS_PIN_DC
-							int "Data/Command (DC) Pin"
+						# FIX: Was named FLXOS_PIN_DC — duplicate of the SPI symbol.
+						# Renamed to FLXOS_PARALLEL_PIN_DC to be unique.
+						config FLXOS_PARALLEL_PIN_DC
+							int "Parallel Data/Command (DC) Pin"
 							range -1 48
-							default 2
+							default 0
 
 						config FLXOS_PIN_D0
 							int "Data Pin D0"
 							range -1 48
-							default 15
+							default 0
 						config FLXOS_PIN_D1
 							int "Data Pin D1"
 							range -1 48
-							default 13
+							default 0
 						config FLXOS_PIN_D2
 							int "Data Pin D2"
 							range -1 48
-							default 12
+							default 0
 						config FLXOS_PIN_D3
 							int "Data Pin D3"
 							range -1 48
-							default 14
+							default 0
 						config FLXOS_PIN_D4
 							int "Data Pin D4"
 							range -1 48
-							default 27
+							default 0
 						config FLXOS_PIN_D5
 							int "Data Pin D5"
 							range -1 48
-							default 25
+							default 0
 						config FLXOS_PIN_D6
 							int "Data Pin D6"
 							range -1 48
-							default 33
+							default 0
 						config FLXOS_PIN_D7
 							int "Data Pin D7"
 							range -1 48
-							default 32
+							default 0
 					endmenu
 				endif
 
@@ -377,35 +407,35 @@ menu "Hardware Configuration"
 						config FLXOS_PIN_D8
 							int "Data Pin D8"
 							range -1 48
-							default 21
+							default 0
 						config FLXOS_PIN_D9
 							int "Data Pin D9"
 							range -1 48
-							default 22
+							default 0
 						config FLXOS_PIN_D10
 							int "Data Pin D10"
 							range -1 48
-							default 23
+							default 0
 						config FLXOS_PIN_D11
 							int "Data Pin D11"
 							range -1 48
-							default 19
+							default 0
 						config FLXOS_PIN_D12
 							int "Data Pin D12"
 							range -1 48
-							default 18
+							default 0
 						config FLXOS_PIN_D13
 							int "Data Pin D13"
 							range -1 48
-							default 5
+							default 0
 						config FLXOS_PIN_D14
 							int "Data Pin D14"
 							range -1 48
-							default 17
+							default 0
 						config FLXOS_PIN_D15
 							int "Data Pin D15"
 							range -1 48
-							default 16
+							default 0
 					endmenu
 				endif
 
@@ -413,20 +443,17 @@ menu "Hardware Configuration"
 					config FLXOS_PIN_CS
 						int "Display CS Pin (-1 to disable)"
 						range -1 48
-						default 10 if IDF_TARGET_ESP32S3
-						default 7 if IDF_TARGET_ESP32C3
-						default 5
+						default 0
 
 					config FLXOS_PIN_RST
 						int "Display Reset Pin (-1 to disable)"
 						range -1 48
-						default 14 if IDF_TARGET_ESP32S3
-						default 15
+						default 0
 
 					config FLXOS_PIN_BUSY
 						int "Display Busy Pin (-1 to disable)"
 						range -1 48
-						default -1
+						default 0
 				endmenu
 
 				menu "Advanced Panel Settings"
@@ -434,38 +461,38 @@ menu "Hardware Configuration"
 						int "Panel X Offset"
 						default 0
 						help
-							Horizontal offset for displays with non-zero start position
+							Horizontal offset for displays with non-zero start position.
 
 					config FLXOS_PANEL_OFFSET_Y
 						int "Panel Y Offset"
 						default 0
 						help
-							Vertical offset for displays with non-zero start position
+							Vertical offset for displays with non-zero start position.
 
 					config FLXOS_PANEL_OFFSET_ROTATION
 						int "Panel Rotation Offset"
 						range 0 7
 						default 0
 						help
-							Additional rotation offset for panel alignment
+							Additional rotation offset for panel alignment.
 
 					config FLXOS_DUMMY_READ_PIXEL
 						int "Dummy Read Pixel Count"
-						default 8
+						default 0
 						help
-							Number of dummy pixels to read before actual data
+							Number of dummy pixels to read before actual data.
 
 					config FLXOS_DUMMY_READ_BITS
 						int "Dummy Read Bits"
-						default 1
+						default 0
 						help
-							Number of dummy bits to read
+							Number of dummy bits to read.
 
 					config FLXOS_PANEL_READABLE
 						bool "Panel Supports Reading"
-						default y
+						default n
 						help
-							Enable if the panel supports reading pixel data back
+							Enable if the panel supports reading pixel data back.
 
 					config FLXOS_PANEL_DLEN_16BIT
 						bool "Use 16-bit Data Length"
@@ -473,18 +500,18 @@ menu "Hardware Configuration"
 
 					config FLXOS_BUS_SHARED
 						bool "SPI Bus is Shared"
-						default y
+						default n
 						help
-							Enable if multiple devices share the same SPI bus
+							Enable if multiple devices share the same SPI bus.
 				endmenu
 
 				menu "Backlight Configuration"
+					depends on FLXOS_ENABLE_DISPLAY
+
 					config FLXOS_PIN_BCKL
 						int "Backlight Pin (-1 to disable)"
 						range -1 48
-						default 21 if IDF_TARGET_ESP32
-						default 7 if IDF_TARGET_ESP32S3
-						default 17
+						default 0
 
 					config FLXOS_BCKL_INVERT
 						bool "Invert Backlight PWM"
@@ -492,17 +519,22 @@ menu "Hardware Configuration"
 
 					config FLXOS_BCKL_FREQ
 						int "Backlight PWM Frequency (Hz)"
-						default 20000
+						default 1000
 
 					config FLXOS_BCKL_PWM_CHANNEL
 						int "Backlight PWM Channel"
 						range 0 15
-						default 7
+						default 0
 				endmenu
+			endmenu  # Display Bus Configuration
+
+			menu "Touch Configuration"
+				depends on FLXOS_ENABLE_DISPLAY
 
 				config FLXOS_TOUCH_ENABLED
 					bool "Enable Touch"
-					default y
+					default n
+					depends on FLXOS_ENABLE_DISPLAY
 
 				if FLXOS_TOUCH_ENABLED
 					choice FLXOS_TOUCH_DRIVER
@@ -535,62 +567,58 @@ menu "Hardware Configuration"
 						config FLXOS_PIN_TOUCH_CS
 							int "Touch CS Pin (SPI only)"
 							range -1 48
-							default 5 if IDF_TARGET_ESP32S3
-							default 8
+							default 0
 							depends on FLXOS_TOUCH_XPT2046
 
 						config FLXOS_PIN_TOUCH_SCL
 							int "Touch I2C SCL Pin"
 							range -1 48
-							default 22 if IDF_TARGET_ESP32
-							default 9
+							default 0
 							depends on !FLXOS_TOUCH_XPT2046 && !FLXOS_TOUCH_RA8875
 
 						config FLXOS_PIN_TOUCH_SDA
 							int "Touch I2C SDA Pin"
 							range -1 48
-							default 21 if IDF_TARGET_ESP32
-							default 8
+							default 0
 							depends on !FLXOS_TOUCH_XPT2046 && !FLXOS_TOUCH_RA8875
 
 						config FLXOS_PIN_TOUCH_INT
 							int "Touch INT Pin (-1 to disable)"
 							range -1 48
-							default 6 if IDF_TARGET_ESP32S3
 							default -1
 					endmenu
 
 					menu "Touch Calibration"
 						config FLXOS_TOUCH_X_MIN
 							int "Touch X Minimum"
-							default 3800
+							default 0
 							help
-								Minimum raw X coordinate value
+								Minimum raw X coordinate value.
 
 						config FLXOS_TOUCH_X_MAX
 							int "Touch X Maximum"
-							default 200
+							default 0
 							help
-								Maximum raw X coordinate value (0 = use display width)
+								Maximum raw X coordinate value (0 = use display width).
 
 						config FLXOS_TOUCH_Y_MIN
 							int "Touch Y Minimum"
-							default 200
+							default 0
 							help
-								Minimum raw Y coordinate value
+								Minimum raw Y coordinate value.
 
 						config FLXOS_TOUCH_Y_MAX
 							int "Touch Y Maximum"
-							default 3800
+							default 0
 							help
-								Maximum raw Y coordinate value (0 = use display height)
+								Maximum raw Y coordinate value (0 = use display height).
 
 						config FLXOS_TOUCH_OFFSET_ROTATION
 							int "Touch Rotation Offset"
 							range 0 7
 							default 0
 							help
-								Additional rotation offset for touch alignment
+								Additional rotation offset for touch alignment.
 					endmenu
 
 					menu "Touch Advanced Settings"
@@ -599,17 +627,17 @@ menu "Hardware Configuration"
 							default 1000000
 							depends on FLXOS_TOUCH_XPT2046
 							help
-								SPI frequency for touch controller (typically 1MHz)
+								SPI frequency for touch controller (typically 1 MHz).
 
 						config FLXOS_TOUCH_SPI_SEPARATE_PINS
 							bool "Use Separate SPI Pins for Touch"
 							default n
 							depends on FLXOS_TOUCH_XPT2046
 							help
-								Enable if the touch controller uses different SPI pins
-								than the display. Required for boards like the
-								ESP32-2432S028R (Cheap Yellow Display / CYD) where
-								the XPT2046 is on separate GPIO pins.
+								Enable if the touch controller uses different SPI pins than
+								the display. Required for boards like the ESP32-2432S028R
+								(Cheap Yellow Display / CYD) where the XPT2046 is on
+								separate GPIO pins.
 
 						if FLXOS_TOUCH_SPI_SEPARATE_PINS
 							config FLXOS_TOUCH_SPI_HOST
@@ -617,7 +645,7 @@ menu "Hardware Configuration"
 								range -1 2
 								default -1
 								help
-									-1 = Software (bitbang) SPI. Use this when the SPI
+									-1 = Software (bitbang) SPI. Use when the hardware SPI
 									bus is shared with SD card and cannot be used
 									simultaneously (e.g. ESP32-2432S028R).
 									1 = SPI2_HOST (HSPI), 2 = SPI3_HOST (VSPI).
@@ -625,26 +653,26 @@ menu "Hardware Configuration"
 							config FLXOS_PIN_TOUCH_SCLK
 								int "Touch SPI SCLK Pin"
 								range -1 48
-								default 25
+								default 0
 								help
 									SPI clock pin for the touch controller.
-									Default 25 (ESP32-2432S028R).
+									Default 25 on ESP32-2432S028R.
 
 							config FLXOS_PIN_TOUCH_MOSI
 								int "Touch SPI MOSI Pin"
 								range -1 48
-								default 32
+								default 0
 								help
-									SPI data out pin for the touch controller.
-									Default 32 (ESP32-2432S028R).
+									SPI data-out pin for the touch controller.
+									Default 32 on ESP32-2432S028R.
 
 							config FLXOS_PIN_TOUCH_MISO
 								int "Touch SPI MISO Pin"
 								range -1 48
-								default 39
+								default 0
 								help
-									SPI data in pin for the touch controller.
-									Default 39 (ESP32-2432S028R).
+									SPI data-in pin for the touch controller.
+									Default 39 on ESP32-2432S028R.
 						endif
 
 						config FLXOS_TOUCH_I2C_PORT
@@ -653,138 +681,144 @@ menu "Hardware Configuration"
 							default 0
 							depends on !FLXOS_TOUCH_XPT2046
 							help
-								I2C port number (0 or 1)
+								I2C port number (0 or 1).
 
 						config FLXOS_TOUCH_I2C_FREQ
 							int "Touch I2C Frequency (Hz)"
 							default 400000
 							depends on !FLXOS_TOUCH_XPT2046
 							help
-								I2C frequency for touch controller (typically 400kHz)
+								I2C frequency for touch controller (typically 400 kHz).
 
 						config FLXOS_TOUCH_BUS_SHARED
 							bool "Touch Bus is Shared"
-							default y
+							default n
 							help
-								Enable if touch controller shares bus with other devices
+								Enable if touch controller shares bus with other devices.
 					endmenu
 				endif
-			endmenu
+			endmenu  # Touch Configuration
+		endif  # FLXOS_HARDWARE_MANUAL
+		endmenu  # Display Configuration
 
-	endif
+		menu "SD Card Configuration"
+			config FLXOS_SD_CARD_ENABLED
+				bool "Enable SD Card Support"
+				default n
+				help
+					Enable SD card storage via SPI bus.
 
-				menu "SD Card Configuration"
-				config FLXOS_SD_CARD_ENABLED
-					bool "Enable SD Card Support"
-					default y
+			if FLXOS_SD_CARD_ENABLED
+				config FLXOS_SD_MOUNT_POINT
+					string "SD Card Mount Point"
+					default "/sdcard"
 					help
-						Enable SD card storage via SPI bus.
+						VFS mount point for SD card.
 
-				if FLXOS_SD_CARD_ENABLED
-					config FLXOS_SD_MOUNT_POINT
-						string "SD Card Mount Point"
-						default "/sdcard"
-						help
-							VFS mount point for SD card.
+				config FLXOS_SD_PIN_CS
+					int "SD Card SPI CS Pin"
+					range 0 48
+					default 0
+					help
+						Chip-select pin for SD card SPI.
 
-					config FLXOS_SD_PIN_CS
-						int "SD Card SPI CS Pin"
-						range 0 48
-						default 4 if IDF_TARGET_ESP32S3
-						default 5
-						help
-							Chip select pin for SD card SPI.
+				config FLXOS_SD_PIN_MOSI
+					int "SD Card SPI MOSI Pin (-1 = reuse display MOSI)"
+					range -1 48
+					default -1
+					help
+						MOSI pin for SD card. Set to -1 to reuse
+						CONFIG_FLXOS_PIN_MOSI from the display bus.
 
-					config FLXOS_SD_PIN_MOSI
-						int "SD Card SPI MOSI Pin (-1 = use display MOSI)"
-						range -1 48
-						default -1
-						help
-							MOSI pin for SD card. Set to -1 to reuse the
-							display SPI MOSI pin (CONFIG_FLXOS_PIN_MOSI).
+				config FLXOS_SD_PIN_MISO
+					int "SD Card SPI MISO Pin (-1 = reuse display MISO)"
+					range -1 48
+					default -1
+					help
+						MISO pin for SD card. Set to -1 to reuse
+						CONFIG_FLXOS_PIN_MISO from the display bus.
 
-					config FLXOS_SD_PIN_MISO
-						int "SD Card SPI MISO Pin (-1 = use display MISO)"
-						range -1 48
-						default -1
-						help
-							MISO pin for SD card. Set to -1 to reuse the
-							display SPI MISO pin (CONFIG_FLXOS_PIN_MISO).
+				config FLXOS_SD_PIN_SCLK
+					int "SD Card SPI SCLK Pin (-1 = reuse display SCLK)"
+					range -1 48
+					default -1
+					help
+						SCLK pin for SD card. Set to -1 to reuse
+						CONFIG_FLXOS_PIN_SCLK from the display bus.
 
-					config FLXOS_SD_PIN_SCLK
-						int "SD Card SPI SCLK Pin (-1 = use display SCLK)"
-						range -1 48
-						default -1
-						help
-							SCLK pin for SD card. Set to -1 to reuse the
-							display SPI SCLK pin (CONFIG_FLXOS_PIN_SCLK).
+				# FIX: Was 'default 0' which is outside 'range 1 2'.
+				# Changed to 1 (SPI2/HSPI) — the most common choice on ESP32.
+				config FLXOS_SD_SPI_HOST
+					int "SD Card SPI Host (1=SPI2/HSPI, 2=SPI3/VSPI)"
+					range 1 2
+					default 1
+					help
+						SPI host for SD card.
+						1 = SPI2_HOST (HSPI), 2 = SPI3_HOST (VSPI).
 
-					config FLXOS_SD_SPI_HOST
-						int "SD Card SPI Host (1=SPI2, 2=SPI3)"
-						range 1 2
-						default 1
-						help
-							SPI host for SD card.
-							1 = SPI2_HOST (HSPI), 2 = SPI3_HOST (VSPI).
+				config FLXOS_SD_MAX_FREQ_KHZ
+					int "SD Card Max SPI Frequency (kHz)"
+					range 400 40000
+					default 20000
+					help
+						Maximum SPI clock frequency for SD card in kHz.
+						Typical values: 4000 (4 MHz) or 20000 (20 MHz).
+			endif
+		endmenu  # SD Card Configuration
 
-					config FLXOS_SD_MAX_FREQ_KHZ
-						int "SD Card Max SPI Frequency (kHz)"
-						range 400 40000
-						default 20000
-						help
-							Maximum SPI clock frequency for SD card in kHz.
-							Typical values: 4000 (4MHz) or 20000 (20MHz).
-				endif
-			endmenu
+		menu "Battery Configuration"
+			config FLXOS_BATTERY_ENABLED
+				bool "Enable Battery Monitoring"
+				default n
+				help
+					Enable battery voltage monitoring via ADC.
 
-			menu "Battery Configuration"
-					config FLXOS_BATTERY_ENABLED
-						bool "Enable Battery Monitoring"
-						default n
-						help
-							Enable battery voltage monitoring via ADC.
+			if FLXOS_BATTERY_ENABLED
+				choice FLXOS_BATTERY_ADC_UNIT
+					prompt "ADC Unit"
+					default FLXOS_BATTERY_ADC_UNIT_1
+					help
+						Select the ADC unit to use.
+						Note: ADC2 is often restricted when Wi-Fi is active.
 
-					if FLXOS_BATTERY_ENABLED
-						choice FLXOS_BATTERY_ADC_UNIT
-							prompt "ADC Unit"
-							default FLXOS_BATTERY_ADC_UNIT_1
-							help
-								Select the ADC unit to use. ADC2 is often restricted when WiFi is active.
+					config FLXOS_BATTERY_ADC_UNIT_1
+						bool "ADC Unit 1"
+					config FLXOS_BATTERY_ADC_UNIT_2
+						bool "ADC Unit 2"
+				endchoice
 
-							config FLXOS_BATTERY_ADC_UNIT_1
-								bool "ADC Unit 1"
-							config FLXOS_BATTERY_ADC_UNIT_2
-								bool "ADC Unit 2"
-						endchoice
+				config FLXOS_BATTERY_ADC_CHANNEL
+					int "ADC Channel"
+					range 0 9
+					default 0
+					help
+						ADC channel for battery sensing.
+						Check your board documentation for GPIO-to-channel mapping.
 
-						config FLXOS_BATTERY_ADC_CHANNEL
-							int "ADC Channel"
-							range 0 9
-							default 7
-							help
-								ADC channel for battery sensing.
-								Check your board documentation for GPIO to Channel mapping.
+				config FLXOS_BATTERY_VOLTAGE_MAX
+					int "Battery Max Voltage (mV)"
+					default 4200
+					help
+						Raw ADC voltage (after divider scaling) when battery is at 100%.
+						Typical Li-ion full charge: 4200 mV.
 
-						config FLXOS_BATTERY_VOLTAGE_MAX
-							int "Battery Max Voltage (mV)"
-							default 4200
-							help
-								Voltage when battery is at 100%.
+				config FLXOS_BATTERY_VOLTAGE_MIN
+					int "Battery Min Voltage (mV)"
+					default 3300
+					help
+						Raw ADC voltage (after divider scaling) when battery is at 0%.
+						Typical Li-ion cutoff: 3300 mV.
 
-						config FLXOS_BATTERY_VOLTAGE_MIN
-							int "Battery Min Voltage (mV)"
-							default 3300
-							help
-								Voltage when battery is at 0%.
+				config FLXOS_BATTERY_DIVIDER_FACTOR
+					int "Voltage Divider Factor (multiplied by 100)"
+					default 200
+					help
+						Compensates for a resistor divider on the ADC input.
+						A 100k/100k divider halves the voltage, so enter 200 (= 2.0×).
+						Enter 100 if there is no divider.
+			endif
+		endmenu  # Battery Configuration
 
-						config FLXOS_BATTERY_DIVIDER_FACTOR
-							int "Voltage Divider Factor (multiplied by 100)"
-							default 200
-							help
-								If you have a 100k/100k divider, factor is 2.0.
-								Enter 200 for 2.0, 100 for no divider.
-					endif
-				endmenu
-	endif
+	endif  # !FLXOS_HEADLESS_MODE && FLXOS_PROFILE_CUSTOM
 
-endmenu
+endmenu  # Hardware Configuration

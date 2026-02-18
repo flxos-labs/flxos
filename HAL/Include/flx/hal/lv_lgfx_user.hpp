@@ -83,10 +83,6 @@
 #define LGFX_PANEL_TYPE lgfx::Panel_ST7796
 #elif defined(CONFIG_FLXOS_DISPLAY_ST77961)
 #define LGFX_PANEL_TYPE lgfx::Panel_ST77961
-#else
-// Fallback: If AutoDetect is selected or no driver matches,
-// define a dummy type to ensure compilation of the LGFX class.
-#define LGFX_PANEL_TYPE lgfx::Panel_ILI9341
 #endif
 
 // ============================================================================
@@ -137,8 +133,6 @@
 #define LGFX_BUS_TYPE lgfx::Bus_Parallel8
 #elif defined(CONFIG_FLXOS_BUS_PARALLEL16)
 #define LGFX_BUS_TYPE lgfx::Bus_Parallel16
-#else
-#define LGFX_BUS_TYPE lgfx::Bus_SPI
 #endif
 
 // ============================================================================
@@ -150,8 +144,6 @@
 #else
 #define LGFX_SPI_HOST SPI3_HOST
 #endif
-#else
-#define LGFX_SPI_HOST SPI2_HOST
 #endif
 
 // ============================================================================
@@ -165,8 +157,6 @@
 #else
 #define LGFX_DMA_CHANNEL SPI_DMA_CH2
 #endif
-#else
-#define LGFX_DMA_CHANNEL SPI_DMA_CH_AUTO
 #endif
 
 // ============================================================================
