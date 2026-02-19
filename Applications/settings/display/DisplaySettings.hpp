@@ -1,8 +1,8 @@
 #pragma once
 #include <cstring>
 
-#include "settings/SettingsPageBase.hpp"
 #include "lvgl.h"
+#include "settings/SettingsPageBase.hpp"
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
 #include <flx/system/managers/ThemeManager.hpp>

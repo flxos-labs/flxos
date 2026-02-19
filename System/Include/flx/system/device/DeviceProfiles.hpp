@@ -16,25 +16,11 @@ class DeviceProfiles {
 public:
 
 	/**
-	 * Find a profile by its unique ID.
-	 * @return Pointer to profile, or nullptr if not found.
+	 * Get the active device profile.
+	 *
+	 * Returns the single profile defined at compile-time via Config.hpp.
 	 */
-	static const DeviceProfile* findById(const std::string& profileId);
-
-	/**
-	 * Get all registered profiles.
-	 */
-	static std::vector<const DeviceProfile*> getAll();
-
-	/**
-	 * Get all profile IDs.
-	 */
-	static std::vector<std::string> getAllIds();
-
-	/**
-	 * Get the number of built-in profiles.
-	 */
-	static size_t count();
+	static const DeviceProfile& get();
 
 private:
 

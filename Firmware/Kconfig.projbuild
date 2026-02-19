@@ -31,12 +31,16 @@ menu "Hardware Configuration"
 
 	choice FLXOS_DEVICE_PROFILE
 		prompt "Device Profile"
-		default FLXOS_PROFILE_CYD_2432S028R
+		default FLXOS_PROFILE_NONE
 		help
 			Select your hardware profile.
+			- none:                 No profile selected.
 			- cyd-2432s028r:        Preset for ESP32-2432S028R (Cheap Yellow Display).
 			- esp32s3-ili9341-xpt:  Preset for ESP32-S3 + ILI9341 + XPT2046.
 			- custom:               Manually configure all hardware settings via Kconfig.
+
+		config FLXOS_PROFILE_NONE
+			bool "none"
 
 		config FLXOS_PROFILE_CYD_2432S028R
 			bool "cyd-2432s028r"

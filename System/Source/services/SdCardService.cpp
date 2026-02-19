@@ -80,10 +80,10 @@ bool SdCardService::mount() {
 
 	sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 	host.slot = host_id;
-	host.max_freq_khz = CONFIG_FLXOS_SD_MAX_FREQ_KHZ;
+	host.max_freq_khz = FLXOS_SD_MAX_FREQ_KHZ;
 
 	sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-	slot_config.gpio_cs = (gpio_num_t)CONFIG_FLXOS_SD_PIN_CS;
+	slot_config.gpio_cs = (gpio_num_t)FLXOS_SD_CS;
 	slot_config.host_id = host_id;
 
 	// Use provided SPI bus initialization from LGFX

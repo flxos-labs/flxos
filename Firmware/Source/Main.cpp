@@ -1,5 +1,9 @@
 #include "sdkconfig.h"
 
+#if CONFIG_FLXOS_PROFILE_NONE
+#error "No device profile selected. Please run 'idf.py menuconfig' and select a profile under Component config -> FlxOS Configuration -> Device Profile."
+#endif
+
 #include <flx/core/Logger.hpp>
 #include <flx/system/SystemManager.hpp>
 

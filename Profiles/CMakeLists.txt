@@ -20,5 +20,14 @@ if(NOT "${PROFILE_DIR}" STREQUAL "")
         INCLUDE_DIRS "${PROFILE_DIR}"
     )
 else()
-    idf_component_register()
+    # Include the no-profile directory which contains a Config.hpp with #error.
+    # This gives a clear error message when any component tries to include Config.hpp
+    # instead of a cryptic "file not found" error.
+    # Also compile profile_check.c which has its own #error as a secondary guard.
+    idf_component_register(
+        SRCS "profile_check.c"
+        INCLUDE_DIRS "no-profile"
+    )
 endif()
+
+

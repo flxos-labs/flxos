@@ -1,6 +1,6 @@
 #pragma once
-#include "settings/SettingsPageBase.hpp"
 #include "lvgl.h"
+#include "settings/SettingsPageBase.hpp"
 #include <cstring>
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <functional>

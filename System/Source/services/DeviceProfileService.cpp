@@ -39,45 +39,31 @@ const ServiceManifest DeviceProfileService::serviceManifest = {
 // ============================================================================
 
 bool DeviceProfileService::onStart() {
-	// 1. Determine active profile ID from Kconfig
-#if defined(CONFIG_FLXOS_DEVICE_PROFILE_ID)
-	std::string profileId = CONFIG_FLXOS_DEVICE_PROFILE_ID;
-#else
-	std::string profileId = "generic-esp32";
-#endif
+	Log::info(TAG, "Loading device profile...");
 
-	Log::info(TAG, "Loading device profile: %s", profileId.c_str());
+	// 1. Get the single active profile (compile-time)
+	const flx::system::DeviceProfile& profile = flx::system::DeviceProfiles::get();
+	m_activeProfile = &profile;
 
-	// 2. Look up in built-in registry
-	m_activeProfile = flx::system::DeviceProfiles::findById(profileId);
+	Log::info(TAG, "Profile loaded: %s %s (%s)", profile.vendor.c_str(), profile.boardName.c_str(), profile.chipTarget.c_str());
+	Log::info(TAG, "  Display: %ux%u %s via %s (%.1f\")", profile.display.width, profile.display.height, profile.display.driver.c_str(), profile.display.bus.c_str(), profile.display.sizeInches);
 
-	if (m_activeProfile) {
-		Log::info(TAG, "Profile loaded: %s %s (%s)", m_activeProfile->vendor.c_str(), m_activeProfile->boardName.c_str(), m_activeProfile->chipTarget.c_str());
-		Log::info(TAG, "  Display: %ux%u %s via %s (%.1f\")", m_activeProfile->display.width, m_activeProfile->display.height, m_activeProfile->display.driver.c_str(), m_activeProfile->display.bus.c_str(), m_activeProfile->display.sizeInches);
-		if (m_activeProfile->touch.enabled) {
-			Log::info(TAG, "  Touch: %s via %s%s", m_activeProfile->touch.driver.c_str(), m_activeProfile->touch.bus.c_str(), m_activeProfile->touch.separateBus ? " (separate bus)" : "");
-		}
-		if (m_activeProfile->sdCard.supported) {
-			Log::info(TAG, "  SD Card: %s", m_activeProfile->sdCard.mode.c_str());
-		}
-		Log::info(TAG, "  Connectivity: WiFi=%s, BT=%s%s, Flash=%luKB, PSRAM=%luKB", m_activeProfile->connectivity.wifi ? "yes" : "no", m_activeProfile->connectivity.bluetooth ? "yes" : "no", m_activeProfile->connectivity.bleOnly ? " (BLE only)" : "", (unsigned long)m_activeProfile->connectivity.flashSizeKb, (unsigned long)m_activeProfile->connectivity.psramSizeKb);
-	} else {
-		Log::warn(TAG, "Unknown profile '%s' — using fallback defaults", profileId.c_str());
-		// Build a minimal fallback
-		m_fallbackProfile.profileId = profileId;
-		m_fallbackProfile.vendor = "Unknown";
-		m_fallbackProfile.boardName = "Unknown Board";
-		m_fallbackProfile.chipTarget = "ESP32";
-		m_fallbackProfile.description = "Unrecognized device profile";
-		m_activeProfile = &m_fallbackProfile;
+	if (profile.touch.enabled) {
+		Log::info(TAG, "  Touch: %s via %s%s", profile.touch.driver.c_str(), profile.touch.bus.c_str(), profile.touch.separateBus ? " (separate bus)" : "");
 	}
 
-	// 3. Check for touch calibration data
+	if (profile.sdCard.supported) {
+		Log::info(TAG, "  SD Card: %s", profile.sdCard.mode.c_str());
+	}
+
+	Log::info(TAG, "  Connectivity: WiFi=%s, BT=%s%s, Flash=%luKB, PSRAM=%luKB", profile.connectivity.wifi ? "yes" : "no", profile.connectivity.bluetooth ? "yes" : "no", profile.connectivity.bleOnly ? " (BLE only)" : "", (unsigned long)profile.connectivity.flashSizeKb, (unsigned long)profile.connectivity.psramSizeKb);
+
+	// 2. Check for touch calibration data
 	if (hasTouchCalibration()) {
 		Log::info(TAG, "Saved touch calibration found in NVS");
 	}
 
-	Log::info(TAG, "Device profile service started (%zu profiles available)", flx::system::DeviceProfiles::count());
+	Log::info(TAG, "Device profile service started");
 	return true;
 }
 

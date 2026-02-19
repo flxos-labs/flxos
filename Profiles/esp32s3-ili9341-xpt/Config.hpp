@@ -36,7 +36,7 @@
 #define FLXOS_PIN_DC                9
 #define FLXOS_PIN_RST               14
 #define FLXOS_PIN_BUSY              -1
-#define FLXOS_PIN_BCKL              21
+#define FLXOS_PIN_BCKL              7
 #define FLXOS_PIN_MOSI              11
 #define FLXOS_PIN_SCLK              12
 #define FLXOS_PIN_MISO              13

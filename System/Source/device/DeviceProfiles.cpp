@@ -1,53 +1,81 @@
-#include <algorithm>
+#include <Config.hpp>
 #include <flx/system/device/DeviceProfiles.hpp>
 
 namespace flx::system {
 
-static const DeviceProfile generic_esp32 = {
-	.profileId = "generic-esp32",
+static const DeviceProfile active_profile = {
+#if defined(FLXOS_PROFILE_CYD_2432S028R)
+	.profileId = "cyd-2432s028r",
+	.vendor = "Sunton",
+	.boardName = "CYD-2432S028R",
+#elif defined(FLXOS_PROFILE_ESP32S3_ILI9341_XPT)
+	.profileId = "esp32s3-ili9341-xpt",
 	.vendor = "Espressif",
-	.boardName = "Generic ESP32",
-	.chipTarget = "ESP32",
-	.description = "Default generic profile",
+	.boardName = "ESP32-S3-ILI9341",
+#else
+	.profileId = "custom",
+	.vendor = "Custom",
+	.boardName = "Custom Board",
+#endif
+	.chipTarget = CONFIG_IDF_TARGET,
+	.description = "Compile-time configured profile",
+
 	.display = {
-		.width = 320,
-		.height = 240,
-		.driver = "ILI9341",
+		.width = FLXOS_DISPLAY_WIDTH,
+		.height = FLXOS_DISPLAY_HEIGHT,
+		.driver = FLXOS_DISPLAY_DRIVER,
+#if defined(FLXOS_BUS_SPI)
 		.bus = "SPI",
-		.sizeInches = 2.4f
+#elif defined(FLXOS_BUS_I2C)
+		.bus = "I2C",
+#elif defined(FLXOS_BUS_PARALLEL8)
+		.bus = "Parallel 8-bit",
+#elif defined(FLXOS_BUS_PARALLEL16)
+		.bus = "Parallel 16-bit",
+#else
+		.bus = "Unknown",
+#endif
+		.sizeInches = 0.0f // Not in Config.hpp usually
 	},
-	.touch = {.enabled = false, .driver = "None", .bus = "None", .separateBus = false},
-	.sdCard = {.supported = true, .mode = "SPI"},
-	.connectivity = {.wifi = true, .bluetooth = true, .bleOnly = false, .flashSizeKb = 4096, .psramSizeKb = 0}
+
+	.touch = {
+#if defined(FLXOS_TOUCH_ENABLED)
+		.enabled = true,
+		.driver = FLXOS_TOUCH_DRIVER,
+#if defined(FLXOS_TOUCH_BUS_SHARED)
+		.bus = "Shared",
+		.separateBus = false,
+#else
+		.bus = "Separate",
+		.separateBus = true,
+#endif
+#else
+		.enabled = false,
+		.driver = "None",
+		.bus = "None",
+		.separateBus = false
+#endif
+	},
+
+	.sdCard = {
+#if defined(FLXOS_SD_CS) || defined(FLXOS_SD_PIN_CLK)
+		.supported = true,
+		.mode = "SPI" // Simplification
+#else
+		.supported = false,
+		.mode = "None"
+#endif
+	},
+
+	.connectivity = {.wifi = true, // Espressif chips usually have WiFi
+					 .bluetooth = true, // And BT
+					 .bleOnly = false,
+					 .flashSizeKb = 0, // Could read from sdkconfig
+					 .psramSizeKb = 0}
 };
 
-static const std::vector<const DeviceProfile*> profiles = {
-	&generic_esp32
-};
-
-const DeviceProfile* DeviceProfiles::findById(const std::string& profileId) {
-	for (const auto* profile: profiles) {
-		if (profile->profileId == profileId) {
-			return profile;
-		}
-	}
-	return nullptr;
-}
-
-std::vector<const DeviceProfile*> DeviceProfiles::getAll() {
-	return profiles;
-}
-
-std::vector<std::string> DeviceProfiles::getAllIds() {
-	std::vector<std::string> ids;
-	for (const auto* profile: profiles) {
-		ids.push_back(profile->profileId);
-	}
-	return ids;
-}
-
-size_t DeviceProfiles::count() {
-	return profiles.size();
+const DeviceProfile& DeviceProfiles::get() {
+	return active_profile;
 }
 
 } // namespace flx::system

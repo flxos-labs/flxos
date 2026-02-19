@@ -1,4 +1,5 @@
 set(EXTRA_REQS "")
+
 if(NOT CONFIG_FLXOS_HEADLESS_MODE)
     list(APPEND EXTRA_REQS UI Applications)
 endif()
@@ -14,6 +15,8 @@ idf_component_register(
 if(NOT CONFIG_FLXOS_HEADLESS_MODE AND CONFIG_LV_USE_LOVYAN_GFX)
     idf_component_get_property(lvgl_lib lvgl COMPONENT_LIB)
     target_link_libraries(${lvgl_lib} PUBLIC idf::LovyanGFX)
+    # Profiles provides Config.hpp (or a #error placeholder when no profile is selected)
+    target_link_libraries(${lvgl_lib} PUBLIC idf::Profiles)
 endif()
 
 # Partition generation & Upload

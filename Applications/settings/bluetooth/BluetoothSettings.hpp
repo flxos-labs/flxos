@@ -1,9 +1,9 @@
 #pragma once
 
-#include "settings/SettingsPageBase.hpp"
 #include "flx/connectivity/ConnectivityManager.hpp"
 #include "flx/connectivity/bluetooth/BluetoothManager.hpp"
 #include "lvgl.h"
+#include "settings/SettingsPageBase.hpp"
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 using namespace flx::ui;

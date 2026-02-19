@@ -1,8 +1,8 @@
 #pragma once
-#include "settings/SettingsPageBase.hpp"
 #include "esp_timer.h"
 #include "esp_wifi.h"
 #include "lvgl.h"
+#include "settings/SettingsPageBase.hpp"
 #include <cstring>
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <memory>
