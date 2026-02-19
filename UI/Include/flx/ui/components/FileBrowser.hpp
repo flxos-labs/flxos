@@ -85,8 +85,7 @@ private:
 	void enterDirectory(const std::string& name);
 	void selectFile(const std::string& name);
 	void confirmSelection();
-
-	static bool hasExtension(const std::string& fileName, const std::string& ext);
+	void dispatchSelection(const std::string& name);
 };
 
 } // namespace flx::ui

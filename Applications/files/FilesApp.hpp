@@ -41,7 +41,8 @@ private:
 	std::string m_currentPath;
 	std::stack<std::string> m_history;
 	flx::kernel::Task* m_guiTask = nullptr;
-	uint32_t m_lastFeed = 0;
+	uint32_t m_lastFeedMs = 0;
+	uint32_t m_lastRefreshMs = 0;
 
 	lv_obj_t* m_progressMbox = nullptr;
 	lv_obj_t* m_progressBar = nullptr;
@@ -55,7 +56,10 @@ private:
 	void refreshList();
 	void addListItem(const std::string& name, bool isDir);
 	void handleMenuAction(const std::string& action, const std::string& name, bool isDir);
+	void showDeleteConfirm(const std::string& name, bool isDir);
 	void showInputDialog(const char* title, const std::string& defaultVal, std::function<void(std::string)> cb);
+
+	lv_obj_t* addHeaderButton(const char* symbol, std::function<void()> onClick);
 
 	void pasteItem();
 	void deleteItem(const std::string& name, bool isDir);

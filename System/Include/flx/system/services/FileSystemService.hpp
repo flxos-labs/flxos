@@ -1,89 +1,67 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace flx::services {
 
 struct FileEntry {
-	std::string name {};
-	bool isDirectory {};
-	size_t size {}; // For files, 0 for directories
+	std::string name;
+	bool isDirectory {false};
+	uint64_t size {0};
 };
 
-using ProgressCallback = std::function<void(int percent, const char* currentPath)>;
+/// Progress callback: (percentComplete 0–100, currentItemPath)
+using ProgressCallback = std::function<void(int, std::string_view)>;
 
 class FileSystemService {
 public:
 
 	static FileSystemService& getInstance();
 
-	/**
-	 * List all files and directories in the given path.
-	 * @param path The directory path (LVGL format, e.g., "A:/data")
-	 * @return Vector of FileEntry objects
-	 */
-	std::vector<FileEntry> listDirectory(const std::string& path);
+	// Non-copyable, non-movable singleton
+	FileSystemService(const FileSystemService&) = delete;
+	FileSystemService& operator=(const FileSystemService&) = delete;
+	FileSystemService(FileSystemService&&) = delete;
+	FileSystemService& operator=(FileSystemService&&) = delete;
 
-	/**
-	 * Copy a file or directory recursively.
-	 * @param src Source path (VFS format, e.g., "/data/file.txt")
-	 * @param dst Destination path (VFS format)
-	 * @param callback Optional progress callback
-	 * @return true on success, false on failure
-	 */
-	bool copy(const std::string& src, const std::string& dst, ProgressCallback callback = nullptr);
+	/// List entries in a directory. LVGL "A:/" paths are accepted.
+	/// Returns an empty vector on failure (errors are logged internally).
+	[[nodiscard]] std::vector<FileEntry> listDirectory(const std::string& path);
 
-	/**
-	 * Move/rename a file or directory.
-	 * @param src Source path (VFS format)
-	 * @param dst Destination path (VFS format)
-	 * @return true on success, false on failure
-	 */
-	bool move(const std::string& src, const std::string& dst);
+	/// Copy src → dst, recursively if src is a directory.
+	[[nodiscard]] bool copy(const std::string& src, const std::string& dst, ProgressCallback callback = {});
 
-	/**
-	 * Remove a file or directory recursively.
-	 * @param path Path to remove (VFS format)
-	 * @param callback Optional progress callback
-	 * @return true on success, false on failure
-	 */
-	bool remove(const std::string& path, ProgressCallback callback = nullptr);
+	/// Move/rename src → dst (falls back to copy+delete across filesystems).
+	[[nodiscard]] bool move(const std::string& src, const std::string& dst);
 
-	/**
-	 * Create a new directory.
-	 * @param path Directory path (VFS format)
-	 * @return true on success, false on failure
-	 */
-	bool mkdir(const std::string& path);
+	/// Remove a file or directory tree.
+	[[nodiscard]] bool remove(const std::string& path, ProgressCallback callback = {});
 
-	/**
-	 * Convert LVGL path (A:/) to VFS path (/)
-	 * @param lvPath LVGL-style path
-	 * @return VFS-style path
-	 */
-	static std::string toVfsPath(const std::string& lvPath);
+	/// Create a directory (succeeds if it already exists).
+	[[nodiscard]] bool mkdir(const std::string& path);
 
-	/**
-	 * Build a full path from base and name, handling slashes properly.
-	 * @param base Base directory path
-	 * @param name File or directory name
-	 * @return Combined path
-	 */
-	static std::string buildPath(const std::string& base, const std::string& name);
+	// ── Path helpers ──────────────────────────────────────────────────────────
+
+	/// Strip LVGL drive prefix ("A:") → native FS path.
+	[[nodiscard]] static std::string toNativePath(const std::string& lvPath);
+
+	/// Join a base directory and a filename with exactly one '/'.
+	[[nodiscard]] static std::string joinPath(std::string_view base, std::string_view name);
 
 private:
 
 	FileSystemService() = default;
-	~FileSystemService() = default;
-	FileSystemService(const FileSystemService&) = delete;
-	FileSystemService& operator=(const FileSystemService&) = delete;
 
-	// Internal helper methods
-	int copyFile(const char* src, const char* dst, ProgressCallback callback);
-	int copyRecursive(const char* src, const char* dst, ProgressCallback callback);
-	int removeRecursive(const char* path, ProgressCallback callback);
+	// Implementation helpers
+	[[nodiscard]] static int copyFile(const char* src, const char* dst, int64_t totalBytes, ProgressCallback callback);
+
+	[[nodiscard]] static int copyRecursive(const char* src, const char* dst, ProgressCallback callback);
+
+	[[nodiscard]] static int removeRecursive(const char* path, ProgressCallback callback);
 };
 
 } // namespace flx::services

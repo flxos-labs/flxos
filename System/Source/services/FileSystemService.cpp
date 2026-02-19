@@ -1,297 +1,429 @@
+#include <flx/system/services/FileSystemService.hpp>
+
 #include "Config.hpp"
 #include "misc/lv_fs.h"
 #include "sdkconfig.h"
+
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
-#include <flx/system/services/FileSystemService.hpp>
 #if defined(FLXOS_SD_CARD_ENABLED)
 #include <flx/system/services/SdCardService.hpp>
 #endif
+
+#include <cerrno>
 #include <cstring>
 #include <dirent.h>
-#include <string_view>
 #include <sys/stat.h>
 #include <unistd.h>
 
-static constexpr std::string_view TAG = "FileSystem";
+#include <array>
+#include <memory>
+#include <utility>
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Internal RAII helpers (file-local, zero overhead)
+// ─────────────────────────────────────────────────────────────────────────────
+namespace {
+
+static constexpr std::string_view TAG = "FileSystemService";
+
+// ── RAII: POSIX FILE* ────────────────────────────────────────────────────────
+struct FileCloser {
+	void operator()(FILE* f) const noexcept {
+		if (f) std::fclose(f);
+	}
+};
+using UniqueFile = std::unique_ptr<FILE, FileCloser>;
+
+[[nodiscard]] UniqueFile openFile(const char* path, const char* mode) noexcept {
+	return UniqueFile {std::fopen(path, mode)};
+}
+
+// ── RAII: POSIX DIR* ─────────────────────────────────────────────────────────
+struct DirCloser {
+	void operator()(DIR* d) const noexcept {
+		if (d) ::closedir(d);
+	}
+};
+using UniqueDir = std::unique_ptr<DIR, DirCloser>;
+
+[[nodiscard]] UniqueDir openDir(const char* path) noexcept {
+	return UniqueDir {::opendir(path)};
+}
+
+// ── RAII: LVGL lv_fs_dir_t ───────────────────────────────────────────────────
+class LvDir {
+public:
+
+	[[nodiscard]] lv_fs_res_t open(const char* path) noexcept {
+		lv_fs_res_t res = lv_fs_dir_open(&dir_, path);
+		open_ = (res == LV_FS_RES_OK);
+		return res;
+	}
+
+	[[nodiscard]] bool isOpen() const noexcept { return open_; }
+
+	lv_fs_res_t read(char* buf, size_t bufSize) noexcept {
+		return lv_fs_dir_read(&dir_, buf, static_cast<uint32_t>(bufSize));
+	}
+
+	~LvDir() noexcept {
+		if (open_) lv_fs_dir_close(&dir_);
+	}
+
+	// Non-copyable
+	LvDir(const LvDir&) = delete;
+	LvDir& operator=(const LvDir&) = delete;
+
+	LvDir() = default;
+
+private:
+
+	lv_fs_dir_t dir_ {};
+	bool open_ {false};
+};
+
+// ── RAII: GuiLock ────────────────────────────────────────────────────────────
+struct GuiLockGuard {
+	GuiLockGuard() noexcept { flx::core::GuiLock::lock(); }
+	~GuiLockGuard() noexcept { flx::core::GuiLock::unlock(); }
+
+	GuiLockGuard(const GuiLockGuard&) = delete;
+	GuiLockGuard& operator=(const GuiLockGuard&) = delete;
+};
+
+// ── Stat helpers ─────────────────────────────────────────────────────────────
+[[nodiscard]] bool statPath(const char* path, struct stat& out) noexcept {
+	return ::stat(path, &out) == 0;
+}
+
+[[nodiscard]] bool isDirectory(const struct stat& st) noexcept {
+	return S_ISDIR(st.st_mode);
+}
+
+} // anonymous namespace
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FileSystemService implementation
+// ─────────────────────────────────────────────────────────────────────────────
 namespace flx::services {
+
+// ── Singleton ────────────────────────────────────────────────────────────────
 
 FileSystemService& FileSystemService::getInstance() {
 	static FileSystemService instance;
 	return instance;
 }
 
-std::string FileSystemService::toVfsPath(const std::string& lvPath) {
-	if (lvPath.substr(0, 2) == "A:") {
-		return lvPath.substr(2);
+// ── Path utilities ────────────────────────────────────────────────────────────
+
+std::string FileSystemService::toNativePath(const std::string& lvPath) {
+	constexpr std::string_view lvPrefix = "A:";
+	if (lvPath.size() >= lvPrefix.size() &&
+		lvPath.compare(0, lvPrefix.size(), lvPrefix) == 0) {
+		return lvPath.substr(lvPrefix.size());
 	}
 	return lvPath;
 }
 
-std::string FileSystemService::buildPath(const std::string& base, const std::string& name) {
-	return (base.back() == '/') ? base + name : base + "/" + name;
+std::string FileSystemService::joinPath(std::string_view base, std::string_view name) {
+	if (base.empty()) return std::string {name};
+	if (base.back() == '/') {
+		return std::string {base} + std::string {name};
+	}
+	return std::string {base} + '/' + std::string {name};
 }
+
+// ── listDirectory ─────────────────────────────────────────────────────────────
 
 std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path) {
 	std::vector<FileEntry> entries;
 
-	// Synchronize with GUI task to prevent SPI bus contention if SD is on shared bus
-	flx::core::GuiLock::lock();
+	// Hold the GUI lock for the full operation to prevent SPI bus contention.
+	GuiLockGuard lock;
 
-	// Special handling for root "A:/" which may not exist as a real directory
-	if (path == "A:/" || path == "A:") {
-		// Check if actual directories exist, otherwise return defaults
-		lv_fs_dir_t rootDir;
-		lv_fs_res_t rootRes = lv_fs_dir_open(&rootDir, path.c_str());
-
-		if (rootRes != LV_FS_RES_OK) {
-			Log::warn(TAG, "Failed to open root A:/, returning defaults");
-			flx::core::GuiLock::unlock();
-			// Return default directories
-			entries.push_back({"system", true, 0});
-			entries.push_back({"data", true, 0});
+	// ── Special-case: LVGL virtual root "A:/" ────────────────────────────────
+	// The virtual root may not correspond to a real directory on the underlying
+	// filesystem. If LVGL cannot open it, synthesise the well-known sub-mounts.
+	const bool isLvRoot = (path == "A:/" || path == "A:");
+	if (isLvRoot) {
+		LvDir probe;
+		if (probe.open(path.c_str()) != LV_FS_RES_OK) {
+			Log::warn(TAG, "Cannot open LVGL root '%s'; returning synthesised entries", path.c_str());
+			entries.push_back({"system", /*isDir=*/true, 0});
+			entries.push_back({"data", /*isDir=*/true, 0});
 #if defined(FLXOS_SD_CARD_ENABLED)
 			if (SdCardService::getInstance().isMounted()) {
-				entries.push_back({"sdcard", true, 0});
+				entries.push_back({"sdcard", /*isDir=*/true, 0});
 			}
 #endif
 			return entries;
 		}
-		lv_fs_dir_close(&rootDir);
+		// Probe succeeded; fall through to the general listing below.
 	}
 
-	lv_fs_dir_t dir;
-	Log::info(TAG, "Opening LVGL directory: %s", path.c_str());
-	lv_fs_res_t res = lv_fs_dir_open(&dir, path.c_str());
-
-	if (res != LV_FS_RES_OK) {
-		Log::error(TAG, "Failed to open directory: %s (res=%d)", path.c_str(), res);
-		flx::core::GuiLock::unlock();
-		return entries;
+	// ── General directory listing via LVGL ───────────────────────────────────
+	LvDir dir;
+	if (dir.open(path.c_str()) != LV_FS_RES_OK) {
+		Log::error(TAG, "Failed to open directory: %s", path.c_str());
+		return entries; // empty
 	}
-	Log::info(TAG, "Directory opened successfully");
 
-	char fn[256];
-	int count = 0;
-	Log::info(TAG, "Starting directory read loop");
+	Log::debug(TAG, "Listing directory: %s", path.c_str());
+
+	std::array<char, 256> nameBuf {};
+	const std::string nativeBase = toNativePath(path);
+
 	while (true) {
-		lv_fs_res_t readRes = lv_fs_dir_read(&dir, fn, sizeof(fn));
-		if (readRes != LV_FS_RES_OK) {
-			Log::info(TAG, "End of directory or error (res=%d)", readRes);
-			break;
+		nameBuf[0] = '\0';
+		if (dir.read(nameBuf.data(), nameBuf.size()) != LV_FS_RES_OK ||
+			nameBuf[0] == '\0') {
+			break; // end of directory or read error
 		}
 
-		Log::info(TAG, "Read entry %d: %s", count++, fn);
-		if (fn[0] == '\0') {
-			break;
-		}
+		// LVGL prefixes directories with '/'.
+		const bool isDir = (nameBuf[0] == '/');
+		const char* rawName = isDir ? nameBuf.data() + 1 : nameBuf.data();
 
-		bool const is_dir = (fn[0] == '/');
-		const char* name = is_dir ? fn + 1 : fn;
-
-		// Skip . and ..
-		if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0) {
+		if (std::strcmp(rawName, ".") == 0 || std::strcmp(rawName, "..") == 0) {
 			continue;
 		}
 
 		FileEntry entry;
-		entry.name = name;
-		entry.isDirectory = is_dir;
+		entry.name = rawName;
+		entry.isDirectory = isDir;
 		entry.size = 0;
 
-		// Get file size if it's a file
-		if (!is_dir) {
-			std::string fullPath = buildPath(toVfsPath(path), name);
+		if (!isDir) {
+			const std::string fullPath = joinPath(nativeBase, rawName);
 			struct stat st {};
-			if (stat(fullPath.c_str(), &st) == 0) {
-				entry.size = st.st_size;
+			if (statPath(fullPath.c_str(), st)) {
+				entry.size = static_cast<uint64_t>(st.st_size);
 			}
 		}
 
-		entries.push_back(entry);
+		entries.push_back(std::move(entry));
 	}
 
-	lv_fs_dir_close(&dir);
-	flx::core::GuiLock::unlock();
+	Log::debug(TAG, "Listed %zu entries in '%s'", entries.size(), path.c_str());
 	return entries;
 }
 
-int FileSystemService::copyFile(const char* src, const char* dst, ProgressCallback callback) {
-	struct stat st {};
-	long totalSize = 0;
-	if (stat(src, &st) == 0) {
-		totalSize = st.st_size;
-	}
+// ── copyFile ─────────────────────────────────────────────────────────────────
 
-	FILE* fsrc = fopen(src, "rb");
+int FileSystemService::copyFile(const char* src, const char* dst, int64_t totalBytes, ProgressCallback callback) {
+	UniqueFile fsrc = openFile(src, "rb");
 	if (!fsrc) {
-		Log::error(TAG, "Failed to open source file for copying: %s", src);
+		Log::error(TAG, "Cannot open source '%s': %s", src, std::strerror(errno));
 		return -1;
 	}
 
-	FILE* fdst = fopen(dst, "wb");
+	UniqueFile fdst = openFile(dst, "wb");
 	if (!fdst) {
-		Log::error(TAG, "Failed to open destination file for copying: %s", dst);
-		fclose(fsrc);
+		Log::error(TAG, "Cannot open destination '%s': %s", dst, std::strerror(errno));
 		return -1;
 	}
 
-	Log::info(TAG, "Copying file: %s -> %s (%ld bytes)", src, dst, totalSize);
+	Log::info(TAG, "Copying '%s' → '%s' (%" PRId64 " bytes)", src, dst, totalBytes);
 
-	char buf[4096];
-	size_t n = 0;
-	long copied = 0;
+	std::array<char, 4096> buf {};
+	int64_t copied = 0;
 
-	while ((n = fread(buf, 1, sizeof(buf), fsrc)) > 0) {
-		if (fwrite(buf, 1, n, fdst) != n) {
-			fclose(fsrc);
-			fclose(fdst);
+	while (true) {
+		const size_t n = std::fread(buf.data(), 1, buf.size(), fsrc.get());
+		if (n == 0) {
+			if (std::ferror(fsrc.get())) {
+				Log::error(TAG, "Read error on '%s': %s", src, std::strerror(errno));
+				return -1;
+			}
+			break; // EOF
+		}
+
+		if (std::fwrite(buf.data(), 1, n, fdst.get()) != n) {
+			Log::error(TAG, "Write error on '%s': %s", dst, std::strerror(errno));
 			return -1;
 		}
-		copied += n;
 
-		if (callback && totalSize > 0) {
-			int percent = (int)(copied * 100 / totalSize);
-			callback(percent, src);
+		copied += static_cast<int64_t>(n);
+
+		if (callback && totalBytes > 0) {
+			const int pct = static_cast<int>(copied * 100 / totalBytes);
+			callback(pct, src);
 		}
 	}
 
-	fclose(fsrc);
-	fclose(fdst);
-	Log::info(TAG, "Copy completed: %s", dst);
+	// Flush to catch deferred write errors before closing.
+	if (std::fflush(fdst.get()) != 0) {
+		Log::error(TAG, "Flush error on '%s': %s", dst, std::strerror(errno));
+		return -1;
+	}
+
+	Log::info(TAG, "Copy complete: '%s'", dst);
 	return 0;
 }
 
+// ── copyRecursive ─────────────────────────────────────────────────────────────
+
 int FileSystemService::copyRecursive(const char* src, const char* dst, ProgressCallback callback) {
 	struct stat st {};
-	if (stat(src, &st) != 0) {
+	if (!statPath(src, st)) {
+		Log::error(TAG, "Cannot stat '%s': %s", src, std::strerror(errno));
 		return -1;
 	}
 
-	if (S_ISDIR(st.st_mode)) {
-		if (callback) {
-			callback(0, src);
-		}
-
-		if (::mkdir(dst, 0777) != 0 && errno != EEXIST) {
-			return -1;
-		}
-
-		DIR* d = opendir(src);
-		if (!d) {
-			return -1;
-		}
-
-		struct dirent* p = nullptr;
-		int res = 0;
-
-		while ((p = readdir(d))) {
-			if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..")) {
-				continue;
-			}
-
-			std::string subSrc = buildPath(src, p->d_name);
-			std::string subDst = buildPath(dst, p->d_name);
-
-			if (copyRecursive(subSrc.c_str(), subDst.c_str(), callback) != 0) {
-				res = -1;
-				break;
-			}
-		}
-
-		closedir(d);
-		return res;
-	} else {
-		return copyFile(src, dst, callback);
-	}
-}
-
-bool FileSystemService::copy(const std::string& src, const std::string& dst, ProgressCallback callback) {
-	return copyRecursive(src.c_str(), dst.c_str(), callback) == 0;
-}
-
-bool FileSystemService::move(const std::string& src, const std::string& dst) {
-
-	if (rename(src.c_str(), dst.c_str()) == 0) {
-		Log::info(TAG, "Moved: %s -> %s", src.c_str(), dst.c_str());
-		return true;
+	if (!isDirectory(st)) {
+		const int64_t size = static_cast<int64_t>(st.st_size);
+		return copyFile(src, dst, size, std::move(callback));
 	}
 
-	Log::error(TAG, "Move failed: %s -> %s (errno: %d)", src.c_str(), dst.c_str(), errno);
-	return false;
-}
+	// ── Directory case ────────────────────────────────────────────────────────
+	if (callback) callback(0, src);
 
-int FileSystemService::removeRecursive(const char* path, ProgressCallback callback) {
-	DIR* d = opendir(path);
-	if (!d) {
-		// Not a directory, try to unlink as a file
-		return unlink(path);
+	if (::mkdir(dst, 0777) != 0 && errno != EEXIST) {
+		Log::error(TAG, "Cannot create directory '%s': %s", dst, std::strerror(errno));
+		return -1;
 	}
 
-	struct dirent* p = nullptr;
-	int r = 0;
+	UniqueDir dir = openDir(src);
+	if (!dir) {
+		Log::error(TAG, "Cannot open source directory '%s': %s", src, std::strerror(errno));
+		return -1;
+	}
 
-	while ((p = readdir(d))) {
-		if (callback) {
-			callback(0, path);
-		}
-
-		if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..")) {
+	while (const struct dirent* entry = ::readdir(dir.get())) {
+		if (std::strcmp(entry->d_name, ".") == 0 ||
+			std::strcmp(entry->d_name, "..") == 0) {
 			continue;
 		}
 
-		std::string subPath = buildPath(path, p->d_name);
-		struct stat st {};
+		const std::string subSrc = joinPath(src, entry->d_name);
+		const std::string subDst = joinPath(dst, entry->d_name);
 
-		if (stat(subPath.c_str(), &st) == 0) {
-			if (S_ISDIR(st.st_mode)) {
-				r = removeRecursive(subPath.c_str(), callback);
-			} else {
-				r = unlink(subPath.c_str());
-			}
-		} else {
-			r = -1;
+		if (copyRecursive(subSrc.c_str(), subDst.c_str(), callback) != 0) {
+			return -1;
 		}
+	}
+
+	return 0;
+}
+
+// ── copy (public) ─────────────────────────────────────────────────────────────
+
+bool FileSystemService::copy(const std::string& src, const std::string& dst, ProgressCallback callback) {
+	return copyRecursive(src.c_str(), dst.c_str(), std::move(callback)) == 0;
+}
+
+// ── move ──────────────────────────────────────────────────────────────────────
+
+bool FileSystemService::move(const std::string& src, const std::string& dst) {
+	// Try atomic rename first (works within the same filesystem).
+	if (::rename(src.c_str(), dst.c_str()) == 0) {
+		Log::info(TAG, "Moved '%s' → '%s'", src.c_str(), dst.c_str());
+		return true;
+	}
+
+	// Cross-filesystem move: copy then delete.
+	if (errno == EXDEV) {
+		Log::info(TAG, "Cross-device move detected; falling back to copy+delete");
+		if (!copy(src, dst)) {
+			Log::error(TAG, "Cross-device copy failed: '%s' → '%s'", src.c_str(), dst.c_str());
+			return false;
+		}
+		if (!remove(src)) {
+			Log::warn(TAG, "Copy succeeded but failed to remove source '%s'", src.c_str());
+			// Still report success since data reached the destination.
+		}
+		return true;
+	}
+
+	Log::error(TAG, "rename('%s', '%s') failed: %s", src.c_str(), dst.c_str(), std::strerror(errno));
+	return false;
+}
+
+// ── removeRecursive ───────────────────────────────────────────────────────────
+
+int FileSystemService::removeRecursive(const char* path, ProgressCallback callback) {
+	UniqueDir dir = openDir(path);
+	if (!dir) {
+		// Not a directory (or can't be opened) — attempt plain file removal.
+		if (::unlink(path) != 0) {
+			Log::error(TAG, "unlink('%s') failed: %s", path, std::strerror(errno));
+			return -1;
+		}
+		return 0;
+	}
+
+	while (const struct dirent* entry = ::readdir(dir.get())) {
+		if (std::strcmp(entry->d_name, ".") == 0 ||
+			std::strcmp(entry->d_name, "..") == 0) {
+			continue;
+		}
+
+		const std::string subPath = joinPath(path, entry->d_name);
+		if (callback) callback(0, subPath);
+
+		struct stat st {};
+		if (!statPath(subPath.c_str(), st)) {
+			Log::error(TAG, "Cannot stat '%s': %s", subPath.c_str(), std::strerror(errno));
+			return -1;
+		}
+
+		const int r = isDirectory(st)
+			? removeRecursive(subPath.c_str(), callback)
+			: ::unlink(subPath.c_str());
 
 		if (r != 0) {
-			break;
+			Log::error(TAG, "Failed to remove '%s': %s", subPath.c_str(), std::strerror(errno));
+			return -1;
 		}
 	}
 
-	closedir(d);
+	dir.reset(); // Close before rmdir — required on some FSes.
 
-	if (r == 0) {
-		r = rmdir(path);
+	if (::rmdir(path) != 0) {
+		Log::error(TAG, "rmdir('%s') failed: %s", path, std::strerror(errno));
+		return -1;
 	}
 
-	return r;
+	return 0;
 }
+
+// ── remove (public) ───────────────────────────────────────────────────────────
 
 bool FileSystemService::remove(const std::string& path, ProgressCallback callback) {
-
 	struct stat st {};
-	if (stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
-		Log::info(TAG, "Removing directory: %s", path.c_str());
-		return removeRecursive(path.c_str(), callback) == 0;
-	} else {
-		Log::info(TAG, "Removing file: %s", path.c_str());
-		return unlink(path.c_str()) == 0;
+	if (statPath(path.c_str(), st) && isDirectory(st)) {
+		Log::info(TAG, "Removing directory tree: %s", path.c_str());
+		return removeRecursive(path.c_str(), std::move(callback)) == 0;
 	}
+
+	Log::info(TAG, "Removing file: %s", path.c_str());
+	if (::unlink(path.c_str()) != 0) {
+		Log::error(TAG, "unlink('%s') failed: %s", path.c_str(), std::strerror(errno));
+		return false;
+	}
+	return true;
 }
 
-bool FileSystemService::mkdir(const std::string& path) {
+// ── mkdir ─────────────────────────────────────────────────────────────────────
 
+bool FileSystemService::mkdir(const std::string& path) {
 	if (::mkdir(path.c_str(), 0777) == 0) {
 		Log::info(TAG, "Created directory: %s", path.c_str());
 		return true;
 	}
 
 	if (errno == EEXIST) {
-		return true;
+		// Verify it's actually a directory, not a file with the same name.
+		struct stat st {};
+		if (statPath(path.c_str(), st) && isDirectory(st)) {
+			return true;
+		}
+		Log::error(TAG, "Path exists but is not a directory: %s", path.c_str());
+		return false;
 	}
 
-	Log::error(TAG, "Failed to create directory: %s (errno: %d)", path.c_str(), errno);
+	Log::error(TAG, "mkdir('%s') failed: %s", path.c_str(), std::strerror(errno));
 	return false;
 }
 
