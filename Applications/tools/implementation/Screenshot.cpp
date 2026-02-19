@@ -6,9 +6,10 @@
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
+#include "Config.hpp"
 #include "sdkconfig.h"
 
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 #include <flx/system/services/SdCardService.hpp>
 #endif
 
@@ -93,7 +94,7 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	int defaultSel = 0;
 	std::string defaultPath = flx::services::ScreenshotService::getInstance().getDefaultStoragePath();
 
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 	if (flx::services::SdCardService::getInstance().isMounted()) {
 		options += "\nSD Card";
 		if (defaultPath == flx::services::SdCardService::getInstance().getMountPoint()) {
@@ -167,7 +168,7 @@ void Screenshot::startCapture() {
 std::string Screenshot::getSelectedBasePath() {
 	uint32_t sel = lv_dropdown_get_selected(m_pathDropdown);
 
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 	if (sel == 1 && flx::services::SdCardService::getInstance().isMounted()) {
 		return flx::services::SdCardService::getInstance().getMountPoint();
 	}

@@ -80,9 +80,9 @@
 // ============================================================================
 // Battery Configuration
 // ============================================================================
-// #define FLXOS_BATTERY_ENABLED
-// #define FLXOS_BATTERY_ADC_UNIT      1
-// #define FLXOS_BATTERY_ADC_CHANNEL   7
-// #define FLXOS_BATTERY_VOLTAGE_MAX   4200
-// #define FLXOS_BATTERY_VOLTAGE_MIN   3300
-// #define FLXOS_BATTERY_DIVIDER_FACTOR 200
+#define FLXOS_BATTERY_ENABLED
+#define FLXOS_BATTERY_ADC_UNIT 1
+#define FLXOS_BATTERY_ADC_CHANNEL 7
+#define FLXOS_BATTERY_VOLTAGE_MAX 4200
+#define FLXOS_BATTERY_VOLTAGE_MIN 3300
+#define FLXOS_BATTERY_DIVIDER_FACTOR 200
