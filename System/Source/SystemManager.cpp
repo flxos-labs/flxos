@@ -1,3 +1,4 @@
+#include "Config.hpp"
 #include "esp_err.h"
 #include "esp_vfs_fat.h"
 #include "nvs.h"
@@ -16,7 +17,7 @@
 #include <flx/system/managers/SettingsManager.hpp>
 #include <flx/system/managers/ThemeManager.hpp>
 #include <flx/system/managers/TimeManager.hpp>
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 #include <flx/system/services/SdCardService.hpp>
 #endif
 #include <flx/system/services/DeviceProfileService.hpp>
@@ -85,7 +86,7 @@ void SystemManager::registerServices() {
 	registry.addService(std::shared_ptr<flx::services::IService>(&TimeManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::DeviceProfileService::getInstance(), noDelete));
 
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::SdCardService::getInstance(), noDelete));
 #endif
 

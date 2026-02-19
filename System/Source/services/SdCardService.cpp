@@ -3,7 +3,7 @@
 #include <flx/system/services/SdCardService.hpp>
 #include <string_view>
 
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 #include "driver/gpio.h"
 #include "driver/sdspi_host.h"
 #include "driver/spi_common.h"
@@ -28,8 +28,8 @@ const ServiceManifest SdCardService::serviceManifest = {
 };
 
 SdCardService::SdCardService()
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
-	: m_mountPoint(CONFIG_FLXOS_SD_MOUNT_POINT)
+#if defined(FLXOS_SD_CARD_ENABLED)
+	: m_mountPoint(FLXOS_SD_MOUNT_POINT)
 #else
 	: m_mountPoint("/sdcard")
 #endif
@@ -54,7 +54,7 @@ void SdCardService::onStop() {
 }
 
 bool SdCardService::mount() {
-#if !defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if !defined(FLXOS_SD_CARD_ENABLED)
 	Log::info(TAG, "SD card support disabled in config");
 	return false;
 #else
@@ -83,7 +83,7 @@ bool SdCardService::mount() {
 	host.max_freq_khz = FLXOS_SD_MAX_FREQ_KHZ;
 
 	sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-	slot_config.gpio_cs = (gpio_num_t)FLXOS_SD_CS;
+	slot_config.gpio_cs = (gpio_num_t)4; // Hardcoded for testing
 	slot_config.host_id = host_id;
 
 	// Use provided SPI bus initialization from LGFX
@@ -110,7 +110,7 @@ bool SdCardService::mount() {
 }
 
 void SdCardService::unmount() {
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 	if (!m_mounted) {
 		return;
 	}

@@ -1,5 +1,5 @@
 # Set component requirements based on build mode
-set(SYSTEM_REQUIRES Core Services Kernel Connectivity wear_levelling esp_timer)
+set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer)
 if(NOT CONFIG_FLXOS_HEADLESS_MODE)
     list(APPEND SYSTEM_REQUIRES lvgl)
 endif()

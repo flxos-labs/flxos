@@ -1,9 +1,10 @@
+#include "Config.hpp"
 #include "misc/lv_fs.h"
 #include "sdkconfig.h"
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/FileSystemService.hpp>
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 #include <flx/system/services/SdCardService.hpp>
 #endif
 #include <cstring>
@@ -50,7 +51,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 			// Return default directories
 			entries.push_back({"system", true, 0});
 			entries.push_back({"data", true, 0});
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 			if (SdCardService::getInstance().isMounted()) {
 				entries.push_back({"sdcard", true, 0});
 			}

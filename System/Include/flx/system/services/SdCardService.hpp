@@ -1,11 +1,12 @@
 #pragma once
 
+#include "Config.hpp"
 #include "sdkconfig.h"
 #include <flx/services/IService.hpp>
 #include <flx/services/ServiceManifest.hpp>
 #include <string>
 
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 #include "sdmmc_cmd.h"
 #endif
 
@@ -39,7 +40,7 @@ private:
 	bool m_mounted = false;
 	std::string m_mountPoint;
 
-#if defined(CONFIG_FLXOS_SD_CARD_ENABLED)
+#if defined(FLXOS_SD_CARD_ENABLED)
 	sdmmc_card_t* m_card = nullptr;
 #endif
 };

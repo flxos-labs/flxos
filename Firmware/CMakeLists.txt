@@ -19,6 +19,6 @@ if(NOT CONFIG_FLXOS_HEADLESS_MODE AND CONFIG_LV_USE_LOVYAN_GFX)
     target_link_libraries(${lvgl_lib} PUBLIC idf::Profiles)
 endif()
 
-# Partition generation & Upload
+# Generate Partitions & Upload
 fatfs_create_spiflash_image(system ../assets/system FLASH_IN_PROJECT)
 fatfs_create_spiflash_image(data ../assets/data FLASH_IN_PROJECT)
