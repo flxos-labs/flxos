@@ -22,5 +22,5 @@ idf_component_register(
          "Source/device/DeviceProfiles.cpp"
     INCLUDE_DIRS Include
     REQUIRES ${SYSTEM_REQUIRES}
-    PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console json esp_driver_i2c
+    PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console json esp_driver_i2c esp_adc
 )

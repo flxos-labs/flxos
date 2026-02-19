@@ -57,7 +57,7 @@ void SystemInfoService::initBatteryAdc() {
 	adc_oneshot_unit_handle_t handle;
 	adc_oneshot_unit_init_cfg_t init_config = {
 		.unit_id = (adc_unit_t)(FLXOS_BATTERY_ADC_UNIT == 1 ? ADC_UNIT_1 : ADC_UNIT_2),
-		.clk_src = ADC_DIGI_CLK_SRC_DEFAULT,
+		.clk_src = ADC_RTC_CLK_SRC_DEFAULT,
 		.ulp_mode = ADC_ULP_MODE_DISABLE,
 	};
 	ESP_ERROR_CHECK(adc_oneshot_new_unit(&init_config, &handle));

@@ -29,7 +29,7 @@ static constexpr int GLASS_BLUR_LARGE = 15;
 static constexpr int SIZE_STATUS_BAR_HEIGHT_PCT = 7;
 static constexpr int SIZE_DOCK_WIDTH_PCT = 90;
 static constexpr int SIZE_DOCK_HEIGHT_PCT = 14;
-static constexpr int SIZE_NOTIF_PANEL_HEIGHT_PCT = 93;
+static constexpr int SIZE_NOTIF_PANEL_HEIGHT_PCT = 94;
 static constexpr int SIZE_WIN_HEADER_PCT = 10;
 static constexpr int SIZE_DOCK_ICON_PCT = 15;
 

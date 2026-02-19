@@ -129,7 +129,10 @@ std::string ScreenshotService::getDefaultStoragePath() const {
 
 std::string ScreenshotService::generateFilename(const std::string& basePath) {
 	std::string dir = basePath + "/screenshots";
-	FileSystemService::getInstance().mkdir(dir);
+	if (!FileSystemService::getInstance().mkdir(dir)) {
+		Log::error(TAG, "Failed to create directory: %s", dir.c_str());
+		return {};
+	}
 
 	char filename[64];
 	time_t now = 0;
