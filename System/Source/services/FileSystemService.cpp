@@ -1,13 +1,15 @@
 #include <flx/system/services/FileSystemService.hpp>
 
 #include "Config.hpp"
-#include "misc/lv_fs.h"
 #include "sdkconfig.h"
 
-#include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
 #if defined(FLXOS_SD_CARD_ENABLED)
 #include <flx/system/services/SdCardService.hpp>
+#endif
+#if !CONFIG_FLXOS_HEADLESS_MODE
+#include "misc/lv_fs.h"
+#include <flx/core/GuiLock.hpp>
 #endif
 
 #include <cerrno>
@@ -51,7 +53,8 @@ using UniqueDir = std::unique_ptr<DIR, DirCloser>;
 	return UniqueDir {::opendir(path)};
 }
 
-// ── RAII: LVGL lv_fs_dir_t ───────────────────────────────────────────────────
+// ── RAII: LVGL lv_fs_dir_t (GUI builds only) ─────────────────────────────────
+#if !CONFIG_FLXOS_HEADLESS_MODE
 class LvDir {
 public:
 
@@ -82,8 +85,10 @@ private:
 	lv_fs_dir_t dir_ {};
 	bool open_ {false};
 };
+#endif
 
-// ── RAII: GuiLock ────────────────────────────────────────────────────────────
+// ── RAII: GuiLock (GUI builds only) ──────────────────────────────────────────
+#if !CONFIG_FLXOS_HEADLESS_MODE
 struct GuiLockGuard {
 	GuiLockGuard() noexcept { flx::core::GuiLock::lock(); }
 	~GuiLockGuard() noexcept { flx::core::GuiLock::unlock(); }
@@ -91,6 +96,7 @@ struct GuiLockGuard {
 	GuiLockGuard(const GuiLockGuard&) = delete;
 	GuiLockGuard& operator=(const GuiLockGuard&) = delete;
 };
+#endif
 
 // ── Stat helpers ─────────────────────────────────────────────────────────────
 [[nodiscard]] bool statPath(const char* path, struct stat& out) noexcept {
@@ -139,6 +145,39 @@ std::string FileSystemService::joinPath(std::string_view base, std::string_view 
 std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path) {
 	std::vector<FileEntry> entries;
 
+#if CONFIG_FLXOS_HEADLESS_MODE
+	const std::string nativePath = toNativePath(path);
+	UniqueDir dir = openDir(nativePath.c_str());
+	if (!dir) {
+		Log::error(TAG, "Failed to open directory: %s", nativePath.c_str());
+		return entries;
+	}
+
+	struct dirent* ent = nullptr;
+	while ((ent = ::readdir(dir.get())) != nullptr) {
+		const char* name = ent->d_name;
+		if (std::strcmp(name, ".") == 0 || std::strcmp(name, "..") == 0) {
+			continue;
+		}
+
+		FileEntry entry;
+		entry.name = name;
+
+		const std::string fullPath = joinPath(nativePath, name);
+		struct stat st {};
+		if (statPath(fullPath.c_str(), st)) {
+			entry.isDirectory = isDirectory(st);
+			if (!entry.isDirectory) {
+				entry.size = static_cast<uint64_t>(st.st_size);
+			}
+		}
+
+		entries.push_back(std::move(entry));
+	}
+
+	Log::debug(TAG, "Listed %zu entries in '%s' (headless)", entries.size(), nativePath.c_str());
+	return entries;
+#else
 	// Hold the GUI lock for the full operation to prevent SPI bus contention.
 	GuiLockGuard lock;
 
@@ -207,6 +246,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 
 	Log::debug(TAG, "Listed %zu entries in '%s'", entries.size(), path.c_str());
 	return entries;
+#endif
 }
 
 // ── copyFile ─────────────────────────────────────────────────────────────────

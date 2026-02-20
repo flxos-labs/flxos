@@ -21,7 +21,7 @@
 #define FLXOS_BUS_SHARED true
 
 // Display Bus Settings (HSPI)
-#define FLXOS_SPI_HOST 1
+#define FLXOS_SPI_HOST SPI2_HOST
 #define FLXOS_SPI_MODE 0
 #define FLXOS_SPI_FREQ_WRITE 40000000
 #define FLXOS_SPI_FREQ_READ 16000000
@@ -46,10 +46,10 @@
 // Touch Configuration (XPT2046)
 // ============================================================================
 #define FLXOS_TOUCH_DRIVER "XPT2046"
-#define FLXOS_TOUCH_CS 33
-#define FLXOS_TOUCH_IRQ -1
+#define FLXOS_PIN_TOUCH_CS 33
+#define FLXOS_PIN_TOUCH_INT -1
 #define FLXOS_TOUCH_SPI_FREQ 1000000
-// #define FLXOS_TOUCH_BUS_SHARED false
+#define FLXOS_TOUCH_BUS_SHARED false
 
 // Touch SPI Pins (Software SPI)
 #define FLXOS_TOUCH_SPI_HOST -1

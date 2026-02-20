@@ -1,9 +1,9 @@
 #include "Config.hpp"
+#include "sdkconfig.h"
 #include "esp_err.h"
 #include "esp_vfs_fat.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-#include "sdkconfig.h"
 #include "wear_levelling.h"
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/core/EventBus.hpp>
@@ -21,8 +21,8 @@
 #include <flx/system/services/SdCardService.hpp>
 #endif
 #include <flx/system/services/DeviceProfileService.hpp>
-#include <flx/system/services/ScreenshotService.hpp>
 #if !CONFIG_FLXOS_HEADLESS_MODE
+#include <flx/system/services/ScreenshotService.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
 #endif
 #include <cstring>

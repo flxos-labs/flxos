@@ -1,6 +1,13 @@
+if(DEFINED PROJECT_DIR)
+    include(${PROJECT_DIR}/Buildscripts/headless.cmake)
+else()
+    include(${CMAKE_CURRENT_LIST_DIR}/../Buildscripts/headless.cmake)
+endif()
+flx_resolve_headless(_flx_headless_mode)
+
 set(EXTRA_REQS "")
 
-if(NOT CONFIG_FLXOS_HEADLESS_MODE)
+if(NOT _flx_headless_mode)
     list(APPEND EXTRA_REQS UI Applications)
 endif()
 
@@ -12,7 +19,7 @@ idf_component_register(
 
 # Inject LovyanGFX dependency into lvgl component
 # distinct from standard requirements because we can't modify lvgl's CMakeLists.txt
-if(NOT CONFIG_FLXOS_HEADLESS_MODE AND CONFIG_LV_USE_LOVYAN_GFX)
+if(NOT _flx_headless_mode AND CONFIG_LV_USE_LOVYAN_GFX)
     idf_component_get_property(lvgl_lib lvgl COMPONENT_LIB)
     target_link_libraries(${lvgl_lib} PUBLIC idf::LovyanGFX)
     # Profiles provides Config.hpp (or a #error placeholder when no profile is selected)

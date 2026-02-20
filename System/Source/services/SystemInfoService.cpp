@@ -1,5 +1,5 @@
 #include "Config.hpp"
-#include "display/lv_display.h"
+#include "sdkconfig.h"
 #include "esp_chip_info.h"
 #include "esp_err.h"
 #include "esp_heap_caps.h"
@@ -19,10 +19,12 @@
 #include "esp_adc/adc_cali_scheme.h"
 #include "esp_adc/adc_oneshot.h"
 #endif
+#if !CONFIG_FLXOS_HEADLESS_MODE
+#include "display/lv_display.h"
 #include "misc/lv_color.h"
 #include "misc/lv_types.h"
+#endif
 #include "portmacro.h"
-#include "sdkconfig.h"
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>

@@ -1,4 +1,11 @@
-if(NOT CONFIG_FLXOS_HEADLESS_MODE)
+if(DEFINED PROJECT_DIR)
+    include(${PROJECT_DIR}/Buildscripts/headless.cmake)
+else()
+    include(${CMAKE_CURRENT_LIST_DIR}/../Buildscripts/headless.cmake)
+endif()
+flx_resolve_headless(_flx_headless_mode)
+
+if(NOT _flx_headless_mode)
     file(GLOB_RECURSE APP_SOURCES
         "settings/*.cpp"
         "files/*.cpp"
