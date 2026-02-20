@@ -121,9 +121,9 @@ public:
 			cfg.spi_3wire = FLXOS_SPI_3WIRE;
 			cfg.use_lock = true;
 			cfg.dma_channel =
-				(FLXOS_SPI_DMA_CHANNEL == 0) ? SPI_DMA_CH_AUTO :
-				(FLXOS_SPI_DMA_CHANNEL == 1) ? 1 :
-				(FLXOS_SPI_DMA_CHANNEL == 2) ? 2 : SPI_DMA_CH_AUTO;
+				(FLXOS_SPI_DMA_CHANNEL == 0) ? SPI_DMA_CH_AUTO : (FLXOS_SPI_DMA_CHANNEL == 1) ? 1
+				: (FLXOS_SPI_DMA_CHANNEL == 2)												  ? 2
+																							  : SPI_DMA_CH_AUTO;
 			cfg.pin_sclk = FLXOS_PIN_SCLK;
 			cfg.pin_mosi = FLXOS_PIN_MOSI;
 			cfg.pin_miso = FLXOS_PIN_MISO;

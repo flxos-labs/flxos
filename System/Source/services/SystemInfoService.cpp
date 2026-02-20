@@ -1,5 +1,4 @@
 #include "Config.hpp"
-#include "sdkconfig.h"
 #include "esp_chip_info.h"
 #include "esp_err.h"
 #include "esp_heap_caps.h"
@@ -11,6 +10,7 @@
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
 #include "freertos/task.h"
+#include "sdkconfig.h"
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
