@@ -19,7 +19,6 @@ set(SYSTEM_SRCS
     "Source/services/CliService.cpp"
     "Source/services/FileSystemService.cpp"
     "Source/services/SystemInfoService.cpp"
-    "Source/device/DeviceProfiles.cpp"
 )
 
 if(NOT _flx_headless_mode)

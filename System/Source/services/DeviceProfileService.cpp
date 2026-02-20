@@ -1,6 +1,6 @@
-#include "sdkconfig.h"
+#include "Config.hpp"
 #include <flx/core/Logger.hpp>
-#include <flx/system/device/DeviceProfiles.hpp>
+#include <flx/system/device/DeviceProfile.hpp>
 #include <flx/system/services/DeviceProfileService.hpp>
 
 #include "driver/i2c_master.h"
@@ -35,6 +35,95 @@ const ServiceManifest DeviceProfileService::serviceManifest = {
 };
 
 // ============================================================================
+// Active Profile Definition
+// ============================================================================
+
+static const flx::system::DeviceProfile ACTIVE_PROFILE = {
+#if defined(FLXOS_PROFILE_ID)
+	.profileId = FLXOS_PROFILE_ID,
+	.vendor = FLXOS_PROFILE_VENDOR,
+	.boardName = FLXOS_PROFILE_BOARD_NAME,
+#else
+	.profileId = "unknown",
+	.vendor = "Unknown",
+	.boardName = "Unknown Board",
+#endif
+	.chipTarget = CONFIG_IDF_TARGET,
+	.description = "Compile-time configured profile",
+
+	.display = {
+#if defined(FLXOS_DISPLAY_WIDTH)
+		.width = FLXOS_DISPLAY_WIDTH,
+		.height = FLXOS_DISPLAY_HEIGHT,
+		.driver = FLXOS_DISPLAY_DRIVER,
+#else
+		.width = 0,
+		.height = 0,
+		.driver = "None",
+#endif
+
+#if defined(FLXOS_BUS_SPI)
+		.bus = "SPI",
+#elif defined(FLXOS_BUS_I2C)
+		.bus = "I2C",
+#elif defined(FLXOS_BUS_PARALLEL8)
+		.bus = "Parallel 8-bit",
+#elif defined(FLXOS_BUS_PARALLEL16)
+		.bus = "Parallel 16-bit",
+#else
+		.bus = "Unknown",
+#endif
+
+#if defined(FLXOS_DISPLAY_SIZE_INCHES)
+		.sizeInches = FLXOS_DISPLAY_SIZE_INCHES
+#else
+		.sizeInches = 0.0f
+#endif
+	},
+
+	.touch = {
+#if defined(FLXOS_TOUCH_ENABLED) && FLXOS_TOUCH_ENABLED
+		.enabled = true,
+		.driver = FLXOS_TOUCH_DRIVER,
+#if defined(FLXOS_TOUCH_BUS_SHARED) && FLXOS_TOUCH_BUS_SHARED
+		.bus = "Shared",
+		.separateBus = false,
+#else
+		.bus = "Separate",
+		.separateBus = true,
+#endif
+#else
+		.enabled = false,
+		.driver = "None",
+		.bus = "None",
+		.separateBus = false
+#endif
+	},
+
+	.sdCard = {
+#if defined(FLXOS_SD_CS) || defined(FLXOS_SD_PIN_CLK)
+		.supported = true,
+		.mode = "SPI" // Simplification
+#else
+		.supported = false,
+		.mode = "None"
+#endif
+	},
+
+	.connectivity = {
+		.wifi = true, // Espressif chips usually have WiFi
+		.bluetooth = true, // And BT
+		.bleOnly = false,
+		.flashSizeKb = 0, // Could read from sdkconfig, but unused in UI
+#if defined(CONFIG_ESP32S3_SPIRAM_SUPPORT) || defined(CONFIG_SPIRAM) || defined(CONFIG_ESP32_SPIRAM_SUPPORT)
+		.psramSizeKb = 2048 // Dummy non-zero to show feature
+#else
+		.psramSizeKb = 0
+#endif
+	}
+};
+
+// ============================================================================
 // IService Lifecycle
 // ============================================================================
 
@@ -42,7 +131,7 @@ bool DeviceProfileService::onStart() {
 	Log::info(TAG, "Loading device profile...");
 
 	// 1. Get the single active profile (compile-time)
-	const flx::system::DeviceProfile& profile = flx::system::DeviceProfiles::get();
+	const flx::system::DeviceProfile& profile = ACTIVE_PROFILE;
 	m_activeProfile = &profile;
 
 	Log::info(TAG, "Profile loaded: %s %s (%s)", profile.vendor.c_str(), profile.boardName.c_str(), profile.chipTarget.c_str());

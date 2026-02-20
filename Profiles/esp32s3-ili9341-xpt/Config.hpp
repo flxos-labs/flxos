@@ -1,9 +1,17 @@
 #pragma once
 
 // ============================================================================
+// Device Profile Metadata
+// ============================================================================
+#define FLXOS_PROFILE_ID "esp32s3-ili9341-xpt"
+#define FLXOS_PROFILE_VENDOR "Espressif"
+#define FLXOS_PROFILE_BOARD_NAME "ESP32-S3-ILI9341"
+
+// ============================================================================
 // Display Configuration (ILI9341)
 // ============================================================================
 #define FLXOS_DISPLAY_DRIVER "ILI9341"
+#define FLXOS_DISPLAY_SIZE_INCHES 2.8f
 #define FLXOS_DISPLAY_ILI9341 true // Feature flag for LovyanGFX
 #define FLXOS_BUS_SPI true // Feature flag for Bus Type
 

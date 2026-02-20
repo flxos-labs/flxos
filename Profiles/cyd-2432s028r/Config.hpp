@@ -1,9 +1,17 @@
 #pragma once
 
 // ============================================================================
+// Device Profile Metadata
+// ============================================================================
+#define FLXOS_PROFILE_ID "cyd-2432s028r"
+#define FLXOS_PROFILE_VENDOR "Sunton"
+#define FLXOS_PROFILE_BOARD_NAME "CYD-2432S028R"
+
+// ============================================================================
 // Display Configuration (ILI9341)
 // ============================================================================
 #define FLXOS_DISPLAY_DRIVER "ILI9341"
+#define FLXOS_DISPLAY_SIZE_INCHES 2.8f
 #define FLXOS_DISPLAY_ILI9341 true // Feature flag for LovyanGFX
 #define FLXOS_BUS_SPI true // Feature flag for Bus Type
 #define FLXOS_DISPLAY_WIDTH 240

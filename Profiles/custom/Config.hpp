@@ -2,10 +2,18 @@
 
 #include "sdkconfig.h"
 
+// ============================================================================
+// Device Profile Metadata
+// ============================================================================
+#define FLXOS_PROFILE_ID "custom"
+#define FLXOS_PROFILE_VENDOR "Custom"
+#define FLXOS_PROFILE_BOARD_NAME "Custom Board"
+
 // Map Kconfig values to standard Profile constants
 
 #define FLXOS_DISPLAY_WIDTH CONFIG_FLXOS_DISPLAY_WIDTH
 #define FLXOS_DISPLAY_HEIGHT CONFIG_FLXOS_DISPLAY_HEIGHT
+#define FLXOS_DISPLAY_SIZE_INCHES 0.0f
 #define FLXOS_DISPLAY_ROTATION CONFIG_FLXOS_DISPLAY_ROTATION_VALUE
 
 // Display Panel Settings
