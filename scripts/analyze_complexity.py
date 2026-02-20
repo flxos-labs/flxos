@@ -143,7 +143,7 @@ def main():
     all_functions = []
     file_count = 0
     
-    target_dirs = {'main', 'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Apps', 'Applications', 'Firmware', 'HAL'}
+    target_dirs = {'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Apps', 'Applications', 'Firmware', 'HAL', 'Profiles'}
     
     for root, dirs, files in os.walk(SEARCH_DIR):
         if root == SEARCH_DIR:

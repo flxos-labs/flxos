@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import re
 import datetime
@@ -29,7 +31,8 @@ def get_prefix(api):
     return parts[0] + "_" + parts[1]
 
 def update_api_list():
-    header_cmd = 'find components/lvgl/src -name "*.h" ! -name "*_private.h" ! -path "*/private/*"'
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    header_cmd = f'find "{project_root}/components/lvgl/src" -name "*.h" ! -name "*_private.h" ! -path "*/private/*"'
     headers = os.popen(header_cmd).read().splitlines()
     
     if not headers:
@@ -75,7 +78,7 @@ def update_api_list():
     sorted_sections = sorted(sections.items(), key=lambda x: len(x[1]), reverse=True)
 
     # Write to file
-    output_path = "LVGL_full_api_list.md"
+    output_path = os.path.join(project_root, "LVGL_full_api_list.md")
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(output_path, "w", encoding='utf-8') as f:
         f.write("# LVGL API List\n\n")

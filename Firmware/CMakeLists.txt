@@ -12,7 +12,7 @@ if(NOT _flx_headless_mode)
 endif()
 
 idf_component_register(
-    SRCS
+    SRCS "Source/Main.cpp"
     INCLUDE_DIRS "."
     REQUIRES Core Kernel Services Apps Connectivity System HAL Profiles ${EXTRA_REQS}
 )
@@ -24,6 +24,11 @@ if(NOT _flx_headless_mode AND CONFIG_LV_USE_LOVYAN_GFX)
     target_link_libraries(${lvgl_lib} PUBLIC idf::LovyanGFX)
     # Profiles provides Config.hpp (or a #error placeholder when no profile is selected)
     target_link_libraries(${lvgl_lib} PUBLIC idf::Profiles)
+endif()
+
+if(NOT _flx_headless_mode AND CONFIG_LV_OS_IDLE_PERCENT_CUSTOM)
+    idf_component_get_property(lvgl_lib lvgl COMPONENT_LIB)
+    target_sources(${lvgl_lib} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../HAL/Source/lv_os_custom.c")
 endif()
 
 # Generate Partitions & Upload

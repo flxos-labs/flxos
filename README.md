@@ -202,22 +202,21 @@ Or configure manually via `idf.py menuconfig`:
 
 ```
 flxos/
-├── main/
-│   ├── core/                 # Platform-independent FlxOS logic
-│   │   ├── apps/             # Built-in applications
-│   │   ├── common/           # Shared utilities and types
-│   │   ├── connectivity/     # WiFi, Bluetooth, Hotspot
-│   │   ├── services/         # Background services
-│   │   ├── system/           # Core managers (Display, Theme, etc.)
-│   │   ├── tasks/            # FreeRTOS task wrappers
-│   │   └── ui/               # UI framework and desktop
-│   ├── hal/                  # Hardware abstraction layer
-│   └── main.cpp              # Entry point
+├── Firmware/                 # Entry point and firmware packaging
+├── Core/                     # Core utilities and abstractions
+├── Kernel/                   # Task and scheduler primitives
+├── Services/                 # System-level services
+├── Apps/                     # Application infrastructure
+├── Applications/             # Built-in application modules
+├── System/                   # System managers and orchestration
+├── HAL/                      # Hardware abstraction layer
+├── Connectivity/             # WiFi/Bluetooth/networking
+├── UI/                       # Graphical UI layer
+├── Profiles/                 # Device profile configuration
 ├── components/               # External components
 │   ├── lvgl/                 # LVGL graphics library
 │   ├── LovyanGFX/            # Display driver library
 │   └── dhcpserver/           # DHCP server for hotspot
-├── simulator/                # Desktop simulator (SDL)
 ├── scripts/                  # Build and quality tools
 ├── assets/                   # Static assets and data
 └── .github/workflows/        # CI/CD configuration
