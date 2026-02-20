@@ -2,13 +2,22 @@ name: ESP-IDF Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
     paths-ignore:
       - '**.md'
       - 'LICENSE'
       - '.gitignore'
       - '.editorconfig'
       - '.clang-format'
+  pull_request:
+    branches: [ "main", "develop" ]
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
+      - '.gitignore'
+      - '.editorconfig'
+      - '.clang-format'
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
@@ -48,4 +57,3 @@ jobs:
         target: ${{ matrix.target }}
         path: "."
         extra_docker_args: -v ${{ github.workspace }}/.ccache:/root/.ccache -e CCACHE_DIR=/root/.ccache
-

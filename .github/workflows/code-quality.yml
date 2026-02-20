@@ -1,22 +1,43 @@
-# FlxOS Code Quality CI (Optimized)
-# Runs on every push and PR to check code quality
-
 name: Code Quality
 
 on:
   push:
     branches: [main, develop]
     paths:
-      - 'main/**'
+      - 'Core/**'
+      - 'Kernel/**'
+      - 'Services/**'
+      - 'Apps/**'
+      - 'Applications/**'
+      - 'System/**'
+      - 'HAL/**'
+      - 'Connectivity/**'
+      - 'UI/**'
+      - 'Firmware/**'
+      - 'Profiles/**'
       - '.clang-format'
       - '.clang-tidy'
       - 'scripts/**'
+      - '.github/workflows/code-quality.yml'
   pull_request:
     branches: [main, develop]
     paths:
-      - 'main/**'
+      - 'Core/**'
+      - 'Kernel/**'
+      - 'Services/**'
+      - 'Apps/**'
+      - 'Applications/**'
+      - 'System/**'
+      - 'HAL/**'
+      - 'Connectivity/**'
+      - 'UI/**'
+      - 'Firmware/**'
+      - 'Profiles/**'
       - '.clang-format'
       - '.clang-tidy'
+      - 'scripts/**'
+      - '.github/workflows/code-quality.yml'
+  workflow_dispatch:
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -27,24 +48,21 @@ permissions:
   pull-requests: write
 
 jobs:
-  # Fast format check - runs first, fails fast
   format-check:
     name: Format Check
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            main
-            .clang-format
+
+      - name: Install clang-format
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-format
 
       - name: Check formatting
-        run: |
-          find main -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h" | \
-          xargs clang-format --dry-run --Werror
+        run: ./scripts/check_format.sh
 
-  # Combined Python checks - single job for all Python-based analysis
   python-analysis:
     name: Code Analysis
     runs-on: ubuntu-latest
@@ -58,31 +76,33 @@ jobs:
           python-version: '3.12'
 
       - name: Run all Python checks
-        id: checks
         run: |
           mkdir -p reports
+          : > reports/analysis.log
+          failed=0
 
-          echo "=== Complexity Analysis ===" | tee reports/analysis.log
-          python3 scripts/analyze_complexity.py 2>&1 | tee -a reports/analysis.log || echo "complexity_failed=true" >> $GITHUB_OUTPUT
+          echo "=== Complexity Analysis ===" | tee -a reports/analysis.log
+          python3 scripts/analyze_complexity.py 2>&1 | tee -a reports/analysis.log || failed=1
 
           echo -e "\n=== Include Analysis ===" | tee -a reports/analysis.log
-          python3 scripts/analyze_includes.py 2>&1 | tee -a reports/analysis.log || echo "includes_failed=true" >> $GITHUB_OUTPUT
+          python3 scripts/analyze_includes.py 2>&1 | tee -a reports/analysis.log || failed=1
 
           echo -e "\n=== Naming Check ===" | tee -a reports/analysis.log
-          python3 scripts/check_naming.py 2>&1 | tee -a reports/analysis.log || echo "naming_failed=true" >> $GITHUB_OUTPUT
+          python3 scripts/check_naming.py 2>&1 | tee -a reports/analysis.log || failed=1
 
           echo -e "\n=== Documentation Check ===" | tee -a reports/analysis.log
-          python3 scripts/check_docs.py 2>&1 | tee -a reports/analysis.log || echo "docs_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
+          python3 scripts/check_docs.py 2>&1 | tee -a reports/analysis.log || failed=1
+
+          exit $failed
 
       - name: Upload analysis reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: code-analysis-reports
           path: reports/
           retention-days: 14
 
-  # Summary job - only runs on PRs
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
@@ -124,9 +144,13 @@ jobs:
               body += `<details><summary>View Details</summary>\n\n\`\`\`\n${summaryLines}\n\`\`\`\n</details>`;
             }
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            } catch (err) {
+              core.warning(`Skipping PR comment: ${err.message}`);
+            }
