@@ -45,10 +45,15 @@ private:
 	// Memory tab labels
 	lv_obj_t* m_heap_label {nullptr};
 	lv_obj_t* m_heap_bar {nullptr};
+	lv_obj_t* m_heap_percent_label {nullptr};
+
 	lv_obj_t* m_internal_heap_label {nullptr};
 	lv_obj_t* m_internal_heap_bar {nullptr};
+	lv_obj_t* m_internal_heap_percent_label {nullptr};
+
 	lv_obj_t* m_psram_label {nullptr};
 	lv_obj_t* m_psram_bar {nullptr};
+	lv_obj_t* m_psram_percent_label {nullptr};
 
 	// Storage
 	lv_obj_t* m_storage_system_label {nullptr};

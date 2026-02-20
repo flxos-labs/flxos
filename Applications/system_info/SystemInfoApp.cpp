@@ -75,10 +75,13 @@ void SystemInfoApp::onStop() {
 	m_battery_label = nullptr;
 	m_heap_label = nullptr;
 	m_heap_bar = nullptr;
+	m_heap_percent_label = nullptr;
 	m_internal_heap_label = nullptr;
 	m_internal_heap_bar = nullptr;
+	m_internal_heap_percent_label = nullptr;
 	m_psram_label = nullptr;
 	m_psram_bar = nullptr;
+	m_psram_percent_label = nullptr;
 	m_storage_system_label = nullptr;
 	m_storage_system_bar = nullptr;
 	m_storage_data_label = nullptr;
@@ -247,48 +250,67 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	lv_obj_set_style_pad_all(tab, lv_dpx(UiConstants::PAD_LARGE), 0);
 	lv_obj_set_style_pad_row(tab, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 
-	// Heap info label
-	m_heap_label = lv_label_create(tab);
-	lv_label_set_text(m_heap_label, "Heap: Loading...");
+	// RAM Section Header
+	lv_obj_t* ram_header = lv_label_create(tab);
+	lv_label_set_text(ram_header, "RAM");
+	lv_obj_set_style_text_font(ram_header, &lv_font_montserrat_14, 0);
 
-	// Heap usage bar
-	lv_obj_t* bar_label = lv_label_create(tab);
-	lv_label_set_text(bar_label, "Heap Usage:");
+	// General Heap
+	m_heap_label = lv_label_create(tab);
+	lv_label_set_text(m_heap_label, "Heap: -- / --");
 
 	m_heap_bar = lv_bar_create(tab);
 	lv_obj_set_size(m_heap_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 	lv_bar_set_range(m_heap_bar, 0, 100);
 	lv_bar_set_value(m_heap_bar, 0, LV_ANIM_OFF);
 
-	// Internal Heap info
-	m_internal_heap_label = lv_label_create(tab);
-	lv_label_set_text(m_internal_heap_label, "Internal Heap: Loading...");
+	m_heap_percent_label = lv_label_create(tab);
+	lv_label_set_text(m_heap_percent_label, "--% free");
+	lv_obj_set_style_text_color(m_heap_percent_label, lv_color_hex(0x888888), 0);
+	lv_obj_set_style_margin_bottom(m_heap_percent_label, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 
-	// Internal Heap usage bar
-	lv_obj_t* int_bar_label = lv_label_create(tab);
-	lv_label_set_text(int_bar_label, "Int. Heap Usage:");
+	// Internal Heap
+	m_internal_heap_label = lv_label_create(tab);
+	lv_label_set_text(m_internal_heap_label, "Internal Heap: -- / --");
 
 	m_internal_heap_bar = lv_bar_create(tab);
 	lv_obj_set_size(m_internal_heap_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 	lv_bar_set_range(m_internal_heap_bar, 0, 100);
 	lv_bar_set_value(m_internal_heap_bar, 0, LV_ANIM_OFF);
 
-	// PSRAM info
-	m_psram_label = lv_label_create(tab);
+	m_internal_heap_percent_label = lv_label_create(tab);
+	lv_label_set_text(m_internal_heap_percent_label, "--% free");
+	lv_obj_set_style_text_color(m_internal_heap_percent_label, lv_color_hex(0x888888), 0);
+	lv_obj_set_style_margin_bottom(m_internal_heap_percent_label, lv_dpx(UiConstants::PAD_LARGE), 0);
+
+	// PSRAM Section Header
 	auto memStats = flx::services::SystemInfoService::getInstance().getMemoryStats();
 	if (memStats.hasPsram) {
-		lv_label_set_text_fmt(m_psram_label, "PSRAM: %s total", flx::services::SystemInfoService::formatBytes(memStats.totalPsram).c_str());
+		lv_obj_t* sep_ram = lv_obj_create(tab);
+		lv_obj_set_size(sep_ram, lv_pct(100), 1);
+		lv_obj_set_style_bg_color(sep_ram, lv_color_hex(0x888888), 0);
+		lv_obj_set_style_bg_opa(sep_ram, LV_OPA_50, 0);
 
-		lv_obj_t* psram_bar_label = lv_label_create(tab);
-		lv_label_set_text(psram_bar_label, "PSRAM Usage:");
+		lv_obj_t* psram_header = lv_label_create(tab);
+		lv_label_set_text(psram_header, "PSRAM");
+		lv_obj_set_style_text_font(psram_header, &lv_font_montserrat_14, 0);
+
+		m_psram_label = lv_label_create(tab);
+		lv_label_set_text(m_psram_label, "PSRAM: -- / --");
 
 		m_psram_bar = lv_bar_create(tab);
 		lv_obj_set_size(m_psram_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 		lv_bar_set_range(m_psram_bar, 0, 100);
 		lv_bar_set_value(m_psram_bar, 0, LV_ANIM_OFF);
+
+		m_psram_percent_label = lv_label_create(tab);
+		lv_label_set_text(m_psram_percent_label, "--% free");
+		lv_obj_set_style_text_color(m_psram_percent_label, lv_color_hex(0x888888), 0);
+		lv_obj_set_style_margin_bottom(m_psram_percent_label, lv_dpx(UiConstants::PAD_LARGE), 0);
 	} else {
-		lv_label_set_text(m_psram_label, "PSRAM: Not available");
+		m_psram_label = nullptr;
 		m_psram_bar = nullptr;
+		m_psram_percent_label = nullptr;
 	}
 
 	// Storage Section
@@ -434,21 +456,26 @@ void SystemInfoApp::updateCpuUsage(const std::vector<flx::services::TaskInfo>& t
 }
 
 void SystemInfoApp::updateHeap(flx::services::SystemInfoService& service) {
-	if (m_heap_label && m_heap_bar) {
+	if (m_heap_label && m_heap_bar && m_heap_percent_label) {
 		auto memStats = service.getMemoryStats();
 
-		lv_label_set_text_fmt(m_heap_label, "Total: %s\nUsed: %s\nFree: %s\nMin Free: %s\nLargest Free Block: %s", service.formatBytes(memStats.totalHeap).c_str(), service.formatBytes(memStats.usedHeap).c_str(), service.formatBytes(memStats.freeHeap).c_str(), service.formatBytes(memStats.minFreeHeap).c_str(), service.formatBytes(memStats.largestFreeBlock).c_str());
-
+		// Update Heap
+		lv_label_set_text_fmt(m_heap_label, "Heap: %s / %s", service.formatBytes(memStats.usedHeap).c_str(), service.formatBytes(memStats.totalHeap).c_str());
 		lv_bar_set_value(m_heap_bar, memStats.usagePercent, LV_ANIM_ON);
+		lv_label_set_text_fmt(m_heap_percent_label, "%d%% free", 100 - memStats.usagePercent);
 
-		if (m_internal_heap_label && m_internal_heap_bar) {
-			lv_label_set_text_fmt(m_internal_heap_label, "Internal Total: %s\nUsed: %s\nFree: %s", service.formatBytes(memStats.totalInternalHeap).c_str(), service.formatBytes(memStats.usedInternalHeap).c_str(), service.formatBytes(memStats.freeInternalHeap).c_str());
+		// Update Internal Heap
+		if (m_internal_heap_label && m_internal_heap_bar && m_internal_heap_percent_label) {
+			lv_label_set_text_fmt(m_internal_heap_label, "Internal Heap: %s / %s", service.formatBytes(memStats.usedInternalHeap).c_str(), service.formatBytes(memStats.totalInternalHeap).c_str());
 			lv_bar_set_value(m_internal_heap_bar, memStats.usagePercentInternal, LV_ANIM_ON);
+			lv_label_set_text_fmt(m_internal_heap_percent_label, "%d%% free", 100 - memStats.usagePercentInternal);
 		}
 
-		if (memStats.hasPsram && m_psram_label && m_psram_bar) {
-			lv_label_set_text_fmt(m_psram_label, "PSRAM Total: %s\nUsed: %s\nFree: %s", service.formatBytes(memStats.totalPsram).c_str(), service.formatBytes(memStats.usedPsram).c_str(), service.formatBytes(memStats.freePsram).c_str());
+		// Update PSRAM
+		if (memStats.hasPsram && m_psram_label && m_psram_bar && m_psram_percent_label) {
+			lv_label_set_text_fmt(m_psram_label, "PSRAM: %s / %s", service.formatBytes(memStats.usedPsram).c_str(), service.formatBytes(memStats.totalPsram).c_str());
 			lv_bar_set_value(m_psram_bar, memStats.usagePercentPsram, LV_ANIM_ON);
+			lv_label_set_text_fmt(m_psram_percent_label, "%d%% free", 100 - memStats.usagePercentPsram);
 		}
 	}
 }
