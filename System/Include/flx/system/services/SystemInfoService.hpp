@@ -33,6 +33,10 @@ struct MemoryStats {
 	uint32_t usedHeap;
 	int usagePercent;
 	uint32_t largestFreeBlock;
+	uint32_t totalInternalHeap;
+	uint32_t freeInternalHeap;
+	uint32_t usedInternalHeap;
+	int usagePercentInternal;
 	uint32_t totalPsram;
 	uint32_t freePsram;
 	uint32_t usedPsram;

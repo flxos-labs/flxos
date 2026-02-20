@@ -45,6 +45,8 @@ private:
 	// Memory tab labels
 	lv_obj_t* m_heap_label {nullptr};
 	lv_obj_t* m_heap_bar {nullptr};
+	lv_obj_t* m_internal_heap_label {nullptr};
+	lv_obj_t* m_internal_heap_bar {nullptr};
 	lv_obj_t* m_psram_label {nullptr};
 	lv_obj_t* m_psram_bar {nullptr};
 

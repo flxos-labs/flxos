@@ -216,6 +216,12 @@ MemoryStats SystemInfoService::getMemoryStats() {
 	stats.usagePercent = (stats.usedHeap * 100) / stats.totalHeap;
 	stats.largestFreeBlock = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT);
 
+	// Internal Heap info
+	stats.totalInternalHeap = heap_caps_get_total_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
+	stats.freeInternalHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT | MALLOC_CAP_INTERNAL);
+	stats.usedInternalHeap = stats.totalInternalHeap - stats.freeInternalHeap;
+	stats.usagePercentInternal = (stats.totalInternalHeap > 0) ? (stats.usedInternalHeap * 100) / stats.totalInternalHeap : 0;
+
 	// PSRAM info
 	stats.totalPsram = heap_caps_get_total_size(MALLOC_CAP_SPIRAM);
 	stats.freePsram = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);

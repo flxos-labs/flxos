@@ -75,6 +75,8 @@ void SystemInfoApp::onStop() {
 	m_battery_label = nullptr;
 	m_heap_label = nullptr;
 	m_heap_bar = nullptr;
+	m_internal_heap_label = nullptr;
+	m_internal_heap_bar = nullptr;
 	m_psram_label = nullptr;
 	m_psram_bar = nullptr;
 	m_storage_system_label = nullptr;
@@ -258,6 +260,19 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	lv_bar_set_range(m_heap_bar, 0, 100);
 	lv_bar_set_value(m_heap_bar, 0, LV_ANIM_OFF);
 
+	// Internal Heap info
+	m_internal_heap_label = lv_label_create(tab);
+	lv_label_set_text(m_internal_heap_label, "Internal Heap: Loading...");
+
+	// Internal Heap usage bar
+	lv_obj_t* int_bar_label = lv_label_create(tab);
+	lv_label_set_text(int_bar_label, "Int. Heap Usage:");
+
+	m_internal_heap_bar = lv_bar_create(tab);
+	lv_obj_set_size(m_internal_heap_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+	lv_bar_set_range(m_internal_heap_bar, 0, 100);
+	lv_bar_set_value(m_internal_heap_bar, 0, LV_ANIM_OFF);
+
 	// PSRAM info
 	m_psram_label = lv_label_create(tab);
 	auto memStats = flx::services::SystemInfoService::getInstance().getMemoryStats();
@@ -425,6 +440,11 @@ void SystemInfoApp::updateHeap(flx::services::SystemInfoService& service) {
 		lv_label_set_text_fmt(m_heap_label, "Total: %s\nUsed: %s\nFree: %s\nMin Free: %s\nLargest Free Block: %s", service.formatBytes(memStats.totalHeap).c_str(), service.formatBytes(memStats.usedHeap).c_str(), service.formatBytes(memStats.freeHeap).c_str(), service.formatBytes(memStats.minFreeHeap).c_str(), service.formatBytes(memStats.largestFreeBlock).c_str());
 
 		lv_bar_set_value(m_heap_bar, memStats.usagePercent, LV_ANIM_ON);
+
+		if (m_internal_heap_label && m_internal_heap_bar) {
+			lv_label_set_text_fmt(m_internal_heap_label, "Internal Total: %s\nUsed: %s\nFree: %s", service.formatBytes(memStats.totalInternalHeap).c_str(), service.formatBytes(memStats.usedInternalHeap).c_str(), service.formatBytes(memStats.freeInternalHeap).c_str());
+			lv_bar_set_value(m_internal_heap_bar, memStats.usagePercentInternal, LV_ANIM_ON);
+		}
 
 		if (memStats.hasPsram && m_psram_label && m_psram_bar) {
 			lv_label_set_text_fmt(m_psram_label, "PSRAM Total: %s\nUsed: %s\nFree: %s", service.formatBytes(memStats.totalPsram).c_str(), service.formatBytes(memStats.usedPsram).c_str(), service.formatBytes(memStats.freePsram).c_str());
