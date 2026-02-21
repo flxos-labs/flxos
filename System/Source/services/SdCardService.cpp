@@ -42,11 +42,10 @@ SdCardService& SdCardService::getInstance() {
 }
 
 bool SdCardService::onStart() {
-	return true;
+	return mount();
 }
 
 void SdCardService::onGuiInit() {
-	mount();
 }
 
 void SdCardService::onStop() {
@@ -75,18 +74,42 @@ bool SdCardService::mount() {
 
 	m_card = nullptr;
 
-	// SPI host config - Assume SPI2_HOST managed by LGFX (lv_lgfx_user.hpp)
-	spi_host_device_t host_id = SPI2_HOST;
+	auto host_id = (spi_host_device_t)FLXOS_SD_SPI_HOST;
+
+	// Initialize SPI bus (idempotent — returns ESP_ERR_INVALID_STATE if LGFX already did it)
+	spi_bus_config_t bus_cfg = {};
+#if FLXOS_SD_PIN_MOSI != -1
+	bus_cfg.mosi_io_num = FLXOS_SD_PIN_MOSI;
+	bus_cfg.miso_io_num = FLXOS_SD_PIN_MISO;
+	bus_cfg.sclk_io_num = FLXOS_SD_PIN_SCLK;
+#else
+	bus_cfg.mosi_io_num = FLXOS_PIN_MOSI;
+	bus_cfg.miso_io_num = FLXOS_PIN_MISO;
+	bus_cfg.sclk_io_num = FLXOS_PIN_SCLK;
+#endif
+	bus_cfg.quadwp_io_num = -1;
+	bus_cfg.quadhd_io_num = -1;
+	bus_cfg.max_transfer_sz = 16 * 1024;
+
+	esp_err_t bus_ret = spi_bus_initialize(host_id, &bus_cfg, SPI_DMA_CH_AUTO);
+	if (bus_ret == ESP_OK) {
+		Log::info(TAG, "SPI bus initialized by SdCardService");
+	} else if (bus_ret == ESP_ERR_INVALID_STATE) {
+		Log::info(TAG, "SPI bus already initialized (shared with display)");
+	} else {
+		Log::error(TAG, "Failed to initialize SPI bus: %s", esp_err_to_name(bus_ret));
+		return false;
+	}
 
 	sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 	host.slot = host_id;
 	host.max_freq_khz = FLXOS_SD_MAX_FREQ_KHZ;
 
 	sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-	slot_config.gpio_cs = (gpio_num_t)4; // Hardcoded for testing
+	slot_config.gpio_cs = (gpio_num_t)FLXOS_SD_CS;
 	slot_config.host_id = host_id;
 
-	// Use provided SPI bus initialization from LGFX
+	// Use provided SPI bus initialization from LGFX (or initialized above in headless mode)
 	Log::info(TAG, "Using shared SPI bus (host_id=%d) for SD card. Max freq: %d kHz", host_id, host.max_freq_khz);
 
 	Log::info(TAG, "Calling esp_vfs_fat_sdspi_mount...");

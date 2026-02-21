@@ -2,7 +2,7 @@ name: ESP-IDF Build
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
     paths-ignore:
       - '**.md'
       - 'LICENSE'
