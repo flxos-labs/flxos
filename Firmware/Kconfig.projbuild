@@ -53,6 +53,7 @@ menu "Hardware Configuration"
 
 		config FLXOS_PROFILE_GENERIC_ESP32S3
 			bool "generic-esp32s3 (headless)"
+			depends on FLXOS_HEADLESS_MODE
 
 		config FLXOS_PROFILE_CUSTOM
 			bool "custom"
