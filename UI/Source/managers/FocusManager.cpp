@@ -14,9 +14,9 @@
 #include <cstdint>
 #include <flx/core/Logger.hpp>
 #include <flx/ui/managers/FocusManager.hpp>
-#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "FocusManager";
