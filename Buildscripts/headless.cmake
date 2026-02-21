@@ -23,9 +23,13 @@ function(flx_resolve_headless out_var)
         )
 
         # Also scan sdkconfig.defaults.{IDF_TARGET} (e.g. sdkconfig.defaults.esp32s3).
+        set(_flx_idf_target "esp32")
         if(DEFINED IDF_TARGET AND NOT IDF_TARGET STREQUAL "")
-            list(APPEND _scan_files "${CMAKE_SOURCE_DIR}/sdkconfig.defaults.${IDF_TARGET}")
+            set(_flx_idf_target "${IDF_TARGET}")
+        elseif(DEFINED ENV{IDF_TARGET} AND NOT "$ENV{IDF_TARGET}" STREQUAL "")
+            set(_flx_idf_target "$ENV{IDF_TARGET}")
         endif()
+        list(APPEND _scan_files "${CMAKE_SOURCE_DIR}/sdkconfig.defaults.${_flx_idf_target}")
 
         if(DEFINED SDKCONFIG)
             list(APPEND _scan_files "${SDKCONFIG}")
