@@ -48,6 +48,12 @@ menu "Hardware Configuration"
 		config FLXOS_PROFILE_ESP32S3_ILI9341_XPT
 			bool "esp32s3-ili9341-xpt"
 
+		config FLXOS_PROFILE_GENERIC_ESP32
+			bool "generic-esp32 (headless)"
+
+		config FLXOS_PROFILE_GENERIC_ESP32S3
+			bool "generic-esp32s3 (headless)"
+
 		config FLXOS_PROFILE_CUSTOM
 			bool "custom"
 	endchoice
