@@ -75,6 +75,10 @@ void WindowManager::openApp(const std::string& packageName) {
 		GuiTask::unlock();
 		return;
 	}
+
+	lv_obj_set_style_radius(win, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
+	lv_obj_set_style_clip_corner(win, true, 0);
+
 	lv_obj_set_style_border_post(win, true, 0);
 
 	m_windowAppMap[win] = packageName;

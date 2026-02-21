@@ -21,6 +21,7 @@ const char* lodepng_error_text(unsigned code);
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <string_view>
 #include <sys/stat.h>
 
 static constexpr std::string_view TAG = "ScreenshotService";

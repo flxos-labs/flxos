@@ -15,6 +15,8 @@
 #include <flx/core/Logger.hpp>
 #include <flx/ui/managers/FocusManager.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
+#include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "FocusManager";
@@ -97,6 +99,10 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 			lv_obj_add_state(child, LV_STATE_FOCUSED);
 			lv_obj_set_style_border_width(child, lv_dpx(UiConstants::BORDER_FOCUS), 0);
 			lv_obj_set_style_border_opa(child, LV_OPA_COVER, 0);
+			// Explicitly set the active border color to the current theme's secondary color
+			::ThemeType current_theme = ::ThemeEngine::get_current_theme();
+			::ThemeConfig config = ::Themes::GetConfig(current_theme);
+			lv_obj_set_style_border_color(child, config.secondary, 0);
 			if (dock_btn && lv_obj_is_valid(dock_btn)) {
 				lv_obj_add_state(dock_btn, LV_STATE_CHECKED);
 			}
@@ -104,6 +110,10 @@ void FocusManager::activateWindow(lv_obj_t* win) {
 			lv_obj_remove_state(child, LV_STATE_FOCUSED);
 			lv_obj_set_style_border_width(child, lv_dpx(UiConstants::BORDER_DEFAULT), 0);
 			lv_obj_set_style_border_opa(child, LV_OPA_40, 0);
+			// Dim the inactive border by just using the same color but transparent, or you could use a neutral color like grey
+			::ThemeType current_theme = ::ThemeEngine::get_current_theme();
+			::ThemeConfig config = ::Themes::GetConfig(current_theme);
+			lv_obj_set_style_border_color(child, config.secondary, 0);
 			if (dock_btn && lv_obj_is_valid(dock_btn)) {
 				lv_obj_remove_state(dock_btn, LV_STATE_CHECKED);
 			}
