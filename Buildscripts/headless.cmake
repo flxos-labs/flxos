@@ -22,6 +22,11 @@ function(flx_resolve_headless out_var)
             "${CMAKE_SOURCE_DIR}/sdkconfig.defaults"
         )
 
+        # Also scan sdkconfig.defaults.{IDF_TARGET} (e.g. sdkconfig.defaults.esp32s3).
+        if(DEFINED IDF_TARGET AND NOT IDF_TARGET STREQUAL "")
+            list(APPEND _scan_files "${CMAKE_SOURCE_DIR}/sdkconfig.defaults.${IDF_TARGET}")
+        endif()
+
         if(DEFINED SDKCONFIG)
             list(APPEND _scan_files "${SDKCONFIG}")
         endif()

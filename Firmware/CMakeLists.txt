@@ -32,5 +32,5 @@ if(NOT _flx_headless_mode AND CONFIG_LV_OS_IDLE_PERCENT_CUSTOM)
 endif()
 
 # Generate Partitions & Upload
-# fatfs_create_spiflash_image(system ../assets/system FLASH_IN_PROJECT)
-# fatfs_create_spiflash_image(data ../assets/data FLASH_IN_PROJECT)
+fatfs_create_spiflash_image(system ../assets/system FLASH_IN_PROJECT)
+fatfs_create_spiflash_image(data ../assets/data FLASH_IN_PROJECT)

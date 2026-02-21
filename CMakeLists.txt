@@ -22,6 +22,12 @@ set(_flx_headless_scan_files
     "${CMAKE_SOURCE_DIR}/sdkconfig.defaults"
 )
 
+# Also scan the target-specific defaults file (e.g. sdkconfig.defaults.esp32s3).
+# IDF_TARGET is set as a cmake cache variable by ESP-IDF before project() runs.
+if(DEFINED IDF_TARGET AND NOT IDF_TARGET STREQUAL "")
+    list(APPEND _flx_headless_scan_files "${CMAKE_SOURCE_DIR}/sdkconfig.defaults.${IDF_TARGET}")
+endif()
+
 # Respect externally supplied SDKCONFIG_DEFAULTS as additional signal sources.
 if(DEFINED SDKCONFIG_DEFAULTS)
     foreach(_defaults_file IN LISTS SDKCONFIG_DEFAULTS)
