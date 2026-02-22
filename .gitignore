@@ -33,7 +33,7 @@ sdkconfig.old
 sdkconfig
 sdkconfig.profile
 Profiles/*/Config.hpp
-
+ 
 # ESP-IDF dependencies
 # For older versions or manual component management
 /components/.idf/
