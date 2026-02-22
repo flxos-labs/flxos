@@ -278,7 +278,7 @@ def cmd_list(args):
     rows.sort(key=lambda row: row["profile"])
 
     if args.json:
-        print(json.dumps(rows, indent=2))
+        print(json.dumps(rows, separators=(",", ":")))
         return 0
 
     current = get_current_profile()
