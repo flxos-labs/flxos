@@ -4,15 +4,17 @@ vendor: FlxOS
 name: ESP32-S3-ILI9341
 target: esp32s3
 flash_size: 16MB
+flash_mode: QIO
+flash_freq: null
 headless: false
 inherits: null
 
 hardware:
   spiram:
-    enabled: false
-    xip_from_psram: false
-    speed_80m: false
-    ecc_enable: false
+    enabled: true
+    speed: 120M               # 80M | 120M (120M requires flash_freq to also be 120M)
+    xip_from_psram: true
+    ecc_enable: true
   display:
     enabled: true
     driver: ILI9341
@@ -105,6 +107,7 @@ cli:
 lvgl:
   font_size: 14
   theme: DefaultDark
+  ui_density: normal
 
 capabilities:
   wifi: true

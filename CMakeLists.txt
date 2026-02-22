@@ -1,9 +1,12 @@
 # The following five lines of boilerplate have to be in your project's
 # CMakeLists in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.16)
+# Build acceleration: ccache as compiler launcher
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
-    set(CCACHE_ENABLE 1)
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    message(STATUS "FlxOS: ccache enabled → ${CCACHE_PROGRAM}")
 endif()
 
 # Include FlxOS buildscripts

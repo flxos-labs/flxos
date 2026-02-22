@@ -4,6 +4,8 @@ vendor: Sunton
 name: CYD-2432S028R
 target: esp32
 flash_size: 4MB
+flash_mode: QIO
+flash_freq: null
 headless: false
 inherits: null
 
@@ -94,6 +96,7 @@ cli:
 lvgl:
   font_size: 14
   theme: DefaultDark
+  ui_density: normal
 
 capabilities:
   wifi: true

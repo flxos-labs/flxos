@@ -4,6 +4,8 @@ vendor: Generic
 name: ESP32-S3 (Headless)
 target: esp32s3
 flash_size: 4MB
+flash_mode: QIO
+flash_freq: null
 headless: true
 inherits: _bases/base-headless
 

@@ -4,6 +4,8 @@ vendor: Generic
 name: ESP32 (Headless)
 target: esp32
 flash_size: 4MB
+flash_mode: QIO
+flash_freq: null
 headless: true
 inherits: _bases/base-headless
 
