@@ -56,8 +56,13 @@ function(_flx_parse_yaml YAML_FILE PREFIX)
         endif()
 
         # Measure indent (number of leading spaces)
-        string(REGEX MATCH "^( *)" _indent_match "${_line}")
-        string(LENGTH "${_indent_match}" _indent)
+        # Use ( +) instead of ( *) to avoid CMake "matched an empty string" error
+        string(REGEX MATCH "^( +)" _indent_match "${_line}")
+        if(_indent_match)
+            string(LENGTH "${_indent_match}" _indent)
+        else()
+            set(_indent 0)
+        endif()
 
         # Pop stack entries whose indent >= current (they ended)
         list(LENGTH _indent_stack _stack_len)
