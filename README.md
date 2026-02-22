@@ -153,6 +153,9 @@ python flxos.py diff generic-esp32 generic-esp32s3
 # Scaffold a new headless profile
 python flxos.py new my-board --headless
 
+# Generate HWD init scaffolds from profile.yaml
+python flxos.py hwgen --all
+
 # Flash current build (uses idf.py)
 python flxos.py flash --port /dev/ttyUSB0
 
@@ -165,6 +168,8 @@ python flxos.py cdn 1.0.0
 
 Notes:
 - `flash`, `release`, and `cdn` are fail-fast and require an existing build that matches the selected profile (`python flxos.py select <id>` then `python flxos.py build`).
+- `hwgen` derives bus/peripheral topology from `Profiles/<id>/profile.yaml` (`hardware` + console/CLI metadata) and generates scaffold code at `Profiles/<id>/Source/hwd/GeneratedInit.cpp`.
+- `GeneratedInit.cpp` is optional: if present it is compiled and invoked during `SystemManager::initHardware()`; if absent the build/runtime path is unchanged.
 - Release outputs are generated under `flxos/releases/`:
   - `flxos-<profile>-v<version>/` (binaries + flash scripts)
   - `flxos-<profile>-v<version>-symbols/` (`FlxOS.elf`)

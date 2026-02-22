@@ -10,6 +10,7 @@ Usage:
     python flxos.py info <id>                Show profile details
     python flxos.py new <id>                 Scaffold profile YAML
     python flxos.py diff <a> <b> [--json]    Compare two profiles
+    python flxos.py hwgen [id] [--all]       Generate HWD init scaffold from profile.yaml
     python flxos.py flash [--port]           Flash current build
     python flxos.py release <version>        Package release artifacts
     python flxos.py cdn <version>            Generate ESP Web Tools manifests
@@ -1198,6 +1199,30 @@ def cmd_doctor(args):
     return 1 if issues else 0
 
 
+def cmd_hwgen(args):
+    """Generate hardware init scaffold from profile.yaml."""
+    hwgen_script = SCRIPT_DIR / "Buildscripts" / "hwgen.py"
+    if not hwgen_script.exists():
+        print(f"{C_RED}Error: missing generator script {hwgen_script}{C_RESET}")
+        return 1
+
+    cmd = [sys.executable, str(hwgen_script)]
+    if args.all:
+        cmd.append("--all")
+    elif args.profile_id:
+        cmd.extend(["--profile", args.profile_id])
+
+    if args.force:
+        cmd.append("--force")
+    if args.stdout:
+        cmd.append("--stdout")
+    if args.output:
+        cmd.extend(["--output", args.output])
+
+    result = subprocess.run(cmd, cwd=str(SCRIPT_DIR))
+    return result.returncode
+
+
 # ── Helpers ────────────────────────────────────────────────────────────────
 
 def _normalize_version(version_text: str) -> Optional[tuple[str, str]]:
@@ -1716,6 +1741,14 @@ def main():
     # doctor
     sub.add_parser("doctor", help="Check build environment")
 
+    # hwgen
+    p_hwgen = sub.add_parser("hwgen", help="Generate HWD init scaffold from profile.yaml")
+    p_hwgen.add_argument("profile_id", nargs="?", default=None, help="Profile ID (defaults to selected profile)")
+    p_hwgen.add_argument("--all", action="store_true", help="Generate scaffold for all profiles")
+    p_hwgen.add_argument("--force", action="store_true", help="Overwrite non-generated output files")
+    p_hwgen.add_argument("--stdout", action="store_true", help="Print generated scaffold instead of writing files")
+    p_hwgen.add_argument("--output", default=None, help="Custom output path (single profile only)")
+
     args = parser.parse_args()
 
     if args.command is None:
@@ -1734,6 +1767,7 @@ def main():
         "release": cmd_release,
         "cdn": cmd_cdn,
         "doctor": cmd_doctor,
+        "hwgen": cmd_hwgen,
     }
 
     return commands[args.command](args)

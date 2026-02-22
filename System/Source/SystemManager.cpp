@@ -33,6 +33,8 @@
 
 static constexpr std::string_view TAG = "SystemManager";
 
+extern "C" esp_err_t flx_profile_hwd_init(void) __attribute__((weak));
+
 namespace flx::system {
 
 esp_err_t SystemManager::initHardware() {
@@ -58,6 +60,18 @@ esp_err_t SystemManager::initHardware() {
 
 	flx::kernel::TaskManager::getInstance().initWatchdog();
 	flx::kernel::ResourceMonitorTask::getInstance().start();
+
+	using profile_hwd_init_fn = esp_err_t (*)(void);
+	const profile_hwd_init_fn profile_hwd_init = flx_profile_hwd_init;
+	if (profile_hwd_init != nullptr) {
+		Log::info(TAG, "Running optional profile HWD init...");
+		const esp_err_t hwd_err = profile_hwd_init();
+		if (hwd_err != ESP_OK) {
+			Log::error(TAG, "Profile HWD init failed: %s", esp_err_to_name(hwd_err));
+			return hwd_err;
+		}
+	}
+
 	return ESP_OK;
 }
 

@@ -16,8 +16,16 @@ endforeach()
 
 if(ACTIVE_PROFILE_DIR)
     message(STATUS "FlxOS: Active profile '${CONFIG_FLXOS_PROFILE}' → ${ACTIVE_PROFILE_DIR}")
+    set(_profile_hwd_generated "${ACTIVE_PROFILE_DIR}/Source/hwd/GeneratedInit.cpp")
+
     if(EXISTS "${ACTIVE_PROFILE_DIR}/CMakeLists.txt")
         add_subdirectory("${ACTIVE_PROFILE_DIR}")
+    elseif(EXISTS "${_profile_hwd_generated}")
+        message(STATUS "FlxOS: Optional HWD source enabled → ${_profile_hwd_generated}")
+        idf_component_register(
+            SRCS "${_profile_hwd_generated}"
+            INCLUDE_DIRS "${ACTIVE_PROFILE_DIR}"
+        )
     else()
         idf_component_register(INCLUDE_DIRS "${ACTIVE_PROFILE_DIR}")
     endif()
