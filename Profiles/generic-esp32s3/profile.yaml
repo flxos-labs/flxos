@@ -1,0 +1,37 @@
+# FlxOS Profile: Generic ESP32-S3 (Headless)
+id: generic-esp32s3
+vendor: Generic
+name: ESP32-S3 (Headless)
+target: esp32s3
+flash_size: 4MB
+headless: true
+inherits: _bases/base-headless
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_64kb: true
+  data_cache_line_64b: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+  keyboard: false
+  trackball: false
+
+distribution:
+  incubating: false
+  tags:
+    - headless

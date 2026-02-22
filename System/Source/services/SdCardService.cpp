@@ -1,9 +1,10 @@
 #include "sdkconfig.h"
+#include <Config.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/SdCardService.hpp>
 #include <string_view>
 
-#if defined(FLXOS_SD_CARD_ENABLED)
+#if FLXOS_SD_CARD_ENABLED
 #include "driver/gpio.h"
 #include "driver/sdspi_host.h"
 #include "driver/spi_common.h"
@@ -28,12 +29,7 @@ const ServiceManifest SdCardService::serviceManifest = {
 };
 
 SdCardService::SdCardService()
-#if defined(FLXOS_SD_CARD_ENABLED)
-	: m_mountPoint(FLXOS_SD_MOUNT_POINT)
-#else
-	: m_mountPoint("/sdcard")
-#endif
-{
+	: m_mountPoint(flx::config::sdcard.mountPoint) {
 }
 
 SdCardService& SdCardService::getInstance() {
@@ -53,7 +49,7 @@ void SdCardService::onStop() {
 }
 
 bool SdCardService::mount() {
-#if !defined(FLXOS_SD_CARD_ENABLED)
+#if !FLXOS_SD_CARD_ENABLED
 	Log::info(TAG, "SD card support disabled in config");
 	return false;
 #else
@@ -74,19 +70,19 @@ bool SdCardService::mount() {
 
 	m_card = nullptr;
 
-	auto host_id = (spi_host_device_t)FLXOS_SD_SPI_HOST;
+	auto host_id = flx::config::sdcard.spiHost;
 
 	// Initialize SPI bus (idempotent — returns ESP_ERR_INVALID_STATE if LGFX already did it)
 	spi_bus_config_t bus_cfg = {};
-#if FLXOS_SD_PIN_MOSI != -1
-	bus_cfg.mosi_io_num = FLXOS_SD_PIN_MOSI;
-	bus_cfg.miso_io_num = FLXOS_SD_PIN_MISO;
-	bus_cfg.sclk_io_num = FLXOS_SD_PIN_SCLK;
-#else
-	bus_cfg.mosi_io_num = FLXOS_PIN_MOSI;
-	bus_cfg.miso_io_num = FLXOS_PIN_MISO;
-	bus_cfg.sclk_io_num = FLXOS_PIN_SCLK;
-#endif
+	if constexpr (flx::config::sdcard.pins.mosi != -1) {
+		bus_cfg.mosi_io_num = flx::config::sdcard.pins.mosi;
+		bus_cfg.miso_io_num = flx::config::sdcard.pins.miso;
+		bus_cfg.sclk_io_num = flx::config::sdcard.pins.sclk;
+	} else {
+		bus_cfg.mosi_io_num = flx::config::display.pins.mosi;
+		bus_cfg.miso_io_num = flx::config::display.pins.miso;
+		bus_cfg.sclk_io_num = flx::config::display.pins.sclk;
+	}
 	bus_cfg.quadwp_io_num = -1;
 	bus_cfg.quadhd_io_num = -1;
 	bus_cfg.max_transfer_sz = 16 * 1024;
@@ -103,13 +99,12 @@ bool SdCardService::mount() {
 
 	sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 	host.slot = host_id;
-	host.max_freq_khz = FLXOS_SD_MAX_FREQ_KHZ;
+	host.max_freq_khz = flx::config::sdcard.maxFreqKhz;
 
 	sdspi_device_config_t slot_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-	slot_config.gpio_cs = (gpio_num_t)FLXOS_SD_CS;
+	slot_config.gpio_cs = (gpio_num_t)flx::config::sdcard.cs;
 	slot_config.host_id = host_id;
 
-	// Use provided SPI bus initialization from LGFX (or initialized above in headless mode)
 	Log::info(TAG, "Using shared SPI bus (host_id=%d) for SD card. Max freq: %d kHz", host_id, host.max_freq_khz);
 
 	Log::info(TAG, "Calling esp_vfs_fat_sdspi_mount...");
@@ -133,7 +128,7 @@ bool SdCardService::mount() {
 }
 
 void SdCardService::unmount() {
-#if defined(FLXOS_SD_CARD_ENABLED)
+#if FLXOS_SD_CARD_ENABLED
 	if (!m_mounted) {
 		return;
 	}

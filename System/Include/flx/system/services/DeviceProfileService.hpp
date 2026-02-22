@@ -19,8 +19,8 @@ namespace flx::services {
  * - I2C bus scanning for peripheral auto-detection
  *
  * Boot flow:
- *   1. Reads CONFIG_FLXOS_DEVICE_PROFILE_ID from Kconfig
- *   2. Looks up matching DeviceProfile from the built-in registry
+ *   1. Loads profile from profile.yaml via CMake-generated Config.hpp
+ *   2. Populates DeviceProfile from flx::config:: constexpr structs
  *   3. Loads NVS pin overrides
  *   4. Loads saved touch calibration from NVS
  */

@@ -49,21 +49,16 @@ void GuiTask::display_init() {
 	Log::info(TAG, "LVGL FS Driver Initialized. Letter: '%c', Path: '%s'", LV_FS_STDIO_LETTER, LV_FS_STDIO_PATH);
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	const uint32_t SZ =
-		FLXOS_DISPLAY_WIDTH * FLXOS_DISPLAY_HEIGHT / 10 * 2;
+		flx::config::display.width * flx::config::display.height / 10 * 2;
 	void* buf = heap_caps_malloc(SZ, MALLOC_CAP_DMA);
 	if (!buf) {
 	} else {
 	}
 
-	bool touch_en = false;
-#if FLXOS_HARDWARE_AUTODETECT
-	touch_en = true;
-#elif FLXOS_TOUCH_ENABLED
-	touch_en = true;
-#endif
+	bool touch_en = flx::config::touch.enabled;
 
 	lv_display_t* disp = lv_lovyan_gfx_create(
-		FLXOS_DISPLAY_WIDTH, FLXOS_DISPLAY_HEIGHT, buf, SZ, touch_en
+		flx::config::display.width, flx::config::display.height, buf, SZ, touch_en
 	);
 	m_disp = disp;
 	if (!disp) {
@@ -77,9 +72,9 @@ void GuiTask::display_init() {
 	if (tft) {
 		tft->endWrite();
 	}
-	Log::info("GuiTask", "Display initialized: %dx%d", FLXOS_DISPLAY_WIDTH, FLXOS_DISPLAY_HEIGHT);
+	Log::info("GuiTask", "Display initialized: %dx%d", flx::config::display.width, flx::config::display.height);
 	lv_display_set_rotation(
-		disp, (lv_display_rotation_t)(FLXOS_DISPLAY_ROTATION / 90)
+		disp, (lv_display_rotation_t)(flx::config::display.rotation / 90)
 	);
 #else
 	Log::info(TAG, "Headless mode: Display driver not initialized");

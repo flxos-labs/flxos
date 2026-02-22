@@ -3,87 +3,10 @@
 #define LGFX_USE_V1
 
 #include <LovyanGFX.hpp>
-#include <sdkconfig.h>
-
 #include <Config.hpp>
 
-#ifndef FLXOS_ENABLE_DISPLAY
-#if defined(CONFIG_FLXOS_ENABLE_DISPLAY)
-#define FLXOS_ENABLE_DISPLAY CONFIG_FLXOS_ENABLE_DISPLAY
-#elif defined(FLXOS_DISPLAY_WIDTH) && defined(FLXOS_DISPLAY_HEIGHT)
-#define FLXOS_ENABLE_DISPLAY true
-#else
-#define FLXOS_ENABLE_DISPLAY false
-#endif
-#endif
-
-#ifndef FLXOS_BUS_SPI
-#if defined(CONFIG_FLXOS_BUS_SPI)
-#define FLXOS_BUS_SPI CONFIG_FLXOS_BUS_SPI
-#endif
-#endif
-
-#ifndef FLXOS_DISPLAY_ILI9341
-#if defined(CONFIG_FLXOS_DISPLAY_ILI9341)
-#define FLXOS_DISPLAY_ILI9341 CONFIG_FLXOS_DISPLAY_ILI9341
-#endif
-#endif
-
-#ifndef FLXOS_TOUCH_XPT2046
-#if defined(CONFIG_FLXOS_TOUCH_XPT2046)
-#define FLXOS_TOUCH_XPT2046 CONFIG_FLXOS_TOUCH_XPT2046
-#endif
-#endif
-
-#if !FLXOS_ENABLE_DISPLAY
-#error "FLXOS_ENABLE_DISPLAY must be enabled when using LGFX."
-#endif
-
-#if !FLXOS_BUS_SPI
-#error "Only SPI display bus is currently supported by flx/hal/lv_lgfx_user.hpp."
-#endif
-
-#if !FLXOS_DISPLAY_ILI9341
-#error "Only ILI9341 panel is currently supported by flx/hal/lv_lgfx_user.hpp."
-#endif
-
-#if FLXOS_TOUCH_ENABLED && !FLXOS_TOUCH_XPT2046
-#error "Only XPT2046 touch is currently supported by flx/hal/lv_lgfx_user.hpp."
-#endif
-
-#ifndef FLXOS_SPI_3WIRE
-#define FLXOS_SPI_3WIRE false
-#endif
-#ifndef FLXOS_SPI_DMA_CHANNEL
-#define FLXOS_SPI_DMA_CHANNEL 0
-#endif
-#ifndef FLXOS_DISPLAY_INVERT
-#define FLXOS_DISPLAY_INVERT false
-#endif
-#ifndef FLXOS_DISPLAY_RGB_ORDER
-#define FLXOS_DISPLAY_RGB_ORDER false
-#endif
-#ifndef FLXOS_PANEL_DLEN_16BIT
-#define FLXOS_PANEL_DLEN_16BIT false
-#endif
-#ifndef FLXOS_BCKL_INVERT
-#define FLXOS_BCKL_INVERT false
-#endif
-#ifndef FLXOS_TOUCH_SPI_SEPARATE_PINS
-#define FLXOS_TOUCH_SPI_SEPARATE_PINS false
-#endif
-#ifndef FLXOS_TOUCH_SPI_HOST
-#define FLXOS_TOUCH_SPI_HOST -1
-#endif
-#ifndef FLXOS_PIN_TOUCH_SCLK
-#define FLXOS_PIN_TOUCH_SCLK -1
-#endif
-#ifndef FLXOS_PIN_TOUCH_MOSI
-#define FLXOS_PIN_TOUCH_MOSI -1
-#endif
-#ifndef FLXOS_PIN_TOUCH_MISO
-#define FLXOS_PIN_TOUCH_MISO -1
-#endif
+// Compile-time validation — this header should only be included for display-enabled profiles
+static_assert(flx::config::display.enabled, "LGFX header included but display is disabled in profile.yaml");
 
 // ============================================================================
 // LovyanGFX Configuration Class
@@ -102,32 +25,26 @@ public:
 	uint8_t getRotation() const { return lgfx::LGFX_Device::getRotation(); }
 	void setRotation(uint8_t r) { lgfx::LGFX_Device::setRotation(r); }
 
-	void test_inheritance() {
-		volatile int w = this->width();
-		(void)w;
-	}
-#pragma message "Building LGFX User Header - LGFX Class Defined (Config.hpp)"
-
 	LGFX(void) {
 		// ====================================================================
 		// Bus Configuration (SPI)
 		// ====================================================================
 		{
 			auto cfg = _bus_instance.config();
-			cfg.spi_host = FLXOS_SPI_HOST;
-			cfg.spi_mode = FLXOS_SPI_MODE;
-			cfg.freq_write = FLXOS_SPI_FREQ_WRITE;
-			cfg.freq_read = FLXOS_SPI_FREQ_READ;
-			cfg.spi_3wire = FLXOS_SPI_3WIRE;
+			cfg.spi_host = flx::config::display.spi.host;
+			cfg.spi_mode = flx::config::display.spi.mode;
+			cfg.freq_write = flx::config::display.spi.freqWrite;
+			cfg.freq_read = flx::config::display.spi.freqRead;
+			cfg.spi_3wire = flx::config::display.spi.threeWire;
 			cfg.use_lock = true;
 			cfg.dma_channel =
-				(FLXOS_SPI_DMA_CHANNEL == 0) ? SPI_DMA_CH_AUTO : (FLXOS_SPI_DMA_CHANNEL == 1) ? 1
-				: (FLXOS_SPI_DMA_CHANNEL == 2)												  ? 2
-																							  : SPI_DMA_CH_AUTO;
-			cfg.pin_sclk = FLXOS_PIN_SCLK;
-			cfg.pin_mosi = FLXOS_PIN_MOSI;
-			cfg.pin_miso = FLXOS_PIN_MISO;
-			cfg.pin_dc = FLXOS_PIN_DC;
+				(flx::config::display.spi.dmaChannel == 0) ? SPI_DMA_CH_AUTO : (flx::config::display.spi.dmaChannel == 1) ? 1
+				: (flx::config::display.spi.dmaChannel == 2)																? 2
+																															: SPI_DMA_CH_AUTO;
+			cfg.pin_sclk = flx::config::display.pins.sclk;
+			cfg.pin_mosi = flx::config::display.pins.mosi;
+			cfg.pin_miso = flx::config::display.pins.miso;
+			cfg.pin_dc = flx::config::display.pins.dc;
 			_bus_instance.config(cfg);
 			_panel_instance.setBus(&_bus_instance);
 		}
@@ -137,23 +54,23 @@ public:
 		// ====================================================================
 		{
 			auto cfg = _panel_instance.config();
-			cfg.pin_cs = FLXOS_PIN_CS;
-			cfg.pin_rst = FLXOS_PIN_RST;
-			cfg.pin_busy = FLXOS_PIN_BUSY;
-			cfg.memory_width = FLXOS_DISPLAY_WIDTH;
-			cfg.memory_height = FLXOS_DISPLAY_HEIGHT;
-			cfg.panel_width = FLXOS_DISPLAY_WIDTH;
-			cfg.panel_height = FLXOS_DISPLAY_HEIGHT;
-			cfg.offset_x = FLXOS_PANEL_OFFSET_X;
-			cfg.offset_y = FLXOS_PANEL_OFFSET_Y;
-			cfg.offset_rotation = FLXOS_PANEL_OFFSET_ROTATION;
-			cfg.dummy_read_pixel = FLXOS_DUMMY_READ_PIXEL;
-			cfg.dummy_read_bits = FLXOS_DUMMY_READ_BITS;
-			cfg.readable = FLXOS_PANEL_READABLE;
-			cfg.invert = FLXOS_DISPLAY_INVERT;
-			cfg.rgb_order = FLXOS_DISPLAY_RGB_ORDER;
-			cfg.dlen_16bit = FLXOS_PANEL_DLEN_16BIT;
-			cfg.bus_shared = FLXOS_BUS_SHARED;
+			cfg.pin_cs = flx::config::display.pins.cs;
+			cfg.pin_rst = flx::config::display.pins.rst;
+			cfg.pin_busy = flx::config::display.pins.busy;
+			cfg.memory_width = flx::config::display.width;
+			cfg.memory_height = flx::config::display.height;
+			cfg.panel_width = flx::config::display.width;
+			cfg.panel_height = flx::config::display.height;
+			cfg.offset_x = flx::config::display.panel.offsetX;
+			cfg.offset_y = flx::config::display.panel.offsetY;
+			cfg.offset_rotation = flx::config::display.panel.offsetRotation;
+			cfg.dummy_read_pixel = flx::config::display.panel.dummyReadPixel;
+			cfg.dummy_read_bits = flx::config::display.panel.dummyReadBits;
+			cfg.readable = flx::config::display.panel.readable;
+			cfg.invert = flx::config::display.panel.invert;
+			cfg.rgb_order = flx::config::display.panel.rgbOrder;
+			cfg.dlen_16bit = flx::config::display.panel.dlen16bit;
+			cfg.bus_shared = flx::config::display.panel.busShared;
 			_panel_instance.config(cfg);
 		}
 
@@ -162,47 +79,48 @@ public:
 		// ====================================================================
 		{
 			auto cfg = _light_instance.config();
-			cfg.pin_bl = FLXOS_PIN_BCKL;
-			cfg.invert = FLXOS_BCKL_INVERT;
-			cfg.freq = FLXOS_BCKL_FREQ;
-			cfg.pwm_channel = FLXOS_BCKL_PWM_CHANNEL;
+			cfg.pin_bl = flx::config::display.pins.bckl;
+			cfg.invert = flx::config::display.backlight.invert;
+			cfg.freq = flx::config::display.backlight.freq;
+			cfg.pwm_channel = flx::config::display.backlight.pwmChannel;
 			_light_instance.config(cfg);
 			_panel_instance.setLight(&_light_instance);
 		}
 
-#if FLXOS_TOUCH_ENABLED
-		// ====================================================================
-		// Touch Configuration (XPT2046)
-		// ====================================================================
-		{
-			auto cfg = _touch_instance.config();
-			cfg.x_min = FLXOS_TOUCH_X_MIN;
-			cfg.x_max = FLXOS_TOUCH_X_MAX;
-			cfg.y_min = FLXOS_TOUCH_Y_MIN;
-			cfg.y_max = FLXOS_TOUCH_Y_MAX;
-			cfg.pin_int = FLXOS_PIN_TOUCH_INT;
-			cfg.bus_shared = FLXOS_TOUCH_BUS_SHARED;
-			cfg.offset_rotation = FLXOS_TOUCH_OFFSET_ROTATION;
+		if constexpr (flx::config::touch.enabled) {
+			// ====================================================================
+			// Touch Configuration (XPT2046)
+			// ====================================================================
+			{
+				auto cfg = _touch_instance.config();
+				cfg.x_min = flx::config::touch.calibration.xMin;
+				cfg.x_max = flx::config::touch.calibration.xMax;
+				cfg.y_min = flx::config::touch.calibration.yMin;
+				cfg.y_max = flx::config::touch.calibration.yMax;
+				cfg.pin_int = flx::config::touch.pins.interrupt;
+				cfg.bus_shared = flx::config::touch.spi.busShared;
+				cfg.offset_rotation = flx::config::touch.calibration.offsetRotation;
 
-			// Use dedicated touch SPI pins/host when requested, otherwise reuse display SPI.
-#if FLXOS_TOUCH_SPI_SEPARATE_PINS
-			cfg.spi_host = FLXOS_TOUCH_SPI_HOST;
-			cfg.pin_sclk = FLXOS_PIN_TOUCH_SCLK;
-			cfg.pin_mosi = FLXOS_PIN_TOUCH_MOSI;
-			cfg.pin_miso = FLXOS_PIN_TOUCH_MISO;
-#else
-			cfg.spi_host = FLXOS_SPI_HOST;
-			cfg.pin_sclk = FLXOS_PIN_SCLK;
-			cfg.pin_mosi = FLXOS_PIN_MOSI;
-			cfg.pin_miso = FLXOS_PIN_MISO;
-#endif
-			cfg.freq = FLXOS_TOUCH_SPI_FREQ;
-			cfg.pin_cs = FLXOS_PIN_TOUCH_CS;
+				if constexpr (flx::config::touch.spi.separatePins) {
+					// Dedicated touch SPI pins/host
+					cfg.spi_host = flx::config::touch.spi.host;
+					cfg.pin_sclk = flx::config::touch.pins.sclk;
+					cfg.pin_mosi = flx::config::touch.pins.mosi;
+					cfg.pin_miso = flx::config::touch.pins.miso;
+				} else {
+					// Reuse display SPI
+					cfg.spi_host = flx::config::display.spi.host;
+					cfg.pin_sclk = flx::config::display.pins.sclk;
+					cfg.pin_mosi = flx::config::display.pins.mosi;
+					cfg.pin_miso = flx::config::display.pins.miso;
+				}
+				cfg.freq = flx::config::touch.spi.freq;
+				cfg.pin_cs = flx::config::touch.pins.cs;
 
-			_touch_instance.config(cfg);
-			_panel_instance.setTouch(&_touch_instance);
+				_touch_instance.config(cfg);
+				_panel_instance.setTouch(&_touch_instance);
+			}
 		}
-#endif
 
 		setPanel(&_panel_instance);
 	}

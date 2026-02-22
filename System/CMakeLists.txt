@@ -1,11 +1,4 @@
-if(DEFINED PROJECT_DIR)
-    include(${PROJECT_DIR}/Buildscripts/headless.cmake)
-else()
-    include(${CMAKE_CURRENT_LIST_DIR}/../Buildscripts/headless.cmake)
-endif()
-flx_resolve_headless(_flx_headless_mode)
-
-# Set component requirements based on build mode
+# System component — system services, managers, device profile
 set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer)
 set(SYSTEM_SRCS
     "Source/SystemManager.cpp"
@@ -21,7 +14,7 @@ set(SYSTEM_SRCS
     "Source/services/SystemInfoService.cpp"
 )
 
-if(NOT _flx_headless_mode)
+if(NOT FLXOS_HEADLESS_MODE_ENABLED)
     list(APPEND SYSTEM_REQUIRES lvgl)
     list(APPEND SYSTEM_SRCS
         "Source/managers/NotificationManager.cpp"

@@ -1,11 +1,5 @@
-if(DEFINED PROJECT_DIR)
-    include(${PROJECT_DIR}/Buildscripts/headless.cmake)
-else()
-    include(${CMAKE_CURRENT_LIST_DIR}/../Buildscripts/headless.cmake)
-endif()
-flx_resolve_headless(_flx_headless_mode)
-
-if(NOT _flx_headless_mode)
+# UI component — LVGL UI framework, desktop, theming
+if(NOT FLXOS_HEADLESS_MODE_ENABLED)
     file(GLOB_RECURSE UI_SOURCES "Source/*.cpp")
 
     idf_component_register(
