@@ -700,7 +700,6 @@ function(_flx_generate_sdkconfig_frag PREFIX OUTPUT_FILE)
     string(APPEND _frag "CONFIG_IDF_TARGET=\"${_idf_target}\"\n")
 
     # sdkconfig passthrough — raw key=value pairs from profile.yaml sdkconfig: section
-    # This matches and surpasses Tactility's [sdkconfig] INI passthrough.
     get_cmake_property(_all_vars VARIABLES)
     set(_has_passthrough FALSE)
     foreach(_var IN LISTS _all_vars)
@@ -729,9 +728,9 @@ function(flx_load_profile)
     # Determine profile directory
     set(_profile_id "$CACHE{CONFIG_FLXOS_PROFILE}")
     if("${_profile_id}" STREQUAL "")
-        # Try reading from sdkconfig directly (pre-project() phase)
+        # Scan for CONFIG_FLXOS_PROFILE — sdkconfig.defaults is the source of truth,
+        # sdkconfig is only a fallback (it may contain stale values from previous builds).
         set(_scan_files
-            "${CMAKE_SOURCE_DIR}/sdkconfig"
             "${CMAKE_SOURCE_DIR}/sdkconfig.defaults"
         )
         if(DEFINED SDKCONFIG_DEFAULTS)
@@ -743,6 +742,8 @@ function(flx_load_profile)
                 endif()
             endforeach()
         endif()
+        # Fallback: read from sdkconfig (may be stale after target switches)
+        list(APPEND _scan_files "${CMAKE_SOURCE_DIR}/sdkconfig")
 
         foreach(_sf IN LISTS _scan_files)
             if(EXISTS "${_sf}")
@@ -775,6 +776,68 @@ function(flx_load_profile)
 
     # Parse YAML with inheritance
     _flx_resolve_inheritance("${_profile_dir}" "_FLX")
+
+    # ── Target mismatch detection ──
+    # Check the CMake cache (not sdkconfig!) for IDF_TARGET — the cache is what
+    # actually determines which compiler toolchain is loaded. A stale cache with
+    # the wrong target causes silent wrong-compiler builds.
+    _flx_yaml_get("_FLX" "target" "esp32" _profile_target)
+    set(_cache_file "${CMAKE_BINARY_DIR}/CMakeCache.txt")
+    if(EXISTS "${_cache_file}")
+        file(STRINGS "${_cache_file}" _cached_target_lines REGEX "^IDF_TARGET:STRING=")
+        if(_cached_target_lines)
+            list(GET _cached_target_lines -1 _cached_line)
+            string(REGEX REPLACE "^IDF_TARGET:STRING=(.*)$" "\\1" _cached_target "${_cached_line}")
+            if(NOT "${_cached_target}" STREQUAL "${_profile_target}")
+                message(WARNING
+                    "\n"
+                    "═══════════════════════════════════════════════════════════\n"
+                    "  FlxOS: TARGET MISMATCH — AUTO-RECOVERING\n"
+                    "═══════════════════════════════════════════════════════════\n"
+                    "  Profile '${_profile_id}' requires target: ${_profile_target}\n"
+                    "  But CMake cache has IDF_TARGET:            ${_cached_target}\n"
+                    "  Wiping build directory...\n"
+                    "═══════════════════════════════════════════════════════════\n"
+                )
+
+                # Wipe the entire build directory — partial deletion leaves it in
+                # a state where idf.py refuses to operate.
+                file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}")
+                message(STATUS "FlxOS: Deleted build directory")
+
+                # Also remove stale sdkconfig (it references the old target)
+                if(EXISTS "${CMAKE_SOURCE_DIR}/sdkconfig")
+                    file(REMOVE "${CMAKE_SOURCE_DIR}/sdkconfig")
+                    message(STATUS "FlxOS: Deleted stale sdkconfig")
+                endif()
+
+                # CMake can't restart itself mid-configure (wrong toolchain already
+                # loaded), and calling idf.py from within CMake is recursive. The
+                # user must re-run. Use `python flxos.py build` for full automation.
+                message(FATAL_ERROR
+                    "\n"
+                    "═══════════════════════════════════════════════════════════\n"
+                    "  FlxOS: BUILD DIRECTORY WIPED — re-run to continue\n"
+                    "═══════════════════════════════════════════════════════════\n"
+                    "  Run:  idf.py set-target ${_profile_target} && idf.py build\n"
+                    "   Or:  python flxos.py build   (fully automatic)\n"
+                    "═══════════════════════════════════════════════════════════\n"
+                )
+            endif()
+        endif()
+    endif()
+
+    # ── Pre-generation cleanup ──
+    # Delete stale generated files for the CURRENT profile and the source root.
+    # Only clean the current profile's Config.hpp — deleting other profiles'
+    # Config.hpp can break builds when the CMake cache still references them.
+    if(EXISTS "${_profile_dir}/Config.hpp")
+        file(REMOVE "${_profile_dir}/Config.hpp")
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/sdkconfig.profile")
+        file(REMOVE "${CMAKE_SOURCE_DIR}/sdkconfig.profile")
+    endif()
+    message(STATUS "FlxOS: Cleaned stale generated files")
 
     # Generate Config.hpp into the profile directory
     set(_config_hpp "${_profile_dir}/Config.hpp")
