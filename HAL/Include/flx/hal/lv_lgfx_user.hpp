@@ -2,8 +2,8 @@
 
 #define LGFX_USE_V1
 
-#include <LovyanGFX.hpp>
 #include <Config.hpp>
+#include <LovyanGFX.hpp>
 
 // Compile-time validation — this header should only be included for display-enabled profiles
 static_assert(flx::config::display.enabled, "LGFX header included but display is disabled in profile.yaml");
@@ -39,8 +39,8 @@ public:
 			cfg.use_lock = true;
 			cfg.dma_channel =
 				(flx::config::display.spi.dmaChannel == 0) ? SPI_DMA_CH_AUTO : (flx::config::display.spi.dmaChannel == 1) ? 1
-				: (flx::config::display.spi.dmaChannel == 2)																? 2
-																															: SPI_DMA_CH_AUTO;
+				: (flx::config::display.spi.dmaChannel == 2)															  ? 2
+																														  : SPI_DMA_CH_AUTO;
 			cfg.pin_sclk = flx::config::display.pins.sclk;
 			cfg.pin_mosi = flx::config::display.pins.mosi;
 			cfg.pin_miso = flx::config::display.pins.miso;
