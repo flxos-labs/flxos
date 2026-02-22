@@ -1,0 +1,32 @@
+{
+  "name": "FlxOS for Generic ESP32-S3 (Headless)",
+  "version": "1.0.0",
+  "new_install_prompt_erase": "true",
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "bootloader.bin",
+          "offset": 0
+        },
+        {
+          "path": "partition-table.bin",
+          "offset": 32768
+        },
+        {
+          "path": "flxos.bin",
+          "offset": 65536
+        },
+        {
+          "path": "system.bin",
+          "offset": 2162688
+        },
+        {
+          "path": "data.bin",
+          "offset": 2293760
+        }
+      ]
+    }
+  ]
+}

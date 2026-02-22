@@ -1,20 +1,11 @@
-# FlxOS Profile: ESP32-S3 + ILI9341 + XPT2046
-id: esp32s3-ili9341-xpt
-vendor: FlxOS
-name: ESP32-S3-ILI9341
-target: esp32s3
-flash_size: 16MB
-flash_mode: QIO
-flash_freq: null
+# Base template for common SPI display profiles
+# Profiles inherit from this via: inherits: _bases/base-esp32-spi
+
 headless: false
-inherits: _bases/base-esp32-spi
 
 hardware:
   spiram:
-    enabled: true
-    speed: 120M               # 80M | 120M (120M requires flash_freq to also be 120M)
-    xip_from_psram: true
-    ecc_enable: true
+    enabled: false
   display:
     enabled: true
     driver: ILI9341
@@ -25,14 +16,14 @@ hardware:
     size_inches: 2.8
     rotation: 1
     pins:
-      cs: 10
-      dc: 9
-      rst: 14
+      cs: -1
+      dc: -1
+      rst: -1
       busy: -1
-      bckl: 7
-      mosi: 11
-      sclk: 12
-      miso: 13
+      bckl: -1
+      mosi: -1
+      sclk: -1
+      miso: -1
     spi:
       host: 2
       mode: 0
@@ -56,12 +47,12 @@ hardware:
       rgb_order: false
       dlen_16bit: false
   touch:
-    enabled: true
+    enabled: false
     driver: XPT2046
     bus: spi
     pins:
-      cs: 5
-      int: 6
+      cs: -1
+      int: -1
       sclk: -1
       mosi: -1
       miso: -1
@@ -71,16 +62,16 @@ hardware:
       bus_shared: true
       separate_pins: false
     calibration:
-      x_min: 3800
-      x_max: 200
+      x_min: 200
+      x_max: 3800
       y_min: 200
       y_max: 3800
       offset_rotation: 0
   sdcard:
-    enabled: true
-    cs: 4
+    enabled: false
+    cs: -1
     spi_host: 2
-    max_freq_khz: 20000
+    max_freq_khz: 4000
     mount_point: /sdcard
     pins:
       mosi: -1
@@ -91,14 +82,6 @@ hardware:
   usb:
     tiny_usb: false
 
-target_config:
-  instruction_cache_32kb: true
-  data_cache_64kb: true
-  data_cache_line_64b: true
-
-console:
-  usb_serial_jtag: true
-
 cli:
   enabled: true
   prompt: "flxos> "
@@ -108,21 +91,3 @@ lvgl:
   font_size: 14
   theme: DefaultDark
   ui_density: normal
-
-capabilities:
-  wifi: true
-  bluetooth: true
-  ble: true
-  gps: false
-  lora: false
-  camera: false
-  audio: false
-  keyboard: false
-  trackball: false
-
-distribution:
-  incubating: false
-  tags:
-    - spi
-    - ili9341
-    - dev-board

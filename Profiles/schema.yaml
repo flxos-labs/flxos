@@ -1,0 +1,40 @@
+# FlxOS profile schema metadata (consumed by flxos.py validate)
+# Note: profile.cmake enforces the same core rules at configure-time.
+
+version: 1
+
+required_fields:
+  - id
+  - vendor
+  - name
+  - target
+  - flash_size
+
+enums:
+  target:
+    - esp32
+    - esp32s3
+    - esp32c6
+    - esp32p4
+  flash_size:
+    - 4MB
+    - 8MB
+    - 16MB
+  flash_mode:
+    - QIO
+    - DIO
+    - QOUT
+    - DOUT
+  lvgl_ui_density:
+    - normal
+    - compact
+
+fields:
+  name:
+    allow_string: true
+    allow_list: true
+  lvgl_ui_density:
+    default: normal
+
+patterns:
+  sdkconfig_key: "^CONFIG_[A-Z0-9_]+$"

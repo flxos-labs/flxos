@@ -1,13 +1,15 @@
 # FlxOS Profile: CYD-2432S028R (Cheap Yellow Display)
 id: cyd-2432s028r
 vendor: Sunton
-name: CYD-2432S028R
+name:
+  - CYD-2432S028R
+  - CYD-2432S028R v2
 target: esp32
 flash_size: 4MB
 flash_mode: QIO
 flash_freq: null
 headless: false
-inherits: null
+inherits: _bases/base-esp32-spi
 
 hardware:
   spiram:

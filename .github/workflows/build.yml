@@ -27,14 +27,30 @@ permissions:
   contents: read
 
 jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.gen.outputs.matrix }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Generate profile matrix
+      id: gen
+      run: |
+        matrix=$(python flxos.py list --json)
+        echo "matrix={\"include\":${matrix}}" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: discover
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
     strategy:
       fail-fast: false
-      matrix:
-        target: [esp32, esp32s3]
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
 
     steps:
     - name: Checkout repository
@@ -46,9 +62,9 @@ jobs:
       uses: actions/cache@v4
       with:
         path: .ccache
-        key: ccache-${{ matrix.target }}-${{ github.sha }}
+        key: ccache-${{ matrix.profile }}-${{ matrix.target }}-${{ github.sha }}
         restore-keys: |
-          ccache-${{ matrix.target }}-
+          ccache-${{ matrix.profile }}-${{ matrix.target }}-
 
     - name: esp-idf build
       uses: espressif/esp-idf-ci-action@v1
@@ -56,4 +72,7 @@ jobs:
         esp_idf_version: v5.5
         target: ${{ matrix.target }}
         path: "."
+        command: |
+          python flxos.py select ${{ matrix.profile }}
+          python flxos.py build
         extra_docker_args: -v ${{ github.workspace }}/.ccache:/root/.ccache -e CCACHE_DIR=/root/.ccache

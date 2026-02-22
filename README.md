@@ -129,6 +129,47 @@ On first boot, FlxOS will:
 3. Launch the desktop environment
 4. Show the app launcher with available applications
 
+### Build System CLI (`flxos.py`)
+
+The profile-based build flow is managed by `flxos.py`:
+
+```bash
+# List profiles
+python flxos.py list
+
+# List profiles as JSON (for CI/scripts)
+python flxos.py list --json
+
+# Select and build a profile
+python flxos.py select cyd-2432s028r
+python flxos.py build
+
+# Validate all profile manifests against schema
+python flxos.py validate
+
+# Compare two profile manifests
+python flxos.py diff generic-esp32 generic-esp32s3
+
+# Scaffold a new headless profile
+python flxos.py new my-board --headless
+
+# Flash current build (uses idf.py)
+python flxos.py flash --port /dev/ttyUSB0
+
+# Package release binaries + symbols
+python flxos.py release 1.0.0
+
+# Generate ESP Web Tools manifest bundle
+python flxos.py cdn 1.0.0
+```
+
+Notes:
+- `flash`, `release`, and `cdn` are fail-fast and require an existing build that matches the selected profile (`python flxos.py select <id>` then `python flxos.py build`).
+- Release outputs are generated under `flxos/releases/`:
+  - `flxos-<profile>-v<version>/` (binaries + flash scripts)
+  - `flxos-<profile>-v<version>-symbols/` (`FlxOS.elf`)
+  - `flxos-<profile>-v<version>-cdn/` (ESP Web Tools `manifest.json`)
+
 ---
 
 ## 🎯 Supported Hardware
