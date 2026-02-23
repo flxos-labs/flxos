@@ -8,7 +8,7 @@ endif()
 idf_component_register(
     SRCS "Source/Main.cpp"
     INCLUDE_DIRS "."
-    REQUIRES Core Kernel Services Apps Connectivity System HAL Profiles ${EXTRA_REQS}
+    REQUIRES Core Kernel Services Apps Connectivity System HalModule Profiles ${EXTRA_REQS}
 )
 
 # Inject LovyanGFX dependency into lvgl component
@@ -22,7 +22,7 @@ endif()
 
 if(NOT FLXOS_HEADLESS_MODE_ENABLED AND CONFIG_LV_OS_IDLE_PERCENT_CUSTOM)
     idf_component_get_property(lvgl_lib lvgl COMPONENT_LIB)
-    target_sources(${lvgl_lib} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../HAL/Source/lv_os_custom.c")
+    target_sources(${lvgl_lib} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../HalModule/Source/lv_os_custom.c")
 endif()
 
 # Generate Partitions & Upload

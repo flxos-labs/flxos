@@ -6,7 +6,7 @@ if(NOT FLXOS_HEADLESS_MODE_ENABLED)
         SRCS ${UI_SOURCES}
         INCLUDE_DIRS Include
         REQUIRES Core Kernel Services Apps Connectivity System lvgl
-        PRIV_REQUIRES LovyanGFX HAL Profiles
+        PRIV_REQUIRES LovyanGFX HalModule Profiles
     )
 
     target_compile_definitions(${COMPONENT_LIB} PRIVATE LV_USE_LOVYAN_GFX=1)
