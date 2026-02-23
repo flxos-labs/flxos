@@ -1049,6 +1049,9 @@ function(flx_load_profile)
         endif()
     endif()
 
+    # Export profile target so CMakeLists.txt can set ENV{IDF_TARGET} before project.cmake
+    set(FLXOS_PROFILE_TARGET "${_profile_target}" PARENT_SCOPE)
+
     # ── Pre-generation cleanup ──
     # Delete stale generated files for the CURRENT profile and the source root.
     # Only clean the current profile's Config.hpp — deleting other profiles'

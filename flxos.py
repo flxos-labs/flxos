@@ -368,7 +368,20 @@ def cmd_select(args):
             return 1
         print(f"  {C_GREEN}✓{C_RESET} Target set to {new_target}")
     elif not old_target:
-        print(f"\n  Run: idf.py set-target {new_target}")
+        # No cached target — auto-run set-target
+        set_env = os.environ.copy()
+        set_env.pop("IDF_TARGET", None)
+
+        print(f"\n  Running: idf.py set-target {new_target}")
+        result = subprocess.run(
+            ["idf.py", "set-target", new_target],
+            cwd=str(SCRIPT_DIR),
+            env=set_env
+        )
+        if result.returncode != 0:
+            print(f"  {C_RED}set-target failed.{C_RESET}")
+            return 1
+        print(f"  {C_GREEN}✓{C_RESET} Target set to {new_target}")
 
     print(f"\n  Next: python flxos.py build")
     return 0
@@ -411,6 +424,21 @@ def cmd_build(args):
                 print(f"  Deleted sdkconfig (stale)")
 
             # Run set-target with clean env
+            set_env = os.environ.copy()
+            set_env.pop("IDF_TARGET", None)
+
+            print(f"  Running: idf.py set-target {expected_target}")
+            result = subprocess.run(
+                ["idf.py", "set-target", expected_target],
+                cwd=str(SCRIPT_DIR),
+                env=set_env,
+            )
+            if result.returncode != 0:
+                print(f"  {C_RED}set-target failed.{C_RESET}")
+                return 1
+            print(f"  {C_GREEN}✓{C_RESET} Target set to {expected_target}\n")
+        elif not cached_target:
+            # No cached target — auto-run set-target
             set_env = os.environ.copy()
             set_env.pop("IDF_TARGET", None)
 

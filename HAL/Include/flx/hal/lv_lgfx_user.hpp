@@ -25,7 +25,7 @@ using LgfxDisplayPanel = lgfx::Panel_ILI948x;
 using LgfxDisplayPanel = lgfx::Panel_ILI9806;
 #elif FLXOS_DISPLAY_DRIVER_ST7735
 using LgfxDisplayPanel = lgfx::Panel_ST7735;
-#elif FLXOS_DISPLAY_DRIVER_ST7789
+#elif FLXOS_DISPLAY_DRIVER_ST7789 || FLXOS_DISPLAY_DRIVER_ST7789V
 using LgfxDisplayPanel = lgfx::Panel_ST7789;
 #elif FLXOS_DISPLAY_DRIVER_ST7789P3
 using LgfxDisplayPanel = lgfx::Panel_ST7789P3;
