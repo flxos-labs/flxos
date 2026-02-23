@@ -325,6 +325,51 @@ def _compact_dict(data: dict[str, Any]) -> dict[str, Any]:
     return compact
 
 
+def _normalize_gpio_pin(value: Any) -> Optional[int]:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        pin = int(value)
+        return pin if pin >= 0 else None
+
+    text = str(value).strip()
+    if text.lower() in ("", "null", "~"):
+        return None
+    try:
+        pin = int(text, 0)
+    except ValueError:
+        return None
+    return pin if pin >= 0 else None
+
+
+def _parse_gpio_pins(values: Any) -> list[int]:
+    if values is None:
+        return []
+
+    source = values if isinstance(values, list) else [values]
+    pins: list[int] = []
+    for item in source:
+        pin = _normalize_gpio_pin(item)
+        if pin is None:
+            continue
+        if pin not in pins:
+            pins.append(pin)
+    return pins
+
+
+def _normalize_gpio_level(value: Any, default: int = 1) -> int:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return 1 if value else 0
+    try:
+        return 0 if int(str(value).strip(), 0) == 0 else 1
+    except (TypeError, ValueError):
+        return default
+
+
 def derive_topology_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
     """Derive HWD-like topology from merged profile metadata."""
     topology: dict[str, Any] = {"version": 1, "buses": {}, "peripherals": {}}
@@ -335,6 +380,7 @@ def derive_topology_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
     display = _as_dict(hardware.get("display"))
     touch = _as_dict(hardware.get("touch"))
     sdcard = _as_dict(hardware.get("sdcard"))
+    power = _as_dict(hardware.get("power"))
     cli = _as_dict(profile.get("cli"))
     console = _as_dict(profile.get("console"))
 
@@ -503,6 +549,17 @@ def derive_topology_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
         )
         peripherals.setdefault("cli_console", cli_peripheral)
 
+    power_on_pins = _parse_gpio_pins(power.get("on_pins"))
+    if power_on_pins:
+        board_power_peripheral = _compact_dict(
+            {
+                "type": "gpio_power",
+                "pins": power_on_pins,
+                "on_level": _normalize_gpio_level(power.get("on_level", 1), default=1),
+            }
+        )
+        peripherals["board_power"] = board_power_peripheral
+
     return topology
 
 
@@ -573,6 +630,14 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
     buses = buses_raw if isinstance(buses_raw, dict) else {}
     peripherals = peripherals_raw if isinstance(peripherals_raw, dict) else {}
 
+    board_power_cfg: dict[str, Any] = {}
+    for per_cfg in peripherals.values():
+        if isinstance(per_cfg, dict) and str(per_cfg.get("type", "")).lower() == "gpio_power":
+            board_power_cfg = per_cfg
+            break
+    board_power_pins = _parse_gpio_pins(board_power_cfg.get("pins"))
+    board_power_level = _normalize_gpio_level(board_power_cfg.get("on_level", 1), default=1)
+
     bus_rows = []
     for bus_name in sorted(buses.keys()):
         cfg = buses[bus_name] if isinstance(buses[bus_name], dict) else {}
@@ -605,13 +670,12 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
         "// concrete driver creation and registration for the profile.",
         "",
         "#include <array>",
+        *(["#include <driver/gpio.h>"] if board_power_pins else []),
         "#include <esp_err.h>",
-        "#include <esp_log.h>",
         "",
         f"namespace flx::profile::{namespace_id}::hwd {{",
         "",
         "namespace {",
-        f'constexpr const char* TAG = "hwd:{profile_id}";',
         "",
         "struct BusDescriptor {",
         "    const char* name;",
@@ -650,11 +714,45 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
         [
             "}};",
             "}  // namespace",
+        ]
+    )
+
+    if board_power_pins:
+        power_pins_literal = ", ".join(str(pin) for pin in board_power_pins)
+        lines.extend(
+            [
+                "",
+                f"constexpr std::array<int, {len(board_power_pins)}> kBoardPowerOnPins = {{{{{power_pins_literal}}}}};",
+                f"constexpr int kBoardPowerOnLevel = {board_power_level};",
+                "",
+                "esp_err_t initBoardPowerPins() {",
+                "    gpio_config_t cfg = {};",
+                "    cfg.mode = GPIO_MODE_OUTPUT;",
+                "    cfg.pull_up_en = GPIO_PULLUP_DISABLE;",
+                "    cfg.pull_down_en = GPIO_PULLDOWN_DISABLE;",
+                "    cfg.intr_type = GPIO_INTR_DISABLE;",
+                "    for (int pin_value : kBoardPowerOnPins) {",
+                "        const gpio_num_t pin = static_cast<gpio_num_t>(pin_value);",
+                "        cfg.pin_bit_mask = 1ULL << pin;",
+                "        const esp_err_t cfg_err = gpio_config(&cfg);",
+                "        if (cfg_err != ESP_OK) {",
+                "            return cfg_err;",
+                "        }",
+                "        const esp_err_t set_err = gpio_set_level(pin, kBoardPowerOnLevel);",
+                "        if (set_err != ESP_OK) {",
+                "            return set_err;",
+                "        }",
+                "    }",
+                "    return ESP_OK;",
+                "}",
+            ]
+        )
+
+    lines.extend(
+        [
             "",
             "void initBuses() {",
-            '    ESP_LOGI(TAG, "HWD buses: %u", static_cast<unsigned>(kBuses.size()));',
             "    for (const auto& bus : kBuses) {",
-            '        ESP_LOGI(TAG, "bus=%s type=%s controller=%s", bus.name, bus.type, bus.controller);',
             "        // TODO: Configure and initialize this bus.",
             "    }",
             "",
@@ -676,9 +774,7 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
             "}",
             "",
             "void initPeripherals() {",
-            '    ESP_LOGI(TAG, "HWD peripherals: %u", static_cast<unsigned>(kPeripherals.size()));',
             "    for (const auto& peripheral : kPeripherals) {",
-            '        ESP_LOGI(TAG, "peripheral=%s type=%s bus=%s", peripheral.name, peripheral.type, peripheral.bus);',
             "        // TODO: Instantiate and wire this peripheral.",
             "    }",
             "",
@@ -707,6 +803,21 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
             f"}}  // namespace flx::profile::{namespace_id}::hwd",
             "",
             'extern "C" esp_err_t flx_profile_hwd_init() {',
+        ]
+    )
+
+    if board_power_pins:
+        lines.extend(
+            [
+                f"    const esp_err_t power_err = flx::profile::{namespace_id}::hwd::initBoardPowerPins();",
+                "    if (power_err != ESP_OK) {",
+                "        return power_err;",
+                "    }",
+            ]
+        )
+
+    lines.extend(
+        [
             f"    flx::profile::{namespace_id}::hwd::initHardware();",
             "    return ESP_OK;",
             "}",

@@ -12,11 +12,18 @@ headless: false
 inherits: _bases/base-esp32-spi
 
 hardware:
+  init:
+    enabled: true
   spiram:
     enabled: true
     speed: 80M
     xip_from_psram: false
     ecc_enable: false
+  power:
+    on_pins:
+      - 14
+      - 10
+    on_level: 1
   display:
     enabled: true
     driver: ST7789V

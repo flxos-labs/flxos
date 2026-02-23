@@ -25,9 +25,13 @@ if(ACTIVE_PROFILE_DIR)
         idf_component_register(
             SRCS "${_profile_hwd_generated}"
             INCLUDE_DIRS "${ACTIVE_PROFILE_DIR}"
+            PRIV_REQUIRES Core
         )
     else()
-        idf_component_register(INCLUDE_DIRS "${ACTIVE_PROFILE_DIR}")
+        idf_component_register(
+            INCLUDE_DIRS "${ACTIVE_PROFILE_DIR}"
+            PRIV_REQUIRES Core
+        )
     endif()
 else()
     # Allow menuconfig to work without a profile selected

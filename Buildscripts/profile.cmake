@@ -277,7 +277,7 @@ endfunction()
 # _flx_generate_config_hpp()
 #   Generate modern C++ constexpr Config.hpp from parsed YAML variables.
 # --------------------------------------------------------------------------
-function(_flx_generate_config_hpp PREFIX OUTPUT_FILE)
+function(_flx_generate_config_hpp PREFIX OUTPUT_FILE HWD_SOURCE_EXISTS)
     # Shortcuts
     macro(_y KEY DEFAULT OUT)
         _flx_yaml_get("${PREFIX}" "${KEY}" "${DEFAULT}" ${OUT})
@@ -299,6 +299,16 @@ function(_flx_generate_config_hpp PREFIX OUTPUT_FILE)
 
     # Headless
     _b("headless" "false" _headless)
+    _b("hardware_init_enabled" "false" _hwd_declared)
+    _y("hardware_power_on_pins" "" _power_on_pins)
+    if(NOT "${_power_on_pins}" STREQUAL "" AND NOT "${_power_on_pins}" STREQUAL "null")
+        set(_hwd_declared "true")
+    endif()
+    if("${HWD_SOURCE_EXISTS}" STREQUAL "true" AND "${_hwd_declared}" STREQUAL "true")
+        set(_hwd_macro "1")
+    else()
+        set(_hwd_macro "0")
+    endif()
 
     # Display
     _b("hardware_display_enabled" "false" _disp_enabled)
@@ -505,6 +515,7 @@ function(_flx_generate_config_hpp PREFIX OUTPUT_FILE)
     else()
         string(APPEND _hpp "#define FLXOS_HEADLESS 0\n")
     endif()
+    string(APPEND _hpp "#define FLXOS_PROFILE_HWD_INIT ${_hwd_macro}\n")
 
     if("${_disp_enabled}" STREQUAL "true")
         string(TOUPPER "${_disp_driver}" _drv_upper)
@@ -1066,7 +1077,13 @@ function(flx_load_profile)
 
     # Generate Config.hpp into the profile directory
     set(_config_hpp "${_profile_dir}/Config.hpp")
-    _flx_generate_config_hpp("_FLX" "${_config_hpp}")
+    set(_profile_hwd_generated "${_profile_dir}/Source/hwd/GeneratedInit.cpp")
+    if(EXISTS "${_profile_hwd_generated}")
+        set(_hwd_source_exists "true")
+    else()
+        set(_hwd_source_exists "false")
+    endif()
+    _flx_generate_config_hpp("_FLX" "${_config_hpp}" "${_hwd_source_exists}")
 
     # Generate sdkconfig.profile
     set(_sdkconfig_frag "${CMAKE_SOURCE_DIR}/sdkconfig.profile")
