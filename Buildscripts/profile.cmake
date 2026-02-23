@@ -120,6 +120,9 @@ function(_flx_parse_yaml YAML_FILE PREFIX)
         elseif("${_stripped}" MATCHES "^- (.*)")
             # Array item — append to list variable (for tags, etc.)
             set(_item "${CMAKE_MATCH_1}")
+            # Remove inline comments
+            string(REGEX REPLACE "[ ]+#.*$" "" _item "${_item}")
+            # Strip surrounding quotes
             string(REGEX REPLACE "^\"(.*)\"$" "\\1" _item "${_item}")
             if("${_current_prefix}" STREQUAL "")
                 set(_list_key "${PREFIX}__list")
@@ -605,16 +608,35 @@ function(_flx_generate_config_hpp PREFIX OUTPUT_FILE HWD_SOURCE_EXISTS)
     string(APPEND _hpp "// ── Compile-time constants (auto-generated from profile.yaml) ──\n\n")
 
     string(APPEND _hpp "inline constexpr Profile profile {\n")
-    string(APPEND _hpp "    .id = \"${_id}\",\n")
-    string(APPEND _hpp "    .vendor = \"${_vendor}\",\n")
-    string(APPEND _hpp "    .boardName = \"${_name_canonical}\",\n")
-    string(APPEND _hpp "    .target = \"${_target}\",\n")
+    
+    # Escape quotes and backslashes for C++ string literals
+    string(REPLACE "\\" "\\\\" _esc_id "${_id}")
+    string(REPLACE "\"" "\\\"" _esc_id "${_esc_id}")
+    string(APPEND _hpp "    .id = \"${_esc_id}\",\n")
+
+    string(REPLACE "\\" "\\\\" _esc_vendor "${_vendor}")
+    string(REPLACE "\"" "\\\"" _esc_vendor "${_esc_vendor}")
+    string(APPEND _hpp "    .vendor = \"${_esc_vendor}\",\n")
+
+    string(REPLACE "\\" "\\\\" _esc_name "${_name_canonical}")
+    string(REPLACE "\"" "\\\"" _esc_name "${_esc_name}")
+    string(APPEND _hpp "    .boardName = \"${_esc_name}\",\n")
+
+    string(REPLACE "\\" "\\\\" _esc_target "${_target}")
+    string(REPLACE "\"" "\\\"" _esc_target "${_esc_target}")
+    string(APPEND _hpp "    .target = \"${_esc_target}\",\n")
+    
     string(APPEND _hpp "};\n\n")
+
+    string(REPLACE "\\" "\\\\" _esc_disp_drv "${_disp_driver}")
+    string(REPLACE "\"" "\\\"" _esc_disp_drv "${_esc_disp_drv}")
+    string(REPLACE "\\" "\\\\" _esc_disp_bus "${_disp_bus}")
+    string(REPLACE "\"" "\\\"" _esc_disp_bus "${_esc_disp_bus}")
 
     string(APPEND _hpp "inline constexpr DisplayConfig display {\n")
     string(APPEND _hpp "    .enabled = ${_disp_enabled},\n")
-    string(APPEND _hpp "    .driver = \"${_disp_driver}\",\n")
-    string(APPEND _hpp "    .bus = \"${_disp_bus}\",\n")
+    string(APPEND _hpp "    .driver = \"${_esc_disp_drv}\",\n")
+    string(APPEND _hpp "    .bus = \"${_esc_disp_bus}\",\n")
     string(APPEND _hpp "    .width = ${_disp_w}, .height = ${_disp_h}, .rotation = ${_disp_rot}, .colorDepth = ${_disp_cdepth},\n")
     string(APPEND _hpp "    .sizeInches = ${_disp_size}f,\n")
     string(APPEND _hpp "    .spi = { .host = ${_disp_spi_host}, .mode = ${_disp_spi_mode}, .freqWrite = ${_disp_spi_fw}, .freqRead = ${_disp_spi_fr},\n")
@@ -638,19 +660,27 @@ function(_flx_generate_config_hpp PREFIX OUTPUT_FILE HWD_SOURCE_EXISTS)
     string(APPEND _hpp "    .backlight = { .freq = ${_bckl_freq}, .pwmChannel = ${_bckl_ch}, .invert = ${_bckl_inv} },\n")
     string(APPEND _hpp "};\n\n")
 
+    string(REPLACE "\\" "\\\\" _esc_touch_drv "${_touch_drv}")
+    string(REPLACE "\"" "\\\"" _esc_touch_drv "${_esc_touch_drv}")
+    string(REPLACE "\\" "\\\\" _esc_touch_bus "${_touch_bus}")
+    string(REPLACE "\"" "\\\"" _esc_touch_bus "${_esc_touch_bus}")
+
     string(APPEND _hpp "inline constexpr TouchConfig touch {\n")
     string(APPEND _hpp "    .enabled = ${_touch_en},\n")
-    string(APPEND _hpp "    .driver = \"${_touch_drv}\",\n")
-    string(APPEND _hpp "    .bus = \"${_touch_bus}\",\n")
+    string(APPEND _hpp "    .driver = \"${_esc_touch_drv}\",\n")
+    string(APPEND _hpp "    .bus = \"${_esc_touch_bus}\",\n")
     string(APPEND _hpp "    .pins = { .cs = ${_tpin_cs}, .interrupt = ${_tpin_int}, .sclk = ${_tpin_sclk}, .mosi = ${_tpin_mosi}, .miso = ${_tpin_miso} },\n")
     string(APPEND _hpp "    .spi = { .freq = ${_tspi_freq}, .busShared = ${_tspi_bsh}, .separatePins = ${_tspi_sep}, .host = ${_tspi_host} },\n")
     string(APPEND _hpp "    .i2c = { .port = ${_ti2c_port}, .addr = ${_ti2c_addr}, .sda = ${_ti2c_sda}, .scl = ${_ti2c_scl} },\n")
     string(APPEND _hpp "    .calibration = { .xMin = ${_tcal_xmin}, .xMax = ${_tcal_xmax}, .yMin = ${_tcal_ymin}, .yMax = ${_tcal_ymax}, .offsetRotation = ${_tcal_or} },\n")
     string(APPEND _hpp "};\n\n")
 
+    string(REPLACE "\\" "\\\\" _esc_sd_mount "${_sd_mount}")
+    string(REPLACE "\"" "\\\"" _esc_sd_mount "${_esc_sd_mount}")
+
     string(APPEND _hpp "inline constexpr SdCardConfig sdcard {\n")
     string(APPEND _hpp "    .enabled = ${_sd_en}, .cs = ${_sd_cs}, .spiHost = ${_sd_spi_host}, .maxFreqKhz = ${_sd_freq},\n")
-    string(APPEND _hpp "    .mountPoint = \"${_sd_mount}\", .pins = { .mosi = ${_sd_mosi}, .miso = ${_sd_miso}, .sclk = ${_sd_sclk} },\n")
+    string(APPEND _hpp "    .mountPoint = \"${_esc_sd_mount}\", .pins = { .mosi = ${_sd_mosi}, .miso = ${_sd_miso}, .sclk = ${_sd_sclk} },\n")
     string(APPEND _hpp "};\n\n")
 
     string(APPEND _hpp "inline constexpr BatteryConfig battery {\n")
@@ -662,9 +692,12 @@ function(_flx_generate_config_hpp PREFIX OUTPUT_FILE HWD_SOURCE_EXISTS)
 
     string(APPEND _hpp "inline constexpr UsbConfig usb { .tinyUsb = ${_usb_tusb} };\n\n")
 
+    string(REPLACE "\\" "\\\\" _esc_cli_prompt "${_cli_prompt}")
+    string(REPLACE "\"" "\\\"" _esc_cli_prompt "${_esc_cli_prompt}")
+
     string(APPEND _hpp "inline constexpr CliConfig cli {\n")
     string(APPEND _hpp "    .enabled = ${_cli_en},\n")
-    string(APPEND _hpp "    .prompt = \"${_cli_prompt}\",\n")
+    string(APPEND _hpp "    .prompt = \"${_esc_cli_prompt}\",\n")
     string(APPEND _hpp "    .maxCmdlineLength = ${_cli_maxlen},\n")
     string(APPEND _hpp "};\n\n")
 
@@ -692,6 +725,12 @@ function(_flx_configure_flash_settings PREFIX FRAG_VAR STAGE)
 
     if("${STAGE}" STREQUAL "size")
         _flx_yaml_get("${PREFIX}" "flash_size" "4MB" _flash_size)
+        
+        if(DEFINED ENV{FLXOS_DEV_MODE} AND "$ENV{FLXOS_DEV_MODE}" STREQUAL "1")
+            message(STATUS "FlxOS: Dev mode enabled, forcing 4MB flash size")
+            set(_flash_size "4MB")
+        endif()
+
         string(TOLOWER "${_flash_size}" _fs_lower)
 
         string(APPEND _frag "\n# Flash Size & Partitions\n")

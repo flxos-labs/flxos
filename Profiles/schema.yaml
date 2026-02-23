@@ -13,8 +13,11 @@ required_fields:
 enums:
   target:
     - esp32
+    - esp32s2
     - esp32s3
+    - esp32c3
     - esp32c6
+    - esp32h2
     - esp32p4
   flash_size:
     - 4MB

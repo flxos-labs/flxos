@@ -856,7 +856,7 @@ def generate_for_profile(profile_id: str, output_override: Optional[str], stdout
         print(f"error: failed to load {profile_yaml}: {exc}", file=sys.stderr)
         return 1
 
-    if "hwd" in profile_data_raw:
+    if "hwd" in profile_data:
         print(
             f"error: legacy 'hwd' section is not supported in {profile_yaml}. "
             "Use profile hardware fields only.",

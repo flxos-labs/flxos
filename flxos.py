@@ -157,7 +157,7 @@ def load_schema() -> dict:
     default_schema = {
         "required_fields": ["id", "vendor", "name", "target", "flash_size"],
         "enums": {
-            "target": ["esp32", "esp32s3", "esp32c6", "esp32p4"],
+            "target": ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6", "esp32h2", "esp32p4"],
             "flash_size": ["4MB", "8MB", "16MB"],
             "flash_mode": ["QIO", "DIO", "QOUT", "DOUT"],
             "lvgl_ui_density": ["normal", "compact"],
@@ -426,6 +426,8 @@ def cmd_build(args):
             # Run set-target with clean env
             set_env = os.environ.copy()
             set_env.pop("IDF_TARGET", None)
+            if args.dev:
+                set_env["FLXOS_DEV_MODE"] = "1"
 
             print(f"  Running: idf.py set-target {expected_target}")
             result = subprocess.run(
@@ -441,6 +443,8 @@ def cmd_build(args):
             # No cached target — auto-run set-target
             set_env = os.environ.copy()
             set_env.pop("IDF_TARGET", None)
+            if args.dev:
+                set_env["FLXOS_DEV_MODE"] = "1"
 
             print(f"  Running: idf.py set-target {expected_target}")
             result = subprocess.run(
@@ -467,6 +471,8 @@ def cmd_build(args):
 
     build_env = os.environ.copy()
     build_env["IDF_TARGET"] = build_target
+    if args.dev:
+        build_env["FLXOS_DEV_MODE"] = "1"
 
     cmd = ["idf.py", "build"]
     result = subprocess.run(cmd, cwd=str(SCRIPT_DIR), env=build_env)
@@ -515,10 +521,14 @@ def _build_all(args):
         # checks the IDF_TARGET env var and refuses set-target if it doesn't match.
         build_env = os.environ.copy()
         build_env["IDF_TARGET"] = target
+        if args.dev:
+            build_env["FLXOS_DEV_MODE"] = "1"
 
         # For set-target, REMOVE IDF_TARGET from env so it doesn't conflict
         set_target_env = os.environ.copy()
         set_target_env.pop("IDF_TARGET", None)
+        if args.dev:
+            set_target_env["FLXOS_DEV_MODE"] = "1"
 
         # Set target
         set_result = subprocess.run(
@@ -534,11 +544,15 @@ def _build_all(args):
                 shutil.rmtree(build_dir)
             if SDKCONFIG_FILE.exists():
                 SDKCONFIG_FILE.unlink()
-            subprocess.run(
+            retry_result = subprocess.run(
                 ["idf.py", "set-target", target],
                 cwd=str(SCRIPT_DIR),
                 env=set_target_env
             )
+            if retry_result.returncode != 0:
+                print(f"  {C_RED}set-target retry failed. Skipping profile.{C_RESET}")
+                results[pid] = "❌"
+                continue
 
         # Build with IDF_TARGET set correctly
         build_result = subprocess.run(
@@ -568,7 +582,7 @@ def cmd_validate(args):
     """Validate profile YAML files."""
     schema = load_schema()
     required_fields = schema.get("required_fields", ["id", "vendor", "name", "target", "flash_size"])
-    valid_targets = [str(v) for v in get_nested(schema, "enums.target", ["esp32", "esp32s3", "esp32c6", "esp32p4"])]
+    valid_targets = [str(v) for v in get_nested(schema, "enums.target", ["esp32", "esp32s2", "esp32s3", "esp32c3", "esp32c6", "esp32h2", "esp32p4"])]
     valid_flash = [str(v) for v in get_nested(schema, "enums.flash_size", ["4MB", "8MB", "16MB"])]
     valid_flash_modes = [str(v).upper() for v in get_nested(schema, "enums.flash_mode", ["QIO", "DIO", "QOUT", "DOUT"])]
     valid_ui_density = [str(v).lower() for v in get_nested(schema, "enums.lvgl_ui_density", ["normal", "compact"])]
@@ -1119,7 +1133,7 @@ def cmd_cdn(args):
     manifest = {
         "name": manifest_name,
         "version": version_raw,
-        "new_install_prompt_erase": "true",
+        "new_install_prompt_erase": True,
         "builds": [
             {
                 "chipFamily": _chip_family_from_target(context["target"]),

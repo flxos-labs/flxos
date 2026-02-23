@@ -1,8 +1,7 @@
 # Profiles Component — Auto-Discovery Engine
 # Scans for profile.yaml files and registers the active profile's include directory.
 # Adding a new profile = adding a folder with profile.yaml. Zero CMake changes.
-
-file(GLOB _profile_yamls LIST_DIRECTORIES false "${CMAKE_CURRENT_SOURCE_DIR}/*/profile.yaml")
+file(GLOB _profile_yamls CONFIGURE_DEPENDS LIST_DIRECTORIES false "${CMAKE_CURRENT_SOURCE_DIR}/*/profile.yaml")
 
 set(ACTIVE_PROFILE_DIR "")
 foreach(_yaml IN LISTS _profile_yamls)
