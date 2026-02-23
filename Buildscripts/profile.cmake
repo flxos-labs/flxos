@@ -121,7 +121,9 @@ function(_flx_parse_yaml YAML_FILE PREFIX)
             # Array item — append to list variable (for tags, etc.)
             set(_item "${CMAKE_MATCH_1}")
             # Remove inline comments
-            string(REGEX REPLACE "[ ]+#.*$" "" _item "${_item}")
+            if(NOT "${_item}" MATCHES "^\".*\"$" AND NOT "${_item}" MATCHES "^'.*'$")
+                string(REGEX REPLACE "[ ]+#.*$" "" _item "${_item}")
+            endif()
             # Strip surrounding quotes
             string(REGEX REPLACE "^\"(.*)\"$" "\\1" _item "${_item}")
             if("${_current_prefix}" STREQUAL "")
