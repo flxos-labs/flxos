@@ -43,10 +43,6 @@ private:
 	std::vector<lv_obj_t*> m_cpu_labels {};
 
 	// Memory tab labels
-	lv_obj_t* m_heap_label {nullptr};
-	lv_obj_t* m_heap_bar {nullptr};
-	lv_obj_t* m_heap_percent_label {nullptr};
-
 	lv_obj_t* m_internal_heap_label {nullptr};
 	lv_obj_t* m_internal_heap_bar {nullptr};
 	lv_obj_t* m_internal_heap_percent_label {nullptr};

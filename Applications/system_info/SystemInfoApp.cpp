@@ -22,6 +22,7 @@
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/DeviceProfileService.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
+#include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <string_view>
@@ -73,9 +74,6 @@ void SystemInfoApp::onStop() {
 	m_chip_label = nullptr;
 	m_idf_label = nullptr;
 	m_battery_label = nullptr;
-	m_heap_label = nullptr;
-	m_heap_bar = nullptr;
-	m_heap_percent_label = nullptr;
 	m_internal_heap_label = nullptr;
 	m_internal_heap_bar = nullptr;
 	m_internal_heap_percent_label = nullptr;
@@ -132,45 +130,75 @@ void SystemInfoApp::createUI(void* parent) {
 void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_style_pad_all(tab, lv_dpx(UiConstants::PAD_LARGE), 0);
-	lv_obj_set_style_pad_row(tab, lv_dpx(UiConstants::PAD_DEFAULT), 0);
+	lv_obj_set_style_pad_row(tab, lv_dpx(UiConstants::PAD_LARGE), 0); // Spacing between cards
 
-	// Get initial system stats
 	auto stats = flx::services::SystemInfoService::getInstance().getSystemStats();
-
-	// FlxOS Version
-	lv_obj_t* version_label = lv_label_create(tab);
-	lv_label_set_text_fmt(version_label, "FlxOS: %s", stats.flxosVersion.c_str());
-
-	// Build Date
-	lv_obj_t* build_label = lv_label_create(tab);
-	lv_label_set_text_fmt(build_label, "Build: %s", stats.buildDate.c_str());
-
-	// Device Profile
 	auto& profileService = flx::services::DeviceProfileService::getInstance();
+
+	// Helper lambda to create a card
+	auto create_card = [&](const char* title) -> lv_obj_t* {
+		lv_obj_t* card = lv_obj_create(tab);
+		lv_obj_set_width(card, lv_pct(100));
+		lv_obj_set_height(card, LV_SIZE_CONTENT);
+		lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
+		lv_obj_set_style_pad_all(card, lv_dpx(UiConstants::PAD_DEFAULT), 0);
+		lv_obj_set_style_pad_row(card, lv_dpx(UiConstants::PAD_SMALL), 0);
+		lv_obj_set_style_radius(card, UiConstants::RADIUS_DEFAULT, 0);
+		lv_obj_set_style_border_width(card, UiConstants::BORDER_THIN, 0);
+		lv_obj_set_style_border_color(card, lv_color_hex(0x888888), 0);
+		lv_obj_set_style_border_opa(card, LV_OPA_30, 0);
+
+		UI::StyleUtils::apply_glass(card, UiConstants::GLASS_BLUR_DEFAULT);
+
+		// Header
+		lv_obj_t* title_label = lv_label_create(card);
+		lv_label_set_text(title_label, title);
+		lv_obj_set_style_text_font(title_label, &lv_font_montserrat_14, 0);
+		lv_obj_set_style_text_color(title_label, lv_color_hex(0x888888), 0);
+		lv_obj_set_style_margin_bottom(title_label, lv_dpx(UiConstants::PAD_SMALL), 0);
+
+		return card;
+	};
+
+	// 1. Software & Firmware Card
+	auto* card_sw = create_card("Software & Firmware");
+	lv_obj_t* version_label = lv_label_create(card_sw);
+	lv_label_set_text_fmt(version_label, LV_SYMBOL_SETTINGS "  FlxOS %s", stats.flxosVersion.c_str());
+
+	lv_obj_t* build_label = lv_label_create(card_sw);
+	lv_label_set_text_fmt(build_label, LV_SYMBOL_SAVE "  Built: %s", stats.buildDate.c_str());
+
+	m_idf_label = lv_label_create(card_sw);
+	lv_label_set_text_fmt(m_idf_label, LV_SYMBOL_FILE "  ESP-IDF %s", stats.idfVersion.c_str());
+
+	lv_obj_t* boot_label = lv_label_create(card_sw);
+	lv_label_set_text_fmt(boot_label, LV_SYMBOL_POWER "  Boot Reason: %s", stats.bootReason.c_str());
+
+	// 2. Hardware & Device Card
+	auto* card_hw = create_card("Hardware Info");
 	if (profileService.hasValidProfile()) {
 		const auto& profile = profileService.getActiveProfile();
 
-		lv_obj_t* separator = lv_obj_create(tab);
-		lv_obj_set_size(separator, lv_pct(100), 1);
-		lv_obj_set_style_bg_color(separator, lv_color_hex(0x888888), 0);
-		lv_obj_set_style_bg_opa(separator, LV_OPA_50, 0);
+		lv_obj_t* board_label = lv_label_create(card_hw);
+		lv_label_set_text_fmt(board_label, LV_SYMBOL_DIRECTORY "  Board: %s %s", profile.vendor.c_str(), profile.boardName.c_str());
 
-		lv_obj_t* profile_header = lv_label_create(tab);
-		lv_label_set_text(profile_header, "Device Profile");
-		lv_obj_set_style_text_font(profile_header, &lv_font_montserrat_14, 0);
+		if (!profile.description.empty()) {
+			lv_obj_t* desc_label = lv_label_create(card_hw);
+			lv_label_set_long_mode(desc_label, LV_LABEL_LONG_WRAP);
+			lv_obj_set_width(desc_label, lv_pct(100));
+			lv_label_set_text_fmt(desc_label, "      %s", profile.description.c_str());
+			lv_obj_set_style_text_color(desc_label, lv_color_hex(0xaaaaaa), 0);
+		}
 
-		lv_obj_t* board_label = lv_label_create(tab);
-		lv_label_set_text_fmt(board_label, "Board: %s %s", profile.vendor.c_str(), profile.boardName.c_str());
+		lv_obj_t* chip_info_label = lv_label_create(card_hw);
+		lv_label_set_text_fmt(chip_info_label, LV_SYMBOL_COPY "  Target: %s", profile.chipTarget.c_str());
 
-		lv_obj_t* chip_info_label = lv_label_create(tab);
-		lv_label_set_text_fmt(chip_info_label, "Target: %s", profile.chipTarget.c_str());
-
-		lv_obj_t* display_info_label = lv_label_create(tab);
-		lv_label_set_text_fmt(display_info_label, "Panel: %ux%u %s (%.1f\")", profile.display.width, profile.display.height, profile.display.driver.c_str(), profile.display.sizeInches);
+		lv_obj_t* display_info_label = lv_label_create(card_hw);
+		lv_label_set_text_fmt(display_info_label, LV_SYMBOL_IMAGE "  Panel: %ux%u %s (%.1f\")", profile.display.width, profile.display.height, profile.display.driver.c_str(), profile.display.sizeInches);
 
 		if (profile.touch.enabled) {
-			lv_obj_t* touch_label = lv_label_create(tab);
-			lv_label_set_text_fmt(touch_label, "Touch: %s via %s", profile.touch.driver.c_str(), profile.touch.bus.c_str());
+			lv_obj_t* touch_label = lv_label_create(card_hw);
+			lv_label_set_text_fmt(touch_label, LV_SYMBOL_EDIT "  Touch: %s via %s", profile.touch.driver.c_str(), profile.touch.bus.c_str());
 		}
 
 		// Feature flags
@@ -179,44 +207,25 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		if (profile.connectivity.bluetooth) caps += profile.connectivity.bleOnly ? "BLE " : "BT ";
 		if (profile.connectivity.psramSizeKb > 0) caps += "PSRAM ";
 		if (profile.sdCard.supported) caps += "SD ";
-		// Note: hasBattery and features.hasRgbLed are no longer in DeviceProfile
-		// if (profile.hasBattery()) caps += "Battery ";
-		// if (profile.features.hasRgbLed) caps += "RGB ";
 
-		lv_obj_t* caps_label = lv_label_create(tab);
-		lv_label_set_text_fmt(caps_label, "Features: %s", caps.c_str());
-
-		lv_obj_t* separator2 = lv_obj_create(tab);
-		lv_obj_set_size(separator2, lv_pct(100), 1);
-		lv_obj_set_style_bg_color(separator2, lv_color_hex(0x888888), 0);
-		lv_obj_set_style_bg_opa(separator2, LV_OPA_50, 0);
+		if (!caps.empty()) {
+			lv_obj_t* caps_label = lv_label_create(card_hw);
+			lv_label_set_text_fmt(caps_label, LV_SYMBOL_WIFI "  Features: %s", caps.c_str());
+		}
 	}
 
-	// ESP-IDF Version
-	m_idf_label = lv_label_create(tab);
-	lv_label_set_text_fmt(m_idf_label, "ESP-IDF: %s", stats.idfVersion.c_str());
+	m_chip_label = lv_label_create(card_hw);
+	lv_label_set_text_fmt(m_chip_label, LV_SYMBOL_SETTINGS "  SoC: %s (%d cores, rev %d)\n      Freq: %lu MHz\n      Capabilities: %s", stats.chipModel.c_str(), stats.cores, stats.revision, stats.cpuFreqMhz, stats.features.c_str());
 
-	// Boot Reason
-	lv_obj_t* boot_label = lv_label_create(tab);
-	lv_label_set_text_fmt(boot_label, "Boot: %s", stats.bootReason.c_str());
+	lv_obj_t* display_label = lv_label_create(card_hw);
+	lv_label_set_text_fmt(display_label, LV_SYMBOL_IMAGE "  Resolution: %dx%d (%d-bpp %s)", stats.displayResX, stats.displayResY, stats.displayBpp, stats.colorFormat.c_str());
 
-	// Chip Info
-	m_chip_label = lv_label_create(tab);
-	lv_label_set_text_fmt(m_chip_label, "Chip: %s (%d cores, rev %d)\nFreq: %lu MHz\nFeatures: %s", stats.chipModel.c_str(), stats.cores, stats.revision, stats.cpuFreqMhz, stats.features.c_str());
-
-	// Display Info
-	lv_obj_t* display_label = lv_label_create(tab);
-	lv_label_set_text_fmt(display_label, "Display: %dx%d (%s)", stats.displayResX, stats.displayResY, stats.colorFormat.c_str());
-
-	// CPU Load Header
-	lv_obj_t* cpu_header = lv_label_create(tab);
-	lv_label_set_text(cpu_header, "CPU Load:");
-	lv_obj_set_style_margin_top(cpu_header, lv_dpx(10), 0);
-
+	// 3. System Load (CPU) Card
+	auto* card_cpu = create_card("System Load");
 	m_cpu_bars.clear();
 	m_cpu_labels.clear();
 	for (int i = 0; i < stats.cores; ++i) {
-		lv_obj_t* row = lv_obj_create(tab);
+		lv_obj_t* row = lv_obj_create(card_cpu);
 		lv_obj_set_size(row, lv_pct(100), LV_SIZE_CONTENT);
 		lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
 		lv_obj_set_flex_align(row, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -236,13 +245,13 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		m_cpu_bars.push_back(bar);
 	}
 
-	// Battery
-	m_battery_label = lv_label_create(tab);
-	lv_label_set_text(m_battery_label, "Battery: --");
+	// 4. Power & Operation Card
+	auto* card_power = create_card("Power & Operation");
+	m_battery_label = lv_label_create(card_power);
+	lv_label_set_text(m_battery_label, LV_SYMBOL_BATTERY_FULL "  Battery: --");
 
-	// Uptime
-	m_uptime_label = lv_label_create(tab);
-	lv_label_set_text(m_uptime_label, "Uptime: --:--:--");
+	m_uptime_label = lv_label_create(card_power);
+	lv_label_set_text(m_uptime_label, LV_SYMBOL_PLAY "  Uptime: --:--:--");
 }
 
 void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
@@ -254,20 +263,6 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	lv_obj_t* ram_header = lv_label_create(tab);
 	lv_label_set_text(ram_header, "RAM");
 	lv_obj_set_style_text_font(ram_header, &lv_font_montserrat_14, 0);
-
-	// General Heap
-	m_heap_label = lv_label_create(tab);
-	lv_label_set_text(m_heap_label, "Heap: -- / --");
-
-	m_heap_bar = lv_bar_create(tab);
-	lv_obj_set_size(m_heap_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
-	lv_bar_set_range(m_heap_bar, 0, 100);
-	lv_bar_set_value(m_heap_bar, 0, LV_ANIM_OFF);
-
-	m_heap_percent_label = lv_label_create(tab);
-	lv_label_set_text(m_heap_percent_label, "--% free");
-	lv_obj_set_style_text_color(m_heap_percent_label, lv_color_hex(0x888888), 0);
-	lv_obj_set_style_margin_bottom(m_heap_percent_label, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 
 	// Internal Heap
 	m_internal_heap_label = lv_label_create(tab);
@@ -418,7 +413,7 @@ void SystemInfoApp::updateUptime(const flx::services::SystemStats& sysStats) {
 		int const h = uptime_s / 3600;
 		int const m = (uptime_s % 3600) / 60;
 		int const s = uptime_s % 60;
-		lv_label_set_text_fmt(m_uptime_label, "Uptime: %02d:%02d:%02d", h, m, s);
+		lv_label_set_text_fmt(m_uptime_label, LV_SYMBOL_PLAY "  Uptime: %02d:%02d:%02d", h, m, s);
 	}
 }
 
@@ -426,9 +421,9 @@ void SystemInfoApp::updateBattery(flx::services::SystemInfoService& service) {
 	if (m_battery_label) {
 		auto batStats = service.getBatteryStats();
 		if (batStats.isConfigured) {
-			lv_label_set_text_fmt(m_battery_label, "Battery: %d%% %s", batStats.level, batStats.isCharging ? "(Charging)" : "");
+			lv_label_set_text_fmt(m_battery_label, LV_SYMBOL_BATTERY_FULL "  Battery: %d%% %s", batStats.level, batStats.isCharging ? "(Charging)" : "");
 		} else {
-			lv_label_set_text(m_battery_label, "Battery: Not configured");
+			lv_label_set_text(m_battery_label, LV_SYMBOL_BATTERY_FULL "  Battery: Not configured");
 		}
 	}
 }
@@ -456,27 +451,20 @@ void SystemInfoApp::updateCpuUsage(const std::vector<flx::services::TaskInfo>& t
 }
 
 void SystemInfoApp::updateHeap(flx::services::SystemInfoService& service) {
-	if (m_heap_label && m_heap_bar && m_heap_percent_label) {
-		auto memStats = service.getMemoryStats();
+	auto memStats = service.getMemoryStats();
 
-		// Update Heap
-		lv_label_set_text_fmt(m_heap_label, "Heap: %s / %s", service.formatBytes(memStats.usedHeap).c_str(), service.formatBytes(memStats.totalHeap).c_str());
-		lv_bar_set_value(m_heap_bar, memStats.usagePercent, LV_ANIM_ON);
-		lv_label_set_text_fmt(m_heap_percent_label, "%d%% free", 100 - memStats.usagePercent);
+	// Update Internal Heap
+	if (m_internal_heap_label && m_internal_heap_bar && m_internal_heap_percent_label) {
+		lv_label_set_text_fmt(m_internal_heap_label, "Internal Heap: %s / %s", service.formatBytes(memStats.usedInternalHeap).c_str(), service.formatBytes(memStats.totalInternalHeap).c_str());
+		lv_bar_set_value(m_internal_heap_bar, memStats.usagePercentInternal, LV_ANIM_ON);
+		lv_label_set_text_fmt(m_internal_heap_percent_label, "%d%% free", 100 - memStats.usagePercentInternal);
+	}
 
-		// Update Internal Heap
-		if (m_internal_heap_label && m_internal_heap_bar && m_internal_heap_percent_label) {
-			lv_label_set_text_fmt(m_internal_heap_label, "Internal Heap: %s / %s", service.formatBytes(memStats.usedInternalHeap).c_str(), service.formatBytes(memStats.totalInternalHeap).c_str());
-			lv_bar_set_value(m_internal_heap_bar, memStats.usagePercentInternal, LV_ANIM_ON);
-			lv_label_set_text_fmt(m_internal_heap_percent_label, "%d%% free", 100 - memStats.usagePercentInternal);
-		}
-
-		// Update PSRAM
-		if (memStats.hasPsram && m_psram_label && m_psram_bar && m_psram_percent_label) {
-			lv_label_set_text_fmt(m_psram_label, "PSRAM: %s / %s", service.formatBytes(memStats.usedPsram).c_str(), service.formatBytes(memStats.totalPsram).c_str());
-			lv_bar_set_value(m_psram_bar, memStats.usagePercentPsram, LV_ANIM_ON);
-			lv_label_set_text_fmt(m_psram_percent_label, "%d%% free", 100 - memStats.usagePercentPsram);
-		}
+	// Update PSRAM
+	if (memStats.hasPsram && m_psram_label && m_psram_bar && m_psram_percent_label) {
+		lv_label_set_text_fmt(m_psram_label, "PSRAM: %s / %s", service.formatBytes(memStats.usedPsram).c_str(), service.formatBytes(memStats.totalPsram).c_str());
+		lv_bar_set_value(m_psram_bar, memStats.usagePercentPsram, LV_ANIM_ON);
+		lv_label_set_text_fmt(m_psram_percent_label, "%d%% free", 100 - memStats.usagePercentPsram);
 	}
 }
 
