@@ -14,52 +14,52 @@ namespace flx::profile::generic_esp32s3::hwd {
 namespace {
 
 struct BusDescriptor {
-    const char* name;
-    const char* type;
-    const char* controller;
+	const char* name;
+	const char* type;
+	const char* controller;
 };
 
 struct PeripheralDescriptor {
-    const char* name;
-    const char* type;
-    const char* bus;
+	const char* name;
+	const char* type;
+	const char* bus;
 };
 
 constexpr std::array<BusDescriptor, 1> kBuses = {{
-    BusDescriptor{"usb_serial_jtag0", "usb_serial_jtag", "USB_SERIAL_JTAG"},
+	BusDescriptor {"usb_serial_jtag0", "usb_serial_jtag", "USB_SERIAL_JTAG"},
 }};
 
 constexpr std::array<PeripheralDescriptor, 1> kPeripherals = {{
-    PeripheralDescriptor{"cli_console", "cli", "usb_serial_jtag0"},
+	PeripheralDescriptor {"cli_console", "cli", "usb_serial_jtag0"},
 }};
-}  // namespace
+} // namespace
 
 void initBuses() {
-    for (const auto& bus : kBuses) {
-        // TODO: Configure and initialize this bus.
-    }
+	for (const auto& bus: kBuses) {
+		// TODO: Configure and initialize this bus.
+	}
 
-    // Bus topology derived from profile metadata:
-    // - usb_serial_jtag0: port=USB_SERIAL_JTAG, type=usb_serial_jtag
+	// Bus topology derived from profile metadata:
+	// - usb_serial_jtag0: port=USB_SERIAL_JTAG, type=usb_serial_jtag
 }
 
 void initPeripherals() {
-    for (const auto& peripheral : kPeripherals) {
-        // TODO: Instantiate and wire this peripheral.
-    }
+	for (const auto& peripheral: kPeripherals) {
+		// TODO: Instantiate and wire this peripheral.
+	}
 
-    // Peripheral topology derived from profile metadata:
-    // - cli_console: bus=usb_serial_jtag0, prompt=flxos> , type=cli
+	// Peripheral topology derived from profile metadata:
+	// - cli_console: bus=usb_serial_jtag0, prompt=flxos> , type=cli
 }
 
 void initHardware() {
-    initBuses();
-    initPeripherals();
+	initBuses();
+	initPeripherals();
 }
 
-}  // namespace flx::profile::generic_esp32s3::hwd
+} // namespace flx::profile::generic_esp32s3::hwd
 
 extern "C" esp_err_t flx_profile_hwd_init() {
-    flx::profile::generic_esp32s3::hwd::initHardware();
-    return ESP_OK;
+	flx::profile::generic_esp32s3::hwd::initHardware();
+	return ESP_OK;
 }

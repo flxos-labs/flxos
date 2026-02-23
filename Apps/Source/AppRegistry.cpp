@@ -16,12 +16,12 @@ void AppRegistry::addApp(const AppManifest& manifest) {
 
 	// O(1) duplicate check via index
 	if (m_idIndex.count(manifest.appId)) {
-		flx::Log::warn(TAG, "App already registered: %s", manifest.appId.c_str());
+		Log::warn(TAG, "App already registered: %s", manifest.appId.c_str());
 		return;
 	}
 
 	insertSorted(manifest);
-	flx::Log::info(TAG, "Registered app: %s (%s) [priority=%d]", manifest.appName.c_str(), manifest.appId.c_str(), manifest.sortPriority);
+	Log::info(TAG, "Registered app: %s (%s) [priority=%d]", manifest.appName.c_str(), manifest.appId.c_str(), manifest.sortPriority);
 }
 
 bool AppRegistry::removeApp(const std::string& appId) {
@@ -29,7 +29,7 @@ bool AppRegistry::removeApp(const std::string& appId) {
 
 	auto idxIt = m_idIndex.find(appId);
 	if (idxIt == m_idIndex.end()) {
-		flx::Log::warn(TAG, "App not found for removal: %s", appId.c_str());
+		Log::warn(TAG, "App not found for removal: %s", appId.c_str());
 		return false;
 	}
 
@@ -41,7 +41,7 @@ bool AppRegistry::removeApp(const std::string& appId) {
 		m_idIndex[m_manifests[i].appId] = i;
 	}
 
-	flx::Log::info(TAG, "Removed app: %s", appId.c_str());
+	Log::info(TAG, "Removed app: %s", appId.c_str());
 	return true;
 }
 

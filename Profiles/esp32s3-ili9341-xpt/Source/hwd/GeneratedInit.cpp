@@ -14,60 +14,60 @@ namespace flx::profile::esp32s3_ili9341_xpt::hwd {
 namespace {
 
 struct BusDescriptor {
-    const char* name;
-    const char* type;
-    const char* controller;
+	const char* name;
+	const char* type;
+	const char* controller;
 };
 
 struct PeripheralDescriptor {
-    const char* name;
-    const char* type;
-    const char* bus;
+	const char* name;
+	const char* type;
+	const char* bus;
 };
 
 constexpr std::array<BusDescriptor, 2> kBuses = {{
-    BusDescriptor{"spi2", "spi", "SPI2_HOST"},
-    BusDescriptor{"usb_serial_jtag0", "usb_serial_jtag", "USB_SERIAL_JTAG"},
+	BusDescriptor {"spi2", "spi", "SPI2_HOST"},
+	BusDescriptor {"usb_serial_jtag0", "usb_serial_jtag", "USB_SERIAL_JTAG"},
 }};
 
 constexpr std::array<PeripheralDescriptor, 4> kPeripherals = {{
-    PeripheralDescriptor{"cli_console", "cli", "usb_serial_jtag0"},
-    PeripheralDescriptor{"display", "display", "spi2"},
-    PeripheralDescriptor{"sdcard", "sdcard", "spi2"},
-    PeripheralDescriptor{"touch", "touch", "spi2"},
+	PeripheralDescriptor {"cli_console", "cli", "usb_serial_jtag0"},
+	PeripheralDescriptor {"display", "display", "spi2"},
+	PeripheralDescriptor {"sdcard", "sdcard", "spi2"},
+	PeripheralDescriptor {"touch", "touch", "spi2"},
 }};
-}  // namespace
+} // namespace
 
 void initBuses() {
-    for (const auto& bus : kBuses) {
-        // TODO: Configure and initialize this bus.
-    }
+	for (const auto& bus: kBuses) {
+		// TODO: Configure and initialize this bus.
+	}
 
-    // Bus topology derived from profile metadata:
-    // - spi2: dma_channel=0, host=SPI2_HOST, mode=0, pins.miso=13, pins.mosi=11, pins.sclk=12, read_freq_hz=16000000, shared=true, type=spi, write_freq_hz=40000000
-    // - usb_serial_jtag0: port=USB_SERIAL_JTAG, type=usb_serial_jtag
+	// Bus topology derived from profile metadata:
+	// - spi2: dma_channel=0, host=SPI2_HOST, mode=0, pins.miso=13, pins.mosi=11, pins.sclk=12, read_freq_hz=16000000, shared=true, type=spi, write_freq_hz=40000000
+	// - usb_serial_jtag0: port=USB_SERIAL_JTAG, type=usb_serial_jtag
 }
 
 void initPeripherals() {
-    for (const auto& peripheral : kPeripherals) {
-        // TODO: Instantiate and wire this peripheral.
-    }
+	for (const auto& peripheral: kPeripherals) {
+		// TODO: Instantiate and wire this peripheral.
+	}
 
-    // Peripheral topology derived from profile metadata:
-    // - cli_console: bus=usb_serial_jtag0, prompt=flxos> , type=cli
-    // - display: bus=spi2, driver=ILI9341, panel.color_depth=16, panel.height=320, panel.rotation=1, panel.width=240, pins.bckl=7, pins.cs=10, pins.dc=9, pins.rst=14, type=display
-    // - sdcard: bus=spi2, max_freq_khz=20000, type=sdcard
-    // - touch: bus=spi2, calibration.offset_rotation=0, calibration.x_max=200, calibration.x_min=3800, calibration.y_max=3800, calibration.y_min=200, driver=XPT2046, pins.cs=5, pins.int=6, type=touch
+	// Peripheral topology derived from profile metadata:
+	// - cli_console: bus=usb_serial_jtag0, prompt=flxos> , type=cli
+	// - display: bus=spi2, driver=ILI9341, panel.color_depth=16, panel.height=320, panel.rotation=1, panel.width=240, pins.bckl=7, pins.cs=10, pins.dc=9, pins.rst=14, type=display
+	// - sdcard: bus=spi2, max_freq_khz=20000, type=sdcard
+	// - touch: bus=spi2, calibration.offset_rotation=0, calibration.x_max=200, calibration.x_min=3800, calibration.y_max=3800, calibration.y_min=200, driver=XPT2046, pins.cs=5, pins.int=6, type=touch
 }
 
 void initHardware() {
-    initBuses();
-    initPeripherals();
+	initBuses();
+	initPeripherals();
 }
 
-}  // namespace flx::profile::esp32s3_ili9341_xpt::hwd
+} // namespace flx::profile::esp32s3_ili9341_xpt::hwd
 
 extern "C" esp_err_t flx_profile_hwd_init() {
-    flx::profile::esp32s3_ili9341_xpt::hwd::initHardware();
-    return ESP_OK;
+	flx::profile::esp32s3_ili9341_xpt::hwd::initHardware();
+	return ESP_OK;
 }

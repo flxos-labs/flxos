@@ -14,52 +14,52 @@ namespace flx::profile::generic_esp32::hwd {
 namespace {
 
 struct BusDescriptor {
-    const char* name;
-    const char* type;
-    const char* controller;
+	const char* name;
+	const char* type;
+	const char* controller;
 };
 
 struct PeripheralDescriptor {
-    const char* name;
-    const char* type;
-    const char* bus;
+	const char* name;
+	const char* type;
+	const char* bus;
 };
 
 constexpr std::array<BusDescriptor, 1> kBuses = {{
-    BusDescriptor{"uart0", "uart", "UART_NUM_0"},
+	BusDescriptor {"uart0", "uart", "UART_NUM_0"},
 }};
 
 constexpr std::array<PeripheralDescriptor, 1> kPeripherals = {{
-    PeripheralDescriptor{"cli_console", "cli", "uart0"},
+	PeripheralDescriptor {"cli_console", "cli", "uart0"},
 }};
-}  // namespace
+} // namespace
 
 void initBuses() {
-    for (const auto& bus : kBuses) {
-        // TODO: Configure and initialize this bus.
-    }
+	for (const auto& bus: kBuses) {
+		// TODO: Configure and initialize this bus.
+	}
 
-    // Bus topology derived from profile metadata:
-    // - uart0: baudrate=115200, port=UART_NUM_0, type=uart
+	// Bus topology derived from profile metadata:
+	// - uart0: baudrate=115200, port=UART_NUM_0, type=uart
 }
 
 void initPeripherals() {
-    for (const auto& peripheral : kPeripherals) {
-        // TODO: Instantiate and wire this peripheral.
-    }
+	for (const auto& peripheral: kPeripherals) {
+		// TODO: Instantiate and wire this peripheral.
+	}
 
-    // Peripheral topology derived from profile metadata:
-    // - cli_console: bus=uart0, prompt=flxos> , type=cli
+	// Peripheral topology derived from profile metadata:
+	// - cli_console: bus=uart0, prompt=flxos> , type=cli
 }
 
 void initHardware() {
-    initBuses();
-    initPeripherals();
+	initBuses();
+	initPeripherals();
 }
 
-}  // namespace flx::profile::generic_esp32::hwd
+} // namespace flx::profile::generic_esp32::hwd
 
 extern "C" esp_err_t flx_profile_hwd_init() {
-    flx::profile::generic_esp32::hwd::initHardware();
-    return ESP_OK;
+	flx::profile::generic_esp32::hwd::initHardware();
+	return ESP_OK;
 }
