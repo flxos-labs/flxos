@@ -17,7 +17,7 @@
 #include <flx/system/managers/SettingsManager.hpp>
 #include <flx/system/managers/ThemeManager.hpp>
 #include <flx/system/managers/TimeManager.hpp>
-#if defined(FLXOS_SD_CARD_ENABLED)
+#if FLXOS_SD_CARD_ENABLED
 #include <flx/system/services/SdCardService.hpp>
 #endif
 #include <flx/system/services/DeviceProfileService.hpp>
@@ -32,6 +32,14 @@
 #include <unistd.h>
 
 static constexpr std::string_view TAG = "SystemManager";
+
+#ifndef FLXOS_PROFILE_HWD_INIT
+#define FLXOS_PROFILE_HWD_INIT 0
+#endif
+
+#if FLXOS_PROFILE_HWD_INIT
+extern "C" esp_err_t flx_profile_hwd_init(void);
+#endif
 
 namespace flx::system {
 
@@ -58,6 +66,16 @@ esp_err_t SystemManager::initHardware() {
 
 	flx::kernel::TaskManager::getInstance().initWatchdog();
 	flx::kernel::ResourceMonitorTask::getInstance().start();
+
+#if FLXOS_PROFILE_HWD_INIT
+	Log::info(TAG, "Running profile HWD init...");
+	const esp_err_t hwd_err = flx_profile_hwd_init();
+	if (hwd_err != ESP_OK) {
+		Log::error(TAG, "Profile HWD init failed: %s", esp_err_to_name(hwd_err));
+		return hwd_err;
+	}
+#endif
+
 	return ESP_OK;
 }
 
@@ -86,7 +104,7 @@ void SystemManager::registerServices() {
 	registry.addService(std::shared_ptr<flx::services::IService>(&TimeManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::DeviceProfileService::getInstance(), noDelete));
 
-#if defined(FLXOS_SD_CARD_ENABLED)
+#if FLXOS_SD_CARD_ENABLED
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::SdCardService::getInstance(), noDelete));
 #endif
 

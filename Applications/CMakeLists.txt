@@ -1,11 +1,5 @@
-if(DEFINED PROJECT_DIR)
-    include(${PROJECT_DIR}/Buildscripts/headless.cmake)
-else()
-    include(${CMAKE_CURRENT_LIST_DIR}/../Buildscripts/headless.cmake)
-endif()
-flx_resolve_headless(_flx_headless_mode)
-
-if(NOT _flx_headless_mode)
+# Applications component — built-in GUI apps (settings, files, calendar, etc.)
+if(NOT FLXOS_HEADLESS_MODE_ENABLED)
     file(GLOB_RECURSE APP_SOURCES
         "settings/*.cpp"
         "files/*.cpp"

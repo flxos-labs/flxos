@@ -1,14 +1,8 @@
-if(DEFINED PROJECT_DIR)
-    include(${PROJECT_DIR}/Buildscripts/headless.cmake)
-else()
-    include(${CMAKE_CURRENT_LIST_DIR}/../Buildscripts/headless.cmake)
-endif()
-flx_resolve_headless(_flx_headless_mode)
-
+# HAL component — hardware abstraction (LovyanGFX wrapper)
 set(HAL_REQUIRES Core)
 set(HAL_PRIV_REQUIRES "")
 
-if(NOT _flx_headless_mode)
+if(NOT FLXOS_HEADLESS_MODE_ENABLED)
     list(APPEND HAL_REQUIRES LovyanGFX)
     list(APPEND HAL_PRIV_REQUIRES lvgl)
 endif()

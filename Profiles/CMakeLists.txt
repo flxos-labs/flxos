@@ -1,37 +1,54 @@
-# Profiles Component
-# This component selects the correct hardware profile directory based on Kconfig
-
-set(PROFILE_DIR "")
-
-if(CONFIG_FLXOS_PROFILE_CYD_2432S028R)
-    set(PROFILE_DIR "cyd-2432s028r")
-elseif(CONFIG_FLXOS_PROFILE_ESP32S3_ILI9341_XPT)
-    set(PROFILE_DIR "esp32s3-ili9341-xpt")
-elseif(CONFIG_FLXOS_PROFILE_GENERIC_ESP32)
-    set(PROFILE_DIR "generic-esp32")
-elseif(CONFIG_FLXOS_PROFILE_GENERIC_ESP32S3)
-    set(PROFILE_DIR "generic-esp32s3")
-elseif(CONFIG_FLXOS_PROFILE_CUSTOM)
-    set(PROFILE_DIR "custom")
+# Profiles Component — Auto-Discovery Engine
+# Scans for profile.yaml files and registers the active profile's include directory.
+# Adding a new profile = adding a folder with profile.yaml. Zero CMake changes.
+if(CMAKE_SCRIPT_MODE_FILE)
+    file(GLOB _profile_yamls LIST_DIRECTORIES false "${CMAKE_CURRENT_SOURCE_DIR}/*/profile.yaml")
 else()
-    message(WARNING "FlxOS: No device profile selected!")
+    file(GLOB _profile_yamls CONFIGURE_DEPENDS LIST_DIRECTORIES false "${CMAKE_CURRENT_SOURCE_DIR}/*/profile.yaml")
 endif()
 
-if(NOT "${PROFILE_DIR}" STREQUAL "")
-    message(STATUS "FlxOS: Using device profile '${PROFILE_DIR}'")
-    
-    idf_component_register(
-        INCLUDE_DIRS "${PROFILE_DIR}"
-    )
+set(ACTIVE_PROFILE_DIR "")
+foreach(_yaml IN LISTS _profile_yamls)
+    get_filename_component(_dir "${_yaml}" DIRECTORY)
+    get_filename_component(_name "${_dir}" NAME)
+    if("${_name}" STREQUAL "${CONFIG_FLXOS_PROFILE}")
+        set(ACTIVE_PROFILE_DIR "${_dir}")
+        break()
+    endif()
+endforeach()
+
+if(ACTIVE_PROFILE_DIR)
+    message(STATUS "FlxOS: Active profile '${CONFIG_FLXOS_PROFILE}' → ${ACTIVE_PROFILE_DIR}")
+    set(_profile_hwd_generated "${ACTIVE_PROFILE_DIR}/Source/hwd/GeneratedInit.cpp")
+
+    if(EXISTS "${ACTIVE_PROFILE_DIR}/CMakeLists.txt")
+        include("${ACTIVE_PROFILE_DIR}/CMakeLists.txt")
+    elseif(EXISTS "${_profile_hwd_generated}")
+        message(STATUS "FlxOS: Optional HWD source enabled → ${_profile_hwd_generated}")
+        idf_component_register(
+            SRCS "${_profile_hwd_generated}"
+            INCLUDE_DIRS "${ACTIVE_PROFILE_DIR}"
+            PRIV_REQUIRES Core
+        )
+    else()
+        idf_component_register(
+            INCLUDE_DIRS "${ACTIVE_PROFILE_DIR}"
+            PRIV_REQUIRES Core
+        )
+    endif()
 else()
-    # Include the no-profile directory which contains a Config.hpp with #error.
-    # This gives a clear error message when any component tries to include Config.hpp
-    # instead of a cryptic "file not found" error.
-    # Also compile profile_check.c which has its own #error as a secondary guard.
-    idf_component_register(
-        SRCS "profile_check.c"
-        INCLUDE_DIRS "no-profile"
-    )
+    # Allow menuconfig to work without a profile selected
+    if("${CONFIG_FLXOS_PROFILE}" STREQUAL "")
+        message(WARNING
+            "FlxOS: No profile selected.\n"
+            "Run: idf.py menuconfig → FlxOS Configuration → Device Profile ID")
+        # Register with a dummy include dir so CMake can still configure
+        idf_component_register()
+    else()
+        message(FATAL_ERROR
+            "FlxOS: Profile '${CONFIG_FLXOS_PROFILE}' not found!\n"
+            "Available profiles:\n"
+            "  ${_profile_yamls}\n"
+            "Run: idf.py menuconfig → FlxOS Configuration → Device Profile ID")
+    endif()
 endif()
-
-

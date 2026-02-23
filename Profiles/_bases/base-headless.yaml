@@ -1,0 +1,27 @@
+# Base template for headless profiles
+# Profiles inherit from this via: inherits: _bases/base-headless
+
+headless: true
+
+hardware:
+  spiram:
+    enabled: false
+  display:
+    enabled: false
+  touch:
+    enabled: false
+  sdcard:
+    enabled: false
+  battery:
+    enabled: false
+  usb:
+    tiny_usb: false
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+lvgl:
+  font_size: 14
+  theme: DefaultDark

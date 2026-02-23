@@ -1,0 +1,147 @@
+# FlxOS Profile: LilyGO T-HMI
+id: lilygo-t-hmi
+vendor: LilyGO
+name:
+  - T-HMI
+  - LilyGO T-HMI
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
+flash_freq: null
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  init:
+    enabled: true
+  spiram:
+    enabled: true
+    speed: 80M
+    xip_from_psram: false
+    ecc_enable: false
+  power:
+    on_pins:
+      - 14
+      - 10
+    on_level: 1
+  display:
+    enabled: true
+    driver: ST7789V
+    bus: parallel8
+    width: 240
+    height: 320
+    color_depth: 16
+    size_inches: 2.8
+    rotation: 1
+    pins:
+      cs: 6
+      dc: 7
+      rst: -1
+      busy: -1
+      bckl: 38
+      mosi: -1
+      sclk: -1
+      miso: -1
+    parallel:
+      freq_write: 10000000
+      freq_read: 10000000
+      rd: -1
+      wr: 8
+      rs: 7
+      d0: 48
+      d1: 47
+      d2: 39
+      d3: 40
+      d4: 41
+      d5: 42
+      d6: 45
+      d7: 46
+      d8: -1
+      d9: -1
+      d10: -1
+      d11: -1
+      d12: -1
+      d13: -1
+      d14: -1
+      d15: -1
+    backlight:
+      freq: 20000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 0
+      offset_y: 0
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: false
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: true
+    driver: XPT2046
+    bus: spi
+    pins:
+      cs: 2
+      int: 9
+      sclk: 1
+      mosi: 3
+      miso: 4
+    spi:
+      host: 2
+      freq: 1000000
+      bus_shared: false
+      separate_pins: true
+    calibration:
+      x_min: 200
+      x_max: 3800
+      y_min: 200
+      y_max: 3800
+      offset_rotation: 0
+  sdcard:
+    enabled: false
+  battery:
+    enabled: false
+  usb:
+    tiny_usb: true
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_64kb: true
+  data_cache_line_64b: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+lvgl:
+  font_size: 14
+  theme: DefaultDark
+  ui_density: normal
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+  keyboard: false
+  trackball: false
+
+distribution:
+  incubating: false
+  warning_message: "Touch controller defaults may still need final on-device calibration."
+  tags:
+    - lilygo
+    - t-hmi
+    - st7789v
+    - parallel8
+    - xpt2046

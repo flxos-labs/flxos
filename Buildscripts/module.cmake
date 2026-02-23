@@ -6,7 +6,7 @@
 # - Conditional GUI source exclusion for headless mode
 # - Component name derived from directory name
 
-include(${CMAKE_CURRENT_LIST_DIR}/headless.cmake)
+# Note: headless mode is now resolved by profile.cmake via FLXOS_HEADLESS_MODE_ENABLED cache variable.
 
 function(flx_add_module)
     set(options "")
@@ -26,8 +26,7 @@ function(flx_add_module)
     set(ALL_SOURCES ${FLX_SOURCES})
 
     # Add GUI sources only if NOT in headless mode
-    flx_resolve_headless(_flx_headless_mode)
-    if(FLX_GUI_SOURCES AND NOT _flx_headless_mode)
+    if(FLX_GUI_SOURCES AND NOT FLXOS_HEADLESS_MODE_ENABLED)
         list(APPEND ALL_SOURCES ${FLX_GUI_SOURCES})
     endif()
 

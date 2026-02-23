@@ -25,9 +25,9 @@ const ServiceManifest DeviceProfileService::serviceManifest = {
 	.serviceId = "com.flxos.device_profile",
 	.serviceName = "Device Profile",
 	.version = "1.0.0",
-	.dependencies = {}, // No dependencies — starts very early
-	.priority = 5, // Very high priority (before display)
-	.required = false, // System can still boot without a valid profile
+	.dependencies = {},
+	.priority = 5,
+	.required = false,
 	.autoStart = true,
 	.guiRequired = false,
 	.capabilities = ServiceCapability::None,
@@ -39,86 +39,34 @@ const ServiceManifest DeviceProfileService::serviceManifest = {
 // ============================================================================
 
 static const flx::system::DeviceProfile ACTIVE_PROFILE = {
-#if defined(FLXOS_PROFILE_ID)
-	.profileId = FLXOS_PROFILE_ID,
-	.vendor = FLXOS_PROFILE_VENDOR,
-	.boardName = FLXOS_PROFILE_BOARD_NAME,
-#else
-	.profileId = "unknown",
-	.vendor = "Unknown",
-	.boardName = "Unknown Board",
-#endif
+	.profileId = flx::config::profile.id,
+	.vendor = flx::config::profile.vendor,
+	.boardName = flx::config::profile.boardName,
 	.chipTarget = CONFIG_IDF_TARGET,
 	.description = "Compile-time configured profile",
 
 	.display = {
-#if defined(FLXOS_DISPLAY_WIDTH)
-		.width = FLXOS_DISPLAY_WIDTH,
-		.height = FLXOS_DISPLAY_HEIGHT,
-		.driver = FLXOS_DISPLAY_DRIVER,
-#else
-		.width = 0,
-		.height = 0,
-		.driver = "None",
-#endif
-
-#if defined(FLXOS_BUS_SPI)
-		.bus = "SPI",
-#elif defined(FLXOS_BUS_I2C)
-		.bus = "I2C",
-#elif defined(FLXOS_BUS_PARALLEL8)
-		.bus = "Parallel 8-bit",
-#elif defined(FLXOS_BUS_PARALLEL16)
-		.bus = "Parallel 16-bit",
-#else
-		.bus = "Unknown",
-#endif
-
-#if defined(FLXOS_DISPLAY_SIZE_INCHES)
-		.sizeInches = FLXOS_DISPLAY_SIZE_INCHES
-#else
-		.sizeInches = 0.0f
-#endif
+		.width = flx::config::display.enabled ? flx::config::display.width : 0,
+		.height = flx::config::display.enabled ? flx::config::display.height : 0,
+		.driver = flx::config::display.enabled ? flx::config::display.driver : "None",
+		.bus = flx::config::display.enabled ? "SPI" : "None",
+		.sizeInches = flx::config::display.sizeInches
 	},
 
 	.touch = {
-#if defined(FLXOS_TOUCH_ENABLED) && FLXOS_TOUCH_ENABLED
-		.enabled = true,
-		.driver = FLXOS_TOUCH_DRIVER,
-#if defined(FLXOS_TOUCH_BUS_SHARED) && FLXOS_TOUCH_BUS_SHARED
-		.bus = "Shared",
-		.separateBus = false,
-#else
-		.bus = "Separate",
-		.separateBus = true,
-#endif
-#else
-		.enabled = false,
-		.driver = "None",
-		.bus = "None",
-		.separateBus = false
-#endif
+		.enabled = flx::config::touch.enabled,
+		.driver = flx::config::touch.enabled ? flx::config::touch.driver : "None",
+		.bus = flx::config::touch.enabled ? (flx::config::touch.spi.busShared ? "Shared" : "Separate") : "None",
+		.separateBus = flx::config::touch.enabled ? flx::config::touch.spi.separatePins : false,
 	},
 
-	.sdCard = {
-#if defined(FLXOS_SD_CS) || defined(FLXOS_SD_PIN_CLK)
-		.supported = true,
-		.mode = "SPI" // Simplification
-#else
-		.supported = false,
-		.mode = "None"
-#endif
-	},
+	.sdCard = {.supported = flx::config::sdcard.enabled, .mode = flx::config::sdcard.enabled ? "SPI" : "None"},
 
-	.connectivity = {
-		.wifi = true, // Espressif chips usually have WiFi
-		.bluetooth = true, // And BT
-		.bleOnly = false,
-		.flashSizeKb = 0, // Could read from sdkconfig, but unused in UI
+	.connectivity = {.wifi = flx::config::capabilities.wifi, .bluetooth = flx::config::capabilities.bluetooth, .bleOnly = false, .flashSizeKb = 0,
 #if defined(CONFIG_ESP32S3_SPIRAM_SUPPORT) || defined(CONFIG_SPIRAM) || defined(CONFIG_ESP32_SPIRAM_SUPPORT)
-		.psramSizeKb = 2048 // Dummy non-zero to show feature
+					 .psramSizeKb = 2048
 #else
-		.psramSizeKb = 0
+					 .psramSizeKb = 0
 #endif
 	}
 };
@@ -130,7 +78,6 @@ static const flx::system::DeviceProfile ACTIVE_PROFILE = {
 bool DeviceProfileService::onStart() {
 	Log::info(TAG, "Loading device profile...");
 
-	// 1. Get the single active profile (compile-time)
 	const flx::system::DeviceProfile& profile = ACTIVE_PROFILE;
 	m_activeProfile = &profile;
 
@@ -147,7 +94,6 @@ bool DeviceProfileService::onStart() {
 
 	Log::info(TAG, "  Connectivity: WiFi=%s, BT=%s%s, Flash=%luKB, PSRAM=%luKB", profile.connectivity.wifi ? "yes" : "no", profile.connectivity.bluetooth ? "yes" : "no", profile.connectivity.bleOnly ? " (BLE only)" : "", (unsigned long)profile.connectivity.flashSizeKb, (unsigned long)profile.connectivity.psramSizeKb);
 
-	// 2. Check for touch calibration data
 	if (hasTouchCalibration()) {
 		Log::info(TAG, "Saved touch calibration found in NVS");
 	}
@@ -169,7 +115,6 @@ const flx::system::DeviceProfile& DeviceProfileService::getActiveProfile() const
 	if (m_activeProfile) {
 		return *m_activeProfile;
 	}
-	// Should never happen after onStart()
 	static const flx::system::DeviceProfile empty {};
 	return empty;
 }
@@ -311,7 +256,6 @@ bool DeviceProfileService::loadTouchCalibration(int16_t& xMin, int16_t& xMax, in
 		yMin = cal.yMin;
 		yMax = cal.yMax;
 
-		// Sanity check
 		if (xMin == xMax || yMin == yMax) {
 			Log::warn(TAG, "Stored touch calibration invalid (degenerate)");
 			return false;
@@ -330,34 +274,32 @@ bool DeviceProfileService::hasTouchCalibration() const {
 // I2C Auto-Detection
 // ============================================================================
 
-// Known I2C device addresses → driver suggestions
 struct KnownI2CDevice {
 	uint8_t address;
 	const char* name;
 };
 
 static const KnownI2CDevice KNOWN_I2C_DEVICES[] = {
-	{0x14, "GT911"}, // Goodix touch controller
-	{0x15, "FT5x06"}, // FocalTech capacitive touch
-	{0x38, "FT5x06"}, // FocalTech secondary address
-	{0x3C, "SSD1306"}, // OLED display
-	{0x3D, "SSD1306"}, // OLED display (alt)
-	{0x48, "ADS1115"}, // ADC
-	{0x50, "EEPROM"}, // 24C02+ EEPROM
-	{0x51, "PCF8563"}, // RTC
-	{0x57, "MAX30102"}, // Heart rate / SpO2
-	{0x5A, "CSTxxx"}, // Hynitron capacitive touch
-	{0x5D, "GT911"}, // Goodix secondary address
-	{0x68, "MPU6050"}, // IMU
-	{0x76, "BME280"}, // Temp/Humidity/Pressure
-	{0x77, "BMP280"}, // Temp/Pressure
+	{0x14, "GT911"},
+	{0x15, "FT5x06"},
+	{0x38, "FT5x06"},
+	{0x3C, "SSD1306"},
+	{0x3D, "SSD1306"},
+	{0x48, "ADS1115"},
+	{0x50, "EEPROM"},
+	{0x51, "PCF8563"},
+	{0x57, "MAX30102"},
+	{0x5A, "CSTxxx"},
+	{0x5D, "GT911"},
+	{0x68, "MPU6050"},
+	{0x76, "BME280"},
+	{0x77, "BMP280"},
 };
 
 std::vector<DeviceProfileService::I2CDetectResult>
 DeviceProfileService::scanI2CBus(int sdaPin, int sclPin, int port) const {
 	std::vector<I2CDetectResult> results;
 
-	// Configure I2C master bus
 	i2c_master_bus_config_t bus_config = {};
 	bus_config.clk_source = I2C_CLK_SRC_DEFAULT;
 	bus_config.i2c_port = port;
@@ -376,13 +318,12 @@ DeviceProfileService::scanI2CBus(int sdaPin, int sclPin, int port) const {
 	Log::info(TAG, "Scanning I2C bus (port=%d, SDA=%d, SCL=%d)...", port, sdaPin, sclPin);
 
 	for (uint8_t addr = 0x08; addr < 0x78; addr++) {
-		err = i2c_master_probe(bus_handle, addr, 50); // 50ms timeout
+		err = i2c_master_probe(bus_handle, addr, 50);
 		if (err == ESP_OK) {
 			I2CDetectResult result;
 			result.address = addr;
 			result.suggestedDriver = "Unknown";
 
-			// Match against known devices
 			for (const auto& known: KNOWN_I2C_DEVICES) {
 				if (known.address == addr) {
 					result.suggestedDriver = known.name;

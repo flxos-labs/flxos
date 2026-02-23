@@ -7,7 +7,7 @@
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
-#if defined(FLXOS_SD_CARD_ENABLED)
+#if FLXOS_SD_CARD_ENABLED
 #include <flx/system/services/SdCardService.hpp>
 #endif
 // Forward-declare only the C functions we need — including lodepng.h directly
@@ -120,7 +120,7 @@ uint32_t ScreenshotService::getDefaultDelay() const {
 }
 
 std::string ScreenshotService::getDefaultStoragePath() const {
-#if defined(FLXOS_SD_CARD_ENABLED)
+#if FLXOS_SD_CARD_ENABLED
 	if (SdCardService::getInstance().isMounted()) {
 		return SdCardService::getInstance().getMountPoint();
 	}

@@ -14,7 +14,7 @@
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
-#if defined(FLXOS_BATTERY_ENABLED)
+#if FLXOS_BATTERY_ENABLED
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 #include "esp_adc/adc_oneshot.h"
@@ -41,7 +41,7 @@ SystemInfoService& SystemInfoService::getInstance() {
 	static bool initialized = false;
 	if (!initialized) {
 		Log::info(TAG, "SystemInfoService initialized");
-#if defined(FLXOS_BATTERY_ENABLED)
+#if FLXOS_BATTERY_ENABLED
 		instance.initBatteryAdc();
 #endif
 		initialized = true;
@@ -49,7 +49,7 @@ SystemInfoService& SystemInfoService::getInstance() {
 	return instance;
 }
 
-#if defined(FLXOS_BATTERY_ENABLED)
+#if FLXOS_BATTERY_ENABLED
 void SystemInfoService::initBatteryAdc() {
 	if (m_batteryInitialized)
 		return;
@@ -58,7 +58,7 @@ void SystemInfoService::initBatteryAdc() {
 
 	adc_oneshot_unit_handle_t handle;
 	adc_oneshot_unit_init_cfg_t init_config = {
-		.unit_id = (adc_unit_t)(FLXOS_BATTERY_ADC_UNIT == 1 ? ADC_UNIT_1 : ADC_UNIT_2),
+		.unit_id = (adc_unit_t)(flx::config::battery.adcUnit == 1 ? ADC_UNIT_1 : ADC_UNIT_2),
 		.clk_src = ADC_RTC_CLK_SRC_DEFAULT,
 		.ulp_mode = ADC_ULP_MODE_DISABLE,
 	};
@@ -69,13 +69,13 @@ void SystemInfoService::initBatteryAdc() {
 		.atten = ADC_ATTEN_DB_12,
 		.bitwidth = ADC_BITWIDTH_DEFAULT,
 	};
-	ESP_ERROR_CHECK(adc_oneshot_config_channel(handle, (adc_channel_t)FLXOS_BATTERY_ADC_CHANNEL, &config));
+	ESP_ERROR_CHECK(adc_oneshot_config_channel(handle, (adc_channel_t)flx::config::battery.adcChannel, &config));
 
 	// Calibration
 	adc_cali_handle_t cali_handle = nullptr;
 	adc_cali_curve_fitting_config_t cali_config = {
-		.unit_id = (adc_unit_t)(FLXOS_BATTERY_ADC_UNIT == 1 ? ADC_UNIT_1 : ADC_UNIT_2),
-		.chan = (adc_channel_t)FLXOS_BATTERY_ADC_CHANNEL,
+		.unit_id = (adc_unit_t)(flx::config::battery.adcUnit == 1 ? ADC_UNIT_1 : ADC_UNIT_2),
+		.chan = (adc_channel_t)flx::config::battery.adcChannel,
 		.atten = ADC_ATTEN_DB_12,
 		.bitwidth = ADC_BITWIDTH_DEFAULT,
 	};
@@ -256,34 +256,33 @@ std::vector<StorageStats> SystemInfoService::getStorageStats() {
 
 	addStats("System", "/system");
 	addStats("Data", "/data");
-#if defined(FLXOS_SD_CARD_ENABLED)
-	addStats("SD Card", FLXOS_SD_MOUNT_POINT);
-#endif
+	if constexpr (flx::config::sdcard.enabled) {
+		addStats("SD Card", flx::config::sdcard.mountPoint);
+	}
 
 	return storageStats;
 }
 
 BatteryStats SystemInfoService::getBatteryStats() {
 	BatteryStats stats {};
-#if defined(FLXOS_BATTERY_ENABLED)
+#if FLXOS_BATTERY_ENABLED
 	stats.isConfigured = true;
 	if (m_batteryInitialized && m_adcHandle) {
 		int raw = 0;
-		if (adc_oneshot_read((adc_oneshot_unit_handle_t)m_adcHandle, (adc_channel_t)FLXOS_BATTERY_ADC_CHANNEL, &raw) == ESP_OK) {
+		if (adc_oneshot_read((adc_oneshot_unit_handle_t)m_adcHandle, (adc_channel_t)flx::config::battery.adcChannel, &raw) == ESP_OK) {
 			int voltage = 0;
 			if (m_adcCaliHandle) {
 				adc_cali_raw_to_voltage((adc_cali_handle_t)m_adcCaliHandle, raw, &voltage);
 			} else {
-				// Fallback to simple calculation if calibration is missing
 				voltage = (raw * 3300) / 4095;
 			}
 
 			// Apply divider factor
-			voltage = (int)(voltage * (FLXOS_BATTERY_DIVIDER_FACTOR / 100.0));
+			voltage = (int)(voltage * (flx::config::battery.dividerFactor / 100.0));
 
 			// Map to percentage
-			int const min_v = FLXOS_BATTERY_VOLTAGE_MIN;
-			int const max_v = FLXOS_BATTERY_VOLTAGE_MAX;
+			int const min_v = flx::config::battery.voltageMin;
+			int const max_v = flx::config::battery.voltageMax;
 
 			if (voltage >= max_v) {
 				stats.level = 100;
@@ -293,7 +292,6 @@ BatteryStats SystemInfoService::getBatteryStats() {
 				stats.level = (voltage - min_v) * 100 / (max_v - min_v);
 			}
 
-			// For now, charging status is hardcoded as false unless we have a specific PMIC/GPIO for it
 			stats.isCharging = false;
 			return stats;
 		}

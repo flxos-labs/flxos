@@ -1,15 +1,9 @@
-if(DEFINED PROJECT_DIR)
-    include(${PROJECT_DIR}/Buildscripts/headless.cmake)
-else()
-    include(${CMAKE_CURRENT_LIST_DIR}/../Buildscripts/headless.cmake)
-endif()
-flx_resolve_headless(_flx_headless_mode)
-
+# Apps component — conditionally includes GUI app management
 set(APPS_SRCS
     "Source/AppContext.cpp"
 )
 
-if(NOT _flx_headless_mode)
+if(NOT FLXOS_HEADLESS_MODE_ENABLED)
     list(APPEND APPS_SRCS
         "Source/AppManager.cpp"
         "Source/AppRegistry.cpp"

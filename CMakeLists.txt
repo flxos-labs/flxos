@@ -1,66 +1,43 @@
 # The following five lines of boilerplate have to be in your project's
 # CMakeLists in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.16)
+# Build acceleration: ccache as compiler launcher
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
-    set(CCACHE_ENABLE 1)
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
+    message(STATUS "FlxOS: ccache enabled → ${CCACHE_PROGRAM}")
 endif()
 
 # Include FlxOS buildscripts
 include(${CMAKE_CURRENT_SOURCE_DIR}/Buildscripts/module.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/Buildscripts/version.cmake)
-include(${CMAKE_CURRENT_SOURCE_DIR}/Buildscripts/device.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/Buildscripts/profile.cmake)
 
 # Embed version information
 flx_embed_version()
 
-# Resolve whether headless mode is enabled before project() is included.
-# CONFIG_* variables are unavailable at this stage, so inspect sdkconfig files directly.
-set(HEADLESS_MODE_ENABLED OFF)
-set(_flx_headless_scan_files
-    "${CMAKE_SOURCE_DIR}/sdkconfig"
-    "${CMAKE_SOURCE_DIR}/sdkconfig.defaults"
-)
+# Load profile: reads profile.yaml → generates Config.hpp + sdkconfig.profile
+# Sets HEADLESS_MODE_ENABLED, SDKCONFIG_DEFAULTS, EXCLUDE_COMPONENTS, FLXOS_PROFILE_TARGET
+flx_load_profile()
 
-# Respect externally supplied SDKCONFIG_DEFAULTS as additional signal sources.
-if(DEFINED SDKCONFIG_DEFAULTS)
-    foreach(_defaults_file IN LISTS SDKCONFIG_DEFAULTS)
-        if(IS_ABSOLUTE "${_defaults_file}")
-            list(APPEND _flx_headless_scan_files "${_defaults_file}")
-        else()
-            list(APPEND _flx_headless_scan_files "${CMAKE_SOURCE_DIR}/${_defaults_file}")
+# ── Auto-set IDF_TARGET from profile ──
+# Ensures IDE-driven cmake invocations (without IDF_TARGET env) and target
+# switches both work without manual intervention.
+if(DEFINED FLXOS_PROFILE_TARGET AND NOT "${FLXOS_PROFILE_TARGET}" STREQUAL "")
+    # If CMake cache has a different IDF_TARGET, wipe build dir and re-set
+    if(DEFINED CACHE{IDF_TARGET} AND NOT "$CACHE{IDF_TARGET}" STREQUAL "${FLXOS_PROFILE_TARGET}")
+        message(WARNING "FlxOS: IDF_TARGET cache mismatch ($CACHE{IDF_TARGET} vs ${FLXOS_PROFILE_TARGET}), wiping build dir")
+        file(REMOVE_RECURSE "${CMAKE_BINARY_DIR}")
+        if(EXISTS "${CMAKE_SOURCE_DIR}/sdkconfig")
+            file(REMOVE "${CMAKE_SOURCE_DIR}/sdkconfig")
         endif()
-    endforeach()
-endif()
-
-list(REMOVE_DUPLICATES _flx_headless_scan_files)
-foreach(_scan_file IN LISTS _flx_headless_scan_files)
-    if(EXISTS "${_scan_file}")
-        file(STRINGS "${_scan_file}" _headless_lines REGEX "^CONFIG_FLXOS_HEADLESS_MODE=y$")
-        if(_headless_lines)
-            set(HEADLESS_MODE_ENABLED ON)
-            break()
-        endif()
+        # Force cache to new target
+        set(IDF_TARGET "${FLXOS_PROFILE_TARGET}" CACHE STRING "IDF Build Target" FORCE)
     endif()
-endforeach()
 
-# Expose the resolved flag to all component CMakeLists.  During early CMake
-# passes, CONFIG_FLXOS_HEADLESS_MODE may be unset, which can otherwise force
-# non-headless dependency branches.
-set(FLXOS_HEADLESS_MODE_ENABLED ${HEADLESS_MODE_ENABLED} CACHE INTERNAL "Resolved FlxOS headless mode")
-
-if(HEADLESS_MODE_ENABLED)
-    message(STATUS "FlxOS: Headless mode enabled - excluding lvgl and LovyanGFX components")
-    list(APPEND EXCLUDE_COMPONENTS lvgl LovyanGFX)
-    list(REMOVE_DUPLICATES EXCLUDE_COMPONENTS)
-endif()
-
-# Append LVGL defaults if not in headless mode
-if(NOT HEADLESS_MODE_ENABLED)
-    if(NOT SDKCONFIG_DEFAULTS)
-        set(SDKCONFIG_DEFAULTS "sdkconfig.defaults")
-    endif()
-    list(APPEND SDKCONFIG_DEFAULTS "${CMAKE_SOURCE_DIR}/sdkconfig.lvgl.defaults")
+    # Always ensure IDF_TARGET env is set from profile (covers IDE / missing env)
+    set(ENV{IDF_TARGET} "${FLXOS_PROFILE_TARGET}")
 endif()
 
 # Register FlxOS modules as extra components
@@ -79,12 +56,10 @@ set(EXTRA_COMPONENT_DIRS
     "${CMAKE_SOURCE_DIR}/Profiles"
 )
 
-if(NOT HEADLESS_MODE_ENABLED)
-    add_compile_definitions(LV_USE_LOVYAN_GFX=1)
-else()
-    # Safety net: if lvgl still appears in the graph (e.g. stale sdkconfig/build cache),
-    # force-disable the LovyanGFX driver path to avoid pulling lv_lgfx_user.hpp.
+if(HEADLESS_MODE_ENABLED)
     add_compile_definitions(LV_USE_LOVYAN_GFX=0)
+else()
+    add_compile_definitions(LV_USE_LOVYAN_GFX=1)
 endif()
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

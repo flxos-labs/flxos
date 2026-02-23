@@ -1,8 +1,8 @@
 #include "sdkconfig.h"
+#include <Config.hpp>
 
-#if CONFIG_FLXOS_PROFILE_NONE
-#error "No device profile selected. Please run 'idf.py menuconfig' and select a profile under Component config -> FlxOS Configuration -> Device Profile."
-#endif
+// Profile must be selected at build time via profile.yaml
+static_assert(flx::config::profile.id[0] != '\0', "No device profile selected.");
 
 #include <flx/core/Logger.hpp>
 #include <flx/system/SystemManager.hpp>
@@ -22,11 +22,9 @@
 #include "tools/ToolsApp.hpp"
 #endif
 
-#if CONFIG_FLXOS_CLI_ENABLED
 #include <flx/services/ServiceRegistry.hpp>
 #include <flx/system/services/CliService.hpp>
 #include <memory>
-#endif
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -39,13 +37,13 @@ extern "C" void app_main(void) {
 	flx::system::SystemManager::getInstance().initHardware();
 	flx::system::SystemManager::getInstance().initServices();
 
-#if CONFIG_FLXOS_CLI_ENABLED
-	// CLI is autoStart = false, so start it explicitly via ServiceRegistry
-	auto noDelete = [](auto*) {};
-	auto& registry = flx::services::ServiceRegistry::getInstance();
-	registry.addService(std::shared_ptr<flx::services::IService>(&flx::system::CliService::getInstance(), noDelete));
-	flx::system::CliService::getInstance().start();
-#endif
+	if constexpr (flx::config::cli.enabled) {
+		// CLI is autoStart = false, so start it explicitly via ServiceRegistry
+		auto noDelete = [](auto*) {};
+		auto& registry = flx::services::ServiceRegistry::getInstance();
+		registry.addService(std::shared_ptr<flx::services::IService>(&flx::system::CliService::getInstance(), noDelete));
+		flx::system::CliService::getInstance().start();
+	}
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// Register built-in apps with the AppRegistry
@@ -80,10 +78,10 @@ extern "C" void app_main(void) {
 
 	// In headless mode with CLI, the REPL runs its own loop.
 	// If CLI is disabled, keep the task alive explicitly.
-#if !CONFIG_FLXOS_CLI_ENABLED
-	while (true) {
-		vTaskDelay(pdMS_TO_TICKS(1000));
+	if constexpr (!flx::config::cli.enabled) {
+		while (true) {
+			vTaskDelay(pdMS_TO_TICKS(1000));
+		}
 	}
-#endif
 #endif
 }
