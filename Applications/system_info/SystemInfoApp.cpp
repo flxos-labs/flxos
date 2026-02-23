@@ -166,7 +166,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	lv_label_set_text_fmt(version_label, LV_SYMBOL_SETTINGS "  FlxOS %s", stats.flxosVersion.c_str());
 
 	lv_obj_t* build_label = lv_label_create(card_sw);
-	lv_label_set_text_fmt(build_label, "  Built: %s", stats.buildDate.c_str());
+	lv_label_set_text_fmt(build_label, LV_SYMBOL_SAVE "  Built: %s", stats.buildDate.c_str());
 
 	m_idf_label = lv_label_create(card_sw);
 	lv_label_set_text_fmt(m_idf_label, LV_SYMBOL_FILE "  ESP-IDF %s", stats.idfVersion.c_str());
@@ -180,7 +180,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		const auto& profile = profileService.getActiveProfile();
 
 		lv_obj_t* board_label = lv_label_create(card_hw);
-		lv_label_set_text_fmt(board_label, LV_SYMBOL_DUMMY "  Board: %s %s", profile.vendor.c_str(), profile.boardName.c_str());
+		lv_label_set_text_fmt(board_label, LV_SYMBOL_DIRECTORY "  Board: %s %s", profile.vendor.c_str(), profile.boardName.c_str());
 
 		if (!profile.description.empty()) {
 			lv_obj_t* desc_label = lv_label_create(card_hw);
@@ -191,14 +191,14 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		}
 
 		lv_obj_t* chip_info_label = lv_label_create(card_hw);
-		lv_label_set_text_fmt(chip_info_label, LV_SYMBOL_DUMMY "  Target: %s", profile.chipTarget.c_str());
+		lv_label_set_text_fmt(chip_info_label, LV_SYMBOL_COPY "  Target: %s", profile.chipTarget.c_str());
 
 		lv_obj_t* display_info_label = lv_label_create(card_hw);
 		lv_label_set_text_fmt(display_info_label, LV_SYMBOL_IMAGE "  Panel: %ux%u %s (%.1f\")", profile.display.width, profile.display.height, profile.display.driver.c_str(), profile.display.sizeInches);
 
 		if (profile.touch.enabled) {
 			lv_obj_t* touch_label = lv_label_create(card_hw);
-			lv_label_set_text_fmt(touch_label, LV_SYMBOL_DUMMY "  Touch: %s via %s", profile.touch.driver.c_str(), profile.touch.bus.c_str());
+			lv_label_set_text_fmt(touch_label, LV_SYMBOL_EDIT "  Touch: %s via %s", profile.touch.driver.c_str(), profile.touch.bus.c_str());
 		}
 
 		// Feature flags
@@ -215,7 +215,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	}
 
 	m_chip_label = lv_label_create(card_hw);
-	lv_label_set_text_fmt(m_chip_label, LV_SYMBOL_DUMMY "  SoC: %s (%d cores, rev %d)\n      Freq: %lu MHz\n      Capabilities: %s", stats.chipModel.c_str(), stats.cores, stats.revision, stats.cpuFreqMhz, stats.features.c_str());
+	lv_label_set_text_fmt(m_chip_label, LV_SYMBOL_SETTINGS "  SoC: %s (%d cores, rev %d)\n      Freq: %lu MHz\n      Capabilities: %s", stats.chipModel.c_str(), stats.cores, stats.revision, stats.cpuFreqMhz, stats.features.c_str());
 
 	lv_obj_t* display_label = lv_label_create(card_hw);
 	lv_label_set_text_fmt(display_label, LV_SYMBOL_IMAGE "  Resolution: %dx%d (%d-bpp %s)", stats.displayResX, stats.displayResY, stats.displayBpp, stats.colorFormat.c_str());
@@ -251,7 +251,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	lv_label_set_text(m_battery_label, LV_SYMBOL_BATTERY_FULL "  Battery: --");
 
 	m_uptime_label = lv_label_create(card_power);
-	lv_label_set_text(m_uptime_label, "  Uptime: --:--:--");
+	lv_label_set_text(m_uptime_label, LV_SYMBOL_PLAY "  Uptime: --:--:--");
 }
 
 void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
@@ -413,7 +413,7 @@ void SystemInfoApp::updateUptime(const flx::services::SystemStats& sysStats) {
 		int const h = uptime_s / 3600;
 		int const m = (uptime_s % 3600) / 60;
 		int const s = uptime_s % 60;
-		lv_label_set_text_fmt(m_uptime_label, "  Uptime: %02d:%02d:%02d", h, m, s);
+		lv_label_set_text_fmt(m_uptime_label, LV_SYMBOL_PLAY "  Uptime: %02d:%02d:%02d", h, m, s);
 	}
 }
 
