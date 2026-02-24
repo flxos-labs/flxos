@@ -77,6 +77,7 @@ void TextEditorApp::onNewIntent(const flx::apps::Intent& intent) {
 			Log::warn(TAG, "Discarding unsaved changes to open new file: %s", intent.data.c_str());
 		}
 		loadFile(intent.data);
+		showEditorScreen();
 	}
 }
 
