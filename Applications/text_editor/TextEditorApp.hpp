@@ -24,6 +24,7 @@ public:
 	void createUI(void* parent) override;
 	void onStop() override;
 	void update() override;
+	void onNewIntent(const flx::apps::Intent& intent) override;
 
 	std::string getPackageName() const override { return "com.flxos.texteditor"; }
 	std::string getAppName() const override { return "Text Editor"; }

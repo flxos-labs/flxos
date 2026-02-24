@@ -71,6 +71,15 @@ void TextEditorApp::update() {
 	// No periodic updates needed
 }
 
+void TextEditorApp::onNewIntent(const flx::apps::Intent& intent) {
+	if (!intent.data.empty()) {
+		if (m_isDirty) {
+			Log::warn(TAG, "Discarding unsaved changes to open new file: %s", intent.data.c_str());
+		}
+		loadFile(intent.data);
+	}
+}
+
 void TextEditorApp::createUI(void* parent) {
 	m_container = static_cast<lv_obj_t*>(parent);
 

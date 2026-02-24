@@ -184,8 +184,7 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 
 		// Update context with new intent
 		if (entry.context) {
-			// In a real Android-like system we'd call onNewIntent
-			// For now, let's just update the intent in the context if possible or ignore
+			entry.context->setIntent(intent);
 		}
 
 		if (!m_appStack.empty()) {
@@ -206,6 +205,7 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 		// Resume
 		lockGui();
 		if (app) {
+			app->onNewIntent(intent);
 			app->setActive(true);
 			app->onResume();
 		}

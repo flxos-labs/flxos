@@ -101,8 +101,61 @@ void ImageViewerApp::createUI(void* parent) {
 	lv_image_header_t header;
 	if (lv_image_decoder_get_info(m_lvglPath.c_str(), &header) != LV_RESULT_OK) {
 		Log::error(TAG, "Failed to decode image: %s", m_lvglPath.c_str());
+		// lv_image_create handles displaying a placeholder or nothing,
+		// but we add an error label for clarity.
+		if (m_image) {
+			lv_obj_del(m_image);
+			m_image = nullptr;
+		}
+
+		m_errorLabel = lv_label_create(content);
+		lv_label_set_text(m_errorLabel, "Failed to load image");
+		lv_obj_set_style_text_color(m_errorLabel, lv_color_hex(0xFF5252), 0);
+	}
+}
+
+void ImageViewerApp::onNewIntent(const flx::apps::Intent& intent) {
+	if (intent.data.empty()) return;
+
+	m_filePath = intent.data;
+	m_lvglPath = "A:" + m_filePath;
+
+	// Update header title
+	if (m_container) {
+		lv_obj_t* header = lv_obj_get_child(m_container, 0); // Header container
+		if (header) {
+			lv_obj_t* titleLabel = lv_obj_get_child(header, 1); // Title label
+			if (titleLabel) lv_label_set_text(titleLabel, getFileName(m_filePath).c_str());
+		}
+	}
+
+	// Safely clear old UI elements
+	if (m_image) {
 		lv_obj_del(m_image);
 		m_image = nullptr;
+	}
+	if (m_errorLabel) {
+		lv_obj_del(m_errorLabel);
+		m_errorLabel = nullptr;
+	}
+
+	// Recreate image in the content container securely
+	lv_obj_t* content = lv_obj_get_child(m_container, 1);
+	if (!content) return;
+
+	m_image = lv_image_create(content);
+	lv_image_set_src(m_image, m_lvglPath.c_str());
+	lv_obj_set_size(m_image, lv_pct(100), lv_pct(100));
+	lv_image_set_inner_align(m_image, LV_IMAGE_ALIGN_CONTAIN);
+	lv_obj_set_style_image_recolor_opa(m_image, LV_OPA_TRANSP, 0);
+
+	lv_image_header_t header_info;
+	if (lv_image_decoder_get_info(m_lvglPath.c_str(), &header_info) != LV_RESULT_OK) {
+		Log::error(TAG, "Failed to load image on new intent: %s", m_lvglPath.c_str());
+		if (m_image) {
+			lv_obj_del(m_image);
+			m_image = nullptr;
+		}
 
 		m_errorLabel = lv_label_create(content);
 		lv_label_set_text(m_errorLabel, "Failed to load image");
