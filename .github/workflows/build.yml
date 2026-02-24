@@ -4,12 +4,15 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore:
-      - '**/*.md'
+      - '**.md'
       - 'docs/**'
       - 'assets/**'
+      - 'reports/**'
+      - 'releases/**'
       - 'LICENSE'
       - 'NOTICE'
       - '.gitignore'
+      - '.gitmodules'
       - '.editorconfig'
       - '.clang-format'
       - '.clang-tidy'
@@ -17,12 +20,15 @@ on:
   pull_request:
     branches: [ "main", "develop" ]
     paths-ignore:
-      - '**/*.md'
+      - '**.md'
       - 'docs/**'
       - 'assets/**'
+      - 'reports/**'
+      - 'releases/**'
       - 'LICENSE'
       - 'NOTICE'
       - '.gitignore'
+      - '.gitmodules'
       - '.editorconfig'
       - '.clang-format'
       - '.clang-tidy'
