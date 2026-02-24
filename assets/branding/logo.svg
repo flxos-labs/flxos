@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 160" fill="none">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#58a6ff"/>
+      <stop offset="50%" stop-color="#39d353"/>
+      <stop offset="100%" stop-color="#58a6ff"/>
+    </linearGradient>
+    <linearGradient id="trace" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#58a6ff" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#39d353" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#58a6ff" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="160" rx="16" fill="#0d1117"/>
+
+  <!-- Circuit trace accents -->
+  <line x1="30" y1="130" x2="120" y2="130" stroke="url(#trace)" stroke-width="2"/>
+  <line x1="120" y1="130" x2="120" y2="110" stroke="url(#trace)" stroke-width="2"/>
+  <circle cx="120" cy="110" r="3" fill="#39d353" opacity="0.4"/>
+
+  <line x1="480" y1="30" x2="570" y2="30" stroke="url(#trace)" stroke-width="2"/>
+  <line x1="480" y1="30" x2="480" y2="50" stroke="url(#trace)" stroke-width="2"/>
+  <circle cx="480" cy="50" r="3" fill="#58a6ff" opacity="0.4"/>
+
+  <line x1="500" y1="130" x2="560" y2="130" stroke="url(#trace)" stroke-width="2"/>
+  <line x1="560" y1="130" x2="560" y2="115" stroke="url(#trace)" stroke-width="2"/>
+  <circle cx="560" cy="115" r="3" fill="#39d353" opacity="0.3"/>
+  <circle cx="500" cy="130" r="2.5" fill="#58a6ff" opacity="0.3"/>
+
+  <line x1="40" y1="35" x2="90" y2="35" stroke="url(#trace)" stroke-width="2"/>
+  <line x1="40" y1="35" x2="40" y2="55" stroke="url(#trace)" stroke-width="2"/>
+  <circle cx="40" cy="55" r="3" fill="#58a6ff" opacity="0.35"/>
+  <circle cx="90" cy="35" r="2.5" fill="#39d353" opacity="0.35"/>
+
+  <!-- Chip icon -->
+  <rect x="42" y="65" width="30" height="30" rx="4" stroke="url(#grad)" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <line x1="50" y1="60" x2="50" y2="65" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="57" y1="60" x2="57" y2="65" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="64" y1="60" x2="64" y2="65" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="50" y1="95" x2="50" y2="100" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="57" y1="95" x2="57" y2="100" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="64" y1="95" x2="64" y2="100" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="37" y1="73" x2="42" y2="73" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="37" y1="80" x2="42" y2="80" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="37" y1="87" x2="42" y2="87" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="72" y1="73" x2="77" y2="73" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="72" y1="80" x2="77" y2="80" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+  <line x1="72" y1="87" x2="77" y2="87" stroke="url(#grad)" stroke-width="1.5" opacity="0.5"/>
+
+  <!-- FlxOS text -->
+  <text x="300" y="100" text-anchor="middle" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="72" font-weight="800" letter-spacing="4" fill="url(#grad)">FlxOS</text>
+
+  <!-- Tagline -->
+  <text x="300" y="128" text-anchor="middle" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="14" font-weight="400" letter-spacing="6" fill="#8b949e">EMBEDDED OS FOR ESP32</text>
+</svg>
