@@ -82,3 +82,6 @@ Desktop.ini
 
 # VS-Code
 .vscode
+
+# Generated reports
+reports/

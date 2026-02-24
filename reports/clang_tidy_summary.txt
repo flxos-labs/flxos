@@ -1,9 +1,0 @@
-=== Clang-Tidy Summary ===
-Date: Wed Feb  4 08:02:11 PM IST 2026
-Mode: analyze-only
-
-Files Checked: 34
-Total Warnings: 882
-Total Errors: 50
-
-Details in: /home/akash/flxos-labs/flxos/reports/clang_tidy_report.txt

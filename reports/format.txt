@@ -1,3 +1,0 @@
-=== FlxOS Format Check ===
-Checking formatting in main/ directory...
-✅ All files are properly formatted!
