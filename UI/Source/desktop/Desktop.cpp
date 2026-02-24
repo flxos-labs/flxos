@@ -1,3 +1,4 @@
+#include "misc/cache/instance/lv_image_cache.h"
 #include <ctime>
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
@@ -96,8 +97,10 @@ void Desktop::init() {
 						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 					}
 					if (instance->m_wallpaper_img != nullptr) {
-						// In LVGL 9, cache is handled automatically or via lv_image_cache_drop
-						// For now, let's just delete the object.
+						if (!instance->m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
+							lv_image_cache_drop(instance->m_wallpaper_path.c_str());
+							instance->m_wallpaper_path.clear();
+						}
 						lv_obj_delete(instance->m_wallpaper_img);
 						instance->m_wallpaper_img = nullptr;
 					}
@@ -197,6 +200,12 @@ void Desktop::configure_panel_style(lv_obj_t* panel) {
 }
 
 void Desktop::createWallpaperImage(const char* path) {
+	// Drop cache for old wallpaper before loading new one
+	if (!m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
+		lv_image_cache_drop(m_wallpaper_path.c_str());
+	}
+
+	m_wallpaper_path = path;
 	m_wallpaper_img = lv_image_create(m_wallpaper);
 	lv_image_set_src(m_wallpaper_img, path);
 	lv_obj_set_size(m_wallpaper_img, lv_pct(100), lv_pct(100));

@@ -1,5 +1,6 @@
 #include "ImageViewerApp.hpp"
 #include "font/lv_symbol_def.h"
+#include "misc/cache/instance/lv_image_cache.h"
 #include "widgets/image/lv_image.h"
 #include "widgets/label/lv_label.h"
 #include <flx/apps/AppManager.hpp>
@@ -117,6 +118,11 @@ void ImageViewerApp::createUI(void* parent) {
 void ImageViewerApp::onNewIntent(const flx::apps::Intent& intent) {
 	if (intent.data.empty()) return;
 
+	// Drop cache for the old image before switching
+	if (!m_lvglPath.empty() && lv_image_cache_is_enabled()) {
+		lv_image_cache_drop(m_lvglPath.c_str());
+	}
+
 	m_filePath = intent.data;
 	m_lvglPath = "A:" + m_filePath;
 
@@ -164,6 +170,11 @@ void ImageViewerApp::onNewIntent(const flx::apps::Intent& intent) {
 }
 
 void ImageViewerApp::onStop() {
+	// Drop cached image data on close
+	if (!m_lvglPath.empty() && lv_image_cache_is_enabled()) {
+		lv_image_cache_drop(m_lvglPath.c_str());
+	}
+
 	m_container = nullptr;
 	m_image = nullptr;
 	m_errorLabel = nullptr;

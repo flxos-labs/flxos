@@ -49,6 +49,7 @@ private:
 	lv_obj_t* m_app_container {};
 	std::unique_ptr<UI::Modules::SwipeManager> m_swipeManagerModule {};
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_rotationObserver;
+	std::string m_wallpaper_path;
 
 	void update_notification_list();
 	void realign_panels();
