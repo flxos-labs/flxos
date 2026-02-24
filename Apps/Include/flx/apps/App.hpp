@@ -19,6 +19,12 @@ public:
 	virtual void update() {}
 
 	/**
+	 * Called when the AppManager receives a new Intent for this app while it
+	 * is already running in the stack.
+	 */
+	virtual void onNewIntent(const Intent& intent) {}
+
+	/**
 	 * Called when a child app finishes and delivers a result.
 	 * Override this to receive results from apps you launched via startAppForResult().
 	 */

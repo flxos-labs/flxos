@@ -58,6 +58,7 @@ public:
 	// === Intent access ===
 
 	const Intent& getIntent() const { return m_intent; }
+	void setIntent(const Intent& intent) { m_intent = intent; }
 	const flx::core::Bundle& getExtras() const { return m_intent.extras; }
 	const std::string& getData() const { return m_intent.data; }
 

@@ -18,6 +18,7 @@ public:
 
 	void createUI(void* parent) override;
 	void onStop() override;
+	void onNewIntent(const flx::apps::Intent& intent) override;
 
 private:
 
