@@ -38,6 +38,8 @@ private:
 	void unmount();
 
 	bool m_mounted = false;
+	bool m_spiOwner = false; // true if we called spi_bus_initialize
+
 	std::string m_mountPoint;
 
 #if FLXOS_SD_CARD_ENABLED

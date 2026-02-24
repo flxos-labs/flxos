@@ -78,13 +78,13 @@ hardware:
   sdcard:
     enabled: true
     cs: 5
-    spi_host: 2
+    spi_host: 3
     max_freq_khz: 4000
     mount_point: /sdcard
     pins:
-      mosi: -1
-      miso: -1
-      sclk: -1
+      mosi: 23
+      miso: 19
+      sclk: 18
   battery:
     enabled: false
   usb:
