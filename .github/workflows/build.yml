@@ -5,18 +5,34 @@ on:
     branches: [ "main" ]
     paths-ignore:
       - '**.md'
+      - 'docs/**'
+      - 'assets/**'
+      - 'reports/**'
+      - 'releases/**'
       - 'LICENSE'
+      - 'NOTICE'
       - '.gitignore'
+      - '.gitmodules'
       - '.editorconfig'
       - '.clang-format'
+      - '.clang-tidy'
+      - '.pre-commit-config.yaml'
   pull_request:
     branches: [ "main", "develop" ]
     paths-ignore:
       - '**.md'
+      - 'docs/**'
+      - 'assets/**'
+      - 'reports/**'
+      - 'releases/**'
       - 'LICENSE'
+      - 'NOTICE'
       - '.gitignore'
+      - '.gitmodules'
       - '.editorconfig'
       - '.clang-format'
+      - '.clang-tidy'
+      - '.pre-commit-config.yaml'
   workflow_dispatch:
 
 concurrency:
