@@ -4,19 +4,29 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore:
-      - '**.md'
+      - '**/*.md'
+      - 'docs/**'
+      - 'assets/**'
       - 'LICENSE'
+      - 'NOTICE'
       - '.gitignore'
       - '.editorconfig'
       - '.clang-format'
+      - '.clang-tidy'
+      - '.pre-commit-config.yaml'
   pull_request:
     branches: [ "main", "develop" ]
     paths-ignore:
-      - '**.md'
+      - '**/*.md'
+      - 'docs/**'
+      - 'assets/**'
       - 'LICENSE'
+      - 'NOTICE'
       - '.gitignore'
       - '.editorconfig'
       - '.clang-format'
+      - '.clang-tidy'
+      - '.pre-commit-config.yaml'
   workflow_dispatch:
 
 concurrency:
