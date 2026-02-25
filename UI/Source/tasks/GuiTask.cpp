@@ -28,15 +28,16 @@
 #include <string_view>
 
 static constexpr std::string_view TAG = "GuiTask";
+#include <flx/hal/DeviceRegistry.hpp>
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "Config.hpp"
-#include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
-#include <flx/hal/lv_lgfx_user.hpp>
+#include <flx/hal/display/LgfxDisplayDevice.hpp>
+#else
+#include <flx/hal/display/HeadlessDisplayDevice.hpp>
 #endif
 
 namespace flx::ui {
 
-lv_display_t* GuiTask::m_disp = nullptr;
 bool GuiTask::m_paused = false;
 bool GuiTask::m_resume_on_touch = false;
 
@@ -47,38 +48,23 @@ void GuiTask::display_init() {
 	lv_init();
 	lv_fs_stdio_init();
 	Log::info(TAG, "LVGL FS Driver Initialized. Letter: '%c', Path: '%s'", LV_FS_STDIO_LETTER, LV_FS_STDIO_PATH);
+
+	auto& registry = flx::hal::DeviceRegistry::getInstance();
+
+	// Instantiate the root display device (Until Phase 12 orchestrator is built)
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	const uint32_t SZ =
-		flx::config::display.width * flx::config::display.height / 10 * 2;
-	void* buf = heap_caps_malloc(SZ, MALLOC_CAP_DMA);
-	if (!buf) {
-	} else {
-	}
+	auto displayDevice = std::make_shared<flx::hal::display::LgfxDisplayDevice>();
+#else
+	auto displayDevice = std::make_shared<flx::hal::display::HeadlessDisplayDevice>();
+#endif
 
-	bool touch_en = flx::config::touch.enabled;
+	registry.registerDevice(displayDevice);
 
-	lv_display_t* disp = lv_lovyan_gfx_create(
-		flx::config::display.width, flx::config::display.height, buf, SZ, touch_en
-	);
-	m_disp = disp;
-	if (!disp) {
-		Log::error(TAG, "Failed to create display driver!");
+	if (!displayDevice->start()) {
+		Log::error(TAG, "Failed to start display device!");
 		vTaskDelete(nullptr);
 		return;
 	}
-
-	// Release the bus lock that lv_lovyan_gfx_create leaves open
-	auto* tft = getDisplayDriver();
-	if (tft) {
-		tft->endWrite();
-	}
-	Log::info("GuiTask", "Display initialized: %dx%d", flx::config::display.width, flx::config::display.height);
-	lv_display_set_rotation(
-		disp, (lv_display_rotation_t)(flx::config::display.rotation / 90)
-	);
-#else
-	Log::info(TAG, "Headless mode: Display driver not initialized");
-#endif
 
 	lv_group_t* g = lv_group_create();
 	lv_group_set_default(g);
@@ -103,24 +89,20 @@ void GuiTask::run(void* /*data*/) {
 	auto& displayMgr = flx::system::DisplayManager::getInstance();
 	auto& brightnessObs = displayMgr.getBrightnessObservable();
 
+	auto displayDev = flx::hal::DeviceRegistry::getInstance().findFirst<flx::hal::display::IDisplayDevice>(flx::hal::IDevice::Type::Display);
+	auto lv_disp = displayDev ? displayDev->getLvglDisplay() : nullptr;
+
 	// Apply initial value
-	int32_t currentBrightness = brightnessObs.get();
-#if !CONFIG_FLXOS_HEADLESS_MODE
-	auto* tft = getDisplayDriver();
-	if (tft) {
-		tft->setBrightness(currentBrightness);
+	if (displayDev) {
+		displayDev->setBacklightDuty(brightnessObs.get());
 	}
-#endif
 
 	// Subscribe to changes
-	brightnessObs.subscribe([](const int32_t& val) {
-		GuiTask::perform([val]() {
-#if !CONFIG_FLXOS_HEADLESS_MODE
-			auto* tft = getDisplayDriver();
-			if (tft) {
-				tft->setBrightness(val);
+	brightnessObs.subscribe([displayDev](const int32_t& val) {
+		GuiTask::perform([displayDev, val]() {
+			if (displayDev) {
+				displayDev->setBacklightDuty(val);
 			}
-#endif
 		});
 	});
 
@@ -129,15 +111,15 @@ void GuiTask::run(void* /*data*/) {
 
 	// Apply initial value
 	int32_t currentRotation = rotationObs.get();
-	if (m_disp) {
-		lv_display_set_rotation(m_disp, (lv_display_rotation_t)(currentRotation / 90));
+	if (lv_disp) {
+		lv_display_set_rotation(lv_disp, (lv_display_rotation_t)(currentRotation / 90));
 	}
 
 	// Subscribe to changes
-	rotationObs.subscribe([](const int32_t& val) {
-		GuiTask::perform([val]() {
-			if (m_disp) {
-				lv_display_set_rotation(m_disp, (lv_display_rotation_t)(val / 90));
+	rotationObs.subscribe([lv_disp](const int32_t& val) {
+		GuiTask::perform([lv_disp, val]() {
+			if (lv_disp) {
+				lv_display_set_rotation(lv_disp, (lv_display_rotation_t)(val / 90));
 			}
 		});
 	});
@@ -147,28 +129,26 @@ void GuiTask::run(void* /*data*/) {
 
 	// Apply initial value
 	int32_t showFps = showFpsObs.get();
-	if (m_disp) {
+	if (lv_disp) {
 #if LV_USE_SYSMON
 		if (showFps) {
-			lv_sysmon_show_performance(m_disp);
+			lv_sysmon_show_performance(lv_disp);
 		} else {
-			lv_sysmon_hide_performance(m_disp);
+			lv_sysmon_hide_performance(lv_disp);
 		}
 #endif
 	}
 
 	// Subscribe to changes
-	showFpsObs.subscribe([](const int32_t& val) {
-		GuiTask::perform([val]() {
-			if (m_disp) {
-#if LV_USE_SYSMON
+	showFpsObs.subscribe([lv_disp](const int32_t& val) {
+		GuiTask::perform([lv_disp, val]() {
+			if (lv_disp) {
 #if LV_USE_SYSMON
 				if (val) {
-					lv_sysmon_show_performance(m_disp);
+					lv_sysmon_show_performance(lv_disp);
 				} else {
-					lv_sysmon_hide_performance(m_disp);
+					lv_sysmon_hide_performance(lv_disp);
 				}
-#endif
 #endif
 			}
 		});
@@ -201,35 +181,21 @@ void GuiTask::run(void* /*data*/) {
 		} else {
 			if (m_resume_on_touch) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
-				LGFX* tft = getDisplayDriver();
-				int32_t x = 0, y = 0;
-				if (tft && tft->getTouch(&x, &y)) {
-					Log::info(TAG, "Touch detected, resuming LVGL...");
-					setResumeOnTouch(false);
-					setPaused(false);
+				auto displayDev = flx::hal::DeviceRegistry::getInstance().findFirst<flx::hal::display::LgfxDisplayDevice>(flx::hal::IDevice::Type::Display);
+				if (displayDev) {
+					auto* tft = displayDev->getRawDriver();
+					int32_t x = 0, y = 0;
+					if (tft && tft->getTouch(&x, &y)) {
+						Log::info(TAG, "Touch detected, resuming LVGL...");
+						setResumeOnTouch(false);
+						setPaused(false);
+					}
 				}
 #endif
 			}
 			vTaskDelay(pdMS_TO_TICKS(50));
 		}
 	}
-}
-
-LGFX* GuiTask::getDisplayDriver() {
-#if !CONFIG_FLXOS_HEADLESS_MODE
-	if (!m_disp) {
-		return nullptr;
-	}
-	// Note: lv_lovyan_gfx.cpp defines lv_lovyan_gfx_t as struct { LGFX* tft; }
-	// lv_display_get_driver_data returns void* to this struct.
-	auto* driver_data = static_cast<lv_lovyan_gfx_driver_data_t*>(lv_display_get_driver_data(m_disp));
-	if (driver_data == nullptr) {
-		return nullptr;
-	}
-	return driver_data->tft;
-#else
-	return nullptr;
-#endif
 }
 
 void GuiTask::setPaused(bool paused) {
@@ -250,9 +216,9 @@ void GuiTask::setResumeOnTouch(bool enable) {
 }
 
 void GuiTask::runDisplayTest(int color) {
-#if !CONFIG_FLXOS_HEADLESS_MODE
-	auto* tft = GuiTask::getDisplayDriver();
-	if (tft == nullptr) {
+	auto displayDev = flx::hal::DeviceRegistry::getInstance().findFirst<flx::hal::display::IDisplayDevice>(flx::hal::IDevice::Type::Display);
+
+	if (!displayDev) {
 		Log::error(TAG, "Failed to get display driver for test!");
 		return;
 	}
@@ -260,18 +226,10 @@ void GuiTask::runDisplayTest(int color) {
 	lock();
 	setPaused(true);
 
-	tft->clear(color); // Clear
-	tft->setTextDatum(middle_center);
-	tft->setTextColor(0xFFFF - color); // Invert text color against bg
-	tft->setFont(&Font4);
-	tft->drawCentreString("Low Level Driver", tft->width() / 2, tft->height() / 2);
-	tft->drawCentreString("Touch to Exit...", tft->width() / 2, (tft->height() / 2) + (tft->fontHeight() * 2));
+	displayDev->runColorTest(color);
 
 	setResumeOnTouch(true);
 	unlock();
-#else
-	Log::warn(TAG, "Display test not available in headless mode");
-#endif
 }
 
 } // namespace flx::ui

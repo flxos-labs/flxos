@@ -27,7 +27,6 @@ public:
 		unlock();
 	}
 
-	static LGFX* getDisplayDriver();
 	static void setPaused(bool paused);
 	static void setResumeOnTouch(bool enable);
 	static void runDisplayTest(int color);
@@ -41,7 +40,6 @@ private:
 
 	static void display_init();
 
-	static lv_display_t* m_disp;
 	static bool m_paused;
 	static bool m_resume_on_touch;
 };
