@@ -2,7 +2,7 @@
 # Phases 0–15 per HAL_ULTIMATE_PLAN.md
 
 set(HALMODULE_REQUIRES Core)
-set(HALMODULE_PRIV_REQUIRES fatfs sdmmc spi_flash esp_driver_spi)
+set(HALMODULE_PRIV_REQUIRES fatfs sdmmc spi_flash esp_driver_spi Profiles)
 
 if(NOT FLXOS_HEADLESS_MODE_ENABLED)
     list(APPEND HALMODULE_REQUIRES LovyanGFX)
