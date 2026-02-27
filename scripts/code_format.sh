@@ -15,7 +15,7 @@ find \
     "$PROJECT_ROOT/Apps" \
     "$PROJECT_ROOT/Applications" \
     "$PROJECT_ROOT/Firmware" \
-    "$PROJECT_ROOT/HAL" \
+    "$PROJECT_ROOT/HalModule" \
     "$PROJECT_ROOT/Profiles" \
     \( -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h" \) -print0 \
 | xargs -0 clang-format -i

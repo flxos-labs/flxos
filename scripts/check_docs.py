@@ -10,7 +10,7 @@ import sys
 from typing import List, Dict
 
 SEARCH_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODULE_DIRS = {'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Apps', 'Applications', 'Firmware', 'HAL', 'Profiles'}
+MODULE_DIRS = {'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Apps', 'Applications', 'Firmware', 'HalModule', 'Profiles'}
 
 def check_file_header(filepath: str) -> bool:
     """Check if file has a header comment."""

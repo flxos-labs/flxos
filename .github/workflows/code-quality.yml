@@ -10,7 +10,7 @@ on:
       - 'Apps/**'
       - 'Applications/**'
       - 'System/**'
-      - 'HAL/**'
+      - 'HalModule/**'
       - 'Connectivity/**'
       - 'UI/**'
       - 'Firmware/**'
@@ -28,7 +28,7 @@ on:
       - 'Apps/**'
       - 'Applications/**'
       - 'System/**'
-      - 'HAL/**'
+      - 'HalModule/**'
       - 'Connectivity/**'
       - 'UI/**'
       - 'Firmware/**'
@@ -48,6 +48,35 @@ permissions:
   pull-requests: write
 
 jobs:
+  case-conflict:
+    name: Case Conflict Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect case-insensitive path conflicts
+        run: |
+          echo "=== Case-Insensitive Path Conflict Check ==="
+          echo "Detects paths that would collide on Windows/macOS"
+          echo ""
+          conflicts=$(git ls-files | sort -f | uniq -di)
+          if [ -n "$conflicts" ]; then
+            echo "❌ Case conflicts found:"
+            echo "$conflicts" | while read -r name; do
+              echo "  Conflict: $(git ls-files | grep -i "^${name}$")"
+            done
+            exit 1
+          fi
+          # Also check directory components
+          dir_conflicts=$(git ls-files | xargs -I{} dirname {} | sort -u | sort -f | uniq -di)
+          if [ -n "$dir_conflicts" ]; then
+            echo "❌ Directory case conflicts found:"
+            echo "$dir_conflicts"
+            exit 1
+          fi
+          echo "✅ No case conflicts — safe for Windows/macOS"
+
   format-check:
     name: Format Check
     runs-on: ubuntu-latest
@@ -106,7 +135,7 @@ jobs:
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
-    needs: [format-check, python-analysis]
+    needs: [case-conflict, format-check, python-analysis]
     if: github.event_name == 'pull_request' && always()
     timeout-minutes: 3
     steps:
@@ -126,11 +155,13 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+            const caseStatus = '${{ needs.case-conflict.result }}' === 'success' ? '✅' : '❌';
             const formatStatus = '${{ needs.format-check.result }}' === 'success' ? '✅' : '❌';
             const analysisStatus = '${{ needs.python-analysis.result }}' === 'success' ? '✅' : '⚠️';
 
             let body = `## Code Quality Report\n\n`;
             body += `| Check | Status |\n|-------|--------|\n`;
+            body += `| Case Conflicts | ${caseStatus} |\n`;
             body += `| Format | ${formatStatus} |\n`;
             body += `| Analysis | ${analysisStatus} |\n\n`;
 

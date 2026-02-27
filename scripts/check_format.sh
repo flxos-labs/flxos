@@ -17,7 +17,7 @@ while IFS= read -r -d '' file; do
         echo "❌ Needs formatting: $file"
         FAILED=1
     fi
-done < <(find "$PROJECT_ROOT/System" "$PROJECT_ROOT/UI" "$PROJECT_ROOT/Connectivity" "$PROJECT_ROOT/Kernel" "$PROJECT_ROOT/Services" "$PROJECT_ROOT/Core" "$PROJECT_ROOT/Apps" "$PROJECT_ROOT/Applications" "$PROJECT_ROOT/Firmware" "$PROJECT_ROOT/HAL" "$PROJECT_ROOT/Profiles" \( -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h" \) -print0)
+done < <(find "$PROJECT_ROOT/System" "$PROJECT_ROOT/UI" "$PROJECT_ROOT/Connectivity" "$PROJECT_ROOT/Kernel" "$PROJECT_ROOT/Services" "$PROJECT_ROOT/Core" "$PROJECT_ROOT/Apps" "$PROJECT_ROOT/Applications" "$PROJECT_ROOT/Firmware" "$PROJECT_ROOT/HalModule" "$PROJECT_ROOT/Profiles" \( -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h" \) -print0)
 
 if [ $FAILED -eq 0 ]; then
     echo "✅ All files are properly formatted!"
