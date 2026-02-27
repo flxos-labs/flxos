@@ -41,3 +41,19 @@ fields:
 
 patterns:
   sdkconfig_key: "^CONFIG_[A-Z0-9_]+$"
+
+  hardware:
+    type: dict
+    keys:
+      i2c:
+        type: list
+      power:
+        type: dict
+      keyboard:
+        type: dict
+      encoder:
+        type: dict
+      gps:
+        type: dict
+      trackball:
+        type: dict
