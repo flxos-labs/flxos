@@ -1,14 +1,14 @@
-#include <flx/hal/gps/UartGpsDevice.hpp>
-#include <flx/core/Logger.hpp>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
+#include <flx/core/Logger.hpp>
+#include <flx/hal/gps/UartGpsDevice.hpp>
 
 namespace flx::hal::gps {
 
 static constexpr std::string_view TAG = "UartGpsDevice";
 
 UartGpsDevice::UartGpsDevice(std::shared_ptr<flx::hal::uart::IUartBus> uartBus)
-    : m_uart(std::move(uartBus)) {
+	: m_uart(std::move(uartBus)) {
 	this->setState(State::Uninitialized);
 }
 
@@ -46,7 +46,7 @@ bool UartGpsDevice::start() {
 
 bool UartGpsDevice::stop() {
 	m_isRunning = false;
-	
+
 	if (m_rxTaskHandle) {
 		// Wait briefly
 		vTaskDelay(pdMS_TO_TICKS(100));
@@ -149,20 +149,20 @@ void UartGpsDevice::parseNmeaSentence(const std::string& sentence) {
 		// Mock parse: $GNGGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh
 		// Normally would parse comma separated tokens
 		std::lock_guard<std::mutex> lock(m_mutex);
-		
+
 		// Very dummy check for fix quality
 		// Token 6 is fix quality (0=invalid, 1=GPS fix, 2=DGPS fix)
 		size_t commas = 0;
 		for (size_t i = 0; i < sentence.size(); ++i) {
 			if (sentence[i] == ',') commas++;
 			if (commas == 6) {
-				char fixQ = (i + 1 < sentence.size()) ? sentence[i+1] : '0';
+				char fixQ = (i + 1 < sentence.size()) ? sentence[i + 1] : '0';
 				m_lastPosition.valid = (fixQ == '1' || fixQ == '2');
 				m_state = m_lastPosition.valid ? GpsState::FixAcquired : GpsState::Searching;
 				break;
 			}
 		}
-		
+
 		if (m_lastPosition.valid) {
 			notifyObservers();
 		}
@@ -174,12 +174,12 @@ void UartGpsDevice::notifyObservers() {
 	// Since it's called from parseNmeaSentence which holds the lock,
 	// we shouldn't lock again if it's a recursive_mutex, but here we must copy to avoid deadlock
 	std::vector<PositionCallback> callbacks;
-	for (const auto& observer : m_observers) {
+	for (const auto& observer: m_observers) {
 		callbacks.push_back(observer.second);
 	}
-	
+
 	GpsPosition pos = m_lastPosition;
-	for (const auto& cb : callbacks) {
+	for (const auto& cb: callbacks) {
 		if (cb) cb(pos);
 	}
 }

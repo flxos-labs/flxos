@@ -13,6 +13,7 @@ namespace flx::hal::power {
  */
 class AdcPowerDevice : public DeviceBase<IPowerDevice> {
 public:
+
 	explicit AdcPowerDevice(int adcPin);
 	~AdcPowerDevice() override;
 
@@ -41,6 +42,7 @@ public:
 	void poll();
 
 private:
+
 	int m_adcPin;
 	uint32_t m_lastVoltageMv = 0;
 	uint8_t m_lastChargeLevel = 0;

@@ -10,9 +10,9 @@ static constexpr const char* TAG = "LgfxDisplay";
 #include "esp_heap_caps.h"
 #include "lgfx/v1/lgfx_fonts.hpp"
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
+#include <flx/hal/BusManager.hpp>
 #include <flx/hal/DeviceRegistry.hpp>
 #include <flx/hal/touch/LgfxTouchDevice.hpp>
-#include <flx/hal/BusManager.hpp>
 #endif
 
 namespace flx::hal::display {

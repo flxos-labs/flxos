@@ -1,6 +1,6 @@
-#include <flx/hal/input/GpioKeyboardDevice.hpp>
-#include <flx/core/Logger.hpp>
 #include <driver/gpio.h>
+#include <flx/core/Logger.hpp>
+#include <flx/hal/input/GpioKeyboardDevice.hpp>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
@@ -9,7 +9,7 @@ namespace flx::hal::input {
 static constexpr std::string_view TAG = "GpioKeyboard";
 
 GpioKeyboardDevice::GpioKeyboardDevice(const std::vector<int>& pins, const std::vector<uint32_t>& keyCodes)
-    : m_pins(pins), m_keyCodes(keyCodes) {
+	: m_pins(pins), m_keyCodes(keyCodes) {
 	this->setState(State::Uninitialized);
 }
 
@@ -29,7 +29,7 @@ bool GpioKeyboardDevice::start() {
 	}
 
 	// Initialize GPIOs
-	for (int pin : m_pins) {
+	for (int pin: m_pins) {
 		if (pin >= 0) {
 			gpio_config_t io_conf = {};
 			io_conf.intr_type = GPIO_INTR_DISABLE;
@@ -90,7 +90,7 @@ void GpioKeyboardDevice::unsubscribeKeyEvents(int id) {
 
 void GpioKeyboardDevice::notifyObservers(const KeyEvent& event) {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	for (const auto& observer : m_observers) {
+	for (const auto& observer: m_observers) {
 		if (observer.second) {
 			observer.second(event);
 		}

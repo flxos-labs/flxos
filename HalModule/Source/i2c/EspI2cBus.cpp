@@ -1,13 +1,13 @@
-#include <flx/hal/i2c/EspI2cBus.hpp>
-#include <flx/core/Logger.hpp>
 #include <driver/i2c.h>
+#include <flx/core/Logger.hpp>
+#include <flx/hal/i2c/EspI2cBus.hpp>
 
 namespace flx::hal::i2c {
 
 static constexpr std::string_view TAG = "EspI2cBus";
 
 EspI2cBus::EspI2cBus(int port, int sdaPin, int sclPin, uint32_t freqHz)
-    : m_port(port), m_sdaPin(sdaPin), m_sclPin(sclPin), m_freqHz(freqHz) {
+	: m_port(port), m_sdaPin(sdaPin), m_sclPin(sclPin), m_freqHz(freqHz) {
 	this->setState(State::Uninitialized);
 }
 
@@ -75,7 +75,7 @@ bool EspI2cBus::stop() {
 bool EspI2cBus::read(uint8_t addr, uint8_t* data, size_t len, uint32_t timeoutMs) {
 	std::lock_guard<std::recursive_mutex> lock(m_lock);
 	i2c_port_t port = static_cast<i2c_port_t>(m_port);
-	
+
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_READ, true);

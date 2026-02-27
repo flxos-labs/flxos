@@ -1,7 +1,7 @@
-#include <flx/hal/power/AdcPowerDevice.hpp>
-#include <flx/core/Logger.hpp>
-#include <driver/gpio.h>
 #include <driver/adc.h>
+#include <driver/gpio.h>
+#include <flx/core/Logger.hpp>
+#include <flx/hal/power/AdcPowerDevice.hpp>
 
 namespace flx::hal::power {
 
@@ -66,7 +66,7 @@ void AdcPowerDevice::unsubscribePowerEvents(int id) {
 
 void AdcPowerDevice::notifyObservers(PowerEvent event) {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	for (const auto& observer : m_observers) {
+	for (const auto& observer: m_observers) {
 		if (observer.second) {
 			observer.second(event);
 		}
@@ -78,13 +78,15 @@ void AdcPowerDevice::poll() {
 
 	// In a real implementation, read from ADC and convert to voltage.
 	// We'll simulate reading 3.7V (50% charge) if we can't actually read.
-	uint32_t currentVoltageMv = 3700; 
+	uint32_t currentVoltageMv = 3700;
 
 	// Very simple battery curve estimation (LiPo)
 	uint8_t currentChargeLevel = 0;
 	if (currentVoltageMv >= 4200) currentChargeLevel = 100;
-	else if (currentVoltageMv <= 3200) currentChargeLevel = 0;
-	else currentChargeLevel = static_cast<uint8_t>((currentVoltageMv - 3200) / 10);
+	else if (currentVoltageMv <= 3200)
+		currentChargeLevel = 0;
+	else
+		currentChargeLevel = static_cast<uint8_t>((currentVoltageMv - 3200) / 10);
 
 	m_lastVoltageMv = currentVoltageMv;
 	m_lastChargeLevel = currentChargeLevel;

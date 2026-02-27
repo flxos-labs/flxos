@@ -1,14 +1,14 @@
-#include <flx/hal/spi/EspSpiBus.hpp>
-#include <flx/hal/BusManager.hpp>
-#include <flx/core/Logger.hpp>
 #include <driver/spi_common.h>
+#include <flx/core/Logger.hpp>
+#include <flx/hal/BusManager.hpp>
+#include <flx/hal/spi/EspSpiBus.hpp>
 
 namespace flx::hal::spi {
 
 static constexpr std::string_view TAG = "EspSpiBus";
 
 EspSpiBus::EspSpiBus(int hostId, int miso, int mosi, int sclk, int maxTransferSz)
-    : m_hostId(hostId), m_miso(miso), m_mosi(mosi), m_sclk(sclk), m_maxTransferSz(maxTransferSz) {
+	: m_hostId(hostId), m_miso(miso), m_mosi(mosi), m_sclk(sclk), m_maxTransferSz(maxTransferSz) {
 	this->setState(State::Uninitialized);
 }
 

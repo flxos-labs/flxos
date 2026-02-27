@@ -8,6 +8,7 @@ namespace flx::hal::spi {
 
 class EspSpiBus : public DeviceBase<ISpiBus> {
 public:
+
 	EspSpiBus(int hostId, int miso, int mosi, int sclk, int maxTransferSz = 4096);
 	~EspSpiBus() override;
 
@@ -27,6 +28,7 @@ public:
 	uint32_t getContentionCount() const override { return m_contentionCount; }
 
 private:
+
 	int m_hostId;
 	int m_miso;
 	int m_mosi;

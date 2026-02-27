@@ -1,7 +1,7 @@
-#include <flx/hal/gps/UartGpsDevice.hpp>
-#include <flx/core/Logger.hpp>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <flx/core/Logger.hpp>
+#include <flx/hal/gps/UartGpsDevice.hpp>
 
 namespace flx::hal::gps {
 
@@ -14,7 +14,7 @@ std::shared_ptr<UartGpsDevice> ProbeGpsDevice(std::shared_ptr<flx::hal::uart::IU
 	bool found = false;
 	uint32_t foundBaud = 0;
 
-	for (uint32_t baud : bauds) {
+	for (uint32_t baud: bauds) {
 		flx::Log::info(TAG, "Probing GPS at %lu baud...", baud);
 		uartBus->open(baud);
 		uartBus->setBaudRate(baud); // Ensure it's set

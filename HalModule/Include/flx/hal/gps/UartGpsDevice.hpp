@@ -1,5 +1,7 @@
 #pragma once
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include <flx/hal/DeviceBase.hpp>
 #include <flx/hal/gps/IGpsDevice.hpp>
 #include <flx/hal/uart/IUartBus.hpp>
@@ -7,13 +9,12 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 
 namespace flx::hal::gps {
 
 class UartGpsDevice : public DeviceBase<IGpsDevice> {
 public:
+
 	explicit UartGpsDevice(std::shared_ptr<flx::hal::uart::IUartBus> uartBus);
 	~UartGpsDevice() override;
 
@@ -37,6 +38,7 @@ public:
 	void setModel(std::string_view model);
 
 private:
+
 	std::shared_ptr<flx::hal::uart::IUartBus> m_uart;
 	GpsState m_state = GpsState::Off;
 	GpsPosition m_lastPosition;

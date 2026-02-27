@@ -4,7 +4,7 @@ namespace flx::hal {
 
 BusManager::~BusManager() {
 	std::lock_guard<std::mutex> guard(m_managerMutex);
-	for (auto& pair : m_spiLocks) {
+	for (auto& pair: m_spiLocks) {
 		if (pair.second) {
 			vSemaphoreDelete(pair.second);
 		}

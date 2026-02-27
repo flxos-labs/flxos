@@ -1,5 +1,5 @@
-#include <flx/hal/gpio/EspGpioController.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/hal/gpio/EspGpioController.hpp>
 
 namespace flx::hal::gpio {
 
@@ -47,7 +47,7 @@ bool EspGpioController::stop() {
 
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		for (auto& pair : m_pinConfigs) {
+		for (auto& pair: m_pinConfigs) {
 			gpio_isr_handler_remove(static_cast<gpio_num_t>(pair.first));
 			delete pair.second;
 		}
@@ -88,12 +88,24 @@ bool EspGpioController::configure(Pin pin, GpioMode mode, GpioPullMode pull) {
 	conf.intr_type = GPIO_INTR_DISABLE;
 
 	switch (mode) {
-		case GpioMode::Disable: conf.mode = GPIO_MODE_DISABLE; break;
-		case GpioMode::Input: conf.mode = GPIO_MODE_INPUT; break;
-		case GpioMode::Output: conf.mode = GPIO_MODE_OUTPUT; break;
-		case GpioMode::OutputOpenDrain: conf.mode = GPIO_MODE_OUTPUT_OD; break;
-		case GpioMode::InputOutput: conf.mode = GPIO_MODE_INPUT_OUTPUT; break;
-		case GpioMode::InputOutputOpenDrain: conf.mode = GPIO_MODE_INPUT_OUTPUT_OD; break;
+		case GpioMode::Disable:
+			conf.mode = GPIO_MODE_DISABLE;
+			break;
+		case GpioMode::Input:
+			conf.mode = GPIO_MODE_INPUT;
+			break;
+		case GpioMode::Output:
+			conf.mode = GPIO_MODE_OUTPUT;
+			break;
+		case GpioMode::OutputOpenDrain:
+			conf.mode = GPIO_MODE_OUTPUT_OD;
+			break;
+		case GpioMode::InputOutput:
+			conf.mode = GPIO_MODE_INPUT_OUTPUT;
+			break;
+		case GpioMode::InputOutputOpenDrain:
+			conf.mode = GPIO_MODE_INPUT_OUTPUT_OD;
+			break;
 	}
 
 	switch (pull) {
@@ -144,10 +156,18 @@ bool EspGpioController::attachInterrupt(Pin pin, GpioInterruptEdge edge, IsrCall
 
 	gpio_int_type_t intr_type;
 	switch (edge) {
-		case GpioInterruptEdge::Rising: intr_type = GPIO_INTR_POSEDGE; break;
-		case GpioInterruptEdge::Falling: intr_type = GPIO_INTR_NEGEDGE; break;
-		case GpioInterruptEdge::Both: intr_type = GPIO_INTR_ANYEDGE; break;
-		default: intr_type = GPIO_INTR_DISABLE; break;
+		case GpioInterruptEdge::Rising:
+			intr_type = GPIO_INTR_POSEDGE;
+			break;
+		case GpioInterruptEdge::Falling:
+			intr_type = GPIO_INTR_NEGEDGE;
+			break;
+		case GpioInterruptEdge::Both:
+			intr_type = GPIO_INTR_ANYEDGE;
+			break;
+		default:
+			intr_type = GPIO_INTR_DISABLE;
+			break;
 	}
 
 	gpio_set_intr_type(static_cast<gpio_num_t>(pin), intr_type);
@@ -164,7 +184,7 @@ bool EspGpioController::attachInterrupt(Pin pin, GpioInterruptEdge edge, IsrCall
 	auto it = m_pinConfigs.find(pin);
 	PinConfig* config = nullptr;
 	if (it == m_pinConfigs.end()) {
-		config = new PinConfig{this, pin, callback, 0, 0, false};
+		config = new PinConfig {this, pin, callback, 0, 0, false};
 		m_pinConfigs[pin] = config;
 	} else {
 		config = it->second;
@@ -210,7 +230,7 @@ bool EspGpioController::configureDebounced(Pin pin, uint32_t debounceMs, IsrCall
 	auto it = m_pinConfigs.find(pin);
 	PinConfig* config = nullptr;
 	if (it == m_pinConfigs.end()) {
-		config = new PinConfig{this, pin, callback, debounceMs, 0, true};
+		config = new PinConfig {this, pin, callback, debounceMs, 0, true};
 		m_pinConfigs[pin] = config;
 	} else {
 		config = it->second;

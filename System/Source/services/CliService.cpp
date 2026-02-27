@@ -1,10 +1,9 @@
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
-#include <flx/system/services/CliService.hpp>
-#include <flx/system/services/SystemInfoService.hpp>
 #include <flx/hal/DeviceRegistry.hpp>
 #include <flx/hal/i2c/II2cBus.hpp>
-
+#include <flx/system/services/CliService.hpp>
+#include <flx/system/services/SystemInfoService.hpp>
 
 #include "esp_console.h"
 #include "esp_err.h"
@@ -637,14 +636,14 @@ static int cmdHal(int argc, char** argv) {
 	}
 
 	std::string subcmd = argv[1];
-	
+
 	if (subcmd == "devices") {
 		auto& registry = flx::hal::DeviceRegistry::getInstance();
 		auto devices = registry.getAll();
 		printf("\n=== HAL Devices ===\n");
 		printf("%-4s %-12s %-20s %-10s\n", "ID", "Type", "Name", "State");
 		printf("--------------------------------------------------\n");
-		for (const auto& dev : devices) {
+		for (const auto& dev: devices) {
 			printf("%-4lu %-12s %-20s %-10d\n", dev->getId(), flx::hal::IDevice::typeToString(dev->getType()), dev->getName().data(), static_cast<int>(dev->getState()));
 		}
 		printf("===================\n\n");
@@ -657,7 +656,7 @@ static int cmdHal(int argc, char** argv) {
 		printf("Error Devices:   %zu\n", report.errorDevices);
 		if (!report.unhealthyDevices.empty()) {
 			printf("Unhealthy Device IDs: ");
-			for (const auto& d : report.unhealthyDevices) {
+			for (const auto& d: report.unhealthyDevices) {
 				printf("%lu ", d.first);
 			}
 			printf("\n");
@@ -676,7 +675,7 @@ static int cmdHal(int argc, char** argv) {
 			printf("No I2C devices found.\n");
 		} else {
 			printf("Found devices at addresses: ");
-			for (uint8_t addr : devices) {
+			for (uint8_t addr: devices) {
 				printf("0x%02X ", addr);
 			}
 			printf("\n");

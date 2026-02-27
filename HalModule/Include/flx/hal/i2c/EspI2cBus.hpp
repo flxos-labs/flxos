@@ -8,6 +8,7 @@ namespace flx::hal::i2c {
 
 class EspI2cBus : public DeviceBase<II2cBus> {
 public:
+
 	EspI2cBus(int port, int sdaPin, int sclPin, uint32_t freqHz);
 	~EspI2cBus() override;
 
@@ -33,6 +34,7 @@ public:
 	int getPort() const override { return m_port; }
 
 private:
+
 	int m_port;
 	int m_sdaPin;
 	int m_sclPin;

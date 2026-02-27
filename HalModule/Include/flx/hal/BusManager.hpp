@@ -1,10 +1,10 @@
 #pragma once
 
 #include <flx/core/Singleton.hpp>
-#include <map>
-#include <mutex>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+#include <map>
+#include <mutex>
 
 namespace flx::hal {
 
@@ -19,6 +19,7 @@ class BusManager : public flx::Singleton<BusManager> {
 	friend class flx::Singleton<BusManager>;
 
 public:
+
 	/**
      * @brief Acquire exclusive access to a shared SPI bus.
      * @param hostId     The SPI host ID (e.g., SPI2_HOST or SPI3_HOST on ESP32).
@@ -40,6 +41,7 @@ public:
 		int m_hostId;
 
 	public:
+
 		explicit ScopedBusLock(int hostId) : m_hostId(hostId) {
 			BusManager::getInstance().acquireSpi(hostId);
 		}
@@ -51,6 +53,7 @@ public:
 	};
 
 private:
+
 	BusManager() = default;
 	~BusManager();
 

@@ -1,19 +1,20 @@
 #pragma once
 
+#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+#include "freertos/task.h"
 #include <flx/hal/DeviceBase.hpp>
 #include <flx/hal/gpio/IGpioController.hpp>
 #include <mutex>
 #include <string_view>
 #include <unordered_map>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
-#include "driver/gpio.h"
 
 namespace flx::hal::gpio {
 
 class EspGpioController : public DeviceBase<IGpioController> {
 public:
+
 	EspGpioController();
 	~EspGpioController() override;
 
@@ -35,6 +36,7 @@ public:
 	bool configureDebounced(Pin pin, uint32_t debounceMs, IsrCallback callback) override;
 
 private:
+
 	struct PinConfig {
 		EspGpioController* controller;
 		Pin pin;

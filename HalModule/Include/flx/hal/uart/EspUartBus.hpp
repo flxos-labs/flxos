@@ -9,6 +9,7 @@ namespace flx::hal::uart {
 
 class EspUartBus : public DeviceBase<IUartBus> {
 public:
+
 	EspUartBus(int port, int txPin, int rxPin, uint32_t rxBufferSize = 1024, uint32_t txBufferSize = 1024);
 	~EspUartBus() override;
 
@@ -31,6 +32,7 @@ public:
 	void flush() override;
 
 private:
+
 	int m_port;
 	int m_txPin;
 	int m_rxPin;

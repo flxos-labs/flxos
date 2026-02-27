@@ -7,6 +7,7 @@ namespace flx::system::services {
 
 class HalInitService : public flx::services::IService {
 public:
+
 	static HalInitService& getInstance();
 
 	static const flx::services::ServiceManifest serviceManifest;
@@ -17,6 +18,7 @@ public:
 	void onHealthCheck() override;
 
 private:
+
 	HalInitService() = default;
 };
 

@@ -2,9 +2,9 @@
 
 #include <flx/hal/DeviceBase.hpp>
 #include <flx/hal/input/IInputDevice.hpp>
+#include <lvgl.h>
 #include <mutex>
 #include <vector>
-#include <lvgl.h>
 
 namespace flx::hal::input {
 
@@ -14,6 +14,7 @@ namespace flx::hal::input {
  */
 class GpioKeyboardDevice : public DeviceBase<IKeyboardDevice> {
 public:
+
 	GpioKeyboardDevice(const std::vector<int>& pins, const std::vector<uint32_t>& keyCodes);
 	~GpioKeyboardDevice() override;
 
@@ -28,6 +29,7 @@ public:
 	void unsubscribeKeyEvents(int id) override;
 
 private:
+
 	std::vector<int> m_pins;
 	std::vector<uint32_t> m_keyCodes;
 	lv_indev_t* m_indev = nullptr;

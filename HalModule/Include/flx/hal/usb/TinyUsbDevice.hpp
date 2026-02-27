@@ -10,6 +10,7 @@ namespace flx::hal::usb {
  */
 class TinyUsbDevice : public DeviceBase<IUsbDevice> {
 public:
+
 	TinyUsbDevice();
 	~TinyUsbDevice() override;
 
@@ -32,6 +33,7 @@ public:
 	void rebootInto(UsbMode mode) override;
 
 private:
+
 	UsbMode m_currentMode = UsbMode::None;
 };
 

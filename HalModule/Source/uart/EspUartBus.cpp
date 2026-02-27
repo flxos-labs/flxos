@@ -1,14 +1,14 @@
-#include <flx/hal/uart/EspUartBus.hpp>
-#include <flx/core/Logger.hpp>
-#include <driver/uart.h>
 #include <driver/gpio.h>
+#include <driver/uart.h>
+#include <flx/core/Logger.hpp>
+#include <flx/hal/uart/EspUartBus.hpp>
 
 namespace flx::hal::uart {
 
 static constexpr std::string_view TAG = "EspUartBus";
 
 EspUartBus::EspUartBus(int port, int txPin, int rxPin, uint32_t rxBufferSize, uint32_t txBufferSize)
-    : m_port(port), m_txPin(txPin), m_rxPin(rxPin), m_rxBufferSize(rxBufferSize), m_txBufferSize(txBufferSize) {
+	: m_port(port), m_txPin(txPin), m_rxPin(rxPin), m_rxBufferSize(rxBufferSize), m_txBufferSize(txBufferSize) {
 	this->setState(State::Uninitialized);
 }
 
@@ -32,14 +32,14 @@ bool EspUartBus::stop() {
 bool EspUartBus::setBaudRate(uint32_t baudRate) {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	if (!m_isOpen) return false;
-	
+
 	esp_err_t err = uart_set_baudrate(static_cast<uart_port_t>(m_port), baudRate);
 	return err == ESP_OK;
 }
 
 bool EspUartBus::open(uint32_t baudRate) {
 	std::lock_guard<std::mutex> lock(m_mutex);
-	
+
 	if (m_isOpen) {
 		flx::Log::warn(TAG, "UART %d is already open", m_port);
 		return true;
@@ -93,7 +93,7 @@ size_t EspUartBus::write(const uint8_t* data, size_t len, uint32_t timeoutMs) {
 	std::lock_guard<std::mutex> lock(m_mutex);
 
 	int written = uart_write_bytes(static_cast<uart_port_t>(m_port), reinterpret_cast<const char*>(data), len);
-	
+
 	if (written < 0) return 0;
 
 	if (timeoutMs > 0) {
@@ -119,7 +119,7 @@ size_t EspUartBus::available() const {
 
 	size_t size = 0;
 	esp_err_t err = uart_get_buffered_data_len(static_cast<uart_port_t>(m_port), &size);
-	
+
 	if (err == ESP_OK) {
 		return size;
 	}

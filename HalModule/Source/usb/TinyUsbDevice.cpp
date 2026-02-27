@@ -1,8 +1,8 @@
-#include <flx/hal/usb/TinyUsbDevice.hpp>
-#include <flx/core/Logger.hpp>
 #include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <flx/core/Logger.hpp>
+#include <flx/hal/usb/TinyUsbDevice.hpp>
 
 // If TinyUSB is enabled in sdkconfig, we'd include its headers here.
 // #include "tinyusb.h"
@@ -60,7 +60,7 @@ bool TinyUsbDevice::startMassStorage(UsbMode mode) {
 	if (m_currentMode == mode) return true;
 
 	stopMode();
-	
+
 	flx::Log::info(TAG, "Starting Mass Storage Mode...");
 	// Insert actual tinyusb MSC init code here.
 	// E.g., tinyusb_config_t tusb_cfg = { ... };
@@ -75,7 +75,7 @@ bool TinyUsbDevice::startCdcSerial() {
 	if (m_currentMode == UsbMode::CdcSerial) return true;
 
 	stopMode();
-	
+
 	flx::Log::info(TAG, "Starting CDC Serial Mode...");
 	// Insert actual tinyusb CDC init code here.
 

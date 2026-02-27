@@ -1,8 +1,8 @@
 #include "Config.hpp"
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
-#include <flx/hal/sdcard/SpiSdCardDevice.hpp>
 #include <flx/hal/BusManager.hpp>
+#include <flx/hal/sdcard/SpiSdCardDevice.hpp>
 
 #if FLXOS_SD_CARD_ENABLED
 #include "driver/gpio.h"
