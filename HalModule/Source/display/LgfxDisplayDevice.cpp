@@ -10,12 +10,15 @@ static constexpr const char* TAG = "LgfxDisplay";
 #include "esp_heap_caps.h"
 #include "lgfx/v1/lgfx_fonts.hpp"
 #include "src/drivers/display/lovyan_gfx/lv_lovyan_gfx.h"
+#include <flx/hal/DeviceRegistry.hpp>
+#include <flx/hal/touch/LgfxTouchDevice.hpp>
+#include <flx/hal/BusManager.hpp>
 #endif
 
 namespace flx::hal::display {
 
 LgfxDisplayDevice::LgfxDisplayDevice() {
-	setState(State::Uninitialized);
+	this->setState(State::Uninitialized);
 }
 
 LgfxDisplayDevice::~LgfxDisplayDevice() {
@@ -25,12 +28,13 @@ LgfxDisplayDevice::~LgfxDisplayDevice() {
 }
 
 bool LgfxDisplayDevice::start() {
-	setState(State::Starting);
+	this->setState(State::Starting);
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
+	flx::hal::BusManager::ScopedBusLock busLock(flx::config::display.spi.host);
 
 	// ── 1. Create LovyanGFX instance ──────────────────────────────────────
-	m_tft = std::make_unique<LGFX>();
+	// Instance is created internally by lv_lovyan_gfx_create in the pristine LVGL submodule.
 
 	// ── 2. Smart DMA buffer allocation (plan §21) ─────────────────────────
 	const uint32_t width = static_cast<uint32_t>(flx::config::display.width);
@@ -54,7 +58,7 @@ bool LgfxDisplayDevice::start() {
 	m_dmaBuffer = heap_caps_malloc(bufSize, MALLOC_CAP_DMA);
 	if (!m_dmaBuffer) {
 		flx::Log::error(TAG, "DMA buffer allocation failed (requested %" PRIu32 " bytes)!", (uint32_t)bufSize);
-		setState(State::Error);
+		this->setState(State::Error);
 		return false;
 	}
 
@@ -77,12 +81,18 @@ bool LgfxDisplayDevice::start() {
 		flx::Log::error(TAG, "lv_lovyan_gfx_create() failed!");
 		heap_caps_free(m_dmaBuffer);
 		m_dmaBuffer = nullptr;
-		setState(State::Error);
+		this->setState(State::Error);
 		return false;
 	}
 
-	// ── 4. Release LGFX bus lock left open by lv_lovyan_gfx_create ────────
-	m_tft->endWrite();
+	// ── 4. Extract LGFX and release bus lock left open by lv_lovyan_gfx_create ────────
+	auto* dsc = static_cast<lv_lovyan_gfx_driver_data_t*>(lv_display_get_driver_data(m_lvDisplay));
+	if (dsc) {
+		m_tft = dsc->tft;
+		if (m_tft) {
+			m_tft->endWrite(); // Important: lv_lovyan_gfx_create leaves the bus locked!
+		}
+	}
 
 	// ── 5. Apply initial rotation from profile config ─────────────────────
 	const int rotation = flx::config::display.rotation;
@@ -97,9 +107,20 @@ bool LgfxDisplayDevice::start() {
 		}
 	});
 
+	// ── 7. Initialize and register Touch Device (if enabled) ──────────────
+	if (touch_en) {
+		m_touch = std::make_shared<flx::hal::touch::LgfxTouchDevice>(m_tft);
+		if (m_touch->start()) {
+			flx::hal::DeviceRegistry::getInstance().registerDevice(m_touch);
+		} else {
+			flx::Log::warn(TAG, "Touch device failed to start.");
+			m_touch.reset();
+		}
+	}
+
 	flx::Log::info(TAG, "Display ready: %" PRIu32 "x%" PRIu32 ", rotation=%d°", width, height, rotation);
 
-	setState(State::Ready);
+	this->setState(State::Ready);
 	return true;
 
 #else // CONFIG_FLXOS_HEADLESS_MODE
@@ -107,7 +128,7 @@ bool LgfxDisplayDevice::start() {
 	flx::Log::info(TAG, "Headless mode — display driver not initialized");
 	// In headless mode, LgfxDisplayDevice shouldn't normally be instantiated;
 	// HeadlessDisplayDevice should be used instead. But set to Ready so registry works.
-	setState(State::Ready);
+	this->setState(State::Ready);
 	return true;
 
 #endif
@@ -123,9 +144,12 @@ bool LgfxDisplayDevice::stop() {
 		heap_caps_free(m_dmaBuffer);
 		m_dmaBuffer = nullptr;
 	}
-	m_tft.reset();
+	if (m_tft) {
+		delete m_tft;
+		m_tft = nullptr;
+	}
 #endif
-	setState(State::Stopped);
+	this->setState(State::Stopped);
 	return true;
 }
 
@@ -188,6 +212,7 @@ std::shared_ptr<flx::hal::touch::ITouchDevice> LgfxDisplayDevice::getAttachedTou
 void LgfxDisplayDevice::runColorTest(uint32_t color) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	if (!m_tft) return;
+	flx::hal::BusManager::ScopedBusLock busLock(flx::config::display.spi.host);
 	m_tft->clear(static_cast<uint32_t>(color));
 	m_tft->setTextDatum(middle_center);
 	m_tft->setTextColor(0xFFFFFF - color); // Invert text color against background

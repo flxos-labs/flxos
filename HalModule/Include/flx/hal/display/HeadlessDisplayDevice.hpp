@@ -22,9 +22,6 @@ public:
 	std::string_view getName() const override { return "Headless Display"; }
 	std::string_view getDescription() const override { return "No-op stub for headless/CI builds"; }
 	Type getType() const override { return IDisplayDevice::getType(); }
-	Id getId() const override { return DeviceBase::getId(); }
-	State getState() const override { return DeviceBase::getState(); }
-
 	// ── Lifecycle ──
 	bool start() override {
 		setState(State::Ready);

@@ -44,9 +44,6 @@ public:
 	std::string_view getName() const override { return "LGFX Display"; }
 	std::string_view getDescription() const override;
 	Type getType() const override { return IDisplayDevice::getType(); }
-	Id getId() const override { return DeviceBase::getId(); }
-	State getState() const override { return DeviceBase::getState(); }
-
 	// ── Lifecycle ─────────────────────────────────────────────────────────
 	/**
      * @brief Initialize LovyanGFX, allocate DMA buffer, create LVGL display.
@@ -99,13 +96,13 @@ public:
 	// ── LovyanGFX raw access (for GuiTask compatibility) ──────────────────
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	/** Direct access to the LGFX driver. Use sparingly — prefer interface methods. */
-	LGFX* getRawDriver() const { return m_tft.get(); }
+	LGFX* getRawDriver() const { return m_tft; }
 #endif
 
 private:
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	std::unique_ptr<LGFX> m_tft; ///< LovyanGFX driver instance
+	LGFX* m_tft = nullptr; ///< LovyanGFX driver instance
 	void* m_dmaBuffer = nullptr; ///< DMA-capable display buffer
 #endif
 
