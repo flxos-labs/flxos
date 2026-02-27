@@ -58,7 +58,16 @@ void ImageViewerApp::createUI(void* parent) {
 
 	// Header with back button and filename
 	lv_obj_t* backBtn = nullptr;
-	create_header(m_container, title.c_str(), &backBtn);
+	lv_obj_t* headerBar = create_header(m_container, title.c_str(), &backBtn);
+
+	// Prevent whole header from scrolling and make only filename scroll
+	lv_obj_remove_flag(headerBar, LV_OBJ_FLAG_SCROLLABLE);
+	lv_obj_t* titleLabel = lv_obj_get_child(headerBar, 1);
+	if (titleLabel) {
+		lv_obj_set_width(titleLabel, 0);
+		lv_obj_set_flex_grow(titleLabel, 1);
+		lv_label_set_long_mode(titleLabel, LV_LABEL_LONG_SCROLL_CIRCULAR);
+	}
 
 	// Back button closes the app
 	lv_obj_add_event_cb(
