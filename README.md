@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  A modular, profile-driven operating system for ESP32 devices
+  A modular, profile-driven operating system — from ESP32 to the desktop
   <br />
   Built on <strong>ESP-IDF</strong> · <strong>LVGL</strong> · <strong>LovyanGFX</strong>
 </p>
@@ -19,7 +19,7 @@
 
 ## Overview
 
-**FlxOS** is a feature-rich operating system designed for ESP32-family microcontrollers. It provides a complete application framework with a graphical user interface, modular hardware abstraction, and a powerful profile-based build system that allows a single codebase to target a wide variety of boards and display configurations.
+**FlxOS** is a feature-rich operating system that started on ESP32-family microcontrollers and is **growing toward desktop platforms**. It provides a complete application framework with a graphical user interface, modular hardware abstraction, and a powerful profile-based build system that allows a single codebase to target a wide variety of boards and display configurations.
 
 ### Key Features
 
@@ -31,6 +31,7 @@
 - ⚡ **One-Command Builds** — `flxos.py` CLI handles profile selection, target switching, building, flashing, and releasing
 - 🎨 **Display-Agnostic** — LovyanGFX backend supports ILI9341, ST7789, and many more display controllers
 - 🔧 **Headless Mode** — Run without a display for embedded/server use cases
+- 🖥️ **Desktop (Planned)** — Future native support for Linux, macOS, and Windows
 
 ---
 
@@ -207,6 +208,15 @@ GitHub Actions workflows are included for:
 
 - **Build** — Multi-profile matrix build (`build.yml`)
 - **Code Quality** — Formatting, linting, naming, and documentation checks (`code-quality.yml`)
+
+---
+
+## Roadmap
+
+- ✅ **ESP32 Embedded** — Full OS with touch UI, HAL, apps, and profile-driven builds
+- 🔜 **Desktop Support** — Expand FlxOS to run natively on Linux, macOS, and Windows
+- 🔜 **Simulator** — Desktop-based simulator for rapid UI and app development without hardware
+- 🔜 **Plugin Ecosystem** — Community-driven app and driver extensions
 
 ---
 
