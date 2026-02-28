@@ -16,8 +16,13 @@ std::shared_ptr<UartGpsDevice> ProbeGpsDevice(std::shared_ptr<flx::hal::uart::IU
 
 	for (uint32_t baud: bauds) {
 		flx::Log::info(TAG, "Probing GPS at %lu baud...", baud);
-		uartBus->open(baud);
-		uartBus->setBaudRate(baud); // Ensure it's set
+		if (!uartBus->open(baud)) {
+			continue;
+		}
+		if (!uartBus->setBaudRate(baud)) {
+			uartBus->close();
+			continue;
+		}
 		uartBus->flush();
 
 		// Wait and listen for NMEA traffic

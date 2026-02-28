@@ -89,11 +89,15 @@ void GpioKeyboardDevice::unsubscribeKeyEvents(int id) {
 }
 
 void GpioKeyboardDevice::notifyObservers(const KeyEvent& event) {
-	std::lock_guard<std::mutex> lock(m_mutex);
-	for (const auto& observer: m_observers) {
-		if (observer.second) {
-			observer.second(event);
+	std::vector<KeyEventCallback> callbacks;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		for (const auto& observer: m_observers) {
+			if (observer.second) callbacks.push_back(observer.second);
 		}
+	}
+	for (const auto& cb: callbacks) {
+		cb(event);
 	}
 }
 

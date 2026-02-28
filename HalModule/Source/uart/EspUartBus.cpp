@@ -88,9 +88,9 @@ void EspUartBus::close() {
 }
 
 size_t EspUartBus::write(const uint8_t* data, size_t len, uint32_t timeoutMs) {
-	if (!m_isOpen) return 0;
 	// Wait on mutex is optional depending on concurrency, but we'll lock to be safe
 	std::lock_guard<std::mutex> lock(m_mutex);
+	if (!m_isOpen) return 0;
 
 	int written = uart_write_bytes(static_cast<uart_port_t>(m_port), reinterpret_cast<const char*>(data), len);
 
@@ -104,6 +104,7 @@ size_t EspUartBus::write(const uint8_t* data, size_t len, uint32_t timeoutMs) {
 }
 
 size_t EspUartBus::read(uint8_t* data, size_t maxLen, uint32_t timeoutMs) {
+	std::lock_guard<std::mutex> lock(m_mutex);
 	if (!m_isOpen) return 0;
 
 	// In read, we shouldn't lock the mutex for long blocking operations,

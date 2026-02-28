@@ -2,6 +2,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <atomic>
 #include <flx/hal/DeviceBase.hpp>
 #include <flx/hal/gps/IGpsDevice.hpp>
 #include <flx/hal/uart/IUartBus.hpp>
@@ -49,7 +50,8 @@ private:
 	int m_nextObserverId = 1;
 
 	TaskHandle_t m_rxTaskHandle = nullptr;
-	bool m_isRunning = false;
+	std::atomic<bool> m_isRunning {false};
+	std::string m_lineBuffer;
 
 	static void rxTaskRunner(void* arg);
 	void processIncomingData();

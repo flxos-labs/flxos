@@ -108,7 +108,6 @@ private:
 
 	struct _lv_display_t* m_lvDisplay = nullptr; ///< LVGL display handle
 
-	uint8_t m_backlightDuty = 127; ///< Current backlight duty [0–255]
 	flx::Observable<uint8_t> m_brightness {127};
 	flx::Observable<uint8_t> m_rotation {0};
 

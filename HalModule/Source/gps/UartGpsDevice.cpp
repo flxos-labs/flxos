@@ -29,8 +29,11 @@ bool UartGpsDevice::start() {
 		return false;
 	}
 
-	m_isRunning = true;
-	m_state = GpsState::Searching;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_isRunning = true;
+		m_state = GpsState::Searching;
+	}
 
 	if (xTaskCreate(rxTaskRunner, "gps_rx_task", 4096, this, 5, &m_rxTaskHandle) != pdPASS) {
 		flx::Log::error(TAG, "Failed to create GPS RX task");
@@ -50,9 +53,7 @@ bool UartGpsDevice::stop() {
 	if (m_rxTaskHandle) {
 		// Wait briefly
 		vTaskDelay(pdMS_TO_TICKS(100));
-		if (eTaskGetState(m_rxTaskHandle) != eDeleted) {
-			vTaskDelete(m_rxTaskHandle);
-		}
+		vTaskDelete(m_rxTaskHandle);
 		m_rxTaskHandle = nullptr;
 	}
 
@@ -60,7 +61,10 @@ bool UartGpsDevice::stop() {
 		m_uart->close();
 	}
 
-	m_state = GpsState::Off;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_state = GpsState::Off;
+	}
 	this->setState(State::Stopped);
 	return true;
 }
@@ -109,6 +113,7 @@ void UartGpsDevice::requestColdStart() {
 		const char* cmd = "$PMTK103*30\r\n";
 		m_uart->write(reinterpret_cast<const uint8_t*>(cmd), strlen(cmd), 100);
 	}
+	std::lock_guard<std::mutex> lock(m_mutex);
 	m_state = GpsState::Searching;
 }
 
@@ -118,7 +123,6 @@ void UartGpsDevice::rxTaskRunner(void* arg) {
 		device->processIncomingData();
 		vTaskDelay(pdMS_TO_TICKS(50));
 	}
-	vTaskDelete(nullptr);
 }
 
 void UartGpsDevice::processIncomingData() {
@@ -128,17 +132,16 @@ void UartGpsDevice::processIncomingData() {
 		buf[len] = '\0';
 		// Basic line splitting
 		// In a production system, use a robust NMEA parsing library like minmea
-		static std::string lineBuffer;
 		for (size_t i = 0; i < len; ++i) {
 			char c = static_cast<char>(buf[i]);
 			if (c == '\n') {
-				if (!lineBuffer.empty() && lineBuffer.back() == '\r') {
-					lineBuffer.pop_back();
+				if (!m_lineBuffer.empty() && m_lineBuffer.back() == '\r') {
+					m_lineBuffer.pop_back();
 				}
-				parseNmeaSentence(lineBuffer);
-				lineBuffer.clear();
+				parseNmeaSentence(m_lineBuffer);
+				m_lineBuffer.clear();
 			} else {
-				lineBuffer += c;
+				m_lineBuffer += c;
 			}
 		}
 	}
@@ -148,37 +151,42 @@ void UartGpsDevice::parseNmeaSentence(const std::string& sentence) {
 	if (sentence.rfind("$GNGGA", 0) == 0 || sentence.rfind("$GPGGA", 0) == 0) {
 		// Mock parse: $GNGGA,hhmmss.ss,llll.ll,a,yyyyy.yy,a,x,xx,x.x,x.x,M,x.x,M,x.x,xxxx*hh
 		// Normally would parse comma separated tokens
-		std::lock_guard<std::mutex> lock(m_mutex);
+		bool notify = false;
+		{
+			std::lock_guard<std::mutex> lock(m_mutex);
 
-		// Very dummy check for fix quality
-		// Token 6 is fix quality (0=invalid, 1=GPS fix, 2=DGPS fix)
-		size_t commas = 0;
-		for (size_t i = 0; i < sentence.size(); ++i) {
-			if (sentence[i] == ',') commas++;
-			if (commas == 6) {
-				char fixQ = (i + 1 < sentence.size()) ? sentence[i + 1] : '0';
-				m_lastPosition.valid = (fixQ == '1' || fixQ == '2');
-				m_state = m_lastPosition.valid ? GpsState::FixAcquired : GpsState::Searching;
-				break;
+			// Very dummy check for fix quality
+			// Token 6 is fix quality (0=invalid, 1=GPS fix, 2=DGPS fix)
+			size_t commas = 0;
+			for (size_t i = 0; i < sentence.size(); ++i) {
+				if (sentence[i] == ',') commas++;
+				if (commas == 6) {
+					char fixQ = (i + 1 < sentence.size()) ? sentence[i + 1] : '0';
+					m_lastPosition.valid = (fixQ == '1' || fixQ == '2');
+					m_state = m_lastPosition.valid ? GpsState::FixAcquired : GpsState::Searching;
+					break;
+				}
 			}
+			notify = m_lastPosition.valid;
 		}
 
-		if (m_lastPosition.valid) {
+		if (notify) {
 			notifyObservers();
 		}
 	}
 }
 
 void UartGpsDevice::notifyObservers() {
-	// Must be called with m_mutex held OR lock inside
-	// Since it's called from parseNmeaSentence which holds the lock,
-	// we shouldn't lock again if it's a recursive_mutex, but here we must copy to avoid deadlock
 	std::vector<PositionCallback> callbacks;
-	for (const auto& observer: m_observers) {
-		callbacks.push_back(observer.second);
+	GpsPosition pos;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		for (const auto& observer: m_observers) {
+			callbacks.push_back(observer.second);
+		}
+		pos = m_lastPosition;
 	}
 
-	GpsPosition pos = m_lastPosition;
 	for (const auto& cb: callbacks) {
 		if (cb) cb(pos);
 	}

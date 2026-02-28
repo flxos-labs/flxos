@@ -20,6 +20,10 @@ static constexpr std::string_view TAG = "SpiSdCardDevice";
 struct GuiLockGuard {
 	GuiLockGuard() noexcept { flx::core::GuiLock::lock(); }
 	~GuiLockGuard() noexcept { flx::core::GuiLock::unlock(); }
+	GuiLockGuard(const GuiLockGuard&) = delete;
+	GuiLockGuard& operator=(const GuiLockGuard&) = delete;
+	GuiLockGuard(GuiLockGuard&&) = delete;
+	GuiLockGuard& operator=(GuiLockGuard&&) = delete;
 };
 
 SpiSdCardDevice::SpiSdCardDevice() {

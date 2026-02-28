@@ -76,6 +76,11 @@ bool EspGpioController::stop() {
 		m_debounceQueue = nullptr;
 	}
 
+	if (m_isrServiceInstalled) {
+		gpio_uninstall_isr_service();
+		m_isrServiceInstalled = false;
+	}
+
 	this->setState(State::Stopped);
 	return true;
 }
@@ -258,9 +263,10 @@ void IRAM_ATTR EspGpioController::gpioIsrHandler(void* arg) {
 			}
 		}
 	} else {
-		if (config->callback) {
-			bool level = gpio_get_level(static_cast<gpio_num_t>(config->pin)) == 1;
-			config->callback(config->pin, level);
+		BaseType_t higherPriorityTaskWoken = pdFALSE;
+		xQueueSendFromISR(config->controller->m_debounceQueue, &config->pin, &higherPriorityTaskWoken);
+		if (higherPriorityTaskWoken) {
+			portYIELD_FROM_ISR();
 		}
 	}
 }
@@ -274,18 +280,20 @@ void EspGpioController::debounceTaskRunner(void* arg) {
 			if (pin == PIN_NC) break; // Exit signal
 
 			PinConfig* config = nullptr;
+			IsrCallback cb = nullptr;
 			{
 				std::lock_guard<std::mutex> lock(controller->m_mutex);
 				auto it = controller->m_pinConfigs.find(pin);
 				if (it != controller->m_pinConfigs.end()) {
 					config = it->second;
+					if (config) cb = config->callback;
 				}
 			}
 
-			if (config && config->callback) {
+			if (cb) {
 				// Re-read level after taking off queue to confirm state
 				bool level = gpio_get_level(static_cast<gpio_num_t>(pin)) == 1;
-				config->callback(pin, level);
+				cb(pin, level);
 			}
 		}
 	}

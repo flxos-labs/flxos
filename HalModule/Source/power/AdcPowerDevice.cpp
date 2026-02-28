@@ -65,11 +65,17 @@ void AdcPowerDevice::unsubscribePowerEvents(int id) {
 }
 
 void AdcPowerDevice::notifyObservers(PowerEvent event) {
-	std::lock_guard<std::mutex> lock(m_mutex);
-	for (const auto& observer: m_observers) {
-		if (observer.second) {
-			observer.second(event);
+	std::vector<PowerEventCallback> cbs;
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		for (const auto& observer: m_observers) {
+			if (observer.second) {
+				cbs.push_back(observer.second);
+			}
 		}
+	}
+	for (const auto& cb: cbs) {
+		cb(event);
 	}
 }
 

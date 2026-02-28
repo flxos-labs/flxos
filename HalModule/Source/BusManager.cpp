@@ -19,7 +19,9 @@ bool BusManager::acquireSpi(int hostId, uint32_t timeoutMs) {
 		auto it = m_spiLocks.find(hostId);
 		if (it == m_spiLocks.end()) {
 			lock = xSemaphoreCreateRecursiveMutex();
-			m_spiLocks[hostId] = lock;
+			if (lock) {
+				m_spiLocks[hostId] = lock;
+			}
 		} else {
 			lock = it->second;
 		}

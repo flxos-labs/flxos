@@ -103,7 +103,6 @@ bool LgfxDisplayDevice::start() {
 	m_brightness.subscribe([this](const uint8_t& duty) {
 		if (m_tft) {
 			m_tft->setBrightness(duty);
-			m_backlightDuty = duty;
 		}
 	});
 
@@ -143,6 +142,10 @@ bool LgfxDisplayDevice::stop() {
 	if (m_dmaBuffer) {
 		heap_caps_free(m_dmaBuffer);
 		m_dmaBuffer = nullptr;
+	}
+	if (m_touch) {
+		flx::hal::DeviceRegistry::getInstance().deregisterDevice(m_touch->getId());
+		m_touch.reset();
 	}
 	if (m_tft) {
 		delete m_tft;

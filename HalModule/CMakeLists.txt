@@ -11,10 +11,17 @@ endif()
 
 # Collect all .cpp and .c files from the Source tree automatically.
 # Add new subdirectories under Source/ freely — they're auto-included.
-file(GLOB_RECURSE HALMODULE_SRCS
-    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.c"
-)
+if(CMAKE_SCRIPT_MODE_FILE)
+    file(GLOB_RECURSE HALMODULE_SRCS
+        "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.c"
+    )
+else()
+    file(GLOB_RECURSE HALMODULE_SRCS CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Source/*.c"
+    )
+endif()
 
 idf_component_register(
     SRCS ${HALMODULE_SRCS}

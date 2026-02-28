@@ -79,10 +79,12 @@ bool EspI2cBus::read(uint8_t addr, uint8_t* data, size_t len, uint32_t timeoutMs
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_READ, true);
-	if (len > 1) {
-		i2c_master_read(cmd, data, len - 1, I2C_MASTER_ACK);
+	if (len > 0) {
+		if (len > 1) {
+			i2c_master_read(cmd, data, len - 1, I2C_MASTER_ACK);
+		}
+		i2c_master_read_byte(cmd, data + len - 1, I2C_MASTER_NACK);
 	}
-	i2c_master_read_byte(cmd, data + len - 1, I2C_MASTER_NACK);
 	i2c_master_stop(cmd);
 
 	esp_err_t err = i2c_master_cmd_begin(port, cmd, pdMS_TO_TICKS(timeoutMs));

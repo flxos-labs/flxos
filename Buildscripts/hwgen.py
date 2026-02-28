@@ -673,6 +673,13 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
         *(["#include <driver/gpio.h>"] if board_power_pins else []),
         "#include <esp_err.h>",
         "",
+        "#include <flx/hal/DeviceRegistry.hpp>",
+        "#include <flx/hal/display/LgfxDisplayDevice.hpp>",
+        "#include <flx/hal/touch/LgfxTouchDevice.hpp>",
+        "#include <flx/hal/sdcard/SpiSdCardDevice.hpp>",
+        "#include <flx/hal/spi/EspSpiBus.hpp>",
+        "#include <flx/hal/i2c/EspI2cBus.hpp>",
+        "",
         f"namespace flx::profile::{namespace_id}::hwd {{",
         "",
         "namespace {",
@@ -750,13 +757,6 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
 
     lines.extend(
         [
-            "",
-            "#include <flx/hal/DeviceRegistry.hpp>",
-            "#include <flx/hal/display/LgfxDisplayDevice.hpp>",
-            "#include <flx/hal/touch/LgfxTouchDevice.hpp>",
-            "#include <flx/hal/sdcard/SpiSdCardDevice.hpp>",
-            "#include <flx/hal/spi/EspSpiBus.hpp>",
-            "#include <flx/hal/i2c/EspI2cBus.hpp>",
             "",
             "void initHardware() {",
             "    auto& registry = flx::hal::DeviceRegistry::getInstance();",

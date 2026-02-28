@@ -64,7 +64,7 @@ jobs:
           if [ -n "$conflicts" ]; then
             echo "❌ Case conflicts found:"
             echo "$conflicts" | while read -r name; do
-              echo "  Conflict: $(git ls-files | grep -i "^${name}$")"
+              echo "  Conflict: $(git ls-files | grep -F -i -x "${name}")"
             done
             exit 1
           fi

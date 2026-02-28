@@ -123,7 +123,7 @@ void DeviceRegistry::notifyObservers(const std::shared_ptr<IDevice>& device, boo
 		snapshot = m_observers;
 	}
 	for (auto& [id, cb]: snapshot) {
-		cb(device, added);
+		if (cb) cb(device, added);
 	}
 }
 

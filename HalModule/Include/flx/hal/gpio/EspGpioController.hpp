@@ -4,6 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
+#include <atomic>
 #include <flx/hal/DeviceBase.hpp>
 #include <flx/hal/gpio/IGpioController.hpp>
 #include <mutex>
@@ -55,7 +56,7 @@ private:
 
 	QueueHandle_t m_debounceQueue = nullptr;
 	TaskHandle_t m_debounceTaskHandle = nullptr;
-	bool m_taskRunning = false;
+	std::atomic<bool> m_taskRunning {false};
 };
 
 } // namespace flx::hal::gpio
