@@ -40,8 +40,9 @@ bool EspGpioController::start() {
 }
 
 bool EspGpioController::stop() {
-	if (m_isrServiceInstalled) {
+	if (m_ownsIsrService) {
 		gpio_uninstall_isr_service();
+		m_ownsIsrService = false;
 		m_isrServiceInstalled = false;
 	}
 
@@ -74,11 +75,6 @@ bool EspGpioController::stop() {
 	if (m_debounceQueue) {
 		vQueueDelete(m_debounceQueue);
 		m_debounceQueue = nullptr;
-	}
-
-	if (m_isrServiceInstalled) {
-		gpio_uninstall_isr_service();
-		m_isrServiceInstalled = false;
 	}
 
 	this->setState(State::Stopped);
@@ -183,6 +179,7 @@ bool EspGpioController::attachInterrupt(Pin pin, GpioInterruptEdge edge, IsrCall
 			flx::Log::error(TAG, "Failed to install ISR service: %s", esp_err_to_name(err));
 			return false;
 		}
+		m_ownsIsrService = (err == ESP_OK);
 		m_isrServiceInstalled = true;
 	}
 
@@ -229,6 +226,7 @@ bool EspGpioController::configureDebounced(Pin pin, uint32_t debounceMs, IsrCall
 			flx::Log::error(TAG, "Failed to install ISR service: %s", esp_err_to_name(err));
 			return false;
 		}
+		m_ownsIsrService = (err == ESP_OK);
 		m_isrServiceInstalled = true;
 	}
 
@@ -250,7 +248,7 @@ bool EspGpioController::configureDebounced(Pin pin, uint32_t debounceMs, IsrCall
 
 void IRAM_ATTR EspGpioController::gpioIsrHandler(void* arg) {
 	PinConfig* config = static_cast<PinConfig*>(arg);
-	if (!config) return;
+	if (!config || !config->controller || !config->controller->m_debounceQueue) return;
 
 	if (config->isDebounced) {
 		TickType_t now = xTaskGetTickCountFromISR();

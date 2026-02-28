@@ -53,6 +53,7 @@ private:
 	std::unordered_map<Pin, PinConfig*> m_pinConfigs;
 	std::mutex m_mutex;
 	bool m_isrServiceInstalled = false;
+	bool m_ownsIsrService = false;
 
 	QueueHandle_t m_debounceQueue = nullptr;
 	TaskHandle_t m_debounceTaskHandle = nullptr;
