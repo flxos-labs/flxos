@@ -49,7 +49,7 @@ private:
 	std::vector<std::pair<int, PositionCallback>> m_observers;
 	int m_nextObserverId = 1;
 
-	TaskHandle_t m_rxTaskHandle = nullptr;
+	std::atomic<TaskHandle_t> m_rxTaskHandle {nullptr};
 	std::atomic<bool> m_isRunning {false};
 	std::string m_lineBuffer;
 
