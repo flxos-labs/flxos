@@ -52,10 +52,17 @@ bool UartGpsDevice::stop() {
 	m_isRunning = false;
 
 	if (m_rxTaskHandle) {
-		// Wait briefly for task to exit its loop
-		vTaskDelay(pdMS_TO_TICKS(50));
-		vTaskDelete(m_rxTaskHandle);
-		m_rxTaskHandle = nullptr;
+		// Wait for task to exit its loop and clear the handle
+		int timeout = 50; // 500ms max
+		while (m_rxTaskHandle != nullptr && timeout-- > 0) {
+			vTaskDelay(pdMS_TO_TICKS(10));
+		}
+
+		// Fallback in case task hangs
+		if (m_rxTaskHandle) {
+			vTaskDelete(m_rxTaskHandle);
+			m_rxTaskHandle = nullptr;
+		}
 	}
 
 	if (m_uart) {
@@ -124,6 +131,10 @@ void UartGpsDevice::rxTaskRunner(void* arg) {
 		device->processIncomingData();
 		vTaskDelay(pdMS_TO_TICKS(50));
 	}
+
+	// Task loop exited. Signal stop() and self-delete to prevent FreeRTOS fatal error.
+	device->m_rxTaskHandle = nullptr;
+	vTaskDelete(NULL);
 }
 
 void UartGpsDevice::processIncomingData() {
