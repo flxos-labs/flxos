@@ -38,6 +38,7 @@ bool UartGpsDevice::start() {
 	if (xTaskCreate(rxTaskRunner, "gps_rx_task", 4096, this, 5, &m_rxTaskHandle) != pdPASS) {
 		flx::Log::error(TAG, "Failed to create GPS RX task");
 		m_isRunning = false;
+		if (m_uart) m_uart->close();
 		this->setState(State::Error);
 		return false;
 	}

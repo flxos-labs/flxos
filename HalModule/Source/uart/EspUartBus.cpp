@@ -116,6 +116,7 @@ size_t EspUartBus::read(uint8_t* data, size_t maxLen, uint32_t timeoutMs) {
 }
 
 size_t EspUartBus::available() const {
+	std::lock_guard<std::mutex> lock(m_mutex);
 	if (!m_isOpen) return 0;
 
 	size_t size = 0;

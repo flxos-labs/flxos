@@ -644,7 +644,7 @@ static int cmdHal(int argc, char** argv) {
 		printf("%-4s %-12s %-20s %-10s\n", "ID", "Type", "Name", "State");
 		printf("--------------------------------------------------\n");
 		for (const auto& dev: devices) {
-			printf("%-4lu %-12s %-20s %-10d\n", dev->getId(), flx::hal::IDevice::typeToString(dev->getType()), dev->getName().data(), static_cast<int>(dev->getState()));
+			printf("%-4lu %-12s %-20.*s %-10d\n", dev->getId(), flx::hal::IDevice::typeToString(dev->getType()), static_cast<int>(dev->getName().length()), dev->getName().data(), static_cast<int>(dev->getState()));
 		}
 		printf("===================\n\n");
 	} else if (subcmd == "health") {

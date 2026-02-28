@@ -189,6 +189,7 @@ bool EspGpioController::attachInterrupt(Pin pin, GpioInterruptEdge edge, IsrCall
 		config = new PinConfig {this, pin, callback, 0, 0, false};
 		m_pinConfigs[pin] = config;
 	} else {
+		gpio_isr_handler_remove(static_cast<gpio_num_t>(pin));
 		config = it->second;
 		config->callback = callback;
 		config->isDebounced = false;
@@ -236,6 +237,7 @@ bool EspGpioController::configureDebounced(Pin pin, uint32_t debounceMs, IsrCall
 		config = new PinConfig {this, pin, callback, debounceMs, 0, true};
 		m_pinConfigs[pin] = config;
 	} else {
+		gpio_isr_handler_remove(static_cast<gpio_num_t>(pin));
 		config = it->second;
 		config->callback = callback;
 		config->debounceMs = debounceMs;

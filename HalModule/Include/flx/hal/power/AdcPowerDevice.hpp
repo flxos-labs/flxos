@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <flx/hal/DeviceBase.hpp>
 #include <flx/hal/power/IPowerDevice.hpp>
 #include <mutex>
@@ -44,8 +45,8 @@ public:
 private:
 
 	int m_adcPin;
-	uint32_t m_lastVoltageMv = 0;
-	uint8_t m_lastChargeLevel = 0;
+	std::atomic<uint32_t> m_lastVoltageMv {0};
+	std::atomic<uint8_t> m_lastChargeLevel {0};
 	bool m_isLow = false;
 	bool m_isCritical = false;
 

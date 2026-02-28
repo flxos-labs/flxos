@@ -110,6 +110,7 @@ private:
 
 	flx::Observable<uint8_t> m_brightness {127};
 	flx::Observable<uint8_t> m_rotation {0};
+	int m_brightnessSubId = -1;
 
 	BufferInfo m_bufferInfo; ///< DMA buffer stats (filled in start())
 

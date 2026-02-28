@@ -774,7 +774,13 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
             port = cfg.get("port", "0")
             lines.append(f"    registry.registerDevice(std::make_shared<flx::hal::i2c::EspI2cBus>({port}, -1, -1, 400000));")
 
-    for per_name in sorted(peripherals.keys()):
+    for per_name in sorted(
+        peripherals.keys(),
+        key=lambda n: (
+            0 if isinstance(peripherals[n], dict) and str(peripherals[n].get("type", "")).lower() == "display" else 1,
+            n
+        )
+    ):
         cfg = peripherals[per_name] if isinstance(peripherals[per_name], dict) else {}
         ptype = str(cfg.get("type", "")).lower()
         if ptype == "display":

@@ -53,8 +53,16 @@ public:
      */
 	struct ScopedLock {
 		ISpiBus& bus;
-		explicit ScopedLock(ISpiBus& b) : bus(b) { bus.acquire(); }
-		~ScopedLock() { bus.release(); }
+		bool m_acquired;
+		explicit ScopedLock(ISpiBus& b, uint32_t timeoutMs = 1000) : bus(b) {
+			m_acquired = bus.acquire(timeoutMs);
+		}
+		~ScopedLock() {
+			if (m_acquired) {
+				bus.release();
+			}
+		}
+		bool isAcquired() const { return m_acquired; }
 		ScopedLock(const ScopedLock&) = delete;
 		ScopedLock& operator=(const ScopedLock&) = delete;
 	};

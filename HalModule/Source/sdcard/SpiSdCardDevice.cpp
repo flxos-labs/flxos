@@ -1,5 +1,5 @@
 #include "Config.hpp"
-#include <flx/core/GuiLock.hpp>
+#include <flx/core/GuiLockGuard.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/hal/BusManager.hpp>
 #include <flx/hal/sdcard/SpiSdCardDevice.hpp>
@@ -15,16 +15,6 @@
 namespace flx::hal::sdcard {
 
 static constexpr std::string_view TAG = "SpiSdCardDevice";
-
-// ── RAII: GuiLock ──────────────────────────────────────────────────────────
-struct GuiLockGuard {
-	GuiLockGuard() noexcept { flx::core::GuiLock::lock(); }
-	~GuiLockGuard() noexcept { flx::core::GuiLock::unlock(); }
-	GuiLockGuard(const GuiLockGuard&) = delete;
-	GuiLockGuard& operator=(const GuiLockGuard&) = delete;
-	GuiLockGuard(GuiLockGuard&&) = delete;
-	GuiLockGuard& operator=(GuiLockGuard&&) = delete;
-};
 
 SpiSdCardDevice::SpiSdCardDevice() {
 	this->setState(State::Uninitialized);
@@ -71,7 +61,7 @@ bool SpiSdCardDevice::stop() {
 
 bool SpiSdCardDevice::mount(const std::string& mountPath) {
 #if FLXOS_SD_CARD_ENABLED
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 	flx::hal::BusManager::ScopedBusLock busLock(flx::config::sdcard.spiHost);
 
 	if (m_mountState == MountState::Mounted) {
@@ -153,7 +143,7 @@ bool SpiSdCardDevice::mount(const std::string& mountPath) {
 
 bool SpiSdCardDevice::unmount() {
 #if FLXOS_SD_CARD_ENABLED
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 	flx::hal::BusManager::ScopedBusLock busLock(flx::config::sdcard.spiHost);
 
 	if (m_mountState != MountState::Mounted) {
@@ -189,7 +179,7 @@ std::recursive_mutex& SpiSdCardDevice::getLock() {
 
 bool SpiSdCardDevice::getCardInfo(CardInfo& info) const {
 #if FLXOS_SD_CARD_ENABLED
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 	flx::hal::BusManager::ScopedBusLock busLock(flx::config::sdcard.spiHost);
 
 	if (m_mountState != MountState::Mounted || !m_card) return false;

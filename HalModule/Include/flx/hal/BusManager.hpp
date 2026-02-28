@@ -39,15 +39,20 @@ public:
      */
 	class ScopedBusLock {
 		int m_hostId;
+		bool m_acquired;
 
 	public:
 
-		explicit ScopedBusLock(int hostId) : m_hostId(hostId) {
-			BusManager::getInstance().acquireSpi(hostId);
+		explicit ScopedBusLock(int hostId, uint32_t timeoutMs = 1000) : m_hostId(hostId) {
+			m_acquired = BusManager::getInstance().acquireSpi(hostId, timeoutMs);
 		}
 		~ScopedBusLock() {
-			BusManager::getInstance().releaseSpi(m_hostId);
+			if (m_acquired) {
+				BusManager::getInstance().releaseSpi(m_hostId);
+			}
 		}
+
+		bool isAcquired() const { return m_acquired; }
 		ScopedBusLock(const ScopedBusLock&) = delete;
 		ScopedBusLock& operator=(const ScopedBusLock&) = delete;
 	};

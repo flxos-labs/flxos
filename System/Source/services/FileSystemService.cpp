@@ -10,7 +10,7 @@
 #endif
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "misc/lv_fs.h"
-#include <flx/core/GuiLock.hpp>
+#include <flx/core/GuiLockGuard.hpp>
 #endif
 
 #include <cerrno>
@@ -88,17 +88,6 @@ private:
 };
 #endif
 
-// ── RAII: GuiLock (GUI builds only) ──────────────────────────────────────────
-#if !CONFIG_FLXOS_HEADLESS_MODE
-struct GuiLockGuard {
-	GuiLockGuard() noexcept { flx::core::GuiLock::lock(); }
-	~GuiLockGuard() noexcept { flx::core::GuiLock::unlock(); }
-
-	GuiLockGuard(const GuiLockGuard&) = delete;
-	GuiLockGuard& operator=(const GuiLockGuard&) = delete;
-};
-#endif
-
 // ── Stat helpers ─────────────────────────────────────────────────────────────
 [[nodiscard]] bool statPath(const char* path, struct stat& out) noexcept {
 	return ::stat(path, &out) == 0;
@@ -148,7 +137,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	// Hold the GUI lock for the full operation to prevent SPI bus contention.
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 
 	// ── Special-case: LVGL virtual root "A:/" ────────────────────────────────
 	const bool isLvRoot = (path == "A:/" || path == "A:");
@@ -220,7 +209,7 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 
 int FileSystemService::copyFile(const char* src, const char* dst, int64_t totalBytes, ProgressCallback callback) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 #endif
 	UniqueFile fsrc = openFile(src, "rb");
 	if (!fsrc) {
@@ -276,7 +265,7 @@ int FileSystemService::copyFile(const char* src, const char* dst, int64_t totalB
 
 int FileSystemService::copyRecursive(const char* src, const char* dst, ProgressCallback callback) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 #endif
 	struct stat st {};
 	if (!statPath(src, st)) {
@@ -330,7 +319,7 @@ bool FileSystemService::copy(const std::string& src, const std::string& dst, Pro
 
 bool FileSystemService::move(const std::string& src, const std::string& dst) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 #endif
 	// Try atomic rename first (works within the same filesystem).
 	if (::rename(src.c_str(), dst.c_str()) == 0) {
@@ -360,7 +349,7 @@ bool FileSystemService::move(const std::string& src, const std::string& dst) {
 
 int FileSystemService::removeRecursive(const char* path, ProgressCallback callback) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 #endif
 	UniqueDir dir = openDir(path);
 	if (!dir) {
@@ -411,7 +400,7 @@ int FileSystemService::removeRecursive(const char* path, ProgressCallback callba
 
 bool FileSystemService::remove(const std::string& path, ProgressCallback callback) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 #endif
 	struct stat st {};
 	if (statPath(path.c_str(), st) && isDirectory(st)) {
@@ -431,7 +420,7 @@ bool FileSystemService::remove(const std::string& path, ProgressCallback callbac
 
 bool FileSystemService::mkdir(const std::string& path) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	GuiLockGuard lock;
+	flx::core::GuiLockGuard lock;
 #endif
 	if (::mkdir(path.c_str(), 0777) == 0) {
 		Log::info(TAG, "Created directory: %s", path.c_str());

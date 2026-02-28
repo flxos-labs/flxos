@@ -100,7 +100,7 @@ bool LgfxDisplayDevice::start() {
 	m_rotation.set(static_cast<uint8_t>(rotation));
 
 	// ── 6. Wire brightness observable → hardware ──────────────────────────
-	m_brightness.subscribe([this](const uint8_t& duty) {
+	m_brightnessSubId = m_brightness.subscribe([this](const uint8_t& duty) {
 		if (m_tft) {
 			m_tft->setBrightness(duty);
 		}
@@ -135,13 +135,9 @@ bool LgfxDisplayDevice::start() {
 
 bool LgfxDisplayDevice::stop() {
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	if (m_lvDisplay) {
-		lv_display_delete(m_lvDisplay);
-		m_lvDisplay = nullptr;
-	}
-	if (m_dmaBuffer) {
-		heap_caps_free(m_dmaBuffer);
-		m_dmaBuffer = nullptr;
+	if (m_brightnessSubId != -1) {
+		m_brightness.unsubscribe(m_brightnessSubId);
+		m_brightnessSubId = -1;
 	}
 	if (m_touch) {
 		flx::hal::DeviceRegistry::getInstance().deregisterDevice(m_touch->getId());
@@ -150,6 +146,18 @@ bool LgfxDisplayDevice::stop() {
 	if (m_tft) {
 		delete m_tft;
 		m_tft = nullptr;
+	}
+	if (m_lvDisplay) {
+		auto* dsc = static_cast<lv_lovyan_gfx_driver_data_t*>(lv_display_get_driver_data(m_lvDisplay));
+		if (dsc) {
+			dsc->tft = nullptr;
+		}
+		lv_display_delete(m_lvDisplay);
+		m_lvDisplay = nullptr;
+	}
+	if (m_dmaBuffer) {
+		heap_caps_free(m_dmaBuffer);
+		m_dmaBuffer = nullptr;
 	}
 #endif
 	this->setState(State::Stopped);
