@@ -772,7 +772,14 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
             lines.append(f"    registry.registerDevice(std::make_shared<flx::hal::spi::EspSpiBus>({host}, -1, -1, -1));")
         elif cfg.get("type") == "i2c":
             port = cfg.get("port", "0")
-            lines.append(f"    registry.registerDevice(std::make_shared<flx::hal::i2c::EspI2cBus>({port}, -1, -1, 400000));")
+            lines.extend([
+                "    {",
+                f"        auto i2c_bus = std::make_shared<flx::hal::i2c::EspI2cBus>({port}, -1, -1, 400000);",
+                "        if (i2c_bus->start()) {",
+                "            registry.registerDevice(i2c_bus);",
+                "        }",
+                "    }"
+            ])
 
     for per_name in sorted(
         peripherals.keys(),

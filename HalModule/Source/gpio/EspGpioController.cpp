@@ -150,7 +150,7 @@ int EspGpioController::getPinCount() const {
 	return GPIO_NUM_MAX;
 }
 
-bool EspGpioController::attachInterrupt(Pin pin, GpioInterruptEdge edge, IsrCallback callback) {
+bool EspGpioController::attachInterrupt(Pin pin, GpioInterruptEdge edge, GpioCallback callback) {
 	if (pin == PIN_NC || !callback) return false;
 
 	std::lock_guard<std::mutex> lock(m_mutex);
@@ -213,7 +213,7 @@ bool EspGpioController::detachInterrupt(Pin pin) {
 	return true;
 }
 
-bool EspGpioController::configureDebounced(Pin pin, uint32_t debounceMs, IsrCallback callback) {
+bool EspGpioController::configureDebounced(Pin pin, uint32_t debounceMs, GpioCallback callback) {
 	if (pin == PIN_NC || !callback) return false;
 
 	std::lock_guard<std::mutex> lock(m_mutex);
@@ -280,7 +280,7 @@ void EspGpioController::debounceTaskRunner(void* arg) {
 			if (pin == PIN_NC) break; // Exit signal
 
 			PinConfig* config = nullptr;
-			IsrCallback cb = nullptr;
+			GpioCallback cb = nullptr;
 			{
 				std::lock_guard<std::mutex> lock(controller->m_mutex);
 				auto it = controller->m_pinConfigs.find(pin);

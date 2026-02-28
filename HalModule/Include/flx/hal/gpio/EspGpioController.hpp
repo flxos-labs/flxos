@@ -32,16 +32,16 @@ public:
 	bool getLevel(Pin pin) const override;
 	int getPinCount() const override;
 
-	bool attachInterrupt(Pin pin, GpioInterruptEdge edge, IsrCallback callback) override;
+	bool attachInterrupt(Pin pin, GpioInterruptEdge edge, GpioCallback callback) override;
 	bool detachInterrupt(Pin pin) override;
-	bool configureDebounced(Pin pin, uint32_t debounceMs, IsrCallback callback) override;
+	bool configureDebounced(Pin pin, uint32_t debounceMs, GpioCallback callback) override;
 
 private:
 
 	struct PinConfig {
 		EspGpioController* controller;
 		Pin pin;
-		IsrCallback callback;
+		GpioCallback callback;
 		uint32_t debounceMs;
 		TickType_t lastIsrTick;
 		bool isDebounced;

@@ -27,11 +27,10 @@ public:
 
 	// TODO: Implement native SDMMC start logic if necessary.
 	bool start() override {
-		setState(State::Error);
+		// Device is an unimplemented stub. Return false so it is not registered.
 		return false;
 	}
 	bool stop() override {
-		setState(State::Stopped);
 		return true;
 	}
 

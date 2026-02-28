@@ -32,13 +32,12 @@ bool SdCardService::onStart() {
 
 	// Create and start SPI SD card HAL device
 	auto sdcard = std::make_shared<flx::hal::sdcard::SpiSdCardDevice>();
-	registry.registerDevice(sdcard);
-	m_device = sdcard;
-
-	if (!m_device->start()) {
-		Log::warn(TAG, "Failed to start SDK card HAL device");
+	if (!sdcard->start()) {
+		Log::warn(TAG, "Failed to start SD card HAL device");
 		return false;
 	}
+	registry.registerDevice(sdcard);
+	m_device = sdcard;
 
 	// Mount it
 	const bool mounted = m_device->mount(flx::config::sdcard.mountPoint);

@@ -85,14 +85,21 @@ public:
 	virtual int getPinCount() const = 0;
 
 	// ── Interrupts (surpasses Tactility) ──────────────────────────────────
-	using IsrCallback = std::function<void(Pin pin, bool level)>;
+	/**
+	 * Callback type invoked when a GPIO edge is detected.
+	 * The callback is dispatched from a normal FreeRTOS task context (not from
+	 * the ISR itself), so heap allocation and blocking APIs are safe to use.
+	 * The underlying ISR only enqueues the pin number and returns immediately.
+	 */
+	using GpioCallback = std::function<void(Pin pin, bool level)>;
 
 	/**
      * @brief Attach an interrupt callback to a GPIO pin.
-     * The callback is invoked from ISR context — keep it short!
+     * The callback is dispatched from a task after the edge is detected —
+     * it is NOT called directly from ISR context.
      * @return true if attached successfully.
      */
-	virtual bool attachInterrupt(Pin pin, GpioInterruptEdge edge, IsrCallback callback) {
+	virtual bool attachInterrupt(Pin pin, GpioInterruptEdge edge, GpioCallback callback) {
 		(void)pin;
 		(void)edge;
 		(void)callback;
@@ -111,10 +118,10 @@ public:
 	// ── Debounced input (surpasses Tactility) ─────────────────────────────
 	/**
      * @brief Configure a debounced input with a callback.
-     * The callback fires after the level is stable for debounceMs.
+     * The callback fires from task context after the level is stable for debounceMs.
      * @return true if configured successfully.
      */
-	virtual bool configureDebounced(Pin pin, uint32_t debounceMs, IsrCallback callback) {
+	virtual bool configureDebounced(Pin pin, uint32_t debounceMs, GpioCallback callback) {
 		(void)pin;
 		(void)debounceMs;
 		(void)callback;

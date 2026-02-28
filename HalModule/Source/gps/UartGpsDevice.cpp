@@ -52,11 +52,9 @@ bool UartGpsDevice::stop() {
 	m_isRunning = false;
 
 	if (m_rxTaskHandle) {
-		// Wait briefly for task to gracefully self-delete
-		vTaskDelay(pdMS_TO_TICKS(100));
-		if (eTaskGetState(m_rxTaskHandle) != eDeleted) {
-			vTaskDelete(m_rxTaskHandle);
-		}
+		// Wait briefly for task to exit its loop
+		vTaskDelay(pdMS_TO_TICKS(50));
+		vTaskDelete(m_rxTaskHandle);
 		m_rxTaskHandle = nullptr;
 	}
 
@@ -126,7 +124,6 @@ void UartGpsDevice::rxTaskRunner(void* arg) {
 		device->processIncomingData();
 		vTaskDelay(pdMS_TO_TICKS(50));
 	}
-	vTaskDelete(nullptr);
 }
 
 void UartGpsDevice::processIncomingData() {

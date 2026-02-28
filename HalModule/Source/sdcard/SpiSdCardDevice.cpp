@@ -41,7 +41,10 @@ bool SpiSdCardDevice::start() {
 bool SpiSdCardDevice::stop() {
 #if FLXOS_SD_CARD_ENABLED
 	if (m_mountState == MountState::Mounted) {
-		unmount();
+		if (!unmount()) {
+			flx::Log::error(TAG, "Failed to unmount SD card during stop()");
+			return false;
+		}
 	}
 
 	if (m_spiOwner) {

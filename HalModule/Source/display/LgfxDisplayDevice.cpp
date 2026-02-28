@@ -143,15 +143,17 @@ bool LgfxDisplayDevice::stop() {
 		flx::hal::DeviceRegistry::getInstance().deregisterDevice(m_touch->getId());
 		m_touch.reset();
 	}
-	if (m_tft) {
-		delete m_tft;
-		m_tft = nullptr;
-	}
 	if (m_lvDisplay) {
 		auto* dsc = static_cast<lv_lovyan_gfx_driver_data_t*>(lv_display_get_driver_data(m_lvDisplay));
 		if (dsc) {
 			dsc->tft = nullptr;
 		}
+	}
+	if (m_tft) {
+		delete m_tft;
+		m_tft = nullptr;
+	}
+	if (m_lvDisplay) {
 		lv_display_delete(m_lvDisplay);
 		m_lvDisplay = nullptr;
 	}

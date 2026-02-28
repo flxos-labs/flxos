@@ -93,8 +93,8 @@ ITouchDevice::CalibrationData LgfxTouchDevice::getCalibration() const {
 }
 
 void LgfxTouchDevice::setCalibration(const ITouchDevice::CalibrationData& cal) {
-#if !CONFIG_FLXOS_HEADLESS_MODE
 	m_calibration = cal;
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	if (m_tft) {
 		uint16_t calData[8] = {
 			static_cast<uint16_t>(cal.xMin),
