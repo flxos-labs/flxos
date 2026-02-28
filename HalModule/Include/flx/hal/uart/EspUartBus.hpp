@@ -39,7 +39,7 @@ private:
 	uint32_t m_rxBufferSize;
 	uint32_t m_txBufferSize;
 	bool m_isOpen = false;
-	std::mutex m_mutex;
+	mutable std::mutex m_mutex;
 };
 
 } // namespace flx::hal::uart

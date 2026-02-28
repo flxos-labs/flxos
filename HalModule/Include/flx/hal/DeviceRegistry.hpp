@@ -77,7 +77,7 @@ public:
 	std::shared_ptr<T> findFirst(IDevice::Type type) const {
 		auto devices = findByType(type);
 		for (auto& dev: devices) {
-			if (auto typed = std::dynamic_pointer_cast<T>(dev)) {
+			if (auto typed = std::static_pointer_cast<T>(dev)) {
 				return typed;
 			}
 		}
@@ -95,7 +95,7 @@ public:
 		std::vector<std::shared_ptr<T>> result;
 		auto devices = findByType(type);
 		for (auto& dev: devices) {
-			if (auto typed = std::dynamic_pointer_cast<T>(dev)) {
+			if (auto typed = std::static_pointer_cast<T>(dev)) {
 				result.push_back(typed);
 			}
 		}
