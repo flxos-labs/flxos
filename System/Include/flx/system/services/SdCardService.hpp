@@ -2,13 +2,11 @@
 
 #include "Config.hpp"
 #include "sdkconfig.h"
+#include <flx/hal/sdcard/ISdCardDevice.hpp>
 #include <flx/services/IService.hpp>
 #include <flx/services/ServiceManifest.hpp>
+#include <memory>
 #include <string>
-
-#if FLXOS_SD_CARD_ENABLED
-#include "sdmmc_cmd.h"
-#endif
 
 namespace flx::services {
 
@@ -26,25 +24,15 @@ public:
 	void onStop() override;
 	void onGuiInit() override;
 
-	bool isMounted() const { return m_mounted; }
-	const std::string& getMountPoint() const { return m_mountPoint; }
+	bool isMounted() const;
+	std::string getMountPoint() const;
 
 private:
 
-	SdCardService();
+	SdCardService() = default;
 	~SdCardService() = default;
 
-	bool mount();
-	void unmount();
-
-	bool m_mounted = false;
-	bool m_spiOwner = false; // true if we called spi_bus_initialize
-
-	std::string m_mountPoint;
-
-#if FLXOS_SD_CARD_ENABLED
-	sdmmc_card_t* m_card = nullptr;
-#endif
+	std::shared_ptr<flx::hal::sdcard::ISdCardDevice> m_device;
 };
 
 } // namespace flx::services

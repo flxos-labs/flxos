@@ -4,12 +4,13 @@
 #include "sdkconfig.h"
 
 #include <flx/core/Logger.hpp>
+#include <flx/kernel/TaskManager.hpp>
 #if FLXOS_SD_CARD_ENABLED
 #include <flx/system/services/SdCardService.hpp>
 #endif
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "misc/lv_fs.h"
-#include <flx/core/GuiLock.hpp>
+#include <flx/core/GuiLockGuard.hpp>
 #endif
 
 #include <cerrno>
@@ -87,17 +88,6 @@ private:
 };
 #endif
 
-// ── RAII: GuiLock (GUI builds only) ──────────────────────────────────────────
-#if !CONFIG_FLXOS_HEADLESS_MODE
-struct GuiLockGuard {
-	GuiLockGuard() noexcept { flx::core::GuiLock::lock(); }
-	~GuiLockGuard() noexcept { flx::core::GuiLock::unlock(); }
-
-	GuiLockGuard(const GuiLockGuard&) = delete;
-	GuiLockGuard& operator=(const GuiLockGuard&) = delete;
-};
-#endif
-
 // ── Stat helpers ─────────────────────────────────────────────────────────────
 [[nodiscard]] bool statPath(const char* path, struct stat& out) noexcept {
 	return ::stat(path, &out) == 0;
@@ -145,7 +135,25 @@ std::string FileSystemService::joinPath(std::string_view base, std::string_view 
 std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path) {
 	std::vector<FileEntry> entries;
 
-#if CONFIG_FLXOS_HEADLESS_MODE
+#if !CONFIG_FLXOS_HEADLESS_MODE
+	// Hold the GUI lock for the full operation to prevent SPI bus contention.
+	flx::core::GuiLockGuard lock;
+
+	// ── Special-case: LVGL virtual root "A:/" ────────────────────────────────
+	const bool isLvRoot = (path == "A:/" || path == "A:");
+	if (isLvRoot) {
+		// Just synthesize the well-known sub-mounts directly.
+		entries.push_back({"system", /*isDir=*/true, 0});
+		entries.push_back({"data", /*isDir=*/true, 0});
+#if FLXOS_SD_CARD_ENABLED
+		if (SdCardService::getInstance().isMounted()) {
+			entries.push_back({"sdcard", /*isDir=*/true, 0});
+		}
+#endif
+		return entries;
+	}
+#endif
+
 	const std::string nativePath = toNativePath(path);
 	UniqueDir dir = openDir(nativePath.c_str());
 	if (!dir) {
@@ -154,104 +162,55 @@ std::vector<FileEntry> FileSystemService::listDirectory(const std::string& path)
 	}
 
 	struct dirent* ent = nullptr;
+	uint32_t count = 0;
 	while ((ent = ::readdir(dir.get())) != nullptr) {
 		const char* name = ent->d_name;
 		if (std::strcmp(name, ".") == 0 || std::strcmp(name, "..") == 0) {
 			continue;
 		}
 
+		// Feed watchdog every few entries to prevent reboot on slow SD cards
+		if (++count % 16 == 0) {
+			auto* guiTask = flx::kernel::TaskManager::getInstance().getTask("gui_task");
+			if (guiTask) guiTask->heartbeat();
+			vTaskDelay(pdMS_TO_TICKS(1));
+		}
+
 		FileEntry entry;
 		entry.name = name;
 
-		const std::string fullPath = joinPath(nativePath, name);
-		struct stat st {};
-		if (statPath(fullPath.c_str(), st)) {
-			entry.isDirectory = isDirectory(st);
-			if (!entry.isDirectory) {
-				entry.size = static_cast<uint64_t>(st.st_size);
-			}
-		}
-
-		entries.push_back(std::move(entry));
-	}
-
-	Log::debug(TAG, "Listed %zu entries in '%s' (headless)", entries.size(), nativePath.c_str());
-	return entries;
-#else
-	// Hold the GUI lock for the full operation to prevent SPI bus contention.
-	GuiLockGuard lock;
-
-	// ── Special-case: LVGL virtual root "A:/" ────────────────────────────────
-	// The virtual root may not correspond to a real directory on the underlying
-	// filesystem. If LVGL cannot open it, synthesise the well-known sub-mounts.
-	const bool isLvRoot = (path == "A:/" || path == "A:");
-	if (isLvRoot) {
-		LvDir probe;
-		if (probe.open(path.c_str()) != LV_FS_RES_OK) {
-			Log::warn(TAG, "Cannot open LVGL root '%s'; returning synthesised entries", path.c_str());
-			entries.push_back({"system", /*isDir=*/true, 0});
-			entries.push_back({"data", /*isDir=*/true, 0});
-#if FLXOS_SD_CARD_ENABLED
-			if (SdCardService::getInstance().isMounted()) {
-				entries.push_back({"sdcard", /*isDir=*/true, 0});
-			}
-#endif
-			return entries;
-		}
-		// Probe succeeded; fall through to the general listing below.
-	}
-
-	// ── General directory listing via LVGL ───────────────────────────────────
-	LvDir dir;
-	if (dir.open(path.c_str()) != LV_FS_RES_OK) {
-		Log::error(TAG, "Failed to open directory: %s", path.c_str());
-		return entries; // empty
-	}
-
-	Log::debug(TAG, "Listing directory: %s", path.c_str());
-
-	std::array<char, 256> nameBuf {};
-	const std::string nativeBase = toNativePath(path);
-
-	while (true) {
-		nameBuf[0] = '\0';
-		if (dir.read(nameBuf.data(), nameBuf.size()) != LV_FS_RES_OK ||
-			nameBuf[0] == '\0') {
-			break; // end of directory or read error
-		}
-
-		// LVGL prefixes directories with '/'.
-		const bool isDir = (nameBuf[0] == '/');
-		const char* rawName = isDir ? nameBuf.data() + 1 : nameBuf.data();
-
-		if (std::strcmp(rawName, ".") == 0 || std::strcmp(rawName, "..") == 0) {
-			continue;
-		}
-
-		FileEntry entry;
-		entry.name = rawName;
-		entry.isDirectory = isDir;
-		entry.size = 0;
-
-		if (!isDir) {
-			const std::string fullPath = joinPath(nativeBase, rawName);
+		// Optimization: Use d_type if available to avoid slow stat() calls
+		if (ent->d_type != DT_UNKNOWN) {
+			entry.isDirectory = (ent->d_type == DT_DIR);
+			entry.size = 0; // Size not needed for basic listing
+		} else {
+			const std::string fullPath = joinPath(nativePath, name);
 			struct stat st {};
 			if (statPath(fullPath.c_str(), st)) {
-				entry.size = static_cast<uint64_t>(st.st_size);
+				entry.isDirectory = isDirectory(st);
+				if (!entry.isDirectory) {
+					entry.size = static_cast<uint64_t>(st.st_size);
+				}
+			} else {
+				// Fallback if stat fails
+				entry.isDirectory = (ent->d_type == DT_DIR);
+				entry.size = 0;
 			}
 		}
 
 		entries.push_back(std::move(entry));
 	}
 
-	Log::debug(TAG, "Listed %zu entries in '%s'", entries.size(), path.c_str());
+	Log::debug(TAG, "Listed %zu entries in '%s'", entries.size(), nativePath.c_str());
 	return entries;
-#endif
 }
 
 // ── copyFile ─────────────────────────────────────────────────────────────────
 
 int FileSystemService::copyFile(const char* src, const char* dst, int64_t totalBytes, ProgressCallback callback) {
+#if !CONFIG_FLXOS_HEADLESS_MODE
+	flx::core::GuiLockGuard lock;
+#endif
 	UniqueFile fsrc = openFile(src, "rb");
 	if (!fsrc) {
 		Log::error(TAG, "Cannot open source '%s': %s", src, std::strerror(errno));
@@ -305,6 +264,9 @@ int FileSystemService::copyFile(const char* src, const char* dst, int64_t totalB
 // ── copyRecursive ─────────────────────────────────────────────────────────────
 
 int FileSystemService::copyRecursive(const char* src, const char* dst, ProgressCallback callback) {
+#if !CONFIG_FLXOS_HEADLESS_MODE
+	flx::core::GuiLockGuard lock;
+#endif
 	struct stat st {};
 	if (!statPath(src, st)) {
 		Log::error(TAG, "Cannot stat '%s': %s", src, std::strerror(errno));
@@ -356,6 +318,9 @@ bool FileSystemService::copy(const std::string& src, const std::string& dst, Pro
 // ── move ──────────────────────────────────────────────────────────────────────
 
 bool FileSystemService::move(const std::string& src, const std::string& dst) {
+#if !CONFIG_FLXOS_HEADLESS_MODE
+	flx::core::GuiLockGuard lock;
+#endif
 	// Try atomic rename first (works within the same filesystem).
 	if (::rename(src.c_str(), dst.c_str()) == 0) {
 		Log::info(TAG, "Moved '%s' → '%s'", src.c_str(), dst.c_str());
@@ -383,6 +348,9 @@ bool FileSystemService::move(const std::string& src, const std::string& dst) {
 // ── removeRecursive ───────────────────────────────────────────────────────────
 
 int FileSystemService::removeRecursive(const char* path, ProgressCallback callback) {
+#if !CONFIG_FLXOS_HEADLESS_MODE
+	flx::core::GuiLockGuard lock;
+#endif
 	UniqueDir dir = openDir(path);
 	if (!dir) {
 		// Not a directory (or can't be opened) — attempt plain file removal.
@@ -431,6 +399,9 @@ int FileSystemService::removeRecursive(const char* path, ProgressCallback callba
 // ── remove (public) ───────────────────────────────────────────────────────────
 
 bool FileSystemService::remove(const std::string& path, ProgressCallback callback) {
+#if !CONFIG_FLXOS_HEADLESS_MODE
+	flx::core::GuiLockGuard lock;
+#endif
 	struct stat st {};
 	if (statPath(path.c_str(), st) && isDirectory(st)) {
 		Log::info(TAG, "Removing directory tree: %s", path.c_str());
@@ -448,6 +419,9 @@ bool FileSystemService::remove(const std::string& path, ProgressCallback callbac
 // ── mkdir ─────────────────────────────────────────────────────────────────────
 
 bool FileSystemService::mkdir(const std::string& path) {
+#if !CONFIG_FLXOS_HEADLESS_MODE
+	flx::core::GuiLockGuard lock;
+#endif
 	if (::mkdir(path.c_str(), 0777) == 0) {
 		Log::info(TAG, "Created directory: %s", path.c_str());
 		return true;

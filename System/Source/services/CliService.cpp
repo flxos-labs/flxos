@@ -1,5 +1,7 @@
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/hal/DeviceRegistry.hpp>
+#include <flx/hal/i2c/II2cBus.hpp>
 #include <flx/system/services/CliService.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
 
@@ -622,6 +624,69 @@ static int cmdReboot(int /*argc*/, char** /*argv*/) {
 	return 0; // Never reached
 }
 
+// Command: hal - Hardware Abstraction Layer diagnostics
+static int cmdHal(int argc, char** argv) {
+	if (argc < 2) {
+		printf("Usage: hal <command>\n");
+		printf("Commands:\n");
+		printf("  devices    List all registered HAL devices\n");
+		printf("  health     Show HAL health report\n");
+		printf("  i2c scan   Scan I2C bus for devices\n");
+		return 1;
+	}
+
+	std::string subcmd = argv[1];
+
+	if (subcmd == "devices") {
+		auto& registry = flx::hal::DeviceRegistry::getInstance();
+		auto devices = registry.getAll();
+		printf("\n=== HAL Devices ===\n");
+		printf("%-4s %-12s %-20s %-10s\n", "ID", "Type", "Name", "State");
+		printf("--------------------------------------------------\n");
+		for (const auto& dev: devices) {
+			printf("%-4lu %-12s %-20.*s %-10d\n", dev->getId(), flx::hal::IDevice::typeToString(dev->getType()), static_cast<int>(dev->getName().length()), dev->getName().data(), static_cast<int>(dev->getState()));
+		}
+		printf("===================\n\n");
+	} else if (subcmd == "health") {
+		auto& registry = flx::hal::DeviceRegistry::getInstance();
+		auto report = registry.getHealthReport();
+		printf("\n=== HAL Health Report ===\n");
+		printf("Total Devices:   %zu\n", report.totalDevices);
+		printf("Healthy Devices: %zu\n", report.healthyDevices);
+		printf("Error Devices:   %zu\n", report.errorDevices);
+		if (!report.unhealthyDevices.empty()) {
+			printf("Unhealthy Device IDs: ");
+			for (const auto& d: report.unhealthyDevices) {
+				printf("%lu ", d.first);
+			}
+			printf("\n");
+		}
+		printf("=========================\n\n");
+	} else if (subcmd == "i2c" && argc > 2 && strcmp(argv[2], "scan") == 0) {
+		auto& registry = flx::hal::DeviceRegistry::getInstance();
+		auto i2cBus = registry.findFirst<flx::hal::i2c::II2cBus>(flx::hal::IDevice::Type::I2c);
+		if (!i2cBus) {
+			printf("No I2C bus found in DeviceRegistry.\n");
+			return 1;
+		}
+		printf("Scanning I2C bus %d...\n", i2cBus->getPort());
+		auto devices = i2cBus->scan(10);
+		if (devices.empty()) {
+			printf("No I2C devices found.\n");
+		} else {
+			printf("Found devices at addresses: ");
+			for (uint8_t addr: devices) {
+				printf("0x%02X ", addr);
+			}
+			printf("\n");
+		}
+	} else {
+		printf("Unknown HAL command: %s\n", subcmd.c_str());
+		return 1;
+	}
+	return 0;
+}
+
 #define REGISTER_CLI_CMD(name, help_text, handler)       \
 	{                                                    \
 		const esp_console_cmd_t cmd = {                  \
@@ -671,6 +736,7 @@ void CliService::registerCommands() {
 	REGISTER_CLI_CMD("echo", "Echo text to stdout", &cmdEcho);
 	REGISTER_CLI_CMD("free", "Show memory stats", &cmdHeap); // Alias
 	REGISTER_CLI_CMD("top", "Show task list", &cmdTasks); // Alias
+	REGISTER_CLI_CMD("hal", "HAL diagnostics (devices, health, i2c scan)", &cmdHal);
 
 	Log::info(TAG, "Registered CLI commands: sysinfo, heap, uptime, reboot, tasks, storage, psram, version, chip, wifi, hotspot, ls, cd, pwd, mkdir, rm, cat, df, brightness, time, loglevel, clear, echo, free, top");
 }

@@ -53,14 +53,15 @@ void ScreenshotService::onStop() {
 
 bool ScreenshotService::capture(const std::string& savePath) {
 	flx::core::GuiLock::lock();
+
 	lv_obj_t* screen = lv_screen_active();
 	int width = lv_obj_get_width(screen);
 	int height = lv_obj_get_height(screen);
 	lv_draw_buf_t* snap = lv_snapshot_take(screen, LV_COLOR_FORMAT_RGB888);
-	flx::core::GuiLock::unlock();
 
 	if (!snap || !snap->data) {
 		Log::error(TAG, "lv_snapshot_take(RGB888) failed");
+		flx::core::GuiLock::unlock();
 		return false;
 	}
 
@@ -73,6 +74,7 @@ bool ScreenshotService::capture(const std::string& savePath) {
 	if (!rgbBuf) {
 		Log::error(TAG, "Failed to allocate RGB buffer (%u bytes)", (unsigned)rgbSize);
 		lv_draw_buf_destroy(snap);
+		flx::core::GuiLock::unlock();
 		return false;
 	}
 
@@ -90,8 +92,11 @@ bool ScreenshotService::capture(const std::string& savePath) {
 	lv_draw_buf_destroy(snap);
 
 	// Save as PNG via lodepng
+	// Note: Hold GuiLock during file write to prevent SPI contention with display
 	unsigned error = lodepng_encode24_file(savePath.c_str(), rgbBuf, width, height);
 	free(rgbBuf);
+
+	flx::core::GuiLock::unlock();
 
 	if (error) {
 		Log::error(TAG, "PNG encode failed (error %u): %s", error, lodepng_error_text(error));

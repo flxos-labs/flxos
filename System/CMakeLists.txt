@@ -1,5 +1,4 @@
-# System component — system services, managers, device profile
-set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer)
+set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule)
 set(SYSTEM_SRCS
     "Source/SystemManager.cpp"
     "Source/managers/SettingsManager.cpp"
@@ -12,6 +11,7 @@ set(SYSTEM_SRCS
     "Source/services/CliService.cpp"
     "Source/services/FileSystemService.cpp"
     "Source/services/SystemInfoService.cpp"
+    "Source/services/HalInitService.cpp"
 )
 
 if(NOT FLXOS_HEADLESS_MODE_ENABLED)

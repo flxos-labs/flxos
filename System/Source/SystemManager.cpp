@@ -21,6 +21,7 @@
 #include <flx/system/services/SdCardService.hpp>
 #endif
 #include <flx/system/services/DeviceProfileService.hpp>
+#include <flx/system/services/HalInitService.hpp>
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
@@ -67,15 +68,6 @@ esp_err_t SystemManager::initHardware() {
 	flx::kernel::TaskManager::getInstance().initWatchdog();
 	flx::kernel::ResourceMonitorTask::getInstance().start();
 
-#if FLXOS_PROFILE_HWD_INIT
-	Log::info(TAG, "Running profile HWD init...");
-	const esp_err_t hwd_err = flx_profile_hwd_init();
-	if (hwd_err != ESP_OK) {
-		Log::error(TAG, "Profile HWD init failed: %s", esp_err_to_name(hwd_err));
-		return hwd_err;
-	}
-#endif
-
 	return ESP_OK;
 }
 
@@ -95,6 +87,7 @@ void SystemManager::registerServices() {
 
 	// Core managers (as shared_ptr wrapping the singletons — prevent deletion)
 	auto noDelete = [](auto*) {}; // Custom deleter that does nothing
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::system::services::HalInitService::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&SettingsManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&DisplayManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&ThemeManager::getInstance(), noDelete));

@@ -85,3 +85,6 @@ Desktop.ini
 
 # Generated reports
 reports/
+
+# Agent files
+.agents
