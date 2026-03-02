@@ -63,6 +63,10 @@ using UniqueDir = std::unique_ptr<DIR, DirCloser>;
 	return path == "A:/" || path == "A:";
 }
 
+[[nodiscard]] bool isVirtualRootPath(std::string_view path) noexcept {
+	return isLvRootPath(path) || path == "/";
+}
+
 [[nodiscard]] bool isUnderMount(std::string_view path, std::string_view mount) {
 	if (mount.empty()) return false;
 	if (path.size() < mount.size()) return false;
@@ -352,7 +356,7 @@ void FileSystemService::processJob(FileOpId opId) {
 			case FileOpType::ListDirectory: {
 				std::vector<FileEntry> entries;
 
-				if (isLvRootPath(job.req.path)) {
+				if (isVirtualRootPath(job.req.path)) {
 					entries.push_back({"system", true, 0});
 					entries.push_back({"data", true, 0});
 #if FLXOS_SD_CARD_ENABLED
