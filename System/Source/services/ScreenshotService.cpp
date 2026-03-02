@@ -4,6 +4,7 @@
 #include <flx/core/EventBus.hpp>
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/system/services/FileOperationTypes.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
@@ -21,12 +22,50 @@ const char* lodepng_error_text(unsigned code);
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <freertos/semphr.h>
 #include <string_view>
 #include <sys/stat.h>
+#include <utility>
 
 static constexpr std::string_view TAG = "ScreenshotService";
 
 namespace flx::services {
+
+namespace {
+
+bool mkdirBlocking(const std::string& path, uint32_t timeoutMs = 10000) {
+	SemaphoreHandle_t done = xSemaphoreCreateBinary();
+	if (!done) return false;
+
+	bool success = false;
+	FileOpRequest req;
+	req.type = FileOpType::Mkdir;
+	req.path = path;
+
+	FileOpId const opId = FileSystemService::getInstance().submit(
+		std::move(req),
+		{},
+		[&](const FileOpResult& result) {
+			success = result.success;
+			xSemaphoreGive(done);
+		}
+	);
+
+	if (opId == 0) {
+		vSemaphoreDelete(done);
+		return false;
+	}
+
+	bool const waited = xSemaphoreTake(done, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
+	if (!waited) {
+		bool const cancelled = FileSystemService::getInstance().cancel(opId);
+		(void)cancelled;
+	}
+	vSemaphoreDelete(done);
+	return waited && success;
+}
+
+} // namespace
 
 const ServiceManifest ScreenshotService::serviceManifest = {
 	.serviceId = "com.flxos.screenshot",
@@ -135,7 +174,7 @@ std::string ScreenshotService::getDefaultStoragePath() const {
 
 std::string ScreenshotService::generateFilename(const std::string& basePath) {
 	std::string dir = basePath + "/screenshots";
-	if (!FileSystemService::getInstance().mkdir(dir)) {
+	if (!mkdirBlocking(dir)) {
 		Log::error(TAG, "Failed to create directory: %s", dir.c_str());
 		return {};
 	}
