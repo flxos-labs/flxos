@@ -9,6 +9,7 @@
 #include <flx/kernel/Task.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <stack>
@@ -42,16 +43,20 @@ private:
 	std::stack<std::string> m_history;
 	flx::kernel::Task* m_guiTask = nullptr;
 	uint32_t m_lastFeedMs = 0;
-	uint32_t m_lastRefreshMs = 0;
 
 	lv_obj_t* m_progressMbox = nullptr;
 	lv_obj_t* m_progressBar = nullptr;
 	lv_obj_t* m_progressLabel = nullptr;
 
+	std::atomic<bool> m_stopped {false};
+	flx::services::FileOpId m_activeOp {0};
+	uint32_t m_listReqVersion {0};
+
 	void feedWatchdog();
 	void showProgressDialog(const char* title);
 	void updateProgress(int percent, const char* text);
 	void closeProgressDialog();
+	void cancelActiveOp();
 
 	void refreshList();
 	void addListItem(const std::string& name, bool isDir);

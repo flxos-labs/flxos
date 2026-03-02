@@ -8,6 +8,7 @@
 #include <functional>
 #include <string.h>
 #include <vector>
+#include <atomic>
 
 namespace flx::ui {
 
@@ -78,6 +79,9 @@ private:
 	std::string m_currentPath {"A:/"};
 	std::vector<std::string> m_extensions {};
 	bool m_forSave {false};
+	std::atomic<bool> m_destroyed {false};
+	flx::services::FileOpId m_listOp {0};
+	uint32_t m_listReqVersion {0};
 
 	void createUI();
 	void refreshList();

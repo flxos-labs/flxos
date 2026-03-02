@@ -31,6 +31,7 @@ static constexpr std::string_view TAG = "GuiTask";
 #include <flx/hal/DeviceRegistry.hpp>
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include "Config.hpp"
+#include <flx/hal/BusManager.hpp>
 #include <flx/hal/display/LgfxDisplayDevice.hpp>
 #else
 #include <flx/hal/display/HeadlessDisplayDevice.hpp>
@@ -40,6 +41,7 @@ namespace flx::ui {
 
 bool GuiTask::m_paused = false;
 bool GuiTask::m_resume_on_touch = false;
+GuiTask::PerfStats GuiTask::m_perfStats {};
 
 GuiTask::GuiTask() : flx::kernel::Task("gui_task", 32 * 1024, 5, 1) {
 }
@@ -169,12 +171,30 @@ void GuiTask::run(void* /*data*/) {
 	setWatchdogTimeout(5000);
 
 	while (true) {
+		uint64_t const loopStartUs = static_cast<uint64_t>(esp_timer_get_time());
 		heartbeat();
 		if (!m_paused) {
 			lock();
 			uint32_t delay = 10;
 			if (!m_paused) {
+				uint64_t const handlerStartUs = static_cast<uint64_t>(esp_timer_get_time());
+#if !CONFIG_FLXOS_HEADLESS_MODE
+				uint64_t const busWaitStartUs = static_cast<uint64_t>(esp_timer_get_time());
+				flx::hal::BusManager::ScopedBusLock busLock(flx::config::display.spi.host);
+				uint64_t const busWaitUs = static_cast<uint64_t>(esp_timer_get_time()) - busWaitStartUs;
+				if (busWaitUs > m_perfStats.maxBusWaitUs) {
+					m_perfStats.maxBusWaitUs = busWaitUs;
+				}
+				if (busLock.isAcquired()) {
+					delay = lv_timer_handler();
+				}
+#else
 				delay = lv_timer_handler();
+#endif
+				uint64_t const handlerUs = static_cast<uint64_t>(esp_timer_get_time()) - handlerStartUs;
+				if (handlerUs > m_perfStats.maxHandlerUs) {
+					m_perfStats.maxHandlerUs = handlerUs;
+				}
 			}
 			unlock();
 			vTaskDelay(pdMS_TO_TICKS(delay));
@@ -195,6 +215,15 @@ void GuiTask::run(void* /*data*/) {
 			}
 			vTaskDelay(pdMS_TO_TICKS(50));
 		}
+
+		uint64_t const loopUs = static_cast<uint64_t>(esp_timer_get_time()) - loopStartUs;
+		++m_perfStats.loopCount;
+		if (loopUs > m_perfStats.maxLoopUs) {
+			m_perfStats.maxLoopUs = loopUs;
+		}
+		if (loopUs > 40000ULL) {
+			++m_perfStats.over40msCount;
+		}
 	}
 }
 
@@ -209,6 +238,13 @@ void GuiTask::setPaused(bool paused) {
 
 bool GuiTask::isPaused() {
 	return m_paused;
+}
+
+GuiTask::PerfStats GuiTask::getPerfStats() {
+	lock();
+	PerfStats stats = m_perfStats;
+	unlock();
+	return stats;
 }
 
 void GuiTask::setResumeOnTouch(bool enable) {
