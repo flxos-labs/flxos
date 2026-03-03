@@ -48,7 +48,8 @@ void postToUi(std::function<void()> fn) {
 		auto* callback = static_cast<std::function<void()>*>(user_data);
 		(*callback)();
 		delete callback;
-	}, cb);
+	},
+				  cb);
 }
 
 } // anonymous namespace

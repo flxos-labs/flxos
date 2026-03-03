@@ -12,8 +12,8 @@
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 
-#include <cstdint>
 #include <cerrno>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <iomanip>
@@ -220,12 +220,7 @@ static int cmdUiPerf(int /*argc*/, char** /*argv*/) {
 	bool foundGui = false;
 	for (const auto& task: tasks) {
 		if (task.name == "gui_task" || task.name == "app_executor") {
-			printf("%-14s state=%-3s cpu=%5.1f%% stack_hwm=%lu core=%d\n",
-				task.name.c_str(),
-				task.state.c_str(),
-				task.cpuUsagePercent,
-				(unsigned long)task.stackHighWaterMark,
-				task.coreID);
+			printf("%-14s state=%-3s cpu=%5.1f%% stack_hwm=%lu core=%d\n", task.name.c_str(), task.state.c_str(), task.cpuUsagePercent, (unsigned long)task.stackHighWaterMark, task.coreID);
 			if (task.name == "gui_task") {
 				foundGui = true;
 			}

@@ -11,13 +11,13 @@
 #include <flx/system/services/SdCardService.hpp>
 #endif
 
-#include "freertos/queue.h"
 #include "freertos/projdefs.h"
+#include "freertos/queue.h"
 
 #include <array>
 #include <cerrno>
-#include <cstring>
 #include <cstdio>
+#include <cstring>
 #include <dirent.h>
 #include <functional>
 #include <memory>
@@ -485,8 +485,8 @@ void FileSystemService::processJob(FileOpId opId) {
 					struct stat st {};
 					uint64_t totalBytes = 0;
 					if (withSpiLockValue(useSpi, localMaxBusWaitUs, -1, [&]() {
-						return ::stat(fileSrc.c_str(), &st);
-					}) == 0) {
+							return ::stat(fileSrc.c_str(), &st);
+						}) == 0) {
 						totalBytes = static_cast<uint64_t>(st.st_size);
 					}
 
