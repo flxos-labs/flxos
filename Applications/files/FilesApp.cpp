@@ -44,11 +44,11 @@ static constexpr std::string_view TAG = "FilesApp";
 
 using namespace flx::apps;
 using namespace flx::ui::common;
-using flx::services::FileSystemService;
 using flx::services::FileOpId;
 using flx::services::FileOpRequest;
 using flx::services::FileOpResult;
 using flx::services::FileOpType;
+using flx::services::FileSystemService;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -123,7 +123,8 @@ void postToUi(std::function<void()> fn) {
 		auto* callback = static_cast<std::function<void()>*>(user_data);
 		(*callback)();
 		delete callback;
-	}, cb);
+	},
+				  cb);
 }
 
 } // anonymous namespace
@@ -281,8 +282,7 @@ void FilesApp::showProgressDialog(const char* title) {
 	lv_obj_t* cancelBtn = lv_msgbox_add_footer_button(m_progressMbox, "Cancel");
 	lv_obj_add_event_cb(cancelBtn, [](lv_event_t* e) {
 		auto* app = static_cast<FilesApp*>(lv_event_get_user_data(e));
-		app->cancelActiveOp();
-	}, LV_EVENT_CLICKED, this);
+		app->cancelActiveOp(); }, LV_EVENT_CLICKED, this);
 }
 
 void FilesApp::updateProgress(int percent, const char* path) {

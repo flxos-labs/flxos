@@ -2,13 +2,13 @@
 
 #include "lvgl.h"
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <functional>
 #include <string.h>
 #include <vector>
-#include <atomic>
 
 namespace flx::ui {
 

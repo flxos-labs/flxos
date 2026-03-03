@@ -4,8 +4,8 @@
 #include <flx/core/EventBus.hpp>
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
-#include <flx/system/services/FileOperationTypes.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
+#include <flx/system/services/FileOperationTypes.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #if FLXOS_SD_CARD_ENABLED
