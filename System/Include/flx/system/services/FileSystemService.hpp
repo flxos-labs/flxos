@@ -1,67 +1,89 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
+#include <flx/system/services/FileOperationTypes.hpp>
+#include <mutex>
 #include <string>
 #include <string_view>
-#include <vector>
+#include <unordered_map>
+
+namespace flx::kernel {
+class Task;
+}
 
 namespace flx::services {
 
-struct FileEntry {
-	std::string name;
-	bool isDirectory {false};
-	uint64_t size {0};
+struct FileSystemPerfStats {
+	uint64_t submitCount {0};
+	uint64_t completedCount {0};
+	uint64_t failedCount {0};
+	uint64_t cancelledCount {0};
+	uint64_t progressEventCount {0};
+	uint64_t bytesRead {0};
+	uint64_t bytesWritten {0};
+	uint64_t maxChunkUs {0};
+	uint64_t maxBusWaitUs {0};
+	uint32_t queueDepth {0};
 };
-
-/// Progress callback: (percentComplete 0–100, currentItemPath)
-using ProgressCallback = std::function<void(int, std::string_view)>;
 
 class FileSystemService {
 public:
 
 	static FileSystemService& getInstance();
 
-	// Non-copyable, non-movable singleton
 	FileSystemService(const FileSystemService&) = delete;
 	FileSystemService& operator=(const FileSystemService&) = delete;
 	FileSystemService(FileSystemService&&) = delete;
 	FileSystemService& operator=(FileSystemService&&) = delete;
 
-	/// List entries in a directory. LVGL "A:/" paths are accepted.
-	/// Returns an empty vector on failure (errors are logged internally).
-	[[nodiscard]] std::vector<FileEntry> listDirectory(const std::string& path);
+	[[nodiscard]] FileOpId submit(
+		FileOpRequest req,
+		FileOpCallback onProgress = {},
+		FileOpResultCallback onDone = {}
+	);
 
-	/// Copy src → dst, recursively if src is a directory.
-	[[nodiscard]] bool copy(const std::string& src, const std::string& dst, ProgressCallback callback = {});
+	[[nodiscard]] bool cancel(FileOpId opId);
 
-	/// Move/rename src → dst (falls back to copy+delete across filesystems).
-	[[nodiscard]] bool move(const std::string& src, const std::string& dst);
+	[[nodiscard]] FileOpState state(FileOpId opId) const;
 
-	/// Remove a file or directory tree.
-	[[nodiscard]] bool remove(const std::string& path, ProgressCallback callback = {});
+	[[nodiscard]] FileSystemPerfStats getPerfStats() const;
 
-	/// Create a directory (succeeds if it already exists).
-	[[nodiscard]] bool mkdir(const std::string& path);
-
-	// ── Path helpers ──────────────────────────────────────────────────────────
-
-	/// Strip LVGL drive prefix ("A:") → native FS path.
 	[[nodiscard]] static std::string toNativePath(const std::string& lvPath);
 
-	/// Join a base directory and a filename with exactly one '/'.
 	[[nodiscard]] static std::string joinPath(std::string_view base, std::string_view name);
 
 private:
 
-	FileSystemService() = default;
+	friend class FileOpExecutorTask;
 
-	// Implementation helpers
-	[[nodiscard]] static int copyFile(const char* src, const char* dst, int64_t totalBytes, ProgressCallback callback);
+	struct Job {
+		FileOpRequest req {};
+		FileOpCallback onProgress {};
+		FileOpResultCallback onDone {};
+	};
 
-	[[nodiscard]] static int copyRecursive(const char* src, const char* dst, ProgressCallback callback);
+	struct OpRecord {
+		FileOpType type {FileOpType::ListDirectory};
+		FileOpState state {FileOpState::Queued};
+		bool cancelRequested {false};
+	};
 
-	[[nodiscard]] static int removeRecursive(const char* path, ProgressCallback callback);
+	FileSystemService();
+	~FileSystemService();
+
+	void ensureExecutorStarted();
+	void processJob(FileOpId opId);
+	void updateQueueDepth();
+
+	mutable std::mutex m_mutex {};
+	std::unordered_map<FileOpId, OpRecord> m_records {};
+	std::unordered_map<FileOpId, Job> m_jobs {};
+	FileOpId m_nextId {1};
+
+	void* m_queue {nullptr}; // QueueHandle_t
+	flx::kernel::Task* m_executor {nullptr};
+
+	FileSystemPerfStats m_perf {};
 };
 
 } // namespace flx::services

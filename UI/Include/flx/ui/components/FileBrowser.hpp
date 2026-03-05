@@ -2,10 +2,12 @@
 
 #include "lvgl.h"
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <functional>
+#include <memory>
 #include <string.h>
 #include <vector>
 
@@ -78,6 +80,9 @@ private:
 	std::string m_currentPath {"A:/"};
 	std::vector<std::string> m_extensions {};
 	bool m_forSave {false};
+	std::shared_ptr<std::atomic<bool>> m_destroyed {std::make_shared<std::atomic<bool>>(false)};
+	flx::services::FileOpId m_listOp {0};
+	uint32_t m_listReqVersion {0};
 
 	void createUI();
 	void refreshList();

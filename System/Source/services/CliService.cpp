@@ -12,21 +12,27 @@
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 
+#include <cerrno>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <iomanip>
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
 #include <flx/core/GuiLock.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
+#include <flx/system/services/FileOperationTypes.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <sstream>
 #include <sys/time.h>
 #include <time.h>
+
+#include "freertos/semphr.h"
 
 static constexpr const char* TAG = "CLI";
 
@@ -70,6 +76,61 @@ static std::string resolvePath(const std::string& base, const std::string& part)
 		result += "/" + p;
 	}
 	return result;
+}
+
+static bool runFsBlocking(
+	flx::services::FileOpRequest req,
+	flx::services::FileOpResult& outResult,
+	uint32_t timeoutMs = 60000
+) {
+	// Heap-allocate shared state so the callback is safe even after timeout
+	struct SharedState {
+		SemaphoreHandle_t sem;
+		flx::services::FileOpResult result;
+		~SharedState() {
+			if (sem) vSemaphoreDelete(sem);
+		}
+	};
+
+	auto state = std::make_shared<SharedState>();
+	state->sem = xSemaphoreCreateBinary();
+	if (!state->sem) {
+		outResult.success = false;
+		outResult.state = flx::services::FileOpState::Failed;
+		outResult.errorCode = ENOMEM;
+		outResult.errorMessage = "failed to allocate semaphore";
+		return false;
+	}
+
+	auto opId = flx::services::FileSystemService::getInstance().submit(
+		std::move(req),
+		{},
+		[state](const flx::services::FileOpResult& result) {
+			state->result = result;
+			xSemaphoreGive(state->sem);
+		}
+	);
+
+	if (opId == 0) {
+		outResult.success = false;
+		outResult.state = flx::services::FileOpState::Failed;
+		outResult.errorCode = ENODEV;
+		outResult.errorMessage = "failed to submit file operation";
+		return false;
+	}
+
+	bool const waited = xSemaphoreTake(state->sem, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
+	if (!waited) {
+		flx::services::FileSystemService::getInstance().cancel(opId);
+		outResult.opId = opId;
+		outResult.success = false;
+		outResult.state = flx::services::FileOpState::Cancelled;
+		outResult.errorCode = ETIMEDOUT;
+		outResult.errorMessage = "operation timed out";
+	} else {
+		outResult = state->result;
+	}
+	return waited && outResult.success;
 }
 
 namespace flx::system {
@@ -157,6 +218,47 @@ static int cmdTasks(int /*argc*/, char** /*argv*/) {
 		printf("%-20s %-8s %-12lu %-6d %-6d %-6.1f\n", task.name.c_str(), task.state.c_str(), (unsigned long)task.stackHighWaterMark, task.currentPriority, task.coreID, task.cpuUsagePercent);
 	}
 	printf("================================================================\n\n");
+	return 0;
+}
+
+// Command: uiperf - UI-related runtime diagnostics
+static int cmdUiPerf(int /*argc*/, char** /*argv*/) {
+	auto& sys_info = flx::services::SystemInfoService::getInstance();
+	auto tasks = sys_info.getTaskList();
+
+	printf("\n=== UI Performance ===\n");
+	bool foundGui = false;
+	for (const auto& task: tasks) {
+		if (task.name == "gui_task" || task.name == "app_executor") {
+			printf("%-14s state=%-3s cpu=%5.1f%% stack_hwm=%lu core=%d\n", task.name.c_str(), task.state.c_str(), task.cpuUsagePercent, (unsigned long)task.stackHighWaterMark, task.coreID);
+			if (task.name == "gui_task") {
+				foundGui = true;
+			}
+		}
+	}
+	if (!foundGui) {
+		printf("gui_task not found (headless mode or task not started)\n");
+	}
+	printf("======================\n\n");
+	return 0;
+}
+
+// Command: fsperf - File operation executor diagnostics
+static int cmdFsPerf(int /*argc*/, char** /*argv*/) {
+	auto stats = flx::services::FileSystemService::getInstance().getPerfStats();
+
+	printf("\n=== FS Performance ===\n");
+	printf("Submitted:      %llu\n", (unsigned long long)stats.submitCount);
+	printf("Completed:      %llu\n", (unsigned long long)stats.completedCount);
+	printf("Failed:         %llu\n", (unsigned long long)stats.failedCount);
+	printf("Cancelled:      %llu\n", (unsigned long long)stats.cancelledCount);
+	printf("Progress Events:%llu\n", (unsigned long long)stats.progressEventCount);
+	printf("Bytes Read:     %llu\n", (unsigned long long)stats.bytesRead);
+	printf("Bytes Written:  %llu\n", (unsigned long long)stats.bytesWritten);
+	printf("Max Chunk (us): %llu\n", (unsigned long long)stats.maxChunkUs);
+	printf("Max BusWait(us):%llu\n", (unsigned long long)stats.maxBusWaitUs);
+	printf("Queue Depth:    %u\n", (unsigned int)stats.queueDepth);
+	printf("======================\n\n");
 	return 0;
 }
 
@@ -376,7 +478,6 @@ static int cmdHotspot(int argc, char** argv) {
 
 // Command: ls - List directory contents
 static int cmdLs(int argc, char** argv) {
-	auto& fs = flx::services::FileSystemService::getInstance();
 	auto& cli = CliService::getInstance();
 
 	std::string path;
@@ -391,8 +492,17 @@ static int cmdLs(int argc, char** argv) {
 		// Ideally buildPath handles this, or we assume absolute if starts with /
 	}
 
-	// Listing
-	auto entries = fs.listDirectory(path);
+	flx::services::FileOpRequest req;
+	req.type = flx::services::FileOpType::ListDirectory;
+	req.path = path;
+
+	flx::services::FileOpResult result;
+	if (!runFsBlocking(std::move(req), result)) {
+		printf("Failed to list directory: %s\n", result.errorMessage.c_str());
+		return 1;
+	}
+
+	auto const& entries = result.entries;
 	printf("\n=== Directory: %s ===\n", path.c_str());
 	if (entries.empty()) {
 		printf("(empty)\n");
@@ -436,14 +546,18 @@ static int cmdMkdir(int argc, char** argv) {
 		printf("Usage: mkdir <path>\n");
 		return 1;
 	}
-	auto& fs = flx::services::FileSystemService::getInstance();
 	auto& cli = CliService::getInstance();
 	std::string path = resolvePath(cli.getCurrentDirectory(), argv[1]);
 
-	if (fs.mkdir(path)) {
+	flx::services::FileOpRequest req;
+	req.type = flx::services::FileOpType::Mkdir;
+	req.path = path;
+
+	flx::services::FileOpResult result;
+	if (runFsBlocking(std::move(req), result)) {
 		printf("Directory created: %s\n", path.c_str());
 	} else {
-		printf("Failed to create directory: %s\n", path.c_str());
+		printf("Failed to create directory: %s (%s)\n", path.c_str(), result.errorMessage.c_str());
 	}
 	return 0;
 }
@@ -454,15 +568,18 @@ static int cmdRm(int argc, char** argv) {
 		printf("Usage: rm <path>\n");
 		return 1;
 	}
-	auto& fs = flx::services::FileSystemService::getInstance();
 	auto& cli = CliService::getInstance();
 	std::string path = resolvePath(cli.getCurrentDirectory(), argv[1]);
 
-	// TODO: Add confirmation?
-	if (fs.remove(path)) {
+	flx::services::FileOpRequest req;
+	req.type = flx::services::FileOpType::Remove;
+	req.path = path;
+
+	flx::services::FileOpResult result;
+	if (runFsBlocking(std::move(req), result)) {
 		printf("Removed: %s\n", path.c_str());
 	} else {
-		printf("Failed to remove: %s\n", path.c_str());
+		printf("Failed to remove: %s (%s)\n", path.c_str(), result.errorMessage.c_str());
 	}
 	return 0;
 }
@@ -709,6 +826,8 @@ void CliService::registerCommands() {
 
 	// Phase 1: New System Info Commands
 	REGISTER_CLI_CMD("tasks", "List FreeRTOS tasks and stats", &cmdTasks);
+	REGISTER_CLI_CMD("uiperf", "UI runtime diagnostics", &cmdUiPerf);
+	REGISTER_CLI_CMD("fsperf", "File operation performance counters", &cmdFsPerf);
 	REGISTER_CLI_CMD("storage", "Display partition/storage usage", &cmdStorage);
 	REGISTER_CLI_CMD("psram", "Display PSRAM statistics", &cmdPsram);
 	REGISTER_CLI_CMD("version", "Show FlxOS software versions", &cmdVersion);

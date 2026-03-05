@@ -5,6 +5,7 @@
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
+#include <flx/system/services/FileOperationTypes.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #if FLXOS_SD_CARD_ENABLED
@@ -21,12 +22,57 @@ const char* lodepng_error_text(unsigned code);
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <freertos/semphr.h>
+#include <memory>
 #include <string_view>
 #include <sys/stat.h>
+#include <utility>
 
 static constexpr std::string_view TAG = "ScreenshotService";
 
 namespace flx::services {
+
+namespace {
+
+bool mkdirBlocking(const std::string& path, uint32_t timeoutMs = 10000) {
+	// Heap-allocate shared state so the callback is safe even after timeout
+	struct SharedState {
+		SemaphoreHandle_t sem;
+		bool success {false};
+		~SharedState() {
+			if (sem) vSemaphoreDelete(sem);
+		}
+	};
+
+	auto state = std::make_shared<SharedState>();
+	state->sem = xSemaphoreCreateBinary();
+	if (!state->sem) return false;
+
+	FileOpRequest req;
+	req.type = FileOpType::Mkdir;
+	req.path = path;
+
+	FileOpId const opId = FileSystemService::getInstance().submit(
+		std::move(req),
+		{},
+		[state](const FileOpResult& result) {
+			state->success = result.success;
+			xSemaphoreGive(state->sem);
+		}
+	);
+
+	if (opId == 0) {
+		return false;
+	}
+
+	bool const waited = xSemaphoreTake(state->sem, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
+	if (!waited) {
+		FileSystemService::getInstance().cancel(opId);
+	}
+	return waited && state->success;
+}
+
+} // namespace
 
 const ServiceManifest ScreenshotService::serviceManifest = {
 	.serviceId = "com.flxos.screenshot",
@@ -135,7 +181,7 @@ std::string ScreenshotService::getDefaultStoragePath() const {
 
 std::string ScreenshotService::generateFilename(const std::string& basePath) {
 	std::string dir = basePath + "/screenshots";
-	if (!FileSystemService::getInstance().mkdir(dir)) {
+	if (!mkdirBlocking(dir)) {
 		Log::error(TAG, "Failed to create directory: %s", dir.c_str());
 		return {};
 	}
