@@ -249,6 +249,12 @@ GuiTask::PerfStats GuiTask::getPerfStats() {
 	return stats;
 }
 
+void GuiTask::resetPerfStats() {
+	lock();
+	m_perfStats = PerfStats {};
+	unlock();
+}
+
 void GuiTask::setResumeOnTouch(bool enable) {
 	m_resume_on_touch = enable;
 }
