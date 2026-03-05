@@ -17,6 +17,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iomanip>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -82,8 +83,18 @@ static bool runFsBlocking(
 	flx::services::FileOpResult& outResult,
 	uint32_t timeoutMs = 60000
 ) {
-	SemaphoreHandle_t done = xSemaphoreCreateBinary();
-	if (!done) {
+	// Heap-allocate shared state so the callback is safe even after timeout
+	struct SharedState {
+		SemaphoreHandle_t sem;
+		flx::services::FileOpResult result;
+		~SharedState() {
+			if (sem) vSemaphoreDelete(sem);
+		}
+	};
+
+	auto state = std::make_shared<SharedState>();
+	state->sem = xSemaphoreCreateBinary();
+	if (!state->sem) {
 		outResult.success = false;
 		outResult.state = flx::services::FileOpState::Failed;
 		outResult.errorCode = ENOMEM;
@@ -94,14 +105,13 @@ static bool runFsBlocking(
 	auto opId = flx::services::FileSystemService::getInstance().submit(
 		std::move(req),
 		{},
-		[&](const flx::services::FileOpResult& result) {
-			outResult = result;
-			xSemaphoreGive(done);
+		[state](const flx::services::FileOpResult& result) {
+			state->result = result;
+			xSemaphoreGive(state->sem);
 		}
 	);
 
 	if (opId == 0) {
-		vSemaphoreDelete(done);
 		outResult.success = false;
 		outResult.state = flx::services::FileOpState::Failed;
 		outResult.errorCode = ENODEV;
@@ -109,17 +119,17 @@ static bool runFsBlocking(
 		return false;
 	}
 
-	bool const waited = xSemaphoreTake(done, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
+	bool const waited = xSemaphoreTake(state->sem, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
 	if (!waited) {
-		bool const cancelled = flx::services::FileSystemService::getInstance().cancel(opId);
-		(void)cancelled;
+		flx::services::FileSystemService::getInstance().cancel(opId);
 		outResult.opId = opId;
 		outResult.success = false;
 		outResult.state = flx::services::FileOpState::Cancelled;
 		outResult.errorCode = ETIMEDOUT;
 		outResult.errorMessage = "operation timed out";
+	} else {
+		outResult = state->result;
 	}
-	vSemaphoreDelete(done);
 	return waited && outResult.success;
 }
 
