@@ -217,6 +217,7 @@ void GuiTask::run(void* /*data*/) {
 		}
 
 		uint64_t const loopUs = static_cast<uint64_t>(esp_timer_get_time()) - loopStartUs;
+		lock();
 		++m_perfStats.loopCount;
 		if (loopUs > m_perfStats.maxLoopUs) {
 			m_perfStats.maxLoopUs = loopUs;
@@ -224,6 +225,7 @@ void GuiTask::run(void* /*data*/) {
 		if (loopUs > 40000ULL) {
 			++m_perfStats.over40msCount;
 		}
+		unlock();
 	}
 }
 
