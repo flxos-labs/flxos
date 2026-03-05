@@ -23,6 +23,7 @@ const char* lodepng_error_text(unsigned code);
 #include <cstring>
 #include <ctime>
 #include <freertos/semphr.h>
+#include <memory>
 #include <string_view>
 #include <sys/stat.h>
 #include <utility>
@@ -34,10 +35,19 @@ namespace flx::services {
 namespace {
 
 bool mkdirBlocking(const std::string& path, uint32_t timeoutMs = 10000) {
-	SemaphoreHandle_t done = xSemaphoreCreateBinary();
-	if (!done) return false;
+	// Heap-allocate shared state so the callback is safe even after timeout
+	struct SharedState {
+		SemaphoreHandle_t sem;
+		bool success {false};
+		~SharedState() {
+			if (sem) vSemaphoreDelete(sem);
+		}
+	};
 
-	bool success = false;
+	auto state = std::make_shared<SharedState>();
+	state->sem = xSemaphoreCreateBinary();
+	if (!state->sem) return false;
+
 	FileOpRequest req;
 	req.type = FileOpType::Mkdir;
 	req.path = path;
@@ -45,24 +55,21 @@ bool mkdirBlocking(const std::string& path, uint32_t timeoutMs = 10000) {
 	FileOpId const opId = FileSystemService::getInstance().submit(
 		std::move(req),
 		{},
-		[&](const FileOpResult& result) {
-			success = result.success;
-			xSemaphoreGive(done);
+		[state](const FileOpResult& result) {
+			state->success = result.success;
+			xSemaphoreGive(state->sem);
 		}
 	);
 
 	if (opId == 0) {
-		vSemaphoreDelete(done);
 		return false;
 	}
 
-	bool const waited = xSemaphoreTake(done, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
+	bool const waited = xSemaphoreTake(state->sem, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
 	if (!waited) {
-		bool const cancelled = FileSystemService::getInstance().cancel(opId);
-		(void)cancelled;
+		FileSystemService::getInstance().cancel(opId);
 	}
-	vSemaphoreDelete(done);
-	return waited && success;
+	return waited && state->success;
 }
 
 } // namespace
