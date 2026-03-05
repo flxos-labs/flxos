@@ -41,6 +41,7 @@ public:
 	static void runDisplayTest(int color);
 	static bool isPaused();
 	static PerfStats getPerfStats();
+	static void resetPerfStats();
 
 protected:
 
