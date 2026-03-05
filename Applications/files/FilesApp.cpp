@@ -31,6 +31,7 @@
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/system/services/FileSystemService.hpp>
+#include <flx/ui/UiAsyncHelpers.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 
@@ -49,6 +50,7 @@ using flx::services::FileOpRequest;
 using flx::services::FileOpResult;
 using flx::services::FileOpType;
 using flx::services::FileSystemService;
+using flx::ui::postToUi;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -117,15 +119,7 @@ inline uint32_t nowMs() {
 	return static_cast<uint32_t>(esp_timer_get_time() / 1000);
 }
 
-void postToUi(std::function<void()> fn) {
-	auto* cb = new std::function<void()>(std::move(fn));
-	lv_async_call([](void* user_data) {
-		auto* callback = static_cast<std::function<void()>*>(user_data);
-		(*callback)();
-		delete callback;
-	},
-				  cb);
-}
+
 
 } // anonymous namespace
 
