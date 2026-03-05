@@ -676,7 +676,13 @@ void FileSystemService::processJob(FileOpId opId) {
 
 				if (job.req.type == FileOpType::Move) {
 					int const rmRes = removeRecursive(src);
-					if (rmRes != 0 && rmRes != -2) {
+					if (rmRes == -2) {
+						result.state = FileOpState::Cancelled;
+						result.errorCode = ECANCELED;
+						result.errorMessage = "move cancelled during source removal";
+						break;
+					}
+					if (rmRes != 0) {
 						Log::warn(TAG, "Move copied destination but failed to remove source '%s'", src.c_str());
 					}
 				}
