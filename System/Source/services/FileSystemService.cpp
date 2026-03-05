@@ -635,7 +635,7 @@ void FileSystemService::processJob(FileOpId opId) {
 								return ::unlink(subPath.c_str());
 							});
 						}
-						if (r != 0) return -1;
+						if (r != 0) return r;
 					}
 					dir.reset();
 					int const rd = withSpiLockValue(useSpi, localMaxBusWaitUs, -1, [&]() {
