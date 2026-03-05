@@ -1,8 +1,8 @@
 #include <flx/ui/components/FileBrowser.hpp>
 
 #include "flx/ui/theming/ui_constants/UiConstants.hpp"
-#include "misc/lv_async.h"
 #include <flx/system/services/FileSystemService.hpp>
+#include <flx/ui/UiAsyncHelpers.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 
 #include <algorithm>
@@ -42,15 +42,7 @@ bool passesFilter(const std::string& filename, const std::vector<std::string>& e
 	return false;
 }
 
-void postToUi(std::function<void()> fn) {
-	auto* cb = new std::function<void()>(std::move(fn));
-	lv_async_call([](void* user_data) {
-		auto* callback = static_cast<std::function<void()>*>(user_data);
-		(*callback)();
-		delete callback;
-	},
-				  cb);
-}
+using flx::ui::postToUi;
 
 } // anonymous namespace
 
@@ -70,7 +62,7 @@ FileBrowser::~FileBrowser() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 void FileBrowser::show(bool forSave, FileSelectedCallback onFileSelected, const std::string& defaultFilename) {
-	m_destroyed = false;
+	*m_destroyed = false;
 	m_forSave = forSave;
 	m_onFileSelected = std::move(onFileSelected);
 
@@ -108,7 +100,7 @@ void FileBrowser::hide() {
 }
 
 void FileBrowser::destroy() {
-	m_destroyed = true;
+	*m_destroyed = true;
 	++m_listReqVersion;
 	if (m_listOp != 0) {
 		bool const cancelled = FileSystemService::getInstance().cancel(m_listOp);
@@ -204,9 +196,9 @@ void FileBrowser::refreshList() {
 	m_listOp = FileSystemService::getInstance().submit(
 		std::move(req),
 		{},
-		[this, reqVersion](const flx::services::FileOpResult& result) {
-			postToUi([this, reqVersion, result]() {
-				if (m_destroyed || reqVersion != m_listReqVersion || !m_list) {
+		[this, reqVersion, destroyed = m_destroyed](const flx::services::FileOpResult& result) {
+			postToUi([this, reqVersion, result, destroyed]() {
+				if (destroyed->load() || reqVersion != m_listReqVersion || !m_list) {
 					return;
 				}
 				m_listOp = 0;
