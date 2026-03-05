@@ -2,11 +2,13 @@
 
 #include "flx/ui/theming/ui_constants/UiConstants.hpp"
 #include <flx/system/services/FileSystemService.hpp>
+#include <flx/ui/UiAsyncHelpers.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 
 #include <algorithm>
 #include <cctype>
 #include <string_view>
+#include <utility>
 
 using flx::services::FileSystemService;
 
@@ -40,6 +42,8 @@ bool passesFilter(const std::string& filename, const std::vector<std::string>& e
 	return false;
 }
 
+using flx::ui::postToUi;
+
 } // anonymous namespace
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,6 +62,7 @@ FileBrowser::~FileBrowser() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 void FileBrowser::show(bool forSave, FileSelectedCallback onFileSelected, const std::string& defaultFilename) {
+	*m_destroyed = false;
 	m_forSave = forSave;
 	m_onFileSelected = std::move(onFileSelected);
 
@@ -95,6 +100,14 @@ void FileBrowser::hide() {
 }
 
 void FileBrowser::destroy() {
+	*m_destroyed = true;
+	++m_listReqVersion;
+	if (m_listOp != 0) {
+		bool const cancelled = FileSystemService::getInstance().cancel(m_listOp);
+		(void)cancelled;
+		m_listOp = 0;
+	}
+
 	if (m_container) {
 		lv_obj_delete(m_container);
 		m_container = nullptr;
@@ -173,40 +186,68 @@ void FileBrowser::refreshList() {
 		lv_obj_add_event_cb(upBtn, [](lv_event_t* e) { static_cast<FileBrowser*>(lv_event_get_user_data(e))->navigateUp(); }, LV_EVENT_CLICKED, this);
 	}
 
-	const auto entries =
-		FileSystemService::getInstance().listDirectory(m_currentPath);
+	lv_list_add_text(m_list, "Loading...");
 
-	for (const auto& entry: entries) {
-		// Apply extension filter to files only
-		if (!entry.isDirectory && !passesFilter(entry.name, m_extensions)) {
-			continue;
+	uint32_t const reqVersion = ++m_listReqVersion;
+	flx::services::FileOpRequest req;
+	req.type = flx::services::FileOpType::ListDirectory;
+	req.path = m_currentPath;
+
+	m_listOp = FileSystemService::getInstance().submit(
+		std::move(req),
+		{},
+		[this, reqVersion, destroyed = m_destroyed](const flx::services::FileOpResult& result) {
+			postToUi([this, reqVersion, result, destroyed]() {
+				if (destroyed->load() || reqVersion != m_listReqVersion || !m_list) {
+					return;
+				}
+				m_listOp = 0;
+
+				lv_obj_clean(m_list);
+				if (m_currentPath != ROOT_PATH) {
+					lv_obj_t* upBtn = lv_list_add_button(m_list, LV_SYMBOL_UP, "..");
+					lv_obj_add_event_cb(upBtn, [](lv_event_t* e) { static_cast<FileBrowser*>(lv_event_get_user_data(e))->navigateUp(); }, LV_EVENT_CLICKED, this);
+				}
+
+				if (!result.success) {
+					lv_list_add_text(m_list, "Failed to list directory");
+					return;
+				}
+
+				for (const auto& entry: result.entries) {
+					// Apply extension filter to files only
+					if (!entry.isDirectory && !passesFilter(entry.name, m_extensions)) {
+						continue;
+					}
+
+					const char* icon = entry.isDirectory ? LV_SYMBOL_DIRECTORY : LV_SYMBOL_FILE;
+					lv_obj_t* btn = lv_list_add_button(m_list, icon, entry.name.c_str());
+
+					// Per-button context — freed via LV_EVENT_DELETE.
+					struct EntryCtx {
+						FileBrowser* browser;
+						std::string name;
+						bool isDir;
+					};
+					auto* ctx = new EntryCtx {this, entry.name, entry.isDirectory};
+
+					lv_obj_add_event_cb(btn, [](lv_event_t* e) {
+		                if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
+		                auto* c = static_cast<EntryCtx*>(lv_event_get_user_data(e));
+		                if (c->isDir) {
+		                    c->browser->enterDirectory(c->name);
+		                } else {
+		                    c->browser->selectFile(c->name);
+		                } }, LV_EVENT_ALL, ctx);
+
+					lv_obj_add_event_cb(btn, [](lv_event_t* e) {
+		                if (lv_event_get_code(e) == LV_EVENT_DELETE) {
+		                    delete static_cast<EntryCtx*>(lv_event_get_user_data(e));
+		                } }, LV_EVENT_DELETE, ctx);
+				}
+			});
 		}
-
-		const char* icon = entry.isDirectory ? LV_SYMBOL_DIRECTORY : LV_SYMBOL_FILE;
-		lv_obj_t* btn = lv_list_add_button(m_list, icon, entry.name.c_str());
-
-		// Per-button context — freed via LV_EVENT_DELETE.
-		struct EntryCtx {
-			FileBrowser* browser;
-			std::string name;
-			bool isDir;
-		};
-		auto* ctx = new EntryCtx {this, entry.name, entry.isDirectory};
-
-		lv_obj_add_event_cb(btn, [](lv_event_t* e) {
-                if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
-                auto* c = static_cast<EntryCtx*>(lv_event_get_user_data(e));
-                if (c->isDir) {
-                    c->browser->enterDirectory(c->name);
-                } else {
-                    c->browser->selectFile(c->name);
-                } }, LV_EVENT_ALL, ctx);
-
-		lv_obj_add_event_cb(btn, [](lv_event_t* e) {
-                if (lv_event_get_code(e) == LV_EVENT_DELETE) {
-                    delete static_cast<EntryCtx*>(lv_event_get_user_data(e));
-                } }, LV_EVENT_DELETE, ctx);
-	}
+	);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

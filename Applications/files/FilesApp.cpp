@@ -30,6 +30,7 @@
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/system/services/FileSystemService.hpp>
+#include <flx/ui/UiAsyncHelpers.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 
@@ -37,12 +38,18 @@
 #include <cctype>
 #include <cstring>
 #include <string_view>
+#include <utility>
 
 static constexpr std::string_view TAG = "FilesApp";
 
 using namespace flx::apps;
 using namespace flx::ui::common;
+using flx::services::FileOpId;
+using flx::services::FileOpRequest;
+using flx::services::FileOpResult;
+using flx::services::FileOpType;
 using flx::services::FileSystemService;
+using flx::ui::postToUi;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -51,7 +58,6 @@ namespace {
 
 constexpr std::string_view ROOT_PATH = "A:/";
 constexpr uint32_t WATCHDOG_MS = 100;
-constexpr uint32_t REFRESH_UI_MS = 50;
 constexpr size_t FILENAME_BUFSZ = 32;
 
 /// Supported file-to-MIME mappings (checked by extension).
@@ -111,7 +117,6 @@ void showMsgBox(const char* title, const char* text) {
 inline uint32_t nowMs() {
 	return static_cast<uint32_t>(esp_timer_get_time() / 1000);
 }
-
 } // anonymous namespace
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -152,6 +157,9 @@ const void* FilesApp::getIcon() const { return LV_SYMBOL_DIRECTORY; }
 // ─────────────────────────────────────────────────────────────────────────────
 
 void FilesApp::createUI(void* parent) {
+	m_stopped = false;
+	m_activeOp = 0;
+
 	m_container = static_cast<lv_obj_t*>(parent);
 	m_page = create_page_container(m_container);
 
@@ -187,6 +195,10 @@ void FilesApp::createUI(void* parent) {
 }
 
 void FilesApp::onStop() {
+	m_stopped = true;
+	cancelActiveOp();
+	++m_listReqVersion;
+
 	// Null out all widget pointers — LVGL owns the memory.
 	m_container = m_page = m_header = m_backBtn = m_pasteBtn = m_pathLabel = m_list = nullptr;
 	m_progressMbox = m_progressBar = m_progressLabel = nullptr;
@@ -257,21 +269,18 @@ void FilesApp::showProgressDialog(const char* title) {
 	lv_bar_set_range(m_progressBar, 0, 100);
 	lv_bar_set_value(m_progressBar, 0, LV_ANIM_OFF);
 
-	lv_refr_now(nullptr);
+	lv_obj_t* cancelBtn = lv_msgbox_add_footer_button(m_progressMbox, "Cancel");
+	lv_obj_add_event_cb(cancelBtn, [](lv_event_t* e) {
+		auto* app = static_cast<FilesApp*>(lv_event_get_user_data(e));
+		app->cancelActiveOp(); }, LV_EVENT_CLICKED, this);
 }
 
 void FilesApp::updateProgress(int percent, const char* path) {
-	if (m_progressBar) {
+	if (m_progressBar && percent >= 0) {
 		lv_bar_set_value(m_progressBar, percent, LV_ANIM_OFF);
 	}
 	if (m_progressLabel && path) {
 		lv_label_set_text(m_progressLabel, basenameOf(path));
-	}
-
-	const uint32_t now = nowMs();
-	if (now - m_lastRefreshMs >= REFRESH_UI_MS) {
-		lv_refr_now(nullptr);
-		m_lastRefreshMs = now;
 	}
 }
 
@@ -279,6 +288,13 @@ void FilesApp::closeProgressDialog() {
 	if (m_progressMbox) {
 		lv_msgbox_close(m_progressMbox);
 		m_progressMbox = m_progressBar = m_progressLabel = nullptr;
+	}
+}
+
+void FilesApp::cancelActiveOp() {
+	if (m_activeOp != 0) {
+		bool const cancelled = FileSystemService::getInstance().cancel(m_activeOp);
+		(void)cancelled;
 	}
 }
 
@@ -305,18 +321,45 @@ void FilesApp::refreshList() {
 		lv_obj_add_flag(m_pasteBtn, LV_OBJ_FLAG_HIDDEN);
 	}
 
+	lv_list_add_text(m_list, "Loading...");
+
 	Log::info(TAG, "Listing: %s", m_currentPath.c_str());
-	const auto entries = FileSystemService::getInstance().listDirectory(m_currentPath);
-	Log::info(TAG, "Found %zu entries", entries.size());
+	uint32_t const reqVersion = ++m_listReqVersion;
 
-	if (entries.empty()) {
-		lv_list_add_text(m_list, "Empty directory");
-		return;
-	}
+	FileOpRequest req;
+	req.type = FileOpType::ListDirectory;
+	req.path = m_currentPath;
 
-	for (const auto& entry: entries) {
-		feedWatchdog();
-		addListItem(entry.name, entry.isDirectory);
+	FileOpId const listOp = FileSystemService::getInstance().submit(
+		std::move(req),
+		{},
+		[this, reqVersion](const FileOpResult& result) {
+			postToUi([this, reqVersion, result]() {
+				if (m_stopped || reqVersion != m_listReqVersion || !m_list) return;
+
+				lv_obj_clean(m_list);
+				if (!result.success) {
+					lv_list_add_text(m_list, "Failed to list directory");
+					Log::error(TAG, "List failed: %s", result.errorMessage.c_str());
+					return;
+				}
+
+				Log::info(TAG, "Found %zu entries", result.entries.size());
+				if (result.entries.empty()) {
+					lv_list_add_text(m_list, "Empty directory");
+					return;
+				}
+
+				for (const auto& entry: result.entries) {
+					feedWatchdog();
+					addListItem(entry.name, entry.isDirectory);
+				}
+			});
+		}
+	);
+	if (listOp == 0) {
+		lv_obj_clean(m_list);
+		lv_list_add_text(m_list, "Failed to queue listing");
 	}
 }
 
@@ -488,6 +531,11 @@ void FilesApp::showInputDialog(const char* title, const std::string& defaultVal,
 // ─────────────────────────────────────────────────────────────────────────────
 
 void FilesApp::pasteItem() {
+	if (m_activeOp != 0) {
+		showMsgBox("Busy", "Another operation is running.");
+		return;
+	}
+
 	auto& clipboard = flx::ClipboardManager::getInstance();
 	if (!clipboard.hasContent()) return;
 
@@ -502,47 +550,94 @@ void FilesApp::pasteItem() {
 		return;
 	}
 
-	auto progress = [this](int pct, std::string_view path) {
-		updateProgress(pct, path.data());
-		feedWatchdog();
-	};
+	FileOpRequest req;
+	req.type = (clip.op == flx::ClipboardOp::CUT) ? FileOpType::Move : FileOpType::Copy;
+	req.path = srcPath;
+	req.destinationPath = dstPath;
 
-	if (clip.op == flx::ClipboardOp::CUT) {
-		if (!FileSystemService::getInstance().move(srcPath, dstPath)) {
-			showMsgBox("Error", "Could not move item.");
-		}
-		clipboard.clear();
-	} else {
-		showProgressDialog("Copying");
-		if (!FileSystemService::getInstance().copy(srcPath, dstPath, progress)) {
-			showMsgBox("Error", "Copy failed.");
-		}
-		closeProgressDialog();
-	}
+	showProgressDialog(clip.op == flx::ClipboardOp::CUT ? "Moving" : "Copying");
 
-	refreshList();
+	m_activeOp = FileSystemService::getInstance().submit(
+		std::move(req),
+		[this](const flx::services::FileOpProgress& progress) {
+			postToUi([this, progress]() {
+				if (m_stopped) return;
+				updateProgress(progress.percent, progress.currentPath.c_str());
+				feedWatchdog();
+			});
+		},
+		[this, clearClipboard = (clip.op == flx::ClipboardOp::CUT)](const FileOpResult& result) {
+			postToUi([this, result, clearClipboard]() {
+				if (m_stopped) return;
+				closeProgressDialog();
+				m_activeOp = 0;
+
+				if (clearClipboard) {
+					flx::ClipboardManager::getInstance().clear();
+				}
+
+				if (!result.success) {
+					if (result.state == flx::services::FileOpState::Cancelled) {
+						showMsgBox("Cancelled", "File operation cancelled.");
+					} else {
+						showMsgBox("Error", "File operation failed.");
+					}
+				}
+				refreshList();
+			});
+		}
+	);
 }
 
 void FilesApp::deleteItem(const std::string& name, bool /*isDir*/) {
+	if (m_activeOp != 0) {
+		showMsgBox("Busy", "Another operation is running.");
+		return;
+	}
+
 	const std::string fullPath = FileSystemService::joinPath(
 		FileSystemService::toNativePath(m_currentPath), name
 	);
 
+	FileOpRequest req;
+	req.type = FileOpType::Remove;
+	req.path = fullPath;
+
 	showProgressDialog("Deleting");
 
-	const bool ok = FileSystemService::getInstance().remove(fullPath, [this](int pct, std::string_view path) {
-		updateProgress(pct, path.data());
-		feedWatchdog();
-	});
-
-	closeProgressDialog();
-
-	if (!ok) showMsgBox("Error", "Could not delete item.");
-	refreshList();
+	m_activeOp = FileSystemService::getInstance().submit(
+		std::move(req),
+		[this](const flx::services::FileOpProgress& progress) {
+			postToUi([this, progress]() {
+				if (m_stopped) return;
+				updateProgress(progress.percent, progress.currentPath.c_str());
+				feedWatchdog();
+			});
+		},
+		[this](const FileOpResult& result) {
+			postToUi([this, result]() {
+				if (m_stopped) return;
+				closeProgressDialog();
+				m_activeOp = 0;
+				if (!result.success) {
+					if (result.state == flx::services::FileOpState::Cancelled) {
+						showMsgBox("Cancelled", "Delete cancelled.");
+					} else {
+						showMsgBox("Error", "Could not delete item.");
+					}
+				}
+				refreshList();
+			});
+		}
+	);
 }
 
 void FilesApp::renameItem(const std::string& oldName, const std::string& newName) {
 	if (newName.empty() || oldName == newName) return;
+	if (m_activeOp != 0) {
+		showMsgBox("Busy", "Another operation is running.");
+		return;
+	}
 
 	const std::string base = FileSystemService::toNativePath(m_currentPath);
 	const std::string oldPath = FileSystemService::joinPath(base, oldName);
@@ -550,23 +645,60 @@ void FilesApp::renameItem(const std::string& oldName, const std::string& newName
 
 	Log::info(TAG, "Renaming '%s' → '%s'", oldName.c_str(), newName.c_str());
 
-	if (!FileSystemService::getInstance().move(oldPath, newPath)) {
-		showMsgBox("Error", "Could not rename item.");
-	}
-	refreshList();
+	FileOpRequest req;
+	req.type = FileOpType::Move;
+	req.path = oldPath;
+	req.destinationPath = newPath;
+
+	showProgressDialog("Renaming");
+	m_activeOp = FileSystemService::getInstance().submit(
+		std::move(req),
+		{},
+		[this](const FileOpResult& result) {
+			postToUi([this, result]() {
+				if (m_stopped) return;
+				closeProgressDialog();
+				m_activeOp = 0;
+				if (!result.success) {
+					showMsgBox("Error", "Could not rename item.");
+				}
+				refreshList();
+			});
+		}
+	);
 }
 
 void FilesApp::createFolder(const std::string& name) {
 	if (name.empty()) return;
+	if (m_activeOp != 0) {
+		showMsgBox("Busy", "Another operation is running.");
+		return;
+	}
 
 	const std::string fullPath = FileSystemService::joinPath(
 		FileSystemService::toNativePath(m_currentPath), name
 	);
 
-	if (!FileSystemService::getInstance().mkdir(fullPath)) {
-		showMsgBox("Error", "Could not create folder.");
-	}
-	refreshList();
+	FileOpRequest req;
+	req.type = FileOpType::Mkdir;
+	req.path = fullPath;
+
+	showProgressDialog("Creating Folder");
+	m_activeOp = FileSystemService::getInstance().submit(
+		std::move(req),
+		{},
+		[this](const FileOpResult& result) {
+			postToUi([this, result]() {
+				if (m_stopped) return;
+				closeProgressDialog();
+				m_activeOp = 0;
+				if (!result.success) {
+					showMsgBox("Error", "Could not create folder.");
+				}
+				refreshList();
+			});
+		}
+	);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

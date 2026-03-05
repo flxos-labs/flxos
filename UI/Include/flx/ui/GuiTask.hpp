@@ -2,6 +2,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include <cstdint>
 #include <flx/core/GuiLock.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <functional>
@@ -14,6 +15,14 @@ namespace flx::ui {
 
 class GuiTask : public flx::kernel::Task {
 public:
+
+	struct PerfStats {
+		uint64_t loopCount {0};
+		uint64_t over40msCount {0};
+		uint64_t maxLoopUs {0};
+		uint64_t maxHandlerUs {0};
+		uint64_t maxBusWaitUs {0};
+	};
 
 	GuiTask();
 	~GuiTask() override = default;
@@ -31,6 +40,8 @@ public:
 	static void setResumeOnTouch(bool enable);
 	static void runDisplayTest(int color);
 	static bool isPaused();
+	static PerfStats getPerfStats();
+	static void resetPerfStats();
 
 protected:
 
@@ -42,6 +53,7 @@ private:
 
 	static bool m_paused;
 	static bool m_resume_on_touch;
+	static PerfStats m_perfStats;
 };
 
 } // namespace flx::ui
