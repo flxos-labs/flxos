@@ -12,7 +12,6 @@
 #include "font/lv_symbol_def.h"
 #include "layouts/flex/lv_flex.h"
 #include "misc/lv_anim.h"
-#include "misc/lv_async.h"
 #include "misc/lv_color.h"
 #include "misc/lv_event.h"
 #include "misc/lv_types.h"
@@ -118,9 +117,6 @@ void showMsgBox(const char* title, const char* text) {
 inline uint32_t nowMs() {
 	return static_cast<uint32_t>(esp_timer_get_time() / 1000);
 }
-
-
-
 } // anonymous namespace
 
 // ─────────────────────────────────────────────────────────────────────────────
