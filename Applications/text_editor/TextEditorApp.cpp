@@ -24,8 +24,7 @@ const AppManifest TextEditorApp::manifest = {
 	.sortPriority = 40,
 	.capabilities = AppCapability::Storage,
 	.supportedMimeTypes = {"text/plain", "text/*"},
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<TextEditorApp>(); }
-};
+	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<TextEditorApp>(); }};
 
 static constexpr const char* TAG = "TextEditorApp";
 static constexpr size_t MAX_FILE_SIZE = 32 * 1024; // 32KB max file size
@@ -86,8 +85,7 @@ void TextEditorApp::createUI(void* parent) {
 
 	// Create file browser component
 	m_fileBrowser = std::make_unique<flx::ui::FileBrowser>(
-		m_container, [this]() { showEditorScreen(); }
-	);
+		m_container, [this]() { showEditorScreen(); });
 	m_fileBrowser->setExtensions({".txt", ".md", ".log", ".json", ".xml", ".csv", ".yaml", ".yml", ".ini", ".cfg", ".conf", ".env", ".html", ".css", ".js", ".ts", ".py", ".java", ".c", ".cpp", ".h", ".hpp", ".cs", ".php", ".rb", ".go", ".rs", ".sh", ".bat", ".ps1", ".sql"});
 
 	// Create and show editor screen

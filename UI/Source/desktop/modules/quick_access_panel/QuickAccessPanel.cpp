@@ -137,8 +137,7 @@ void QuickAccessPanel::buildHeader() {
 				lv_obj_set_style_text_color(btn, cfg.text_primary, 0);
 			}
 		},
-		settings_btn, nullptr
-	);
+		settings_btn, nullptr);
 }
 
 void QuickAccessPanel::buildToggles() {
@@ -190,8 +189,7 @@ void QuickAccessPanel::buildToggles() {
 							lv_label_set_text(label, Themes::ToString(theme));
 						}
 					},
-					m_themeLabel, nullptr
-				);
+					m_themeLabel, nullptr);
 			}
 		}
 	}
@@ -218,8 +216,7 @@ void QuickAccessPanel::buildToggles() {
 				lv_obj_center(rot_icon);
 
 				lv_subject_increment_dsc_t* rot_dsc = lv_obj_add_subject_increment_event(
-					rot_btn, m_rotationBridge->getSubject(), LV_EVENT_CLICKED, 90
-				);
+					rot_btn, m_rotationBridge->getSubject(), LV_EVENT_CLICKED, 90);
 
 				if (rot_dsc) {
 					lv_obj_set_subject_increment_event_min_value(rot_btn, rot_dsc, 0);

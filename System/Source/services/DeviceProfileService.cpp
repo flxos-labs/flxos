@@ -50,8 +50,7 @@ static const flx::system::DeviceProfile ACTIVE_PROFILE = {
 		.height = flx::config::display.enabled ? flx::config::display.height : 0,
 		.driver = flx::config::display.enabled ? flx::config::display.driver : "None",
 		.bus = flx::config::display.enabled ? "SPI" : "None",
-		.sizeInches = flx::config::display.sizeInches
-	},
+		.sizeInches = flx::config::display.sizeInches},
 
 	.touch = {
 		.enabled = flx::config::touch.enabled,
@@ -64,12 +63,11 @@ static const flx::system::DeviceProfile ACTIVE_PROFILE = {
 
 	.connectivity = {.wifi = flx::config::capabilities.wifi, .bluetooth = flx::config::capabilities.bluetooth, .bleOnly = false, .flashSizeKb = 0,
 #if defined(CONFIG_ESP32S3_SPIRAM_SUPPORT) || defined(CONFIG_SPIRAM) || defined(CONFIG_ESP32_SPIRAM_SUPPORT)
-					 .psramSizeKb = 2048
+		.psramSizeKb = 2048
 #else
-					 .psramSizeKb = 0
+		.psramSizeKb = 0
 #endif
-	}
-};
+	}};
 
 // ============================================================================
 // IService Lifecycle

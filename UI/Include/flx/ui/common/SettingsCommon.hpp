@@ -66,8 +66,7 @@ inline void add_back_button_event_cb(lv_obj_t* btn, std::function<void()>* onBac
 				(*callback)();
 			}
 		},
-		LV_EVENT_CLICKED, onBack
-	);
+		LV_EVENT_CLICKED, onBack);
 }
 
 inline void add_switch_item(lv_obj_t* list, const char* text, lv_subject_t* subject) {

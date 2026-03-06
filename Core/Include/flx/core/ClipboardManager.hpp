@@ -5,8 +5,8 @@
 namespace flx {
 
 enum class ClipboardOp { NONE,
-						 COPY,
-						 CUT };
+	COPY,
+	CUT };
 
 struct ClipboardEntry {
 	std::string path {};

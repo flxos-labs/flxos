@@ -51,8 +51,7 @@ void DisplayTester::createView(lv_obj_t* parent, std::function<void()> onBack) {
 		{0x00FF00, "GREEN", lv_color_black()},
 		{0x0000FF, "BLUE", lv_color_white()},
 		{0xFFFFFF, "WHITE", lv_color_black()},
-		{0x000000, "BLACK", lv_color_white()}
-	};
+		{0x000000, "BLACK", lv_color_white()}};
 
 	for (int i = 0; i < 5; i++) {
 		lv_obj_t* btn = lv_button_create(btnRow);

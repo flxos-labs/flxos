@@ -70,13 +70,11 @@ protected:
 					lv_label_set_text(label, Themes::ToString((ThemeType)v));
 				}
 			},
-			themeLabel, nullptr
-		);
+			themeLabel, nullptr);
 
 		lv_obj_add_subject_toggle_event(
 			themeValBtn, m_themeBridge->getSubject(),
-			LV_EVENT_CLICKED
-		);
+			LV_EVENT_CLICKED);
 
 		lv_obj_t* rotBtn = add_list_btn(m_list, LV_SYMBOL_REFRESH, "Rotation");
 		lv_obj_set_flex_grow(lv_obj_get_child(rotBtn, 1), 1);
@@ -85,13 +83,11 @@ protected:
 		lv_obj_set_size(rotValBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 		lv_obj_t* rotLabel = lv_label_create(rotValBtn);
 		lv_label_bind_text(
-			rotLabel, m_rotationBridge->getSubject(), "%d°"
-		);
+			rotLabel, m_rotationBridge->getSubject(), "%d°");
 
 		lv_subject_increment_dsc_t* rot_dsc = lv_obj_add_subject_increment_event(
 			rotValBtn, m_rotationBridge->getSubject(),
-			LV_EVENT_CLICKED, 90
-		);
+			LV_EVENT_CLICKED, 90);
 		lv_obj_set_subject_increment_event_min_value(rotValBtn, rot_dsc, 0);
 		lv_obj_set_subject_increment_event_max_value(rotValBtn, rot_dsc, 270);
 		lv_obj_set_subject_increment_event_rollover(rotValBtn, rot_dsc, true);
@@ -128,8 +124,7 @@ protected:
 					lv_label_set_text(label, "None");
 				}
 			},
-			wpValLabel, nullptr
-		);
+			wpValLabel, nullptr);
 
 		// Sync button state with wallpaper enablement
 		auto update_chooser_state = [](lv_obj_t* btn, int32_t enabled) {
@@ -143,8 +138,7 @@ protected:
 		// Initial state
 		update_chooser_state(
 			chooseWpBtn,
-			lv_subject_get_int(m_wpEnabledBridge->getSubject())
-		);
+			lv_subject_get_int(m_wpEnabledBridge->getSubject()));
 
 		// Observer for changes
 		lv_subject_add_observer_obj(
@@ -158,8 +152,7 @@ protected:
 					lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
 				}
 			},
-			chooseWpBtn, nullptr
-		);
+			chooseWpBtn, nullptr);
 
 		lv_obj_add_event_cb(
 			chooseWpBtn,
@@ -177,13 +170,11 @@ protected:
 					path_buf[sizeof(path_buf) - 1] = '\0';
 					lv_subject_set_pointer(
 						self->m_wpPathBridge->getSubject(),
-						path_buf
-					);
+						path_buf);
 					self->m_fileBrowser->hide();
 				});
 			},
-			LV_EVENT_CLICKED, this
-		);
+			LV_EVENT_CLICKED, this);
 
 		lv_obj_t* transpBtn =
 			add_list_btn(m_list, LV_SYMBOL_EYE_OPEN, "Transparency");
@@ -214,8 +205,7 @@ protected:
 					lv_obj_set_style_opa(glassBtn, LV_OPA_50, 0);
 				}
 			},
-			glassSw, nullptr
-		);
+			glassSw, nullptr);
 	}
 
 	void onDestroy() override {

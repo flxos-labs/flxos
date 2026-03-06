@@ -94,7 +94,7 @@ def check_file(filepath: str) -> List[str]:
     
     return issues
 
-def main():
+def main() -> int:
     print("=== FlxOS Naming Convention Check ===\n")
     
     all_issues = []

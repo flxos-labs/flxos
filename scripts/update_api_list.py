@@ -30,7 +30,7 @@ def get_prefix(api):
 
     return parts[0] + "_" + parts[1]
 
-def update_api_list():
+def update_api_list() -> None:
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     header_cmd = f'find "{project_root}/components/lvgl/src" -name "*.h" ! -name "*_private.h" ! -path "*/private/*"'
     headers = os.popen(header_cmd).read().splitlines()

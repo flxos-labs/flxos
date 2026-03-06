@@ -32,8 +32,7 @@ esp_err_t WiFiManager::init(flx::Observable<int32_t>* connected_subject, flx::St
 	m_status_subject = status_subject;
 
 	esp_err_t err = esp_event_handler_instance_register(
-		WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, this, nullptr
-	);
+		WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, this, nullptr);
 	if (err != ESP_OK) {
 		return err;
 	}
@@ -58,8 +57,7 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 	setStatus(WiFiStatus::CONNECTING);
 
 	std::lock_guard<std::recursive_mutex> wifi_lock(
-		ConnectivityManager::getInstance().getWifiMutex()
-	);
+		ConnectivityManager::getInstance().getWifiMutex());
 
 	// Ensure any previous connection attempt is stopped
 	esp_wifi_disconnect();
@@ -108,8 +106,7 @@ esp_err_t WiFiManager::setEnabled(bool enabled) {
 	}
 
 	std::lock_guard<std::recursive_mutex> wifi_lock(
-		ConnectivityManager::getInstance().getWifiMutex()
-	);
+		ConnectivityManager::getInstance().getWifiMutex());
 
 	m_is_enabled = enabled;
 	wifi_mode_t current_mode;
@@ -122,13 +119,11 @@ esp_err_t WiFiManager::setEnabled(bool enabled) {
 		esp_wifi_disconnect();
 		setStatus(WiFiStatus::DISABLED);
 		return ConnectivityManager::getInstance().setWifiMode(
-			ap_enabled ? WIFI_MODE_AP : WIFI_MODE_NULL
-		);
+			ap_enabled ? WIFI_MODE_AP : WIFI_MODE_NULL);
 	} else {
 		setStatus(WiFiStatus::DISCONNECTED);
 		return ConnectivityManager::getInstance().setWifiMode(
-			ap_enabled ? WIFI_MODE_APSTA : WIFI_MODE_STA
-		);
+			ap_enabled ? WIFI_MODE_APSTA : WIFI_MODE_STA);
 	}
 }
 
@@ -141,8 +136,7 @@ esp_err_t WiFiManager::scan(ScanCallback callback) {
 	}
 
 	std::lock_guard<std::recursive_mutex> wifi_lock(
-		ConnectivityManager::getInstance().getWifiMutex()
-	);
+		ConnectivityManager::getInstance().getWifiMutex());
 
 	Log::info(TAG, "Scanning for WiFi networks...");
 	// Atomically set scanning flag to prevent concurrent scans
@@ -239,9 +233,9 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 
 	bool const is_auth_failure =
 		(event->reason == WIFI_REASON_AUTH_EXPIRE ||
-		 event->reason == WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT ||
-		 event->reason == WIFI_REASON_AUTH_FAIL ||
-		 event->reason == WIFI_REASON_HANDSHAKE_TIMEOUT);
+			event->reason == WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT ||
+			event->reason == WIFI_REASON_AUTH_FAIL ||
+			event->reason == WIFI_REASON_HANDSHAKE_TIMEOUT);
 
 	if (is_auth_failure) {
 		m_should_reconnect = false;

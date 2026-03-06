@@ -111,8 +111,7 @@ void DeviceRegistry::unsubscribe(int subscriptionId) {
 	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	m_observers.erase(
 		std::remove_if(m_observers.begin(), m_observers.end(), [subscriptionId](const auto& pair) { return pair.first == subscriptionId; }),
-		m_observers.end()
-	);
+		m_observers.end());
 }
 
 void DeviceRegistry::notifyObservers(const std::shared_ptr<IDevice>& device, bool added) {

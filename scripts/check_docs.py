@@ -87,7 +87,7 @@ def check_readme_presence() -> Dict[str, bool]:
             readme_status[item] = os.path.exists(readme_path)
     return readme_status
 
-def main():
+def main() -> int:
     print("=== FlxOS Documentation Coverage Check ===\n")
     
     files_without_headers = []
