@@ -81,8 +81,7 @@ static std::string resolvePath(const std::string& base, const std::string& part)
 static bool runFsBlocking(
 	flx::services::FileOpRequest req,
 	flx::services::FileOpResult& outResult,
-	uint32_t timeoutMs = 60000
-) {
+	uint32_t timeoutMs = 60000) {
 	// Heap-allocate shared state so the callback is safe even after timeout
 	struct SharedState {
 		SemaphoreHandle_t sem;
@@ -108,8 +107,7 @@ static bool runFsBlocking(
 		[state](const flx::services::FileOpResult& result) {
 			state->result = result;
 			xSemaphoreGive(state->sem);
-		}
-	);
+		});
 
 	if (opId == 0) {
 		outResult.success = false;
@@ -813,8 +811,7 @@ static int cmdHal(int argc, char** argv) {
 			.func = (handler),                           \
 			.argtable = nullptr,                         \
 			.func_w_context = nullptr,                   \
-			.context = nullptr                           \
-		};                                               \
+			.context = nullptr};                         \
 		ESP_ERROR_CHECK(esp_console_cmd_register(&cmd)); \
 	}
 

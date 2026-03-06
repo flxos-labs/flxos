@@ -160,8 +160,7 @@ esp_err_t HotspotManager::init(flx::Observable<int32_t>* enabled_subject, flx::O
 	m_client_count_subject = client_count_subject;
 
 	esp_err_t const err = esp_event_handler_instance_register(
-		WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, this, nullptr
-	);
+		WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, this, nullptr);
 	if (err != ESP_OK) {
 		return err;
 	}
@@ -200,11 +199,11 @@ void HotspotManager::startUsageTimer() {
 					float const dt_s = (float)dt_us / 1000000.0F;
 					self.m_upload_speed =
 						(uint32_t)((float)(self.m_bytes_sent - self.m_last_bytes_sent) /
-								   dt_s);
+							dt_s);
 					self.m_download_speed =
 						(uint32_t)((float)(self.m_bytes_received -
-										   self.m_last_bytes_received) /
-								   dt_s);
+									   self.m_last_bytes_received) /
+							dt_s);
 				}
 
 				self.m_last_update_time = now;
@@ -255,8 +254,7 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 	}
 
 	std::lock_guard<std::recursive_mutex> wifi_lock(
-		ConnectivityManager::getInstance().getWifiMutex()
-	);
+		ConnectivityManager::getInstance().getWifiMutex());
 
 	wifi_config_t wifi_config = {};
 	strncpy((char*)wifi_config.ap.ssid, ssid, sizeof(wifi_config.ap.ssid));
@@ -315,8 +313,7 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 esp_err_t HotspotManager::stop() {
 	Log::info(TAG, "Stopping hotspot...");
 	std::lock_guard<std::recursive_mutex> wifi_lock(
-		ConnectivityManager::getInstance().getWifiMutex()
-	);
+		ConnectivityManager::getInstance().getWifiMutex());
 
 	wifi_mode_t current_mode;
 	esp_wifi_get_mode(&current_mode);
@@ -463,7 +460,7 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
 			for (auto it = self->m_clients.begin(); it != self->m_clients.end();
-				 ++it) {
+				++it) {
 				if (memcmp(it->mac, event->mac, 6) == 0) {
 					self->m_clients.erase(it);
 					break;

@@ -127,7 +127,7 @@ def check_header_guards(filepath: str) -> List[str]:
     
     return issues
 
-def main():
+def main() -> int:
     print("=== FlxOS Include Dependency Analysis ===\n")
     
     all_issues = []

@@ -78,8 +78,7 @@ void Desktop::init() {
 					lv_obj_set_style_bg_color(wp, cfg.primary, 0);
 				}
 			},
-			m_wallpaper, nullptr
-		);
+			m_wallpaper, nullptr);
 
 		// Wallpaper Enabled Observer
 		lv_subject_add_observer(
@@ -106,8 +105,7 @@ void Desktop::init() {
 					}
 				}
 			},
-			this
-		);
+			this);
 	}
 	lv_obj_set_style_bg_opa(m_screen, UiConstants::OPA_COVER, 0);
 
@@ -122,8 +120,7 @@ void Desktop::init() {
 
 	UI::Modules::Dock::Callbacks dockCallbacks {
 		.onStartClick = [this]() { this->on_start_click(); },
-		.onUpClick = [this]() { this->on_up_click(); }
-	};
+		.onUpClick = [this]() { this->on_up_click(); }};
 	m_dockModule.reset(new UI::Modules::Dock(m_screen, dockCallbacks));
 	m_dock = m_dockModule->getObj();
 	m_app_container = m_dockModule->getAppContainer();
@@ -151,8 +148,7 @@ void Desktop::init() {
 			.screen = m_screen,
 			.statusBar = m_status_bar,
 			.notificationPanel = m_notification_panel,
-			.notificationList = m_notification_list
-		};
+			.notificationList = m_notification_list};
 		m_swipeManagerModule.reset(new UI::Modules::SwipeManager(swipeConfig));
 
 		// Register panels with FocusManager
@@ -164,13 +160,11 @@ void Desktop::init() {
 		// Register AppManager callbacks
 		flx::apps::AppManager::getInstance().setWindowCallbacks(
 			[this](const std::string& pkg) { this->openApp(pkg); },
-			[this](const std::string& pkg) { this->closeApp(pkg); }
-		);
+			[this](const std::string& pkg) { this->closeApp(pkg); });
 
 		flx::apps::AppManager::getInstance().setGuiCallbacks(
 			[]() { flx::ui::GuiTask::lock(); },
-			[]() { flx::ui::GuiTask::unlock(); }
-		);
+			[]() { flx::ui::GuiTask::unlock(); });
 
 		m_rotationObserver = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(flx::system::DisplayManager::getInstance().getRotationObservable());
 		lv_subject_add_observer(
@@ -183,8 +177,7 @@ void Desktop::init() {
 					instance->realign_panels();
 				}
 			},
-			this
-		);
+			this);
 		Log::info(TAG, "DE initialization complete");
 	}
 }
@@ -259,8 +252,7 @@ void Desktop::on_app_click(lv_event_t* e) {
 
 	flx::ui::FocusManager::getInstance().dismissAllPanels();
 	flx::apps::AppManager::getInstance().startApp(
-		flx::apps::Intent::forApp(packageName)
-	);
+		flx::apps::Intent::forApp(packageName));
 }
 
 void Desktop::openApp(const std::string& packageName) {

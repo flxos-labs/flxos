@@ -2,7 +2,7 @@
 # See https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 BasedOnStyle: LLVM
 AccessModifierOffset: -4
-AlignAfterOpenBracket: BlockIndent
+AlignAfterOpenBracket: DontAlign
 AlignConsecutiveAssignments: None
 AlignOperands: DontAlign
 AlignTrailingComments: false

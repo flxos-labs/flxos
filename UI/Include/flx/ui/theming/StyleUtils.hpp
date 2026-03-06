@@ -27,8 +27,7 @@ static inline void apply_glass(lv_obj_t* obj, int32_t blur) {
 			lv_obj_set_style_bg_color(target, cfg.surface, 0);
 			lv_obj_set_style_text_color(target, cfg.text_primary, 0);
 		},
-		obj, nullptr
-	);
+		obj, nullptr);
 
 	// Add observer for Glass Enabled
 	lv_subject_add_observer_obj(
@@ -49,8 +48,7 @@ static inline void apply_glass(lv_obj_t* obj, int32_t blur) {
 				lv_obj_set_style_blur_radius(target, 0, 0);
 			}
 		},
-		obj, (void*)(intptr_t)blur
-	);
+		obj, (void*)(intptr_t)blur);
 
 	// Add observer for Transparency Enabled
 	lv_subject_add_observer_obj(
@@ -77,8 +75,7 @@ static inline void apply_glass(lv_obj_t* obj, int32_t blur) {
 				lv_obj_set_style_blur_radius(target, 0, 0);
 			}
 		},
-		obj, (void*)(intptr_t)blur
-	);
+		obj, (void*)(intptr_t)blur);
 }
 
 } // namespace UI::StyleUtils

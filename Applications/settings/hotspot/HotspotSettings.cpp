@@ -114,8 +114,7 @@ void HotspotSettings::createMainPage() {
 				lv_obj_remove_state(sw, LV_STATE_CHECKED);
 			instance->m_ignore_events = false;
 		},
-		m_hotspotSwitch, this
-	);
+		m_hotspotSwitch, this);
 
 	lv_obj_add_event_cb(
 		m_hotspotSwitch,
@@ -131,8 +130,7 @@ void HotspotSettings::createMainPage() {
 				flx::connectivity::ConnectivityManager::getInstance().stopHotspot();
 			}
 		},
-		LV_EVENT_VALUE_CHANGED, this
-	);
+		LV_EVENT_VALUE_CHANGED, this);
 
 	lv_obj_t* content = lv_obj_create(m_mainPage);
 	lv_obj_set_size(content, lv_pct(100), LV_SIZE_CONTENT);
@@ -159,8 +157,7 @@ void HotspotSettings::createMainPage() {
 			auto* instance = (HotspotSettings*)lv_event_get_user_data(e);
 			instance->showConfigPage();
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	lv_obj_t* usageHeader = lv_label_create(content);
 	lv_label_set_text(usageHeader, "Data Usage:");
@@ -189,8 +186,7 @@ void HotspotSettings::createMainPage() {
 				lv_label_set_text_fmt(label, "Uptime: %ds", r);
 			}
 		},
-		uptimeLabel, nullptr
-	);
+		uptimeLabel, nullptr);
 
 	lv_obj_t* downSpeedLabel = lv_label_create(usageCont);
 	lv_label_set_text(downSpeedLabel, "Download: 0 KB/s");
@@ -205,8 +201,7 @@ void HotspotSettings::createMainPage() {
 				lv_label_set_text_fmt(label, "Download: %d KB/s", (int)kb);
 			}
 		},
-		downSpeedLabel, nullptr
-	);
+		downSpeedLabel, nullptr);
 
 	lv_obj_t* upSpeedLabel = lv_label_create(usageCont);
 	lv_label_set_text(upSpeedLabel, "Upload: 0 KB/s");
@@ -221,8 +216,7 @@ void HotspotSettings::createMainPage() {
 				lv_label_set_text_fmt(label, "Upload: %d KB/s", (int)kb);
 			}
 		},
-		upSpeedLabel, nullptr
-	);
+		upSpeedLabel, nullptr);
 
 	lv_obj_t* sentLabel = lv_label_create(usageCont);
 	lv_label_set_text(sentLabel, "Sent: 0 KB");
@@ -237,8 +231,7 @@ void HotspotSettings::createMainPage() {
 				lv_label_set_text_fmt(label, "Sent: %d KB", (int)kb);
 			}
 		},
-		sentLabel, nullptr
-	);
+		sentLabel, nullptr);
 
 	lv_obj_t* recvLabel = lv_label_create(usageCont);
 	lv_label_set_text(recvLabel, "Received: 0 KB");
@@ -253,8 +246,7 @@ void HotspotSettings::createMainPage() {
 				lv_label_set_text_fmt(label, "Received: %d KB", (int)kb);
 			}
 		},
-		recvLabel, nullptr
-	);
+		recvLabel, nullptr);
 
 	lv_obj_t* resetUsageBtn = lv_button_create(usageCont);
 	lv_obj_set_size(resetUsageBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -265,8 +257,7 @@ void HotspotSettings::createMainPage() {
 		[](lv_event_t* /*e*/) {
 			flx::connectivity::HotspotManager::getInstance().resetUsage();
 		},
-		LV_EVENT_CLICKED, nullptr
-	);
+		LV_EVENT_CLICKED, nullptr);
 
 	lv_obj_t* clientsHeader = lv_label_create(content);
 	lv_label_set_text(clientsHeader, "Connected Clients (0):");
@@ -277,11 +268,9 @@ void HotspotSettings::createMainPage() {
 		[](lv_observer_t* o, lv_subject_t* s) {
 			lv_obj_t* label = lv_observer_get_target_obj(o);
 			lv_label_set_text_fmt(
-				label, "Connected Clients (%d):", (int)lv_subject_get_int(s)
-			);
+				label, "Connected Clients (%d):", (int)lv_subject_get_int(s));
 		},
-		clientsHeader, nullptr
-	);
+		clientsHeader, nullptr);
 
 	m_clientsCont = lv_obj_create(content);
 	lv_obj_set_size(m_clientsCont, lv_pct(100), LV_SIZE_CONTENT);
@@ -330,16 +319,14 @@ void HotspotSettings::createMainPage() {
 							lv_label_set_text_fmt(
 								info_label, "IP: %s | %s | %dh %dm",
 								client.ip.empty() ? "Allocating..." : client.ip.c_str(),
-								rssi_str, (int)(d / 3600), (int)((d % 3600) / 60)
-							);
+								rssi_str, (int)(d / 3600), (int)((d % 3600) / 60));
 						} else {
 							lv_label_set_text_fmt(info_label, "IP: %s | %s | %dm %ds", client.ip.empty() ? "Allocating..." : client.ip.c_str(), rssi_str, (int)(d / 60), (int)(d % 60));
 						}
 					}
 				}
 			},
-			2000, this
-		);
+			2000, this);
 	}
 }
 
@@ -357,8 +344,7 @@ void HotspotSettings::createConfigPage() {
 			auto* instance = (HotspotSettings*)lv_event_get_user_data(e);
 			instance->showMainPage();
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	m_configTitle = lv_obj_get_child(header, 1);
 	lv_obj_set_flex_grow(m_configTitle, 1);
@@ -373,8 +359,7 @@ void HotspotSettings::createConfigPage() {
 			auto* instance = (HotspotSettings*)lv_event_get_user_data(e);
 			instance->saveAndApply();
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	lv_obj_t* content = lv_obj_create(m_configPage);
 	lv_obj_set_size(content, lv_pct(100), LV_SIZE_CONTENT);
@@ -447,8 +432,7 @@ void HotspotSettings::createConfigPage() {
 			auto* label = (lv_obj_t*)lv_event_get_user_data(e);
 			lv_label_set_text_fmt(label, "%d", (int)lv_slider_get_value(slider));
 		},
-		LV_EVENT_VALUE_CHANGED, maxConnValLabel
-	);
+		LV_EVENT_VALUE_CHANGED, maxConnValLabel);
 
 	// Hidden SSID
 	lv_obj_t* hiddenCont = lv_obj_create(content);
@@ -516,8 +500,7 @@ void HotspotSettings::createConfigPage() {
 			auto* label = (lv_obj_t*)lv_event_get_user_data(e);
 			lv_label_set_text_fmt(label, "%d", (int)lv_slider_get_value(slider));
 		},
-		LV_EVENT_VALUE_CHANGED, txValLabel
-	);
+		LV_EVENT_VALUE_CHANGED, txValLabel);
 
 	// Auto Shutdown
 	lv_obj_t* autoShutCont = lv_obj_create(content);
@@ -598,14 +581,12 @@ void HotspotSettings::applyHotspotSettings() {
 
 	flx::connectivity::ConnectivityManager::getInstance().setHotspotNatEnabled(nat_enabled);
 	flx::connectivity::HotspotManager::getInstance().setAutoShutdownTimeout(
-		lv_obj_has_state(m_autoShutdownSwitch, LV_STATE_CHECKED) ? 300 : 0
-	);
+		lv_obj_has_state(m_autoShutdownSwitch, LV_STATE_CHECKED) ? 300 : 0);
 
 	// Only start/restart if the switch is ON
 	if (lv_obj_has_state(m_hotspotSwitch, LV_STATE_CHECKED)) {
 		esp_err_t const err = flx::connectivity::ConnectivityManager::getInstance().startHotspot(
-			ssid, pass, channel, max_conn, hidden, auth, tx_power
-		);
+			ssid, pass, channel, max_conn, hidden, auth, tx_power);
 		if (err != ESP_OK) {
 			lv_obj_remove_state(m_hotspotSwitch, LV_STATE_CHECKED);
 		}

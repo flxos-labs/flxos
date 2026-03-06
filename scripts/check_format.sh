@@ -2,7 +2,7 @@
 # Check code formatting without modifying files
 # Exit 1 if any file needs formatting
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"

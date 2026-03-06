@@ -2,7 +2,7 @@
 #include "lvgl.h"
 
 enum class ThemeType { HYPRLAND,
-					   MATERIAL };
+	MATERIAL };
 
 struct ThemeConfig {
 	lv_color_t primary;

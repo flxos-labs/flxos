@@ -66,14 +66,12 @@ void WiFiSettings::createUI() {
 			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
 			instance->showConfig();
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	m_wifiSwitch = lv_switch_create(header);
 	lv_obj_bind_checked(
 		m_wifiSwitch,
-		m_wifiEnabledBridge->getSubject()
-	);
+		m_wifiEnabledBridge->getSubject());
 
 	lv_obj_add_event_cb(
 		m_wifiSwitch,
@@ -104,8 +102,7 @@ void WiFiSettings::createUI() {
 			}
 			instance->updateStatus();
 		},
-		LV_EVENT_VALUE_CHANGED, this
-	);
+		LV_EVENT_VALUE_CHANGED, this);
 
 	lv_obj_t* statusCont = lv_obj_create(m_container);
 	lv_obj_set_size(statusCont, lv_pct(100), LV_SIZE_CONTENT);
@@ -134,8 +131,7 @@ void WiFiSettings::createUI() {
 			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
 			instance->refreshScan();
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	m_list = create_settings_list(m_container);
 
@@ -151,8 +147,7 @@ void WiFiSettings::createUI() {
 			}
 			instance->updateStatus();
 		},
-		m_container, this
-	);
+		m_container, this);
 
 	// Observer for scan interval setting changes
 	m_scanIntervalObserver = lv_subject_add_observer_obj(
@@ -193,8 +188,7 @@ void WiFiSettings::createUI() {
 				esp_timer_start_periodic(instance->m_scanTimer, static_cast<uint64_t>(interval) * 1000000);
 			}
 		},
-		m_container, this
-	);
+		m_container, this);
 
 	// Trigger initial timer setup based on current setting
 	int32_t initial_interval = lv_subject_get_int(m_wifiScanIntervalBridge->getSubject());
@@ -251,16 +245,14 @@ void WiFiSettings::showConfig() {
 			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
 			instance->hideConfig();
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	lv_obj_t* list = create_settings_list(m_configContainer);
 
 	add_switch_item(
 		list,
 		"Auto-start on Boot",
-		m_wifiAutostartBridge->getSubject()
-	);
+		m_wifiAutostartBridge->getSubject());
 
 	// Auto-scan interval slider (0 = disabled, 10-120 seconds)
 	add_slider_item(
@@ -360,8 +352,7 @@ void WiFiSettings::refreshScan() {
 				}
 			}
 			flx::ui::GuiTask::unlock();
-		}
-	);
+		});
 }
 
 const char* WiFiSettings::getSignalIcon(int8_t rssi) {
@@ -380,8 +371,7 @@ void WiFiSettings::updateStatus() {
 	}
 
 	auto const status = static_cast<flx::connectivity::WiFiStatus>(lv_subject_get_int(
-		m_wifiStatusBridge->getSubject()
-	));
+		m_wifiStatusBridge->getSubject()));
 
 	switch (status) {
 		case flx::connectivity::WiFiStatus::DISABLED:
@@ -467,8 +457,7 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 			instance->m_passwordTa = nullptr;
 			instance->m_saveSwitch = nullptr;
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	lv_obj_t* connectBtn = lv_button_create(btnCont);
 	lv_obj_t* connectLabel = lv_label_create(connectBtn);
@@ -480,16 +469,14 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 			const char* password = lv_textarea_get_text(instance->m_passwordTa);
 			bool save = lv_obj_has_state(instance->m_saveSwitch, LV_STATE_CHECKED);
 			flx::connectivity::ConnectivityManager::getInstance().connectWiFi(
-				instance->m_connectSsid.c_str(), password, save
-			);
+				instance->m_connectSsid.c_str(), password, save);
 			lv_obj_delete(instance->m_connectContainer);
 			instance->m_connectContainer = nullptr;
 			instance->m_passwordTa = nullptr;
 			instance->m_saveSwitch = nullptr;
 			instance->updateStatus();
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	// Save switch container
 	lv_obj_t* save_cont = lv_obj_create(m_connectContainer);
