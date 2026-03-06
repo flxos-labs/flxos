@@ -48,7 +48,7 @@ def is_hardcoded(val):
             return True
     return False
 
-def find_hardcoded():
+def find_hardcoded() -> list:
     results = []
     target_dirs = {'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Apps', 'Applications', 'Firmware', 'HalModule', 'Profiles'}
     for root, dirs, files in os.walk(search_dir):
