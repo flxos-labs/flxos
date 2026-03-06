@@ -136,7 +136,7 @@ def analyze_file(filepath: str) -> Tuple[List[str], List[FunctionMetrics]]:
     
     return issues, functions
 
-def main():
+def main() -> int:
     print("=== FlxOS Code Complexity Analysis ===\n")
     
     all_issues = []
