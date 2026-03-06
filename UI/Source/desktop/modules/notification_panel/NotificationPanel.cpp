@@ -83,8 +83,7 @@ void NotificationPanel::create() {
 					this->update_list();
 				}
 			});
-		}
-	);
+		});
 
 	// Add swipe-up indicator
 	lv_obj_t* up_indicator = lv_label_create(m_panel);

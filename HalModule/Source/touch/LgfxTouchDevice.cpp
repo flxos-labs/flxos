@@ -104,8 +104,7 @@ void LgfxTouchDevice::setCalibration(const ITouchDevice::CalibrationData& cal) {
 			static_cast<uint16_t>(cal.xMin),
 			static_cast<uint16_t>(cal.yMax),
 			static_cast<uint16_t>(cal.xMax),
-			static_cast<uint16_t>(cal.yMax)
-		};
+			static_cast<uint16_t>(cal.yMax)};
 		m_tft->setTouchCalibrate(calData);
 	}
 #endif

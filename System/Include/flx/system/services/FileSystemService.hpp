@@ -39,8 +39,7 @@ public:
 	[[nodiscard]] FileOpId submit(
 		FileOpRequest req,
 		FileOpCallback onProgress = {},
-		FileOpResultCallback onDone = {}
-	);
+		FileOpResultCallback onDone = {});
 
 	[[nodiscard]] bool cancel(FileOpId opId);
 

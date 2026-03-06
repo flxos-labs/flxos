@@ -47,8 +47,7 @@ public:
 	void initByteCounter();
 	void initApHook();
 	void processIncomingPacket(
-		void* p
-	); // Using void* to avoid pbuf header requirement in hpp
+		void* p); // Using void* to avoid pbuf header requirement in hpp
 	static void startUsageTimer();
 
 	struct ClientInfo {

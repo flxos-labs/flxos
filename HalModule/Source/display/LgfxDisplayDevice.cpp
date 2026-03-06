@@ -74,8 +74,7 @@ bool LgfxDisplayDevice::start() {
 		static_cast<uint32_t>(height),
 		m_dmaBuffer,
 		bufSize,
-		touch_en
-	);
+		touch_en);
 
 	if (!m_lvDisplay) {
 		flx::Log::error(TAG, "lv_lovyan_gfx_create() failed!");

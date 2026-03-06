@@ -17,8 +17,7 @@ const AppManifest CalendarApp::manifest = {
 	.location = AppLocation::internal(),
 	.description = "View calendar and dates",
 	.sortPriority = 50,
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<CalendarApp>(); }
-};
+	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<CalendarApp>(); }};
 
 static constexpr const char* TAG = "CalendarApp";
 

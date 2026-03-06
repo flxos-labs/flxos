@@ -35,8 +35,7 @@ protected:
 		m_btSwitch = lv_switch_create(header);
 		lv_obj_bind_checked(
 			m_btSwitch,
-			m_btEnabledBridge->getSubject()
-		);
+			m_btEnabledBridge->getSubject());
 
 		lv_obj_add_event_cb(
 			m_btSwitch,
@@ -47,8 +46,7 @@ protected:
 				flx::connectivity::BluetoothManager::getInstance().enable(enabled);
 				instance->refresh();
 			},
-			LV_EVENT_VALUE_CHANGED, this
-		);
+			LV_EVENT_VALUE_CHANGED, this);
 
 		lv_obj_t* statusCont = lv_obj_create(m_container);
 		lv_obj_set_size(statusCont, lv_pct(100), LV_SIZE_CONTENT);
@@ -66,8 +64,7 @@ protected:
 		lv_obj_set_flex_grow(m_statusLabel, 1);
 		lv_label_set_text(
 			m_statusLabel,
-			flx::connectivity::BluetoothManager::getInstance().isEnabled() ? "Ready" : "Disabled"
-		);
+			flx::connectivity::BluetoothManager::getInstance().isEnabled() ? "Ready" : "Disabled");
 
 		lv_obj_t* refreshBtn = lv_button_create(statusCont);
 		lv_obj_set_size(refreshBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -79,8 +76,7 @@ protected:
 				auto* instance = (BluetoothSettings*)lv_event_get_user_data(e);
 				instance->startScan();
 			},
-			LV_EVENT_CLICKED, this
-		);
+			LV_EVENT_CLICKED, this);
 
 		m_list = create_settings_list(m_container);
 	}
@@ -118,8 +114,7 @@ private:
 				}
 				lv_timer_delete(t); // One-shot
 			},
-			2000, this
-		);
+			2000, this);
 	}
 
 	void refresh() {

@@ -122,8 +122,7 @@ bool SpiSdCardDevice::mount(const std::string& mountPath) {
 
 	sdmmc_card_t* card_local = nullptr;
 	const esp_err_t ret = esp_vfs_fat_sdspi_mount(
-		m_mountPath.c_str(), &host, &slot_config, &mount_config, &card_local
-	);
+		m_mountPath.c_str(), &host, &slot_config, &mount_config, &card_local);
 
 	if (ret != ESP_OK) {
 		flx::Log::error(TAG, "Failed to mount SD card: %s", esp_err_to_name(ret));

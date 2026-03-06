@@ -28,17 +28,13 @@ public:
 		m_container = (lv_obj_t*)parent;
 		m_mainList = nullptr;
 		m_wifiSettings = std::make_unique<Settings::WiFiSettings>(
-			m_container, [this]() { showMainSettings(); }
-		);
+			m_container, [this]() { showMainSettings(); });
 		m_hotspotSettings = std::make_unique<Settings::HotspotSettings>(
-			m_container, [this]() { showMainSettings(); }
-		);
+			m_container, [this]() { showMainSettings(); });
 		m_bluetoothSettings = std::make_unique<Settings::BluetoothSettings>(
-			m_container, [this]() { showMainSettings(); }
-		);
+			m_container, [this]() { showMainSettings(); });
 		m_displaySettings = std::make_unique<Settings::DisplaySettings>(
-			m_container, [this]() { showMainSettings(); }
-		);
+			m_container, [this]() { showMainSettings(); });
 		showMainSettings();
 	}
 
@@ -92,12 +88,11 @@ private:
 					auto* app = (SettingsApp*)lv_event_get_user_data(e);
 					app->showWiFiSettings();
 				},
-				LV_EVENT_CLICKED, this
-			);
+				LV_EVENT_CLICKED, this);
 
 			lv_obj_t* hotspotBtn =
 				add_list_btn(m_mainList, LV_SYMBOL_WIFI,
-							 "Hotspot"); // LV_SYMBOL_WIFI is used for
+					"Hotspot"); // LV_SYMBOL_WIFI is used for
 			// hotspot too if no specific one
 			lv_obj_add_event_cb(
 				hotspotBtn,
@@ -105,8 +100,7 @@ private:
 					auto* app = (SettingsApp*)lv_event_get_user_data(e);
 					app->showHotspotSettings();
 				},
-				LV_EVENT_CLICKED, this
-			);
+				LV_EVENT_CLICKED, this);
 
 			lv_obj_t* btBtn =
 				add_list_btn(m_mainList, LV_SYMBOL_BLUETOOTH, "Bluetooth");
@@ -116,8 +110,7 @@ private:
 					auto* app = (SettingsApp*)lv_event_get_user_data(e);
 					app->showBluetoothSettings();
 				},
-				LV_EVENT_CLICKED, this
-			);
+				LV_EVENT_CLICKED, this);
 
 			lv_list_add_text(m_mainList, "System");
 			lv_obj_t* displayBtn =
@@ -128,8 +121,7 @@ private:
 					auto* app = (SettingsApp*)lv_event_get_user_data(e);
 					app->showDisplaySettings();
 				},
-				LV_EVENT_CLICKED, this
-			);
+				LV_EVENT_CLICKED, this);
 		} else {
 			lv_obj_remove_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
 		}

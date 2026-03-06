@@ -161,8 +161,7 @@ void StatusBar::create() {
 				lv_obj_set_style_text_opa(slash, UiConstants::OPA_GLASS_BG, 0);
 			}
 		},
-		hotspot_icon, nullptr
-	);
+		hotspot_icon, nullptr);
 
 	lv_subject_add_observer_obj(
 		m_hotspotClientsBridge->getSubject(),
@@ -175,8 +174,7 @@ void StatusBar::create() {
 				lv_label_set_text(label, "");
 			}
 		},
-		hotspot_label, nullptr
-	);
+		hotspot_label, nullptr);
 
 	lv_obj_t* bt_cont = lv_obj_create(left_group);
 	lv_obj_remove_style_all(bt_cont);
@@ -202,8 +200,7 @@ void StatusBar::create() {
 				lv_obj_set_style_text_opa(slash, UiConstants::OPA_GLASS_BG, 0);
 			}
 		},
-		bt_cont, nullptr
-	);
+		bt_cont, nullptr);
 
 	lv_obj_t* notif_btn = lv_obj_create(left_group);
 	lv_obj_remove_style_all(notif_btn);
@@ -235,8 +232,7 @@ void StatusBar::create() {
 				lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
 			}
 		},
-		notif_btn, nullptr
-	);
+		notif_btn, nullptr);
 
 	// Battery Indicator
 	if (flx::system::PowerManager::getInstance().getIsConfiguredObservable().get()) {
@@ -285,8 +281,7 @@ void StatusBar::create() {
 					lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
 				}
 			},
-			batt_cont, nullptr
-		);
+			batt_cont, nullptr);
 	}
 
 	s_overlayLabel = lv_label_create(m_statusBar);
@@ -310,8 +305,7 @@ void StatusBar::create() {
 			localtime_r(&now, &timeinfo);
 			lv_label_set_text_fmt(label, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
 		},
-		1000, m_timeLabel
-	);
+		1000, m_timeLabel);
 
 	// Event subscriptions for Overlay
 	flx::core::EventBus::getInstance().subscribe("ui.overlay.show", [this](const std::string& /*event*/, const flx::core::Bundle& data) {

@@ -64,8 +64,7 @@ extern "C" void app_main(void) {
 		"FlxOS initialized successfully!",
 		"System",
 		LV_SYMBOL_OK,
-		1
-	);
+		1);
 
 	// Start GUI task
 	Log::info(TAG, "Starting GuiTask...");
