@@ -2,7 +2,7 @@
 # Master script for FlxOS code quality checks
 # Runs all quality analysis tools and generates a unified report
 
-set -e
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
