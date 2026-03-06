@@ -72,8 +72,7 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 			int val = lv_slider_get_value(lv_event_get_target_obj(e));
 			lv_label_set_text_fmt(self->m_delayValueLabel, "%ds", val);
 		},
-		LV_EVENT_VALUE_CHANGED, this
-	);
+		LV_EVENT_VALUE_CHANGED, this);
 
 	// --- Path chooser row ---
 	lv_obj_t* pathRow = lv_obj_create(content);
@@ -122,8 +121,7 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 			auto* self = static_cast<Screenshot*>(lv_event_get_user_data(e));
 			self->startCapture();
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	// --- Status label ---
 	m_statusLabel = lv_label_create(content);
@@ -152,8 +150,7 @@ void Screenshot::startCapture() {
 			} else {
 				updateStatus("Save failed!", true);
 			}
-		}
-	);
+		});
 
 	// Update local UI
 	if (delaySec > 0) {
@@ -185,8 +182,7 @@ void Screenshot::updateStatus(const char* msg, bool isError) {
 	lv_obj_set_style_text_color(
 		m_statusLabel,
 		isError ? lv_color_hex(0xFF5252) : lv_color_hex(0x4CAF50),
-		0
-	);
+		0);
 }
 
 // ──────────────────────────────────────────────────────

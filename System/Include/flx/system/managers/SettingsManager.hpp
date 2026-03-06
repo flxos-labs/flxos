@@ -41,7 +41,7 @@ private:
 
 	struct Setting {
 		enum class Type { INT,
-						  STRING } type;
+			STRING } type;
 		void* observable;
 	};
 

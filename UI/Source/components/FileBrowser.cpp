@@ -246,8 +246,7 @@ void FileBrowser::refreshList() {
 		                } }, LV_EVENT_DELETE, ctx);
 				}
 			});
-		}
-	);
+		});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -301,8 +300,7 @@ void FileBrowser::dispatchSelection(const std::string& name) {
 	// Build a native path then convert back to LVGL VFS path for callers.
 	const std::string fullPath =
 		FileSystemService::joinPath(
-			FileSystemService::toNativePath(m_currentPath), name
-		);
+			FileSystemService::toNativePath(m_currentPath), name);
 
 	m_onFileSelected(fullPath);
 }

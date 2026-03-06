@@ -141,8 +141,7 @@ const flx::apps::AppManifest FilesApp::manifest = {
 	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<flx::apps::App> {
 		return std::make_shared<FilesApp>();
-	}
-};
+	}};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // App identity
@@ -355,8 +354,7 @@ void FilesApp::refreshList() {
 					addListItem(entry.name, entry.isDirectory);
 				}
 			});
-		}
-	);
+		});
 	if (listOp == 0) {
 		lv_obj_clean(m_list);
 		lv_list_add_text(m_list, "Failed to queue listing");
@@ -585,8 +583,7 @@ void FilesApp::pasteItem() {
 				}
 				refreshList();
 			});
-		}
-	);
+		});
 }
 
 void FilesApp::deleteItem(const std::string& name, bool /*isDir*/) {
@@ -596,8 +593,7 @@ void FilesApp::deleteItem(const std::string& name, bool /*isDir*/) {
 	}
 
 	const std::string fullPath = FileSystemService::joinPath(
-		FileSystemService::toNativePath(m_currentPath), name
-	);
+		FileSystemService::toNativePath(m_currentPath), name);
 
 	FileOpRequest req;
 	req.type = FileOpType::Remove;
@@ -628,8 +624,7 @@ void FilesApp::deleteItem(const std::string& name, bool /*isDir*/) {
 				}
 				refreshList();
 			});
-		}
-	);
+		});
 }
 
 void FilesApp::renameItem(const std::string& oldName, const std::string& newName) {
@@ -664,8 +659,7 @@ void FilesApp::renameItem(const std::string& oldName, const std::string& newName
 				}
 				refreshList();
 			});
-		}
-	);
+		});
 }
 
 void FilesApp::createFolder(const std::string& name) {
@@ -676,8 +670,7 @@ void FilesApp::createFolder(const std::string& name) {
 	}
 
 	const std::string fullPath = FileSystemService::joinPath(
-		FileSystemService::toNativePath(m_currentPath), name
-	);
+		FileSystemService::toNativePath(m_currentPath), name);
 
 	FileOpRequest req;
 	req.type = FileOpType::Mkdir;
@@ -697,8 +690,7 @@ void FilesApp::createFolder(const std::string& name) {
 				}
 				refreshList();
 			});
-		}
-	);
+		});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -731,8 +723,7 @@ void FilesApp::goHome() {
 
 void FilesApp::onFileClick(const std::string& name) {
 	const std::string vfsPath = FileSystemService::joinPath(
-		FileSystemService::toNativePath(m_currentPath), name
-	);
+		FileSystemService::toNativePath(m_currentPath), name);
 
 	const std::string_view mime = mimeForFilename(name);
 	if (!mime.empty()) {

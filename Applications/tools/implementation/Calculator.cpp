@@ -49,8 +49,7 @@ void Calculator::createView(lv_obj_t* parent, std::function<void()> onBack) {
 		"7", "8", "9", "/",
 		"4", "5", "6", "*",
 		"1", "2", "3", "-",
-		"C", "0", "=", "+"
-	};
+		"C", "0", "=", "+"};
 
 	lv_obj_t* grid = lv_obj_create(content);
 	lv_obj_set_width(grid, lv_pct(100));

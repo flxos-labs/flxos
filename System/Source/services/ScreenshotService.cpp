@@ -58,8 +58,7 @@ bool mkdirBlocking(const std::string& path, uint32_t timeoutMs = 10000) {
 		[state](const FileOpResult& result) {
 			state->success = result.success;
 			xSemaphoreGive(state->sem);
-		}
-	);
+		});
 
 	if (opId == 0) {
 		return false;
@@ -84,8 +83,7 @@ const ServiceManifest ScreenshotService::serviceManifest = {
 	.autoStart = true,
 	.guiRequired = true,
 	.capabilities = ServiceCapability::Display,
-	.description = "RGB888 PNG screenshot capture"
-};
+	.description = "RGB888 PNG screenshot capture"};
 
 bool ScreenshotService::onStart() {
 	Log::info(TAG, "Screenshot service started");
@@ -161,8 +159,7 @@ bool ScreenshotService::capture(const std::string& savePath) {
 		"Screenshot Saved",
 		savePath,
 		"System",
-		LV_SYMBOL_IMAGE
-	);
+		LV_SYMBOL_IMAGE);
 	return true;
 }
 
@@ -269,8 +266,7 @@ void ScreenshotService::scheduleCapture(uint32_t delaySec, const std::string& st
 				auto* self = static_cast<ScreenshotService*>(lv_timer_get_user_data(t));
 				self->onTimerTick();
 			},
-			1000, this
-		);
+			1000, this);
 	}
 }
 

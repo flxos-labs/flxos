@@ -29,8 +29,7 @@ const flx::apps::AppManifest ImageViewerApp::manifest = {
 	.sortPriority = 100,
 	.capabilities = AppCapability::Storage,
 	.supportedMimeTypes = {"image/bmp", "image/*"},
-	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ImageViewerApp>(); }
-};
+	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ImageViewerApp>(); }};
 
 std::string ImageViewerApp::getPackageName() const { return manifest.appId; }
 std::string ImageViewerApp::getAppName() const { return manifest.appName; }
@@ -76,8 +75,7 @@ void ImageViewerApp::createUI(void* parent) {
 			auto* app = static_cast<ImageViewerApp*>(lv_event_get_user_data(e));
 			flx::apps::AppManager::getInstance().stopApp(app->getPackageName());
 		},
-		LV_EVENT_CLICKED, this
-	);
+		LV_EVENT_CLICKED, this);
 
 	// Image content area — no scrolling, image fits inside
 	lv_obj_t* content = lv_obj_create(m_container);

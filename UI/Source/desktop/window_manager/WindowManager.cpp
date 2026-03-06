@@ -44,8 +44,7 @@ void WindowManager::init(lv_obj_t* window_container, lv_obj_t* app_container, lv
 	lv_subject_add_observer(
 		m_rotationBridge->getSubject(),
 		on_rotation_change,
-		nullptr
-	);
+		nullptr);
 
 	// Initialize FocusManager with our containers
 	flx::ui::FocusManager::getInstance().init(m_windowContainer, m_screen, m_statusBar, m_dock);
@@ -120,8 +119,7 @@ bool WindowManager::activateIfOpen(const std::string& packageName) {
 lv_obj_t* WindowManager::createAndConfigureAppButton(lv_obj_t* win, flx::apps::App* app) {
 	const char* iconSymbol = static_cast<const char*>(app->getIcon());
 	lv_obj_t* dock_btn = UI::Modules::Dock::create_dock_btn(
-		m_appContainer, iconSymbol, lv_pct(UiConstants::SIZE_DOCK_ICON_PCT), lv_pct(LayoutConstants::LIST_HEIGHT_PCT)
-	);
+		m_appContainer, iconSymbol, lv_pct(UiConstants::SIZE_DOCK_ICON_PCT), lv_pct(LayoutConstants::LIST_HEIGHT_PCT));
 
 	lv_obj_set_style_bg_opa(dock_btn, UiConstants::OPA_ITEM_BG, 0);
 	lv_obj_set_style_bg_opa(dock_btn, UiConstants::OPA_GLASS_BG, LV_STATE_USER_1);
@@ -134,8 +132,7 @@ lv_obj_t* WindowManager::createAndConfigureAppButton(lv_obj_t* win, flx::apps::A
 			bool enabled = lv_subject_get_int(subject);
 			lv_obj_set_style_bg_opa(btn, enabled ? UiConstants::OPA_GLASS_BG : UiConstants::OPA_COVER, LV_STATE_USER_1);
 		},
-		dock_btn, nullptr
-	);
+		dock_btn, nullptr);
 
 	lv_obj_add_state(dock_btn, LV_STATE_USER_1);
 	lv_obj_add_event_cb(dock_btn, on_win_minimize, LV_EVENT_CLICKED, this);
@@ -203,8 +200,7 @@ void WindowManager::on_win_minimize(lv_event_t* e) {
 		flx::ui::FocusManager::getInstance().activateWindow(w);
 		if (wm->m_windowAppMap.contains(w)) {
 			flx::apps::AppManager::getInstance().startApp(
-				flx::apps::Intent::forApp(wm->m_windowAppMap[w])
-			);
+				flx::apps::Intent::forApp(wm->m_windowAppMap[w]));
 		}
 	} else {
 		lv_obj_add_flag(w, LV_OBJ_FLAG_HIDDEN);

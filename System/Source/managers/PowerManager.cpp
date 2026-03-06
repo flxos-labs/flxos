@@ -45,8 +45,7 @@ bool PowerManager::onStart() {
 					default:
 						break;
 				}
-			}
-		);
+			});
 	} else {
 		Log::info(TAG, "No HAL power device found — using SystemInfoService fallback");
 	}
