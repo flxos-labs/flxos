@@ -6,14 +6,16 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+CLANG_FORMAT="${CLANG_FORMAT:-clang-format}"
 
 echo "=== FlxOS Format Check ==="
+echo "Using: $CLANG_FORMAT ($($CLANG_FORMAT --version 2>/dev/null || echo 'not found'))"
 echo "Checking formatting in FlxOS source modules..."
 
 # Find all source files and check formatting
 FAILED=0
 while IFS= read -r -d '' file; do
-    if ! clang-format --dry-run --Werror "$file" 2>/dev/null; then
+    if ! $CLANG_FORMAT --dry-run --Werror "$file" 2>/dev/null; then
         echo "❌ Needs formatting: $file"
         FAILED=1
     fi
