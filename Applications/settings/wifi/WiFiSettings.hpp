@@ -35,6 +35,7 @@ private:
 
 	lv_obj_t* m_connectContainer = nullptr;
 	lv_obj_t* m_configContainer = nullptr;
+	lv_obj_t* m_scanSliderRow = nullptr;
 	lv_obj_t* m_wifiSwitch = nullptr;
 	lv_obj_t* m_statusLabel = nullptr;
 	lv_obj_t* m_statusPrefixLabel = nullptr;
@@ -44,6 +45,7 @@ private:
 	bool m_isScanning = false;
 	bool m_pendingAutoScan = false;
 	bool m_destroying = false;
+	int32_t m_lastScanInterval = 10;
 	lv_observer_t* m_statusObserver = nullptr;
 	lv_observer_t* m_scanIntervalObserver = nullptr;
 	esp_timer_handle_t m_scanTimer = nullptr;
