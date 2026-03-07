@@ -254,19 +254,58 @@ void WiFiSettings::showConfig() {
 		"Auto-start on Boot",
 		m_wifiAutostartBridge->getSubject());
 
-	// Auto-scan interval slider (0 = disabled, 10-120 seconds)
-	add_slider_item(
+	// Auto scan switch
+	lv_obj_t* toggleBtn = lv_list_add_button(list, nullptr, "Auto Scan");
+	lv_obj_t* sw = lv_switch_create(toggleBtn);
+	lv_obj_align(sw, LV_ALIGN_RIGHT_MID, 0, 0);
+	lv_obj_add_flag(sw, LV_OBJ_FLAG_EVENT_BUBBLE);
+
+	int32_t currentInterval = lv_subject_get_int(m_wifiScanIntervalBridge->getSubject());
+	if (currentInterval > 0) {
+		lv_obj_add_state(sw, LV_STATE_CHECKED);
+		m_lastScanInterval = currentInterval;
+	} else if (m_lastScanInterval <= 0) {
+		m_lastScanInterval = 10;
+	}
+
+	// Auto-scan interval slider (10-120 seconds)
+	lv_obj_t* slider = add_slider_item(
 		list,
 		"Scan Interval (s)",
 		m_wifiScanIntervalBridge->getSubject(),
-		0, 120 // 0 = disabled, max 2 minutes
+		10, 120 // max 2 minutes
 	);
+	
+	m_scanSliderRow = lv_obj_get_parent(slider);
+
+	if (currentInterval <= 0) {
+		lv_obj_add_flag(m_scanSliderRow, LV_OBJ_FLAG_HIDDEN);
+	}
+
+	lv_obj_add_event_cb(sw, [](lv_event_t* e) {
+		auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+		lv_obj_t* switch_obj = lv_event_get_target_obj(e);
+		bool is_checked = lv_obj_has_state(switch_obj, LV_STATE_CHECKED);
+		
+		if (is_checked) {
+			lv_obj_remove_flag(instance->m_scanSliderRow, LV_OBJ_FLAG_HIDDEN);
+			lv_subject_set_int(instance->m_wifiScanIntervalBridge->getSubject(), instance->m_lastScanInterval);
+		} else {
+			lv_obj_add_flag(instance->m_scanSliderRow, LV_OBJ_FLAG_HIDDEN);
+			int32_t cv = lv_subject_get_int(instance->m_wifiScanIntervalBridge->getSubject());
+			if (cv > 0) {
+				instance->m_lastScanInterval = cv;
+			}
+			lv_subject_set_int(instance->m_wifiScanIntervalBridge->getSubject(), 0);
+		}
+	}, LV_EVENT_VALUE_CHANGED, this);
 }
 
 void WiFiSettings::hideConfig() {
 	if (m_configContainer) {
 		lv_obj_delete(m_configContainer);
 		m_configContainer = nullptr;
+		m_scanSliderRow = nullptr;
 	}
 }
 
@@ -514,6 +553,7 @@ void WiFiSettings::onDestroy() {
 	m_statusLabel = nullptr;
 	m_statusPrefixLabel = nullptr;
 	m_saveSwitch = nullptr;
+	m_scanSliderRow = nullptr;
 	m_statusObserver = nullptr; // Auto-cleaned when m_container is deleted
 	m_scanIntervalObserver = nullptr; // Auto-cleaned when m_container is deleted
 }
