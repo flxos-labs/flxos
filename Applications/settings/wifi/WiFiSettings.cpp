@@ -263,7 +263,7 @@ void WiFiSettings::showConfig() {
 	int32_t currentInterval = lv_subject_get_int(m_wifiScanIntervalBridge->getSubject());
 	if (currentInterval > 0) {
 		lv_obj_add_state(sw, LV_STATE_CHECKED);
-		m_lastScanInterval = std::clamp(currentInterval, int32_t{10}, int32_t{120});
+		m_lastScanInterval = std::clamp(currentInterval, int32_t {10}, int32_t {120});
 	} else if (m_lastScanInterval <= 0) {
 		m_lastScanInterval = 10;
 	}
@@ -275,7 +275,7 @@ void WiFiSettings::showConfig() {
 		m_wifiScanIntervalBridge->getSubject(),
 		10, 120 // max 2 minutes
 	);
-	
+
 	m_scanSliderRow = lv_obj_get_parent(slider);
 
 	if (currentInterval <= 0) {
@@ -297,8 +297,7 @@ void WiFiSettings::showConfig() {
 				instance->m_lastScanInterval = cv;
 			}
 			lv_subject_set_int(instance->m_wifiScanIntervalBridge->getSubject(), 0);
-		}
-	}, LV_EVENT_VALUE_CHANGED, this);
+		} }, LV_EVENT_VALUE_CHANGED, this);
 }
 
 void WiFiSettings::hideConfig() {
