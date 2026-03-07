@@ -4,6 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+CLANG_FORMAT="${CLANG_FORMAT:-clang-format}"
 
 find \
     "$PROJECT_ROOT/System" \
@@ -18,6 +19,6 @@ find \
     "$PROJECT_ROOT/HalModule" \
     "$PROJECT_ROOT/Profiles" \
     \( -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h" \) -print0 \
-| xargs -0 clang-format -i
+| xargs -0 $CLANG_FORMAT -i
 
 echo "FORMATTING COMPLETE"
