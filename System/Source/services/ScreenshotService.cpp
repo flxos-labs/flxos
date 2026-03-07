@@ -5,8 +5,6 @@
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
-#include <flx/system/services/FileOperationTypes.hpp>
-#include <flx/system/services/FileSystemService.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #if FLXOS_SD_CARD_ENABLED
 #include <flx/system/services/SdCardService.hpp>
@@ -19,11 +17,10 @@ const char* lodepng_error_text(unsigned code);
 }
 #include "lvgl.h"
 
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
-#include <freertos/semphr.h>
-#include <memory>
 #include <string_view>
 #include <sys/stat.h>
 #include <utility>
@@ -34,41 +31,24 @@ namespace flx::services {
 
 namespace {
 
-bool mkdirBlocking(const std::string& path, uint32_t timeoutMs = 10000) {
-	// Heap-allocate shared state so the callback is safe even after timeout
-	struct SharedState {
-		SemaphoreHandle_t sem;
-		bool success {false};
-		~SharedState() {
-			if (sem) vSemaphoreDelete(sem);
+/**
+ * Create a directory directly using POSIX mkdir.
+ *
+ * This MUST be used instead of going through FileSystemService when the caller
+ * already holds the SPI bus lock (e.g. from an LVGL timer callback inside
+ * lv_timer_handler()).  The FileSystemService executor runs on a separate task
+ * which would need to acquire the same bus lock → deadlock / timeout.
+ */
+bool ensureDir(const std::string& path) {
+	int rc = ::mkdir(path.c_str(), 0777);
+	if (rc == 0) return true;
+	if (errno == EEXIST) {
+		struct stat st {};
+		if (::stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode)) {
+			return true;
 		}
-	};
-
-	auto state = std::make_shared<SharedState>();
-	state->sem = xSemaphoreCreateBinary();
-	if (!state->sem) return false;
-
-	FileOpRequest req;
-	req.type = FileOpType::Mkdir;
-	req.path = path;
-
-	FileOpId const opId = FileSystemService::getInstance().submit(
-		std::move(req),
-		{},
-		[state](const FileOpResult& result) {
-			state->success = result.success;
-			xSemaphoreGive(state->sem);
-		});
-
-	if (opId == 0) {
-		return false;
 	}
-
-	bool const waited = xSemaphoreTake(state->sem, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
-	if (!waited) {
-		FileSystemService::getInstance().cancel(opId);
-	}
-	return waited && state->success;
+	return false;
 }
 
 } // namespace
@@ -178,9 +158,20 @@ std::string ScreenshotService::getDefaultStoragePath() const {
 
 std::string ScreenshotService::generateFilename(const std::string& basePath) {
 	std::string dir = basePath + "/screenshots";
-	if (!mkdirBlocking(dir)) {
-		Log::error(TAG, "Failed to create directory: %s", dir.c_str());
-		return {};
+	if (!ensureDir(dir)) {
+		Log::error(TAG, "Failed to create directory: %s (%s)", dir.c_str(), strerror(errno));
+
+		// Fallback: if the primary path is on SD card, try internal storage
+		if (basePath != "/data") {
+			Log::warn(TAG, "Falling back to /data for screenshot storage");
+			dir = "/data/screenshots";
+			if (!ensureDir(dir)) {
+				Log::error(TAG, "Fallback directory also failed: %s (%s)", dir.c_str(), strerror(errno));
+				return {};
+			}
+		} else {
+			return {};
+		}
 	}
 
 	char filename[64];
