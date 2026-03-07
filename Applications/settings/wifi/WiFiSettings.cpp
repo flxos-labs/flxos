@@ -263,7 +263,7 @@ void WiFiSettings::showConfig() {
 	int32_t currentInterval = lv_subject_get_int(m_wifiScanIntervalBridge->getSubject());
 	if (currentInterval > 0) {
 		lv_obj_add_state(sw, LV_STATE_CHECKED);
-		m_lastScanInterval = currentInterval;
+		m_lastScanInterval = std::clamp(currentInterval, int32_t{10}, int32_t{120});
 	} else if (m_lastScanInterval <= 0) {
 		m_lastScanInterval = 10;
 	}
