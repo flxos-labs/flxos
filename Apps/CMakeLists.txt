@@ -1,6 +1,7 @@
 # Apps component — conditionally includes GUI app management
 set(APPS_SRCS
     "Source/AppContext.cpp"
+    "Source/AppPaths.cpp"
 )
 
 if(NOT FLXOS_HEADLESS_MODE_ENABLED)

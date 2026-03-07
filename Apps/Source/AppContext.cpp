@@ -8,4 +8,8 @@ const std::string& AppContext::getAppId() const {
 	return m_manifest ? m_manifest->appId : empty;
 }
 
+AppPaths AppContext::getPaths() const {
+	return AppPaths(getAppId());
+}
+
 } // namespace flx::apps

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ServiceManifest.hpp"
+#include "ServicePaths.hpp"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include <cstdint>
@@ -80,6 +81,11 @@ public:
 		}
 		m_state = ServiceState::Starting;
 
+		if (!getPaths().ensureDirectories()) {
+			m_state = ServiceState::Failed;
+			return false;
+		}
+
 		// Measure boot timing and heap impact
 		uint32_t heapBefore = esp_get_free_heap_size();
 		int64_t t0 = esp_timer_get_time();
@@ -135,6 +141,7 @@ public:
 
 	/// Convenience: get service ID from manifest
 	const std::string& getServiceId() const { return getManifest().serviceId; }
+	ServicePaths getPaths() const { return ServicePaths(getServiceId()); }
 
 protected:
 

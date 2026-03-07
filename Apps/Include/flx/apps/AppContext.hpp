@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AppPaths.hpp"
 #include "Intent.hpp"
 #include <cstdint>
 #include <flx/core/Bundle.hpp>
@@ -54,6 +55,7 @@ public:
 
 	const AppManifest* getManifest() const { return m_manifest; }
 	const std::string& getAppId() const;
+	AppPaths getPaths() const;
 
 	// === Intent access ===
 

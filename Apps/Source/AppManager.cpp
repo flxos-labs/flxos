@@ -229,6 +229,12 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 
 	// 2. Create context
 	auto ctx = std::make_unique<AppContext>(&manifest, intent, launchId);
+	auto paths = ctx->getPaths();
+	if (!paths.ensureDirectories()) {
+		xSemaphoreGive((SemaphoreHandle_t)m_mutex);
+		Log::error("AppManager", "Failed to prepare app storage for '%s'", manifest.appId.c_str());
+		return LAUNCH_ID_INVALID;
+	}
 	if (callback) {
 		ctx->setResultCallback(callback);
 	}
@@ -277,6 +283,8 @@ LaunchId AppManager::startAppForResult(const Intent& intent, ResultCallback call
 void AppManager::finishApp(LaunchId id, ResultCode resultCode, const flx::core::Bundle& resultData) {
 	if (id == LAUNCH_ID_INVALID) return;
 
+	uint32_t heapBefore = esp_get_free_heap_size();
+
 	xSemaphoreTake((SemaphoreHandle_t)m_mutex, portMAX_DELAY);
 
 	// Find in stack
@@ -295,6 +303,7 @@ void AppManager::finishApp(LaunchId id, ResultCode resultCode, const flx::core::
 	}
 
 	auto app = it->app;
+	std::weak_ptr<App> appWeak = app;
 	auto resultCb = it->resultCallback;
 	bool wasActive = (it == m_appStack.end() - 1); // Is top of stack
 
@@ -317,6 +326,7 @@ void AppManager::finishApp(LaunchId id, ResultCode resultCode, const flx::core::
 	if (app) app->setContext(nullptr);
 
 	m_appStack.erase(it);
+	app.reset();
 
 	// Delivery logic
 
@@ -328,6 +338,16 @@ void AppManager::finishApp(LaunchId id, ResultCode resultCode, const flx::core::
 	}
 
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
+
+	uint32_t heapAfter = esp_get_free_heap_size();
+	int32_t leakedBytes = static_cast<int32_t>(heapBefore) - static_cast<int32_t>(heapAfter);
+	if (leakedBytes > 1024) {
+		Log::warn("AppManager", "Possible leak: %s retained %ld bytes after finish", pkg.c_str(), (long)leakedBytes);
+	}
+	long externalRefs = static_cast<long>(appWeak.use_count());
+	if (externalRefs > 0) {
+		Log::warn("AppManager", "Ref leak: %s still has %ld external refs after finish", pkg.c_str(), externalRefs);
+	}
 
 	// Deliver to callback
 	if (resultCb) {
@@ -352,6 +372,8 @@ void AppManager::finishApp(LaunchId id, ResultCode resultCode, const flx::core::
 }
 
 bool AppManager::stopApp(const std::string& packageName, bool closeUI) {
+	uint32_t heapBefore = esp_get_free_heap_size();
+
 	xSemaphoreTake((SemaphoreHandle_t)m_mutex, portMAX_DELAY);
 
 	// Find in stack (could be multiple instances? For now assume finding last for that pkg)
@@ -373,6 +395,7 @@ bool AppManager::stopApp(const std::string& packageName, bool closeUI) {
 	auto forward_it = std::next(it).base();
 
 	auto app = forward_it->app;
+	std::weak_ptr<App> appWeak = app;
 	bool wasActive = (forward_it == m_appStack.end() - 1);
 
 	// Lifecycle
@@ -387,6 +410,7 @@ bool AppManager::stopApp(const std::string& packageName, bool closeUI) {
 	if (app) app->setContext(nullptr);
 
 	m_appStack.erase(forward_it);
+	app.reset();
 
 	// Resume previous if we removed the top
 	std::shared_ptr<App> newTop = nullptr;
@@ -395,6 +419,16 @@ bool AppManager::stopApp(const std::string& packageName, bool closeUI) {
 	}
 
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
+
+	uint32_t heapAfter = esp_get_free_heap_size();
+	int32_t leakedBytes = static_cast<int32_t>(heapBefore) - static_cast<int32_t>(heapAfter);
+	if (leakedBytes > 1024) {
+		Log::warn("AppManager", "Possible leak: %s retained %ld bytes after stop", packageName.c_str(), (long)leakedBytes);
+	}
+	long externalRefs = static_cast<long>(appWeak.use_count());
+	if (externalRefs > 0) {
+		Log::warn("AppManager", "Ref leak: %s still has %ld external refs after stop", packageName.c_str(), externalRefs);
+	}
 
 	notifyAppStopped(packageName);
 	publishAppEvent(flx::core::Events::APP_STOPPED, packageName);
