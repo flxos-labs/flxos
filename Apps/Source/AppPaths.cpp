@@ -7,7 +7,11 @@
 
 namespace flx::apps {
 
-AppPaths::AppPaths(std::string appId) : m_appId(flx::core::sanitizeSegment(std::move(appId))) {}
+AppPaths::AppPaths(std::string appId) : m_appId(flx::core::sanitizeSegment(std::move(appId))) {
+	if (m_appId.empty() || m_appId == "." || m_appId == "..") {
+		m_appId = "_";
+	}
+}
 
 std::string AppPaths::getDataDir() const {
 	return "/data/apps/" + m_appId;
