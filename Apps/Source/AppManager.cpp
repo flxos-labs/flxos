@@ -361,6 +361,7 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 	entry.app = app;
 	entry.launchId = launchId;
 	entry.resultCallback = callback;
+	auto prefs = ctx->getPreferences();
 	entry.context = std::move(ctx);
 
 	app->setContext(entry.context.get());
@@ -380,7 +381,6 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 	}
 
 	// Restore state (after onStart)
-	auto prefs = ctx->getPreferences();
 	std::vector<uint8_t> savedData;
 	if (prefs.optBlob("_saved_state_", savedData)) {
 		int64_t savedTime = prefs.getInt64Or("_saved_state_time_", 0);

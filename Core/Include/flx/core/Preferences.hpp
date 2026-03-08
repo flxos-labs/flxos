@@ -29,6 +29,7 @@ public:
 
 	bool getBoolOr(const std::string& key, bool def) const;
 	int32_t getInt32Or(const std::string& key, int32_t def) const;
+	int64_t getInt64Or(const std::string& key, int64_t def) const;
 	std::string getStringOr(const std::string& key, const std::string& def) const;
 
 	bool hasKey(const std::string& key) const;
