@@ -968,9 +968,10 @@ void AppManager::reportAppCrash(const std::string& appId, const std::string& rea
 	record.timestamps[record.index % MAX_CRASHES_BEFORE_BLOCK] = now;
 	record.index++;
 
+	uint32_t currentCrashCount = record.crashCount;
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 
-	Log::warn("AppManager", "App '%s' crashed (#%lu): %s", appId.c_str(), (unsigned long)record.crashCount, reason.c_str());
+	Log::warn("AppManager", "App '%s' crashed (#%lu): %s", appId.c_str(), (unsigned long)currentCrashCount, reason.c_str());
 
 	publishAppEvent(flx::core::Events::APP_CRASHED, appId);
 

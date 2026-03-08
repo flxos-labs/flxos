@@ -358,15 +358,17 @@ Bundle Bundle::deserialize(const std::vector<uint8_t>& data) {
 	if (data.empty()) return result;
 	size_t offset = 0;
 	if (offset + sizeof(uint32_t) > data.size()) return result;
-	uint32_t count = *reinterpret_cast<const uint32_t*>(&data[offset]);
+	uint32_t count;
+	std::memcpy(&count, &data[offset], sizeof(uint32_t));
 	offset += sizeof(uint32_t);
 
 	for (uint32_t i = 0; i < count; ++i) {
 		if (offset + sizeof(uint16_t) > data.size()) break;
-		uint16_t keyLen = *reinterpret_cast<const uint16_t*>(&data[offset]);
+		uint16_t keyLen;
+		std::memcpy(&keyLen, &data[offset], sizeof(uint16_t));
 		offset += sizeof(uint16_t);
 
-		if (offset + keyLen > data.size()) break;
+		if (keyLen > data.size() - offset) break;
 		std::string key(reinterpret_cast<const char*>(&data[offset]), keyLen);
 		offset += keyLen;
 
@@ -411,7 +413,7 @@ Bundle Bundle::deserialize(const std::vector<uint8_t>& data) {
 				uint32_t strLen;
 				std::memcpy(&strLen, &data[offset], sizeof(uint32_t));
 				offset += sizeof(uint32_t);
-				if (offset + strLen > data.size()) return result;
+				if (strLen > data.size() - offset) return result;
 				std::string val(reinterpret_cast<const char*>(&data[offset]), strLen);
 				offset += strLen;
 				result.putString(key, val);
@@ -422,7 +424,7 @@ Bundle Bundle::deserialize(const std::vector<uint8_t>& data) {
 				uint32_t blobLen;
 				std::memcpy(&blobLen, &data[offset], sizeof(uint32_t));
 				offset += sizeof(uint32_t);
-				if (offset + blobLen > data.size()) return result;
+				if (blobLen > data.size() - offset) return result;
 				std::vector<uint8_t> val(data.begin() + offset, data.begin() + offset + blobLen);
 				offset += blobLen;
 				result.putBlob(key, val);
@@ -433,7 +435,7 @@ Bundle Bundle::deserialize(const std::vector<uint8_t>& data) {
 				uint32_t subLen;
 				std::memcpy(&subLen, &data[offset], sizeof(uint32_t));
 				offset += sizeof(uint32_t);
-				if (offset + subLen > data.size()) return result;
+				if (subLen > data.size() - offset) return result;
 				std::vector<uint8_t> sub(data.begin() + offset, data.begin() + offset + subLen);
 				offset += subLen;
 				result.putBundle(key, Bundle::deserialize(sub));

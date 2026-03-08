@@ -183,6 +183,12 @@ bool ServiceRegistry::startAll(bool guiMode) {
 			continue;
 		}
 
+		if (!isInBootProfile(manifest)) {
+			Log::info(TAG, "Skipping '%s' (not in active boot profile)", id.c_str());
+			skipped++;
+			continue;
+		}
+
 		Log::info(TAG, "Starting service: %s...", manifest.serviceName.c_str());
 
 		if (svc->start()) {
@@ -477,11 +483,9 @@ bool ServiceRegistry::startGroup(const std::string& group) {
 	Log::info(TAG, "Starting service group: %s", group.c_str());
 
 	// Use boot order if available, otherwise use registration order
-	const auto& order = m_bootOrder.empty() ? std::vector<std::string>() : m_bootOrder;
-
 	std::vector<std::string> toStart;
-	if (!order.empty()) {
-		for (const auto& id: order) {
+	if (!m_bootOrder.empty()) {
+		for (const auto& id: m_bootOrder) {
 			auto it = m_serviceMap.find(id);
 			if (it == m_serviceMap.end()) continue;
 			if (isInGroup(it->second->getManifest(), group)) {
@@ -517,7 +521,7 @@ void ServiceRegistry::stopGroup(const std::string& group) {
 	// Collect services in this group, stop in reverse boot order
 	std::vector<std::string> toStop;
 
-	const auto& order = m_bootOrder.empty() ? std::vector<std::string>() : m_bootOrder;
+	const auto& order = m_bootOrder;
 	if (!order.empty()) {
 		for (auto it = order.rbegin(); it != order.rend(); ++it) {
 			auto sit = m_serviceMap.find(*it);

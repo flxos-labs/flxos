@@ -769,7 +769,11 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
         cfg = buses[bus_name] if isinstance(buses[bus_name], dict) else {}
         if cfg.get("type") == "spi":
             host = cfg.get("host", "SPI2_HOST")
-            lines.append(f"    registry.registerDevice(std::make_shared<flx::hal::spi::EspSpiBus>({host}, -1, -1, -1));")
+            pins = cfg.get("pins", {})
+            mosi = pins.get("mosi", -1)
+            miso = pins.get("miso", -1)
+            sclk = pins.get("sclk", -1)
+            lines.append(f"    registry.registerDevice(std::make_shared<flx::hal::spi::EspSpiBus>({host}, {mosi}, {miso}, {sclk}));")
         elif cfg.get("type") == "i2c":
             port = cfg.get("port", "0")
             lines.extend([
@@ -802,9 +806,9 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
                 "    {",
                 "        auto display = registry.findFirst<flx::hal::display::IDisplayDevice>(flx::hal::IDevice::Type::Display);",
                 "        if (display) {",
-                "            auto* lgfx_disp = std::static_pointer_cast<flx::hal::display::LgfxDisplayDevice>(display).get();",
-                "            if (lgfx_disp) {",
-                "                auto touch = std::make_shared<flx::hal::touch::LgfxTouchDevice>(lgfx_disp->getRawDriver());",
+                "            auto lgfx_disp_sp = std::dynamic_pointer_cast<flx::hal::display::LgfxDisplayDevice>(display);",
+                "            if (lgfx_disp_sp) {",
+                "                auto touch = std::make_shared<flx::hal::touch::LgfxTouchDevice>(lgfx_disp_sp->getRawDriver());",
                 "                if (touch->start()) registry.registerDevice(touch);",
                 "            }",
                 "        }",
@@ -958,6 +962,19 @@ def generate_for_profile(profile_id: str, output_override: Optional[str], stdout
             file=sys.stderr,
         )
         return 1
+
+    hardware = _as_dict(profile_data.get("hardware"))
+    init = _as_dict(hardware.get("init"))
+    if not bool(init.get("enabled")):
+        if not stdout:
+            out_file = profile_dir / "Source" / "hwd" / "GeneratedInit.cpp"
+            cmake_file = profile_dir / "CMakeLists.txt"
+            if out_file.exists():
+                out_file.unlink()
+            if cmake_file.exists():
+                cmake_file.unlink()
+            print(f"skip: {profile_id} (hardware.init.enabled != true)")
+        return 0
 
     topology = derive_topology_from_profile(profile_data)
     errors = validate_hardware_doc(profile_id, topology)
