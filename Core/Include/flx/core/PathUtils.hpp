@@ -35,7 +35,7 @@ inline bool ensureDirectoryExists(const std::string& path) {
 inline std::string sanitizeSegment(const std::string& segment) {
 	std::string safe = segment;
 	for (char& c: safe) {
-		if (!std::isalnum(c) && c != '.' && c != '_' && c != '-') {
+		if (!std::isalnum(static_cast<unsigned char>(c)) && c != '.' && c != '_' && c != '-') {
 			c = '_';
 		}
 	}

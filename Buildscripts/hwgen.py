@@ -970,8 +970,14 @@ def generate_for_profile(profile_id: str, output_override: Optional[str], stdout
             out_file = profile_dir / "Source" / "hwd" / "GeneratedInit.cpp"
             cmake_file = profile_dir / "CMakeLists.txt"
             if out_file.exists():
+                existing = out_file.read_text(encoding="utf-8", errors="ignore")
+                if GENERATED_SIGNATURE not in existing and not force:
+                    raise RuntimeError(f"Refusing to remove non-generated file: {out_file}. Use --force to overwrite.")
                 out_file.unlink()
             if cmake_file.exists():
+                existing = cmake_file.read_text(encoding="utf-8", errors="ignore")
+                if GENERATED_SIGNATURE not in existing and not force:
+                    raise RuntimeError(f"Refusing to remove non-generated file: {cmake_file}. Use --force to overwrite.")
                 cmake_file.unlink()
             print(f"skip: {profile_id} (hardware.init.enabled != true)")
         return 0
