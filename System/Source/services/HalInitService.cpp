@@ -4,8 +4,11 @@
 #include <flx/services/ServiceRegistry.hpp>
 #include <flx/system/services/HalInitService.hpp>
 
-extern "C" esp_err_t flx_profile_hwd_init();
+#include "Config.hpp"
 
+#if FLXOS_PROFILE_HWD_INIT
+extern "C" esp_err_t flx_profile_hwd_init(void);
+#endif
 namespace flx::system::services {
 
 static constexpr std::string_view TAG = "HalInitService";
@@ -46,11 +49,13 @@ bool HalInitService::onStart() {
 
 	flx::core::EventBus::getInstance().publish("hal.init.begin", {});
 
+#if FLXOS_PROFILE_HWD_INIT
 	esp_err_t err = flx_profile_hwd_init();
 	if (err != ESP_OK) {
 		flx::Log::error(TAG, "Hardware initialization failed: %d", err);
 		return false;
 	}
+#endif
 
 	flx::Log::info(TAG, "Hardware initialization complete.");
 

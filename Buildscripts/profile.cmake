@@ -993,6 +993,59 @@ function(_flx_generate_sdkconfig_frag PREFIX OUTPUT_FILE)
 endfunction()
 
 # --------------------------------------------------------------------------
+# _flx_maybe_generate_hwd(profile_id profile_dir prefix)
+#   Auto-generate the profile HWD source when the profile explicitly requests
+#   board-level init, so builds do not depend on a manual hwgen step.
+# --------------------------------------------------------------------------
+function(_flx_maybe_generate_hwd PROFILE_ID PROFILE_DIR PREFIX)
+    _flx_yaml_get("${PREFIX}" "hardware_init_enabled" "false" _raw_hwd_enabled)
+    _flx_bool("${_raw_hwd_enabled}" _hwd_enabled)
+    _flx_yaml_get("${PREFIX}" "hardware_power_on_pins" "" _power_on_pins)
+
+    if(NOT "${_power_on_pins}" STREQUAL "" AND NOT "${_power_on_pins}" STREQUAL "null")
+        set(_hwd_enabled "true")
+    endif()
+
+    if(NOT "${_hwd_enabled}" STREQUAL "true")
+        return()
+    endif()
+
+    set(_hwgen_script "${CMAKE_SOURCE_DIR}/Buildscripts/hwgen.py")
+    if(NOT EXISTS "${_hwgen_script}")
+        message(FATAL_ERROR "FlxOS: Missing HWD generator script: ${_hwgen_script}")
+    endif()
+
+    find_program(_flx_python NAMES python3 python)
+    if(NOT _flx_python)
+        message(FATAL_ERROR
+            "FlxOS: Python interpreter required to auto-generate HWD for profile '${PROFILE_ID}'")
+    endif()
+
+    execute_process(
+        COMMAND "${_flx_python}" "${_hwgen_script}" --profile "${PROFILE_ID}"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        RESULT_VARIABLE _hwgen_result
+        OUTPUT_VARIABLE _hwgen_stdout
+        ERROR_VARIABLE _hwgen_stderr
+    )
+
+    string(STRIP "${_hwgen_stdout}" _hwgen_stdout)
+    string(STRIP "${_hwgen_stderr}" _hwgen_stderr)
+
+    if(NOT _hwgen_result EQUAL 0)
+        message(FATAL_ERROR
+            "FlxOS: Auto HWD generation failed for profile '${PROFILE_ID}'\n"
+            "${_hwgen_stdout}\n${_hwgen_stderr}")
+    endif()
+
+    if(NOT "${_hwgen_stdout}" STREQUAL "")
+        message(STATUS "FlxOS: ${_hwgen_stdout}")
+    else()
+        message(STATUS "FlxOS: HWD scaffold ready for profile '${PROFILE_ID}'")
+    endif()
+endfunction()
+
+# --------------------------------------------------------------------------
 # flx_load_profile()
 #   Top-level function called from root CMakeLists.txt.
 #   Reads profile.yaml → generates Config.hpp + sdkconfig.profile → configures headless mode.
@@ -1050,6 +1103,7 @@ function(flx_load_profile)
     # Parse YAML with inheritance
     _flx_resolve_inheritance("${_profile_dir}" "_FLX")
     _flx_validate_profile("_FLX")
+    _flx_maybe_generate_hwd("${_profile_id}" "${_profile_dir}" "_FLX")
 
     # ── Target mismatch detection ──
     # Check the CMake cache (not sdkconfig!) for IDF_TARGET — the cache is what

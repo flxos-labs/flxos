@@ -53,19 +53,28 @@ void GuiTask::display_init() {
 
 	auto& registry = flx::hal::DeviceRegistry::getInstance();
 
-	// Instantiate the root display device (Until Phase 12 orchestrator is built)
+	auto displayDevice = registry.findFirst<flx::hal::display::IDisplayDevice>(flx::hal::IDevice::Type::Display);
+
+	// Fall back to the legacy GUI bootstrap only when profile HWD init did not
+	// already register the root display.
+	if (!displayDevice) {
 #if !CONFIG_FLXOS_HEADLESS_MODE
-	auto displayDevice = std::make_shared<flx::hal::display::LgfxDisplayDevice>();
+		displayDevice = std::make_shared<flx::hal::display::LgfxDisplayDevice>();
 #else
-	auto displayDevice = std::make_shared<flx::hal::display::HeadlessDisplayDevice>();
+		displayDevice = std::make_shared<flx::hal::display::HeadlessDisplayDevice>();
 #endif
-
-	registry.registerDevice(displayDevice);
-
-	if (!displayDevice->start()) {
-		Log::error(TAG, "Failed to start display device!");
-		vTaskDelete(nullptr);
-		return;
+		if (!displayDevice->start()) {
+			Log::error(TAG, "Failed to start display device!");
+			vTaskDelete(nullptr);
+			return;
+		}
+		registry.registerDevice(displayDevice);
+	} else if (displayDevice->getState() != flx::hal::IDevice::State::Ready) {
+		if (!displayDevice->start()) {
+			Log::error(TAG, "Failed to start pre-registered display device!");
+			vTaskDelete(nullptr);
+			return;
+		}
 	}
 
 	lv_group_t* g = lv_group_create();
