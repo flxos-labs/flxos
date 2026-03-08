@@ -30,6 +30,20 @@ inline bool operator&(ServiceCapability a, ServiceCapability b) {
 }
 
 /**
+ * @brief Health status returned by periodic service health checks.
+ *
+ * Services override onHealthCheck() to return one of these.
+ * The ServiceRegistry watchdog uses the result to log, restart,
+ * or trigger safe mode.
+ */
+enum class HealthStatus {
+	Healthy, ///< Service is operating normally
+	Degraded, ///< Log warning, keep running (e.g. queue backlog)
+	Unhealthy, ///< Auto-restart if autoRestart=true in manifest
+	Critical, ///< Trigger safe mode if required=true in manifest
+};
+
+/**
  * @brief Service lifecycle state machine
  *
  * Stopped → Starting → Started → Stopping → Stopped
@@ -96,6 +110,20 @@ struct ServiceManifest {
 
 	/// Human-readable description
 	std::string description {};
+
+	// ─── Watchdog (2.1) ───
+
+	/// Interval in ms for periodic health checks (0 = disabled)
+	uint32_t healthCheckIntervalMs = 0;
+
+	/// If true, automatically restart the service when onHealthCheck()
+	/// returns HealthStatus::Unhealthy
+	bool autoRestart = false;
+
+	// ─── Groups / Boot Profiles (2.3) ───
+
+	/// Groups this service belongs to — used by boot profiles and group start/stop
+	std::vector<std::string> groups {"default"};
 };
 
 } // namespace flx::services

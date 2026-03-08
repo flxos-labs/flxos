@@ -19,6 +19,19 @@ public:
 	virtual void update() {}
 
 	/**
+	 * Called before the app is stopped — save UI/data state for later restoration.
+	 * Return a Bundle of state data to persist (or empty to skip).
+	 * Saved state is restored on the next launch via onRestoreState().
+	 */
+	virtual flx::core::Bundle onSaveState() { return {}; }
+
+	/**
+	 * Called during onStart() if a previously saved state exists.
+	 * Restore your UI and data from this bundle.
+	 */
+	virtual void onRestoreState(const flx::core::Bundle& savedState) { (void)savedState; }
+
+	/**
 	 * Called when the AppManager receives a new Intent for this app while it
 	 * is already running in the stack.
 	 */
