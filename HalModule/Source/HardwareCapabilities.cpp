@@ -1,5 +1,5 @@
-#include <flx/hal/HardwareCapabilities.hpp>
 #include <Config.hpp>
+#include <flx/hal/HardwareCapabilities.hpp>
 
 namespace flx::hal {
 
@@ -25,7 +25,7 @@ uint32_t HardwareCapabilities::flashSizeBytes() const { return 0; } // Placehold
 uint32_t HardwareCapabilities::psramSizeBytes() const { return 0; } // Placeholder
 
 HardwareCapabilities getActiveCapabilities() {
-        return HardwareCapabilities(); // Placeholder, but gets capability flags
+	return HardwareCapabilities(); // Placeholder, but gets capability flags
 }
 
 } // namespace flx::hal
