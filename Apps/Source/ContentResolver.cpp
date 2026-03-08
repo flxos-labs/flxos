@@ -9,12 +9,9 @@ namespace flx::apps {
 // Use a static mutex for ContentResolver map protection, as the singleton
 // constructor might be called early before FreeRTOS is up if we aren't careful,
 // or we just initialize lazily.
-static SemaphoreHandle_t s_resolverMutex = nullptr;
-
-static void ensureMutex() {
-	if (!s_resolverMutex) {
-		s_resolverMutex = xSemaphoreCreateMutex();
-	}
+static SemaphoreHandle_t getResolverMutex() {
+	static SemaphoreHandle_t s_resolverMutex = xSemaphoreCreateMutex();
+	return s_resolverMutex;
 }
 
 std::string ContentResolver::extractAuthority(const std::string& uri) const {
@@ -33,27 +30,24 @@ std::string ContentResolver::extractAuthority(const std::string& uri) const {
 
 void ContentResolver::registerProvider(const std::string& authority, std::shared_ptr<ContentProvider> provider) {
 	if (!provider || authority.empty()) return;
-	ensureMutex();
-	xSemaphoreTake(s_resolverMutex, portMAX_DELAY);
+	xSemaphoreTake(getResolverMutex(), portMAX_DELAY);
 	m_providers[authority] = std::move(provider);
-	xSemaphoreGive(s_resolverMutex);
+	xSemaphoreGive(getResolverMutex());
 	Log::info("ContentResolver", "Registered provider for authority: %s", authority.c_str());
 }
 
 void ContentResolver::unregisterProvider(const std::string& authority) {
-	ensureMutex();
-	xSemaphoreTake(s_resolverMutex, portMAX_DELAY);
+	xSemaphoreTake(getResolverMutex(), portMAX_DELAY);
 	m_providers.erase(authority);
-	xSemaphoreGive(s_resolverMutex);
+	xSemaphoreGive(getResolverMutex());
 }
 
 std::shared_ptr<ContentProvider> ContentResolver::getProvider(const std::string& authority) const {
 	if (authority.empty()) return nullptr;
-	ensureMutex();
-	xSemaphoreTake(s_resolverMutex, portMAX_DELAY);
+	xSemaphoreTake(getResolverMutex(), portMAX_DELAY);
 	auto it = m_providers.find(authority);
 	auto provider = (it != m_providers.end()) ? it->second : nullptr;
-	xSemaphoreGive(s_resolverMutex);
+	xSemaphoreGive(getResolverMutex());
 	return provider;
 }
 

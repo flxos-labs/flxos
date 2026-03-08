@@ -57,19 +57,19 @@ struct AppLaunchStats {
 	uint32_t totalActiveTimeMs = 0;
 };
 
+static constexpr int MAX_CRASHES_BEFORE_BLOCK = 3;
+static constexpr int CRASH_WINDOW_SECONDS = 60;
+
 /**
  * @brief Tracks crash history for a single app (crash recovery, 2.5)
  */
 struct AppCrashRecord {
 	std::string appId;
-	uint32_t timestamps[3] = {}; ///< Ring buffer of last 3 crash timestamps (seconds)
+	uint32_t timestamps[MAX_CRASHES_BEFORE_BLOCK] = {}; ///< Ring buffer of last crash timestamps (seconds)
 	uint8_t index = 0; ///< Next write position in ring buffer
 	uint32_t crashCount = 0; ///< Total crash count
 	std::string lastError; ///< Last crash reason
 };
-
-static constexpr int MAX_CRASHES_BEFORE_BLOCK = 3;
-static constexpr int CRASH_WINDOW_SECONDS = 60;
 
 class AppManager : public flx::Singleton<AppManager> {
 	friend class flx::Singleton<AppManager>;

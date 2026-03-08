@@ -1,6 +1,9 @@
 #include <Config.hpp>
 #include <flx/hal/HardwareCapabilities.hpp>
 
+#include <flx/hal/DeviceRegistry.hpp>
+#include <flx/hal/IDevice.hpp>
+
 namespace flx::hal {
 
 bool HardwareCapabilities::hasDisplay() const { return flx::config::display.enabled; }
@@ -12,10 +15,10 @@ bool HardwareCapabilities::hasGps() const { return flx::config::capabilities.gps
 bool HardwareCapabilities::hasUsb() const { return flx::config::usb.tinyUsb; }
 bool HardwareCapabilities::hasWifi() const { return flx::config::capabilities.wifi; }
 bool HardwareCapabilities::hasBluetooth() const { return flx::config::capabilities.bluetooth; }
-bool HardwareCapabilities::hasI2C() const { return true; /* Update this safely */ }
-bool HardwareCapabilities::hasSpi() const { return true; /* Update this safely */ }
-bool HardwareCapabilities::hasUart() const { return true; /* Update this safely */ }
-bool HardwareCapabilities::hasGpio() const { return true; /* Update this safely */ }
+bool HardwareCapabilities::hasI2C() const { return flx::hal::DeviceRegistry::getInstance().findFirst<flx::hal::IDevice>(flx::hal::IDevice::Type::I2c) != nullptr; }
+bool HardwareCapabilities::hasSpi() const { return flx::hal::DeviceRegistry::getInstance().findFirst<flx::hal::IDevice>(flx::hal::IDevice::Type::Spi) != nullptr; }
+bool HardwareCapabilities::hasUart() const { return flx::hal::DeviceRegistry::getInstance().findFirst<flx::hal::IDevice>(flx::hal::IDevice::Type::Uart) != nullptr; }
+bool HardwareCapabilities::hasGpio() const { return flx::hal::DeviceRegistry::getInstance().findFirst<flx::hal::IDevice>(flx::hal::IDevice::Type::Gpio) != nullptr; }
 
 uint16_t HardwareCapabilities::displayWidth() const { return flx::config::display.width; }
 uint16_t HardwareCapabilities::displayHeight() const { return flx::config::display.height; }
