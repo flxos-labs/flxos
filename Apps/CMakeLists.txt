@@ -8,12 +8,13 @@ if(NOT FLXOS_HEADLESS_MODE_ENABLED)
     list(APPEND APPS_SRCS
         "Source/AppManager.cpp"
         "Source/AppRegistry.cpp"
+        "Source/ContentResolver.cpp"
     )
 endif()
 
 idf_component_register(
     SRCS ${APPS_SRCS}
     INCLUDE_DIRS Include
-    REQUIRES Core Kernel Services
+    REQUIRES Core Kernel Services HalModule
     PRIV_REQUIRES freertos
 )

@@ -3,6 +3,9 @@
 #include <flx/services/ServiceRegistry.hpp>
 #include <queue>
 #include <unordered_set>
+#include <utility>
+
+#include "esp_timer.h"
 
 static constexpr const char* TAG = "ServiceRegistry";
 
@@ -13,6 +16,8 @@ namespace Events {
 static constexpr const char* SERVICE_STARTED = "service.started";
 static constexpr const char* SERVICE_STOPPED = "service.stopped";
 static constexpr const char* SERVICE_FAILED = "service.failed";
+static constexpr const char* SERVICE_RESTARTED = "service.restarted";
+static constexpr const char* SERVICE_HEALTH_DEGRADED = "service.health.degraded";
 } // namespace Events
 
 void ServiceRegistry::addService(std::shared_ptr<IService> service) {
@@ -28,6 +33,34 @@ void ServiceRegistry::addService(std::shared_ptr<IService> service) {
 
 	m_serviceMap[id] = service;
 	m_services.push_back(service);
+
+	std::vector<std::string> unresolved {};
+	for (const auto& dep: service->getManifest().dependencies) {
+		if (!m_serviceMap.count(dep)) {
+			Log::warn(TAG, "Service '%s' depends on '%s' (not yet registered)", id.c_str(), dep.c_str());
+			unresolved.push_back(dep);
+		}
+	}
+
+	if (unresolved.empty()) {
+		m_pendingDeps.erase(id);
+	} else {
+		m_pendingDeps[id] = std::move(unresolved);
+	}
+
+	for (auto it = m_pendingDeps.begin(); it != m_pendingDeps.end();) {
+		auto& deps = it->second;
+		deps.erase(std::remove(deps.begin(), deps.end(), id), deps.end());
+		if (deps.empty()) {
+			it = m_pendingDeps.erase(it);
+		} else {
+			++it;
+		}
+	}
+
+	if (hasCyclicDependencies()) {
+		Log::error(TAG, "Dependency cycle detected after registering '%s'", id.c_str());
+	}
 }
 
 // ──────── Topological Sort (Kahn's Algorithm) ────────
@@ -104,6 +137,17 @@ std::vector<std::string> ServiceRegistry::topologicalSort() const {
 
 bool ServiceRegistry::startAll(bool guiMode) {
 	Log::info(TAG, "Starting all services (%zu registered, guiMode=%s)...", m_services.size(), guiMode ? "true" : "false");
+
+	auto unresolvedDeps = getUnresolvedDependencies();
+	if (!unresolvedDeps.empty()) {
+		Log::warn(TAG, "Unresolved service dependencies detected before startup:");
+		for (const auto& dep: unresolvedDeps) {
+			Log::warn(TAG, "  %s", dep.c_str());
+		}
+	}
+	if (hasCyclicDependencies()) {
+		Log::error(TAG, "Registered service graph contains a dependency cycle");
+	}
 
 	m_bootOrder = topologicalSort();
 	m_requiredFailed = false;
@@ -259,6 +303,63 @@ ServiceState ServiceRegistry::getServiceState(const std::string& serviceId) cons
 	return (it != m_serviceMap.end()) ? it->second->getState() : ServiceState::Stopped;
 }
 
+std::vector<std::string> ServiceRegistry::getUnresolvedDependencies() const {
+	std::vector<std::string> result {};
+	for (const auto& [serviceId, deps]: m_pendingDeps) {
+		for (const auto& dep: deps) {
+			result.push_back(serviceId + " -> " + dep);
+		}
+	}
+	std::sort(result.begin(), result.end());
+	return result;
+}
+
+bool ServiceRegistry::hasCyclicDependencies() const {
+	std::unordered_map<std::string, int> inDegree {};
+	std::unordered_map<std::string, std::vector<std::string>> adj {};
+
+	for (const auto& svc: m_services) {
+		inDegree[svc->getServiceId()] = 0;
+	}
+
+	for (const auto& svc: m_services) {
+		const auto& manifest = svc->getManifest();
+		for (const auto& dep: manifest.dependencies) {
+			if (!m_serviceMap.count(dep)) {
+				continue;
+			}
+			adj[dep].push_back(manifest.serviceId);
+			inDegree[manifest.serviceId]++;
+		}
+	}
+
+	std::queue<std::string> ready {};
+	for (const auto& [id, degree]: inDegree) {
+		if (degree == 0) {
+			ready.push(id);
+		}
+	}
+
+	size_t resolvedCount = 0;
+	while (!ready.empty()) {
+		auto current = ready.front();
+		ready.pop();
+		++resolvedCount;
+
+		auto it = adj.find(current);
+		if (it == adj.end()) {
+			continue;
+		}
+		for (const auto& neighbor: it->second) {
+			if (--inDegree[neighbor] == 0) {
+				ready.push(neighbor);
+			}
+		}
+	}
+
+	return resolvedCount != m_services.size();
+}
+
 std::vector<std::string> ServiceRegistry::findDependents(const std::string& serviceId) const {
 	std::vector<std::string> result;
 	for (const auto& svc: m_services) {
@@ -270,14 +371,174 @@ std::vector<std::string> ServiceRegistry::findDependents(const std::string& serv
 	return result;
 }
 
-// ──────── Diagnostics ────────
+// ──────── Health Check / Watchdog (2.1) ────────
 
 void ServiceRegistry::performHealthCheck() {
+	uint32_t now_ms = static_cast<uint32_t>(esp_timer_get_time() / 1000);
+
 	for (auto& svc: m_services) {
-		if (svc->isRunning()) {
-			svc->onHealthCheck();
+		if (!svc->isRunning()) continue;
+
+		const auto& manifest = svc->getManifest();
+		const auto& id = manifest.serviceId;
+
+		// Skip services without watchdog enabled
+		if (manifest.healthCheckIntervalMs == 0) continue;
+
+		// Throttle: only check if enough time has elapsed
+		auto it = m_lastHealthCheckMs.find(id);
+		if (it != m_lastHealthCheckMs.end()) {
+			uint32_t elapsed = now_ms - it->second;
+			if (elapsed < manifest.healthCheckIntervalMs) continue;
+		}
+		m_lastHealthCheckMs[id] = now_ms;
+
+		HealthStatus status = svc->onHealthCheck();
+
+		switch (status) {
+			case HealthStatus::Healthy:
+				break;
+
+			case HealthStatus::Degraded:
+				Log::warn(TAG, "Service '%s' health: Degraded", id.c_str());
+				publishServiceEvent(Events::SERVICE_HEALTH_DEGRADED, id);
+				break;
+
+			case HealthStatus::Unhealthy:
+				Log::error(TAG, "Service '%s' health: Unhealthy", id.c_str());
+				if (manifest.autoRestart) {
+					Log::warn(TAG, "Auto-restarting unhealthy service '%s'", id.c_str());
+					svc->stop();
+					if (svc->start()) {
+						publishServiceEvent(Events::SERVICE_RESTARTED, id);
+						Log::info(TAG, "Service '%s' restarted successfully", id.c_str());
+					} else {
+						publishServiceEvent(Events::SERVICE_FAILED, id);
+						Log::error(TAG, "Service '%s' failed to restart", id.c_str());
+						if (manifest.required) {
+							m_requiredFailed = true;
+						}
+					}
+				}
+				break;
+
+			case HealthStatus::Critical:
+				Log::error(TAG, "Service '%s' health: CRITICAL", id.c_str());
+				publishServiceEvent(Events::SERVICE_FAILED, id);
+				if (manifest.required) {
+					Log::error(TAG, "CRITICAL: Required service '%s' reports critical health — triggering safe mode", id.c_str());
+					m_requiredFailed = true;
+				}
+				break;
 		}
 	}
+}
+
+// ──────── Service Groups / Boot Profiles (2.3) ────────
+
+bool ServiceRegistry::isInGroup(const ServiceManifest& manifest, const std::string& group) {
+	return std::find(manifest.groups.begin(), manifest.groups.end(), group) != manifest.groups.end();
+}
+
+bool ServiceRegistry::isInBootProfile(const ServiceManifest& manifest) const {
+	if (m_bootProfile.empty()) return true; // No profile set = include everything
+
+	for (const auto& group: m_bootProfile) {
+		if (isInGroup(manifest, group)) return true;
+	}
+	return false;
+}
+
+void ServiceRegistry::setBootProfile(const std::vector<std::string>& groups) {
+	m_bootProfile = groups;
+	Log::info(TAG, "Boot profile set with %zu groups", groups.size());
+	for (const auto& g: groups) {
+		Log::info(TAG, "  group: %s", g.c_str());
+	}
+}
+
+std::vector<std::string> ServiceRegistry::getGroups() const {
+	std::unordered_set<std::string> seen;
+	std::vector<std::string> result;
+
+	for (const auto& svc: m_services) {
+		for (const auto& g: svc->getManifest().groups) {
+			if (seen.insert(g).second) {
+				result.push_back(g);
+			}
+		}
+	}
+
+	std::sort(result.begin(), result.end());
+	return result;
+}
+
+bool ServiceRegistry::startGroup(const std::string& group) {
+	Log::info(TAG, "Starting service group: %s", group.c_str());
+
+	// Use boot order if available, otherwise use registration order
+	const auto& order = m_bootOrder.empty() ? std::vector<std::string>() : m_bootOrder;
+
+	std::vector<std::string> toStart;
+	if (!order.empty()) {
+		for (const auto& id: order) {
+			auto it = m_serviceMap.find(id);
+			if (it == m_serviceMap.end()) continue;
+			if (isInGroup(it->second->getManifest(), group)) {
+				toStart.push_back(id);
+			}
+		}
+	} else {
+		for (const auto& svc: m_services) {
+			if (isInGroup(svc->getManifest(), group)) {
+				toStart.push_back(svc->getServiceId());
+			}
+		}
+	}
+
+	bool all_ok = true;
+	for (const auto& id: toStart) {
+		if (!startService(id)) {
+			all_ok = false;
+			auto it = m_serviceMap.find(id);
+			if (it != m_serviceMap.end() && it->second->getManifest().required) {
+				m_requiredFailed = true;
+			}
+		}
+	}
+
+	Log::info(TAG, "Group '%s' start complete (%s)", group.c_str(), all_ok ? "OK" : "PARTIAL");
+	return all_ok;
+}
+
+void ServiceRegistry::stopGroup(const std::string& group) {
+	Log::info(TAG, "Stopping service group: %s", group.c_str());
+
+	// Collect services in this group, stop in reverse boot order
+	std::vector<std::string> toStop;
+
+	const auto& order = m_bootOrder.empty() ? std::vector<std::string>() : m_bootOrder;
+	if (!order.empty()) {
+		for (auto it = order.rbegin(); it != order.rend(); ++it) {
+			auto sit = m_serviceMap.find(*it);
+			if (sit == m_serviceMap.end()) continue;
+			if (isInGroup(sit->second->getManifest(), group) && sit->second->isRunning()) {
+				toStop.push_back(*it);
+			}
+		}
+	} else {
+		for (const auto& svc: m_services) {
+			if (isInGroup(svc->getManifest(), group) && svc->isRunning()) {
+				toStop.push_back(svc->getServiceId());
+			}
+		}
+	}
+
+	for (const auto& id: toStop) {
+		stopService(id);
+	}
+
+	Log::info(TAG, "Group '%s' stopped", group.c_str());
 }
 
 void ServiceRegistry::dumpServiceStates() const {

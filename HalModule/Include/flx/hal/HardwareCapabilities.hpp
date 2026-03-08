@@ -13,6 +13,12 @@ extern const bool hardware_gps_enabled;
 extern const bool hardware_keyboard_enabled;
 extern const bool hardware_encoder_enabled;
 extern const bool hardware_usb_enabled;
+extern const bool hardware_wifi_enabled;
+extern const bool hardware_bluetooth_enabled;
+extern const bool hardware_i2c_enabled;
+extern const bool hardware_spi_enabled;
+extern const bool hardware_uart_enabled;
+extern const bool hardware_gpio_enabled;
 extern const int hardware_display_width;
 extern const int hardware_display_height;
 } // namespace flx::config
@@ -39,6 +45,12 @@ struct HardwareCapabilities {
 	bool hasKeyboard() const;
 	bool hasGps() const;
 	bool hasUsb() const;
+	bool hasWifi() const;
+	bool hasBluetooth() const;
+	bool hasI2C() const;
+	bool hasSpi() const;
+	bool hasUart() const;
+	bool hasGpio() const;
 
 	// ── Characteristics ───────────────────────────────────────────────────
 	uint16_t displayWidth() const;

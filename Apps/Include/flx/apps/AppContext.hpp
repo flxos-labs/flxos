@@ -4,6 +4,7 @@
 #include "Intent.hpp"
 #include <cstdint>
 #include <flx/core/Bundle.hpp>
+#include <flx/core/Preferences.hpp>
 #include <functional>
 #include <string>
 
@@ -56,6 +57,7 @@ public:
 	const AppManifest* getManifest() const { return m_manifest; }
 	const std::string& getAppId() const;
 	AppPaths getPaths() const;
+	flx::core::Preferences getPreferences() const;
 
 	// === Intent access ===
 

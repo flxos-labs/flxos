@@ -12,4 +12,8 @@ AppPaths AppContext::getPaths() const {
 	return AppPaths(getAppId());
 }
 
+flx::core::Preferences AppContext::getPreferences() const {
+	return flx::core::Preferences("app." + getAppId());
+}
+
 } // namespace flx::apps
