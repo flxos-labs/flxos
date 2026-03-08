@@ -95,6 +95,9 @@ public:
 	void clear();
 	std::vector<std::string> keys() const;
 
+	std::vector<uint8_t> serialize() const;
+	static Bundle deserialize(const std::vector<uint8_t>& data);
+
 private:
 
 	struct Value {

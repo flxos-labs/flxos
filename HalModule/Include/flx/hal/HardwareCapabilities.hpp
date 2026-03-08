@@ -2,20 +2,7 @@
 
 #include <cstdint>
 
-// Forward declare the profile settings structure since hal shouldn't depend on system headers
-namespace flx::config {
-// These are auto-generated from profile.yaml
-extern const bool hardware_display_enabled;
-extern const bool hardware_touch_enabled;
-extern const bool hardware_sdcard_enabled;
-extern const bool hardware_power_enabled;
-extern const bool hardware_gps_enabled;
-extern const bool hardware_keyboard_enabled;
-extern const bool hardware_encoder_enabled;
-extern const bool hardware_usb_enabled;
-extern const int hardware_display_width;
-extern const int hardware_display_height;
-} // namespace flx::config
+// Legacy variables removed. Access flx::config structures directly in .cpp instead.
 
 namespace flx::hal {
 
@@ -39,6 +26,12 @@ struct HardwareCapabilities {
 	bool hasKeyboard() const;
 	bool hasGps() const;
 	bool hasUsb() const;
+	bool hasWifi() const;
+	bool hasBluetooth() const;
+	bool hasI2C() const;
+	bool hasSpi() const;
+	bool hasUart() const;
+	bool hasGpio() const;
 
 	// ── Characteristics ───────────────────────────────────────────────────
 	uint16_t displayWidth() const;

@@ -34,14 +34,6 @@
 
 static constexpr std::string_view TAG = "SystemManager";
 
-#ifndef FLXOS_PROFILE_HWD_INIT
-#define FLXOS_PROFILE_HWD_INIT 0
-#endif
-
-#if FLXOS_PROFILE_HWD_INIT
-extern "C" esp_err_t flx_profile_hwd_init(void);
-#endif
-
 namespace flx::system {
 
 esp_err_t SystemManager::initHardware() {

@@ -4,8 +4,11 @@
 #include <flx/services/ServiceRegistry.hpp>
 #include <flx/system/services/HalInitService.hpp>
 
-extern "C" esp_err_t flx_profile_hwd_init();
+#include "Config.hpp"
 
+#if FLXOS_PROFILE_HWD_INIT
+extern "C" esp_err_t flx_profile_hwd_init(void);
+#endif
 namespace flx::system::services {
 
 static constexpr std::string_view TAG = "HalInitService";
@@ -46,11 +49,13 @@ bool HalInitService::onStart() {
 
 	flx::core::EventBus::getInstance().publish("hal.init.begin", {});
 
+#if FLXOS_PROFILE_HWD_INIT
 	esp_err_t err = flx_profile_hwd_init();
 	if (err != ESP_OK) {
 		flx::Log::error(TAG, "Hardware initialization failed: %d", err);
 		return false;
 	}
+#endif
 
 	flx::Log::info(TAG, "Hardware initialization complete.");
 
@@ -68,7 +73,7 @@ void HalInitService::onStop() {
 	flx::Log::info(TAG, "Stopping hardware services (no-op)");
 }
 
-void HalInitService::onHealthCheck() {
+flx::services::HealthStatus HalInitService::onHealthCheck() {
 	auto& registry = flx::hal::DeviceRegistry::getInstance();
 	auto report = registry.getHealthReport();
 
@@ -77,7 +82,9 @@ void HalInitService::onHealthCheck() {
 		for (const auto& dev: report.unhealthyDevices) {
 			flx::Log::warn(TAG, "Device ID %lu is unhealthy", dev.first);
 		}
+		return flx::services::HealthStatus::Degraded;
 	}
+	return flx::services::HealthStatus::Healthy;
 }
 
 } // namespace flx::system::services

@@ -82,14 +82,30 @@ private:
 
 // Standard event name constants
 namespace Events {
+
+// App lifecycle events
 constexpr const char* APP_STARTED = "app.started";
 constexpr const char* APP_STOPPED = "app.stopped";
+constexpr const char* APP_INSTALLED = "app.installed";
+constexpr const char* APP_UNINSTALLED = "app.uninstalled";
+constexpr const char* APP_CRASHED = "app.crashed";
+constexpr const char* APP_BLOCKED = "app.blocked";
+constexpr const char* APP_RESUMED = "app.resumed";
+constexpr const char* APP_PAUSED = "app.paused";
+
+// Service lifecycle events
+constexpr const char* SERVICE_STARTED = "service.started";
+constexpr const char* SERVICE_STOPPED = "service.stopped";
+constexpr const char* SERVICE_FAILED = "service.failed";
+constexpr const char* SERVICE_RESTARTED = "service.restarted";
+constexpr const char* SERVICE_HEALTH_DEGRADED = "service.health.degraded";
+
+// Hardware / system events
 constexpr const char* WIFI_CONNECTED = "wifi.connected";
 constexpr const char* WIFI_DISCONNECTED = "wifi.disconnected";
 constexpr const char* SDCARD_MOUNTED = "sdcard.mounted";
 constexpr const char* SDCARD_UNMOUNTED = "sdcard.unmounted";
-constexpr const char* APP_INSTALLED = "app.installed";
-constexpr const char* APP_UNINSTALLED = "app.uninstalled";
+
 } // namespace Events
 
 } // namespace flx::core

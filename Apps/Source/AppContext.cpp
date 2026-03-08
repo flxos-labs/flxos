@@ -8,4 +8,12 @@ const std::string& AppContext::getAppId() const {
 	return m_manifest ? m_manifest->appId : empty;
 }
 
+AppPaths AppContext::getPaths() const {
+	return AppPaths(getAppId());
+}
+
+flx::core::Preferences AppContext::getPreferences() const {
+	return flx::core::Preferences("app." + getAppId());
+}
+
 } // namespace flx::apps

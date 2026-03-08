@@ -769,7 +769,11 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
         cfg = buses[bus_name] if isinstance(buses[bus_name], dict) else {}
         if cfg.get("type") == "spi":
             host = cfg.get("host", "SPI2_HOST")
-            lines.append(f"    registry.registerDevice(std::make_shared<flx::hal::spi::EspSpiBus>({host}, -1, -1, -1));")
+            pins = cfg.get("pins", {})
+            mosi = pins.get("mosi", -1)
+            miso = pins.get("miso", -1)
+            sclk = pins.get("sclk", -1)
+            lines.append(f"    registry.registerDevice(std::make_shared<flx::hal::spi::EspSpiBus>({host}, {mosi}, {miso}, {sclk}));")
         elif cfg.get("type") == "i2c":
             port = cfg.get("port", "0")
             lines.extend([
@@ -802,9 +806,9 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
                 "    {",
                 "        auto display = registry.findFirst<flx::hal::display::IDisplayDevice>(flx::hal::IDevice::Type::Display);",
                 "        if (display) {",
-                "            auto* lgfx_disp = std::static_pointer_cast<flx::hal::display::LgfxDisplayDevice>(display).get();",
-                "            if (lgfx_disp) {",
-                "                auto touch = std::make_shared<flx::hal::touch::LgfxTouchDevice>(lgfx_disp->getRawDriver());",
+                "            auto lgfx_disp_sp = std::dynamic_pointer_cast<flx::hal::display::LgfxDisplayDevice>(display);",
+                "            if (lgfx_disp_sp) {",
+                "                auto touch = std::make_shared<flx::hal::touch::LgfxTouchDevice>(lgfx_disp_sp->getRawDriver());",
                 "                if (touch->start()) registry.registerDevice(touch);",
                 "            }",
                 "        }",
@@ -849,6 +853,73 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def render_profile_cmake(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
+    """Render a per-profile component manifest for generated HWD sources."""
+    generated_on = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    buses_raw = hw.get("buses", {})
+    peripherals_raw = hw.get("peripherals", {})
+    buses = buses_raw if isinstance(buses_raw, dict) else {}
+    peripherals = peripherals_raw if isinstance(peripherals_raw, dict) else {}
+
+    needs_gpio = False
+    needs_lgfx = False
+
+    for per_cfg in peripherals.values():
+        if not isinstance(per_cfg, dict):
+            continue
+        ptype = str(per_cfg.get("type", "")).lower()
+        if ptype == "gpio_power":
+            pins = _parse_gpio_pins(per_cfg.get("pins"))
+            if pins:
+                needs_gpio = True
+        elif ptype in {"display", "touch"}:
+            needs_lgfx = True
+
+    # Some profiles expose buses/peripherals only through the generated HAL
+    # scaffold. Pull HAL headers directly to avoid a Profiles <-> HalModule
+    # dependency cycle, and add optional component deps only for external SDK
+    # or LovyanGFX headers.
+    lines: list[str] = [
+        f"# {GENERATED_SIGNATURE}",
+        f"# Profile: {profile_id}",
+        f"# Source: {source_ref}",
+        f"# Generated: {generated_on}",
+        "",
+        "idf_component_register(",
+        "    SRCS",
+        '        "${CMAKE_CURRENT_LIST_DIR}/Source/hwd/GeneratedInit.cpp"',
+        "    INCLUDE_DIRS",
+        '        "${CMAKE_CURRENT_LIST_DIR}"',
+        ")",
+        "",
+        "# Bypass ESP-IDF static dependency analysis quirks for profile-local",
+        "# CMakeLists included from the parent Profiles component.",
+        "idf_component_optional_requires(PRIVATE Core HalModule)",
+        "",
+    ]
+
+    if needs_lgfx:
+        lines.extend(
+            [
+                "# Generated HWD may instantiate LovyanGFX-backed HAL devices.",
+                "idf_component_optional_requires(PRIVATE LovyanGFX)",
+                "",
+            ]
+        )
+
+    if needs_gpio:
+        lines.extend(
+            [
+                "# Board-power init uses ESP-IDF GPIO headers/components.",
+                "idf_component_optional_requires(PRIVATE esp_driver_gpio driver)",
+                "",
+            ]
+        )
+
+    return "\n".join(lines)
+
+
 def write_generated_file(path: Path, content: str, force: bool) -> None:
     """Write generated output with overwrite guard for manual files."""
     if path.exists():
@@ -858,6 +929,12 @@ def write_generated_file(path: Path, content: str, force: bool) -> None:
                 f"Refusing to overwrite non-generated file: {path}. "
                 "Use --force to overwrite."
             )
+        # Ignore the generated timestamp when deciding whether regeneration
+        # actually changed the scaffold content.
+        existing_normalized = re.sub(r"^(//|#) Generated: .*$", r"\1 Generated: <stable>", existing, flags=re.MULTILINE)
+        content_normalized = re.sub(r"^(//|#) Generated: .*$", r"\1 Generated: <stable>", content, flags=re.MULTILINE)
+        if existing_normalized == content_normalized:
+            return
 
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
@@ -886,6 +963,27 @@ def generate_for_profile(profile_id: str, output_override: Optional[str], stdout
         )
         return 1
 
+    hardware = _as_dict(profile_data.get("hardware"))
+    init = _as_dict(hardware.get("init"))
+    if not bool(init.get("enabled")):
+        if not stdout:
+            out_file = profile_dir / "Source" / "hwd" / "GeneratedInit.cpp"
+            cmake_file = profile_dir / "CMakeLists.txt"
+            if out_file.exists():
+                existing = out_file.read_text(encoding="utf-8", errors="ignore")
+                if GENERATED_SIGNATURE not in existing and not force:
+                    print(f"error: refusing to remove non-generated file: {out_file}. Use --force to overwrite.", file=sys.stderr)
+                    return 1
+                out_file.unlink()
+            if cmake_file.exists():
+                existing = cmake_file.read_text(encoding="utf-8", errors="ignore")
+                if GENERATED_SIGNATURE not in existing and not force:
+                    print(f"error: refusing to remove non-generated file: {cmake_file}. Use --force to overwrite.", file=sys.stderr)
+                    return 1
+                cmake_file.unlink()
+            print(f"skip: {profile_id} (hardware.init.enabled != true)")
+        return 0
+
     topology = derive_topology_from_profile(profile_data)
     errors = validate_hardware_doc(profile_id, topology)
     if errors:
@@ -896,6 +994,7 @@ def generate_for_profile(profile_id: str, output_override: Optional[str], stdout
 
     source_ref = f"{profile_yaml.relative_to(ROOT_DIR).as_posix()} (derived)"
     generated_cpp = render_cpp(profile_id, source_ref, topology)
+    generated_cmake = render_profile_cmake(profile_id, source_ref, topology)
     if stdout:
         print(generated_cpp)
         return 0
@@ -906,15 +1005,23 @@ def generate_for_profile(profile_id: str, output_override: Optional[str], stdout
             output_path = ROOT_DIR / output_path
     else:
         output_path = profile_dir / "Source" / "hwd" / "GeneratedInit.cpp"
+    cmake_path = profile_dir / "CMakeLists.txt"
 
     try:
         write_generated_file(output_path, generated_cpp, force=force)
+        if output_override is None:
+            write_generated_file(cmake_path, generated_cmake, force=force)
     except Exception as exc:
-        print(f"error: failed to write {output_path}: {exc}", file=sys.stderr)
+        print(f"error: failed to write generated outputs for '{profile_id}': {exc}", file=sys.stderr)
         return 1
 
     relative_out = output_path.relative_to(ROOT_DIR).as_posix()
-    print(f"generated: {relative_out}")
+    if output_override is None:
+        relative_cmake = cmake_path.relative_to(ROOT_DIR).as_posix()
+        print(f"generated: {relative_out}")
+        print(f"generated: {relative_cmake}")
+    else:
+        print(f"generated: {relative_out}")
     return 0
 
 

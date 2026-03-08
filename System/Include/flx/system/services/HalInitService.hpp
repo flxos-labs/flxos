@@ -15,7 +15,7 @@ public:
 
 	bool onStart() override;
 	void onStop() override;
-	void onHealthCheck() override;
+	flx::services::HealthStatus onHealthCheck() override;
 
 private:
 

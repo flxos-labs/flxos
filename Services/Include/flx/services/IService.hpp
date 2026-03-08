@@ -1,9 +1,11 @@
 #pragma once
 
 #include "ServiceManifest.hpp"
+#include "ServicePaths.hpp"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include <cstdint>
+#include <flx/core/Preferences.hpp>
 #include <string>
 
 namespace flx::services {
@@ -63,10 +65,11 @@ public:
 	virtual void onGuiInit() {}
 
 	/**
-	 * Optional health check. Called periodically by the registry.
+	 * Optional health check. Called periodically by the registry watchdog.
 	 * Override to report service health status.
+	 * @return HealthStatus indicating the service's current state.
 	 */
-	virtual void onHealthCheck() {}
+	virtual HealthStatus onHealthCheck() { return HealthStatus::Healthy; }
 
 	// ──────── State management (non-virtual) ────────
 
@@ -79,6 +82,11 @@ public:
 			return m_state == ServiceState::Started;
 		}
 		m_state = ServiceState::Starting;
+
+		if (!getPaths().ensureDirectories()) {
+			m_state = ServiceState::Failed;
+			return false;
+		}
 
 		// Measure boot timing and heap impact
 		uint32_t heapBefore = esp_get_free_heap_size();
@@ -135,6 +143,8 @@ public:
 
 	/// Convenience: get service ID from manifest
 	const std::string& getServiceId() const { return getManifest().serviceId; }
+	ServicePaths getPaths() const { return ServicePaths(getServiceId()); }
+	flx::core::Preferences getPreferences() const { return flx::core::Preferences("svc." + getServiceId()); }
 
 protected:
 

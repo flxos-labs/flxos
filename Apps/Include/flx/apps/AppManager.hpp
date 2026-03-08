@@ -2,16 +2,20 @@
 
 #include "AppContext.hpp"
 #include "Intent.hpp"
+#include <cstdint>
 #include <flx/core/Bundle.hpp>
 #include <flx/core/Singleton.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "App.hpp"
 
 namespace flx::apps {
+
+class AppExecutor;
 
 // Forward declaration
 // class App; // Removed as we include App.hpp
@@ -42,10 +46,34 @@ struct AppStackEntry {
 	std::unique_ptr<AppContext> context;
 	LaunchId launchId = LAUNCH_ID_INVALID;
 	ResultCallback resultCallback;
+	int64_t activeSinceUs = 0;
+};
+
+struct AppLaunchStats {
+	uint32_t launchCount = 0;
+	int64_t lastStartTimeUs = 0;
+	int32_t heapDeltaBytes = 0;
+	uint32_t lastActiveTimeMs = 0;
+	uint32_t totalActiveTimeMs = 0;
+};
+
+static constexpr int MAX_CRASHES_BEFORE_BLOCK = 3;
+static constexpr int CRASH_WINDOW_SECONDS = 60;
+
+/**
+ * @brief Tracks crash history for a single app (crash recovery, 2.5)
+ */
+struct AppCrashRecord {
+	std::string appId;
+	uint32_t timestamps[MAX_CRASHES_BEFORE_BLOCK] = {}; ///< Ring buffer of last crash timestamps (seconds)
+	uint8_t index = 0; ///< Next write position in ring buffer
+	uint32_t crashCount = 0; ///< Total crash count
+	std::string lastError; ///< Last crash reason
 };
 
 class AppManager : public flx::Singleton<AppManager> {
 	friend class flx::Singleton<AppManager>;
+	friend class AppExecutor;
 
 public:
 
@@ -100,6 +128,7 @@ public:
 	std::shared_ptr<App> getAppByPackageName(const std::string& packageName);
 	std::shared_ptr<App> getCurrentApp() const;
 	bool isAppRegistered(const std::string& packageName) const;
+	AppLaunchStats getAppStats(const std::string& packageName) const;
 
 	// === App stack queries ===
 
@@ -116,10 +145,31 @@ public:
 
 	// === Diagnostics ===
 
+	void dumpAppStates() const;
 	void performHealthCheck();
 	void update();
 
+	// === Crash recovery (2.5) ===
+
+	/**
+	 * Report that an app has crashed.
+	 * Increments crash count and may block the app if threshold is exceeded.
+	 */
+	void reportAppCrash(const std::string& appId, const std::string& reason);
+
+	/**
+	 * Check if an app is blocked due to repeated crashes.
+	 */
+	bool isAppBlocked(const std::string& appId) const;
+
+	/**
+	 * Clear crash history for an app, allowing it to be launched again.
+	 */
+	void clearCrashHistory(const std::string& appId);
+
 private:
+
+	struct AppCommand;
 
 	AppManager();
 	~AppManager() = default;
@@ -130,16 +180,31 @@ private:
 
 	// === Registered apps ===
 	std::vector<std::shared_ptr<App>> m_apps;
+	std::unordered_map<std::string, AppLaunchStats> m_appStats;
+	std::unordered_map<std::string, AppCrashRecord> m_crashRecords;
 	std::vector<AppStateObserver*> m_observers {};
 
 	void* m_mutex = nullptr;
 	void* m_executor = nullptr;
+	void* m_dispatcherQueue = nullptr;
 
 	// Internal helpers
+	bool dispatchAndWait(AppCommand& cmd);
+	void processQueuedCommands();
+	void processCommand(AppCommand& cmd);
+	bool isExecutorThread() const;
+
+	LaunchId startAppForResultImpl(const Intent& intent, ResultCallback callback);
+	void finishAppImpl(LaunchId id, ResultCode resultCode, const flx::core::Bundle& resultData);
+	bool stopAppImpl(const std::string& packageName, bool closeUI);
+
 	LaunchId generateLaunchId();
 	void notifyAppStarted(const std::string& packageName);
 	void notifyAppStopped(const std::string& packageName);
 	void publishAppEvent(const char* event, const std::string& appId);
+	void recordLaunchMetrics(const std::string& packageName, int64_t startTimeUs, int32_t heapDeltaBytes);
+	void recordActiveTime(AppStackEntry& entry, int64_t nowUs);
+	void markTopAppActive(int64_t nowUs);
 
 	// Legacy method removed, but internal logic moved to startAppForResult
 	// bool startApp(std::shared_ptr<App> app);
