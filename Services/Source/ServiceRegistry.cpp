@@ -162,6 +162,30 @@ bool ServiceRegistry::startAll(bool guiMode) {
 	int skipped = 0;
 	int failed = 0;
 
+	// Pre-calculate which services MUST start due to active profile or being a transitive dependency
+	std::unordered_set<std::string> willStart;
+	for (auto it = m_bootOrder.rbegin(); it != m_bootOrder.rend(); ++it) {
+		auto sit = m_serviceMap.find(*it);
+		if (sit == m_serviceMap.end()) continue;
+		const auto& manifest = sit->second->getManifest();
+
+		bool explicitStart = true;
+		if (!manifest.autoStart) explicitStart = false;
+		if (manifest.guiRequired && !guiMode) explicitStart = false;
+		if (!isInBootProfile(manifest)) explicitStart = false;
+
+		if (explicitStart) {
+			willStart.insert(*it);
+		}
+
+		if (willStart.count(*it)) {
+			// If this service is starting, its dependencies MUST also start
+			for (const auto& dep : manifest.dependencies) {
+				willStart.insert(dep);
+			}
+		}
+	}
+
 	for (const auto& id: m_bootOrder) {
 		auto it = m_serviceMap.find(id);
 		if (it == m_serviceMap.end()) continue;
@@ -169,27 +193,43 @@ bool ServiceRegistry::startAll(bool guiMode) {
 		auto& svc = it->second;
 		const auto& manifest = svc->getManifest();
 
-		// Skip non-autostart services
-		if (!manifest.autoStart) {
-			Log::info(TAG, "Skipping '%s' (autoStart=false)", id.c_str());
-			skipped++;
-			continue;
-		}
-
-		// Skip GUI-required services if not in GUI mode
-		if (manifest.guiRequired && !guiMode) {
-			Log::info(TAG, "Skipping '%s' (guiRequired, headless mode)", id.c_str());
-			skipped++;
-			continue;
-		}
-
-		if (!isInBootProfile(manifest)) {
-			Log::info(TAG, "Skipping '%s' (not in active boot profile)", id.c_str());
+		if (!willStart.count(id)) {
+			if (!manifest.autoStart) {
+				Log::info(TAG, "Skipping '%s' (autoStart=false)", id.c_str());
+			} else if (manifest.guiRequired && !guiMode) {
+				Log::info(TAG, "Skipping '%s' (guiRequired, headless mode)", id.c_str());
+			} else if (!isInBootProfile(manifest)) {
+				Log::info(TAG, "Skipping '%s' (not in active boot profile)", id.c_str());
+			} else {
+				Log::info(TAG, "Skipping '%s'", id.c_str());
+			}
 			skipped++;
 			continue;
 		}
 
 		Log::info(TAG, "Starting service: %s...", manifest.serviceName.c_str());
+
+		// Ensure dependencies actually started
+		bool depsStarted = true;
+		for (const auto& dep : manifest.dependencies) {
+			auto depIt = m_serviceMap.find(dep);
+			if (depIt == m_serviceMap.end() || !depIt->second->isRunning()) {
+				Log::error(TAG, "  ✗ %s FAILED to start (dependency '%s' not running)", manifest.serviceName.c_str(), dep.c_str());
+				depsStarted = false;
+				break;
+			}
+		}
+
+		if (!depsStarted) {
+			publishServiceEvent(Events::SERVICE_FAILED, id);
+			failed++;
+
+			if (manifest.required) {
+				Log::error(TAG, "CRITICAL: Required service '%s' failed — triggering safe mode", id.c_str());
+				m_requiredFailed = true;
+			}
+			continue;
+		}
 
 		if (svc->start()) {
 			Log::info(TAG, "  ✓ %s started", manifest.serviceName.c_str());

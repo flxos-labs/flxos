@@ -15,7 +15,7 @@ static constexpr const char* TAG = "Preferences";
 static constexpr size_t MAX_NVS_NAME_LEN = NVS_KEY_NAME_MAX_SIZE - 1;
 
 uint64_t fnv1a64(const std::string& input) {
-	uint64_t hash = 14695981039346656037ULL;
+	uint64_t hash = 1469598103934665603ULL;
 	for (unsigned char ch: input) {
 		hash ^= ch;
 		hash *= 1099511628211ULL;
