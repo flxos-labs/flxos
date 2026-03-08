@@ -1,11 +1,11 @@
 #pragma once
 
-#include <string>
 #include <cerrno>
 #include <cstring>
+#include <flx/core/Logger.hpp>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <flx/core/Logger.hpp>
 
 namespace flx::core {
 
@@ -34,7 +34,7 @@ inline bool ensureDirectoryExists(const std::string& path) {
 
 inline std::string sanitizeSegment(const std::string& segment) {
 	std::string safe = segment;
-	for (char& c : safe) {
+	for (char& c: safe) {
 		if (!std::isalnum(c) && c != '.' && c != '_' && c != '-') {
 			c = '_';
 		}
