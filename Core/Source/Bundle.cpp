@@ -301,8 +301,6 @@ std::vector<std::string> Bundle::keys() const {
 	return result;
 }
 
-} // namespace flx::core
-
 // ============================================================
 // Serialization
 // ============================================================
@@ -447,3 +445,6 @@ Bundle Bundle::deserialize(const std::vector<uint8_t>& data) {
 	}
 	return result;
 }
+
+} // namespace flx::core
+

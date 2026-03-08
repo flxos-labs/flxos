@@ -324,6 +324,12 @@ int32_t Preferences::getInt32Or(const std::string& key, int32_t def) const {
 	return out;
 }
 
+int64_t Preferences::getInt64Or(const std::string& key, int64_t def) const {
+	int64_t out = def;
+	optInt64(key, out);
+	return out;
+}
+
 std::string Preferences::getStringOr(const std::string& key, const std::string& def) const {
 	std::string out = def;
 	optString(key, out);
