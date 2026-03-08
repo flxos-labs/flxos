@@ -34,8 +34,6 @@
 
 static constexpr std::string_view TAG = "SystemManager";
 
-
-
 namespace flx::system {
 
 esp_err_t SystemManager::initHardware() {

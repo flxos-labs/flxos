@@ -1,13 +1,13 @@
-#include <flx/apps/ContentResolver.hpp>
-#include <flx/core/Logger.hpp>
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include <algorithm>
+#include <flx/apps/ContentResolver.hpp>
+#include <flx/core/Logger.hpp>
 
 namespace flx::apps {
 
-// Use a static mutex for ContentResolver map protection, as the singleton 
-// constructor might be called early before FreeRTOS is up if we aren't careful, 
+// Use a static mutex for ContentResolver map protection, as the singleton
+// constructor might be called early before FreeRTOS is up if we aren't careful,
 // or we just initialize lazily.
 static SemaphoreHandle_t s_resolverMutex = nullptr;
 

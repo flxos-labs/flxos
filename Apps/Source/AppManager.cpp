@@ -12,9 +12,9 @@
 #include <flx/core/EventBus.hpp>
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/hal/HardwareCapabilities.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
-#include <flx/hal/HardwareCapabilities.hpp>
 #include <limits>
 #include <utility>
 
