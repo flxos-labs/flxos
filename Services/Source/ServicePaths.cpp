@@ -60,10 +60,7 @@ std::string ServicePaths::getCacheDir() const {
 }
 
 bool ServicePaths::ensureDirectories() const {
-	return ensureDirectoryExists("/data")
-		&& ensureDirectoryExists("/data/services")
-		&& ensureDirectoryExists(getDataDir())
-		&& ensureDirectoryExists(getCacheDir());
+	return ensureDirectoryExists("/data") && ensureDirectoryExists("/data/services") && ensureDirectoryExists(getDataDir()) && ensureDirectoryExists(getCacheDir());
 }
 
 } // namespace flx::services

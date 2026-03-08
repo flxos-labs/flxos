@@ -1,3 +1,4 @@
+#include <cstring>
 #include <flx/core/Bundle.hpp>
 
 namespace flx::core {
@@ -301,3 +302,148 @@ std::vector<std::string> Bundle::keys() const {
 }
 
 } // namespace flx::core
+
+// ============================================================
+// Serialization
+// ============================================================
+
+std::vector<uint8_t> Bundle::serialize() const {
+	std::vector<uint8_t> out;
+	uint32_t count = m_entries.size();
+	out.insert(out.end(), reinterpret_cast<const uint8_t*>(&count), reinterpret_cast<const uint8_t*>(&count) + sizeof(count));
+
+	for (const auto& [k, v]: m_entries) {
+		uint16_t keyLen = k.size();
+		out.insert(out.end(), reinterpret_cast<const uint8_t*>(&keyLen), reinterpret_cast<const uint8_t*>(&keyLen) + sizeof(keyLen));
+		out.insert(out.end(), reinterpret_cast<const uint8_t*>(k.data()), reinterpret_cast<const uint8_t*>(k.data()) + k.size());
+		uint8_t type = static_cast<uint8_t>(v.type);
+		out.push_back(type);
+		switch (v.type) {
+			case Type::Bool:
+				out.push_back(v.valueBool ? 1 : 0);
+				break;
+			case Type::Int32:
+				out.insert(out.end(), reinterpret_cast<const uint8_t*>(&v.valueInt32), reinterpret_cast<const uint8_t*>(&v.valueInt32) + sizeof(int32_t));
+				break;
+			case Type::Int64:
+				out.insert(out.end(), reinterpret_cast<const uint8_t*>(&v.valueInt64), reinterpret_cast<const uint8_t*>(&v.valueInt64) + sizeof(int64_t));
+				break;
+			case Type::Float:
+				out.insert(out.end(), reinterpret_cast<const uint8_t*>(&v.valueFloat), reinterpret_cast<const uint8_t*>(&v.valueFloat) + sizeof(float));
+				break;
+			case Type::String: {
+				uint32_t strLen = v.valueString.size();
+				out.insert(out.end(), reinterpret_cast<const uint8_t*>(&strLen), reinterpret_cast<const uint8_t*>(&strLen) + sizeof(strLen));
+				out.insert(out.end(), reinterpret_cast<const uint8_t*>(v.valueString.data()), reinterpret_cast<const uint8_t*>(v.valueString.data()) + v.valueString.size());
+				break;
+			}
+			case Type::Blob: {
+				uint32_t blobLen = v.valueBlob.size();
+				out.insert(out.end(), reinterpret_cast<const uint8_t*>(&blobLen), reinterpret_cast<const uint8_t*>(&blobLen) + sizeof(blobLen));
+				out.insert(out.end(), v.valueBlob.begin(), v.valueBlob.end());
+				break;
+			}
+			case Type::Bundle: {
+				auto sub = v.valueBundle ? v.valueBundle->serialize() : std::vector<uint8_t>();
+				uint32_t subLen = sub.size();
+				out.insert(out.end(), reinterpret_cast<const uint8_t*>(&subLen), reinterpret_cast<const uint8_t*>(&subLen) + sizeof(subLen));
+				out.insert(out.end(), sub.begin(), sub.end());
+				break;
+			}
+		}
+	}
+	return out;
+}
+
+Bundle Bundle::deserialize(const std::vector<uint8_t>& data) {
+	Bundle result;
+	if (data.empty()) return result;
+	size_t offset = 0;
+	if (offset + sizeof(uint32_t) > data.size()) return result;
+	uint32_t count = *reinterpret_cast<const uint32_t*>(&data[offset]);
+	offset += sizeof(uint32_t);
+
+	for (uint32_t i = 0; i < count; ++i) {
+		if (offset + sizeof(uint16_t) > data.size()) break;
+		uint16_t keyLen = *reinterpret_cast<const uint16_t*>(&data[offset]);
+		offset += sizeof(uint16_t);
+
+		if (offset + keyLen > data.size()) break;
+		std::string key(reinterpret_cast<const char*>(&data[offset]), keyLen);
+		offset += keyLen;
+
+		if (offset + sizeof(uint8_t) > data.size()) break;
+		Type type = static_cast<Type>(data[offset]);
+		offset += sizeof(uint8_t);
+
+		switch (type) {
+			case Type::Bool: {
+				if (offset + 1 > data.size()) return result;
+				bool val = data[offset] != 0;
+				offset += 1;
+				result.putBool(key, val);
+				break;
+			}
+			case Type::Int32: {
+				if (offset + sizeof(int32_t) > data.size()) return result;
+				int32_t val;
+				std::memcpy(&val, &data[offset], sizeof(int32_t));
+				offset += sizeof(int32_t);
+				result.putInt32(key, val);
+				break;
+			}
+			case Type::Int64: {
+				if (offset + sizeof(int64_t) > data.size()) return result;
+				int64_t val;
+				std::memcpy(&val, &data[offset], sizeof(int64_t));
+				offset += sizeof(int64_t);
+				result.putInt64(key, val);
+				break;
+			}
+			case Type::Float: {
+				if (offset + sizeof(float) > data.size()) return result;
+				float val;
+				std::memcpy(&val, &data[offset], sizeof(float));
+				offset += sizeof(float);
+				result.putFloat(key, val);
+				break;
+			}
+			case Type::String: {
+				if (offset + sizeof(uint32_t) > data.size()) return result;
+				uint32_t strLen;
+				std::memcpy(&strLen, &data[offset], sizeof(uint32_t));
+				offset += sizeof(uint32_t);
+				if (offset + strLen > data.size()) return result;
+				std::string val(reinterpret_cast<const char*>(&data[offset]), strLen);
+				offset += strLen;
+				result.putString(key, val);
+				break;
+			}
+			case Type::Blob: {
+				if (offset + sizeof(uint32_t) > data.size()) return result;
+				uint32_t blobLen;
+				std::memcpy(&blobLen, &data[offset], sizeof(uint32_t));
+				offset += sizeof(uint32_t);
+				if (offset + blobLen > data.size()) return result;
+				std::vector<uint8_t> val(data.begin() + offset, data.begin() + offset + blobLen);
+				offset += blobLen;
+				result.putBlob(key, val);
+				break;
+			}
+			case Type::Bundle: {
+				if (offset + sizeof(uint32_t) > data.size()) return result;
+				uint32_t subLen;
+				std::memcpy(&subLen, &data[offset], sizeof(uint32_t));
+				offset += sizeof(uint32_t);
+				if (offset + subLen > data.size()) return result;
+				std::vector<uint8_t> sub(data.begin() + offset, data.begin() + offset + subLen);
+				offset += subLen;
+				result.putBundle(key, Bundle::deserialize(sub));
+				break;
+			}
+			default:
+				return result; // Invalid type
+		}
+	}
+	return result;
+}

@@ -68,10 +68,7 @@ std::string AppPaths::getAssetsPath(const std::string& child) const {
 }
 
 bool AppPaths::ensureDirectories() const {
-	return ensureDirectoryExists("/data")
-		&& ensureDirectoryExists("/data/apps")
-		&& ensureDirectoryExists(getDataDir())
-		&& ensureDirectoryExists(getCacheDir());
+	return ensureDirectoryExists("/data") && ensureDirectoryExists("/data/apps") && ensureDirectoryExists(getDataDir()) && ensureDirectoryExists(getCacheDir());
 }
 
 } // namespace flx::apps

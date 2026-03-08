@@ -2,6 +2,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "freertos/task.h"
 #include <flx/core/Singleton.hpp>
 
 namespace flx::core {
@@ -22,6 +23,37 @@ public:
 		auto& instance = getInstance();
 		if (instance.m_semaphore) {
 			xSemaphoreGiveRecursive(instance.m_semaphore);
+		}
+	}
+
+	static bool isHeldByCurrentTask() {
+		auto& instance = getInstance();
+		return instance.m_semaphore && xSemaphoreGetMutexHolder(instance.m_semaphore) == xTaskGetCurrentTaskHandle();
+	}
+
+	static UBaseType_t releaseAllForCurrentTask() {
+		auto& instance = getInstance();
+		if (!instance.m_semaphore) {
+			return 0;
+		}
+
+		UBaseType_t releaseCount = 0;
+		TaskHandle_t current = xTaskGetCurrentTaskHandle();
+		while (xSemaphoreGetMutexHolder(instance.m_semaphore) == current) {
+			xSemaphoreGiveRecursive(instance.m_semaphore);
+			++releaseCount;
+		}
+		return releaseCount;
+	}
+
+	static void reacquireForCurrentTask(UBaseType_t count) {
+		auto& instance = getInstance();
+		if (!instance.m_semaphore) {
+			return;
+		}
+
+		while (count-- > 0) {
+			xSemaphoreTakeRecursive(instance.m_semaphore, portMAX_DELAY);
 		}
 	}
 

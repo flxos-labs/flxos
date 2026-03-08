@@ -68,7 +68,7 @@ void HalInitService::onStop() {
 	flx::Log::info(TAG, "Stopping hardware services (no-op)");
 }
 
-void HalInitService::onHealthCheck() {
+flx::services::HealthStatus HalInitService::onHealthCheck() {
 	auto& registry = flx::hal::DeviceRegistry::getInstance();
 	auto report = registry.getHealthReport();
 
@@ -77,7 +77,9 @@ void HalInitService::onHealthCheck() {
 		for (const auto& dev: report.unhealthyDevices) {
 			flx::Log::warn(TAG, "Device ID %lu is unhealthy", dev.first);
 		}
+		return flx::services::HealthStatus::Degraded;
 	}
+	return flx::services::HealthStatus::Healthy;
 }
 
 } // namespace flx::system::services

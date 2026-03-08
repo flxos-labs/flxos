@@ -108,11 +108,46 @@ public:
 	/** Check if a required service failed (triggers safe mode) */
 	bool hasRequiredFailure() const { return m_requiredFailed; }
 
+	/** Get unresolved dependency diagnostics in "service -> dependency" format */
+	std::vector<std::string> getUnresolvedDependencies() const;
+
+	/** Check whether the currently registered service graph contains a cycle */
+	bool hasCyclicDependencies() const;
+
+	// ──────── Service Groups / Boot Profiles (2.3) ────────
+
+	/**
+	 * Start all services belonging to the given group.
+	 * Services are started in dependency order.
+	 * @return true if all required services in the group started
+	 */
+	bool startGroup(const std::string& group);
+
+	/**
+	 * Stop all services belonging to the given group.
+	 * Services are stopped in reverse dependency order.
+	 */
+	void stopGroup(const std::string& group);
+
+	/**
+	 * Get a list of all distinct groups across registered services.
+	 */
+	std::vector<std::string> getGroups() const;
+
+	/**
+	 * Set the boot profile: an ordered list of groups to start.
+	 * When startAll() is called, only services in these groups are started.
+	 * An empty list means start all services (default behavior).
+	 */
+	void setBootProfile(const std::vector<std::string>& groups);
+
 	// ──────── Diagnostics ────────
 
 	/**
-	 * Run health checks on all started services.
-	 * Logs state of each service.
+	 * Run health checks on all started services that have watchdog enabled.
+	 * Processes HealthStatus results: logs degraded, triggers restart for
+	 * unhealthy (if autoRestart=true), triggers safe mode for critical
+	 * required services.
 	 */
 	void performHealthCheck();
 
@@ -146,8 +181,21 @@ private:
 
 	std::vector<std::shared_ptr<IService>> m_services;
 	std::unordered_map<std::string, std::shared_ptr<IService>> m_serviceMap;
+	std::unordered_map<std::string, std::vector<std::string>> m_pendingDeps;
 	std::vector<std::string> m_bootOrder;
 	bool m_requiredFailed = false;
+
+	// Watchdog state
+	std::unordered_map<std::string, uint32_t> m_lastHealthCheckMs;
+
+	// Boot profile
+	std::vector<std::string> m_bootProfile;
+
+	/** Check if a service belongs to the active boot profile (or any if no profile set) */
+	bool isInBootProfile(const ServiceManifest& manifest) const;
+
+	/** Check if a service belongs to a specific group */
+	static bool isInGroup(const ServiceManifest& manifest, const std::string& group);
 };
 
 } // namespace flx::services
