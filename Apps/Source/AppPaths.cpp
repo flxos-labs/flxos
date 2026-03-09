@@ -2,15 +2,16 @@
 
 #include <cerrno>
 #include <cstring>
+#include <flx/core/Logger.hpp>
 #include <flx/core/PathUtils.hpp>
-#include <stdexcept>
 #include <utility>
 
 namespace flx::apps {
 
 AppPaths::AppPaths(std::string appId) : m_appId(flx::core::sanitizeSegment(std::move(appId))) {
 	if (m_appId.empty() || m_appId == "." || m_appId == "..") {
-		throw std::invalid_argument("Invalid app ID: reserved segment");
+		flx::Log::error("AppPaths", "Invalid app ID: reserved segment");
+		m_appId = "_invalid_";
 	}
 }
 
