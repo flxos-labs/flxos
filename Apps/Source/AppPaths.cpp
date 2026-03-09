@@ -2,8 +2,8 @@
 
 #include <cerrno>
 #include <cstring>
-#include <flx/core/PathUtils.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/core/PathUtils.hpp>
 #include <utility>
 
 namespace flx::apps {

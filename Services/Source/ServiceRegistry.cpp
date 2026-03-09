@@ -180,7 +180,7 @@ bool ServiceRegistry::startAll(bool guiMode) {
 
 		if (willStart.count(*it)) {
 			// If this service is starting, its dependencies MUST also start
-			for (const auto& dep : manifest.dependencies) {
+			for (const auto& dep: manifest.dependencies) {
 				auto depIt = m_serviceMap.find(dep);
 				if (depIt != m_serviceMap.end() && depIt->second->getManifest().guiRequired && !guiMode) {
 					Log::error(TAG, "Service '%s' depends on guiRequired service '%s', but running in headless mode — skipping dependency",
@@ -217,7 +217,7 @@ bool ServiceRegistry::startAll(bool guiMode) {
 
 		// Ensure dependencies actually started
 		bool depsStarted = true;
-		for (const auto& dep : manifest.dependencies) {
+		for (const auto& dep: manifest.dependencies) {
 			auto depIt = m_serviceMap.find(dep);
 			if (depIt == m_serviceMap.end() || !depIt->second->isRunning()) {
 				Log::error(TAG, "  ✗ %s FAILED to start (dependency '%s' not running)", manifest.serviceName.c_str(), dep.c_str());
