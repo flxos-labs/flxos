@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <flx/core/BootTimeline.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/services/ServiceRegistry.hpp>
 #include <queue>
@@ -226,6 +227,23 @@ bool ServiceRegistry::startAll(bool guiMode) {
 			}
 		}
 
+		// API version compatibility check (3.3)
+		for (const auto& tdep: manifest.typedDependencies) {
+			auto depIt = m_serviceMap.find(tdep.serviceId);
+			if (depIt == m_serviceMap.end()) continue; // unregistered → already warned
+
+			const auto& depVersion = depIt->second->getManifest().apiVersion;
+			if (!depVersion.isCompatibleWith(tdep.requiredVersion)) {
+				Log::error(TAG, "  ⚠ %s requires %s v%u.%u.x but found v%u.%u.%u (incompatible major/minor)",
+				           manifest.serviceName.c_str(),
+				           tdep.serviceId.c_str(),
+				           tdep.requiredVersion.major, tdep.requiredVersion.minor,
+				           depVersion.major, depVersion.minor, depVersion.patch);
+				// Warn-and-continue policy: log the mismatch but don't block startup
+				// to avoid bricking devices on version bumps.
+			}
+		}
+
 		if (!depsStarted) {
 			publishServiceEvent(Events::SERVICE_FAILED, id);
 			failed++;
@@ -240,10 +258,15 @@ bool ServiceRegistry::startAll(bool guiMode) {
 		if (svc->start()) {
 			Log::info(TAG, "  ✓ %s started", manifest.serviceName.c_str());
 			publishServiceEvent(Events::SERVICE_STARTED, id);
+			flx::core::BootTimeline::getInstance().record(
+				"service:" + id, "started",
+				svc->getHeapDeltaBytes(), svc->getLastStartTimeUs());
 			started++;
 		} else {
 			Log::error(TAG, "  ✗ %s FAILED to start", manifest.serviceName.c_str());
 			publishServiceEvent(Events::SERVICE_FAILED, id);
+			flx::core::BootTimeline::getInstance().record(
+				"service:" + id, "failed");
 			failed++;
 
 			if (manifest.required) {
@@ -253,6 +276,7 @@ bool ServiceRegistry::startAll(bool guiMode) {
 		}
 	}
 
+	flx::core::BootTimeline::getInstance().record("system", "services.boot.complete");
 	Log::info(TAG, "Service startup complete: %d started, %d skipped, %d failed", started, skipped, failed);
 
 	return !m_requiredFailed;
