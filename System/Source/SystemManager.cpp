@@ -6,10 +6,8 @@
 #include "sdkconfig.h"
 #include "wear_levelling.h"
 #include <flx/connectivity/ConnectivityManager.hpp>
-#include <flx/core/BootTimeline.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
-#include <flx/system/SystemDiagnostics.hpp>
 #include <flx/kernel/ResourceMonitorTask.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
@@ -103,7 +101,6 @@ void SystemManager::registerServices() {
 
 esp_err_t SystemManager::initServices() {
 	Log::info(TAG, "Registering services with ServiceRegistry...");
-	flx::core::BootTimeline::getInstance().record("system", "boot.start");
 	registerServices();
 
 	auto& registry = flx::services::ServiceRegistry::getInstance();
@@ -121,8 +118,6 @@ esp_err_t SystemManager::initServices() {
 	}
 
 	registry.dumpServiceStates();
-	flx::core::BootTimeline::getInstance().dump();
-	flx::system::dumpSystemDiagnostics();
 	Log::info(TAG, "Services initialized via ServiceRegistry");
 	return ESP_OK;
 }

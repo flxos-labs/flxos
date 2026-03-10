@@ -1,7 +1,6 @@
-set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule Apps)
+set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule)
 set(SYSTEM_SRCS
     "Source/SystemManager.cpp"
-    "Source/SystemDiagnostics.cpp"
     "Source/managers/SettingsManager.cpp"
     "Source/managers/DisplayManager.cpp"
     "Source/managers/ThemeManager.cpp"
