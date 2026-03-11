@@ -21,6 +21,7 @@ struct HardwareCapabilities {
 	// ── Peripherals ───────────────────────────────────────────────────────
 	bool hasDisplay() const;
 	bool hasTouch() const;
+	bool hasStorage() const;
 	bool hasSdCard() const;
 	bool hasBattery() const; ///< true if Power PMIC or ADC is configured
 	bool hasKeyboard() const;
@@ -28,6 +29,7 @@ struct HardwareCapabilities {
 	bool hasUsb() const;
 	bool hasWifi() const;
 	bool hasBluetooth() const;
+	bool hasCamera() const;
 	bool hasI2C() const;
 	bool hasSpi() const;
 	bool hasUart() const;
@@ -44,8 +46,10 @@ struct HardwareCapabilities {
 };
 
 /**
- * @brief Obtain compile-time constraints based purely on profile.yaml.
- * Useful for fast GUI instantiation.
+ * @brief Obtain the current hardware capability facade.
+ *
+ * Capability checks may combine profile-derived flags with runtime state
+ * such as registered devices or mounted storage.
  */
 constexpr HardwareCapabilities getCapabilities() {
 	return HardwareCapabilities(); // Implementation delegated to .cpp for IDF links
