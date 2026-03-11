@@ -26,6 +26,8 @@
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #endif
+#include <flx/core/BootTimeline.hpp>
+#include <flx/system/SystemDiagnostics.hpp>
 #include <cstring>
 #include <memory>
 #include <string_view>
@@ -70,12 +72,8 @@ esp_err_t SystemManager::initHardware() {
 void SystemManager::registerServices() {
 	auto& registry = flx::services::ServiceRegistry::getInstance();
 
-	// Decoupled event publishing
-	registry.setEventCallback([](const char* event, const std::string& serviceId) {
-		flx::core::Bundle data;
-		data.putString("serviceId", serviceId);
-		flx::core::EventBus::getInstance().publish(event, data);
-	});
+	// NOTE: ServiceRegistry now publishes directly to EventBus (2.7).
+	// No setEventCallback needed — events flow through EventBus automatically.
 
 	// Core managers (as shared_ptr wrapping the singletons — prevent deletion)
 	auto noDelete = [](auto*) {}; // Custom deleter that does nothing
@@ -118,6 +116,10 @@ esp_err_t SystemManager::initServices() {
 	}
 
 	registry.dumpServiceStates();
+
+	// Dump boot timeline (3.1)
+	flx::core::BootTimeline::getInstance().dump();
+
 	Log::info(TAG, "Services initialized via ServiceRegistry");
 	return ESP_OK;
 }
