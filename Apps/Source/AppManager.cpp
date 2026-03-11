@@ -9,7 +9,6 @@
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/apps/AppRegistry.hpp>
-#include <flx/core/BootTimeline.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
@@ -411,9 +410,6 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 
 	notifyAppStarted(manifest.appId);
 	publishAppEvent(flx::core::Events::APP_STARTED, manifest.appId);
-	flx::core::BootTimeline::getInstance().record(
-		"app:" + manifest.appId, "started",
-		heapDeltaBytes, lastStartTimeUs);
 
 	Log::info("AppManager", "startAppForResult: Requesting Desktop openApp");
 
@@ -541,7 +537,6 @@ void AppManager::finishAppImpl(LaunchId id, ResultCode resultCode, const flx::co
 
 	notifyAppStopped(pkg);
 	publishAppEvent(flx::core::Events::APP_STOPPED, pkg);
-	flx::core::BootTimeline::getInstance().record("app:" + pkg, "stopped");
 
 	// Close UI
 	lockGui();
@@ -645,7 +640,6 @@ bool AppManager::stopAppImpl(const std::string& packageName, bool closeUI) {
 
 	notifyAppStopped(packageName);
 	publishAppEvent(flx::core::Events::APP_STOPPED, packageName);
-	flx::core::BootTimeline::getInstance().record("app:" + packageName, "stopped");
 
 	if (wasActive && newTop) {
 		lockGui();

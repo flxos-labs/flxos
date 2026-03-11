@@ -81,42 +81,6 @@ inline const char* serviceStateToString(ServiceState state) {
  * Each service defines a static manifest that the ServiceRegistry uses
  * for dependency resolution and boot ordering.
  */
-/**
- * @brief Semantic API version for service compatibility checking. (3.3)
- *
- * major = breaking changes (incompatible API)
- * minor = additive features  (backward-compatible additions)
- * patch = bug fixes           (no API surface change)
- *
- * Compatibility rule:  same major AND provider minor >= required minor.
- */
-struct ApiVersion {
-	uint8_t major = 1;
-	uint8_t minor = 0;
-	uint8_t patch = 0;
-
-	/// Check whether *this* (the provider) satisfies a consumer's requirement.
-	bool isCompatibleWith(const ApiVersion& required) const {
-		return major == required.major && minor >= required.minor;
-	}
-
-	bool operator==(const ApiVersion& o) const {
-		return major == o.major && minor == o.minor && patch == o.patch;
-	}
-	bool operator!=(const ApiVersion& o) const { return !(*this == o); }
-};
-
-/**
- * @brief Typed service dependency with version requirement. (3.3)
- *
- * Used by `ServiceManifest::typedDependencies` to declare both *which*
- * service is needed and the minimum API version required.
- */
-struct ServiceDependency {
-	std::string serviceId;
-	ApiVersion requiredVersion {1, 0, 0};
-};
-
 struct ServiceManifest {
 	/// Unique service identifier (e.g. "com.flxos.settings")
 	std::string serviceId;
@@ -124,11 +88,9 @@ struct ServiceManifest {
 	/// Human-readable name
 	std::string serviceName;
 
-	/// Service version string (human-readable, e.g. "1.0.0")
+	/// Service version for API compatibility
 	std::string version = "1.0.0";
-
 	/// IDs of services this service depends on (must be started first)
-	/// Kept for backward compatibility — see also typedDependencies below.
 	std::vector<std::string> dependencies {};
 
 	/// Boot priority within the same dependency level (lower = earlier)
@@ -162,18 +124,6 @@ struct ServiceManifest {
 
 	/// Groups this service belongs to — used by boot profiles and group start/stop
 	std::vector<std::string> groups {"default"};
-
-	// ─── API Versioning (3.3) ───
-
-	/// Structured semantic version for API compatibility checking.
-	ApiVersion apiVersion {1, 0, 0};
-
-	/// Typed dependencies with version requirements.
-	/// When present, the registry validates that the dependency's apiVersion
-	/// satisfies the required version during startup.
-	/// These are *in addition to* the plain `dependencies` vector, which
-	/// is still used for dependency-graph ordering.
-	std::vector<ServiceDependency> typedDependencies {};
 };
 
 } // namespace flx::services
