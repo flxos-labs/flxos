@@ -75,6 +75,43 @@ inline const char* serviceStateToString(ServiceState state) {
 }
 
 /**
+ * @brief Semantic API version for service compatibility checking.
+ *
+ * Follows semver: breaking changes bump major, new features bump minor,
+ * bug fixes bump patch. A dependency is compatible if the provider's
+ * major version matches and its minor version is >= the required minor.
+ */
+struct ApiVersion {
+	uint8_t major = 1; ///< Breaking changes
+	uint8_t minor = 0; ///< New features (backward-compatible)
+	uint8_t patch = 0; ///< Bug fixes
+
+	/**
+	 * Check if this version satisfies a required version.
+	 * Compatible when major matches and minor >= required minor.
+	 */
+	bool isCompatibleWith(const ApiVersion& required) const {
+		return major == required.major && minor >= required.minor;
+	}
+
+	bool operator==(const ApiVersion& o) const {
+		return major == o.major && minor == o.minor && patch == o.patch;
+	}
+	bool operator!=(const ApiVersion& o) const { return !(*this == o); }
+};
+
+/**
+ * @brief Versioned dependency declaration.
+ *
+ * Pairs a service ID with the minimum API version required.
+ * Used alongside the legacy `dependencies` vector for backward compatibility.
+ */
+struct ServiceDependency {
+	std::string serviceId;
+	ApiVersion requiredVersion {1, 0, 0};
+};
+
+/**
  * @brief Static metadata for a service registration.
  *
  * Mirrors the AppManifest pattern from Phase 1.
@@ -88,10 +125,20 @@ struct ServiceManifest {
 	/// Human-readable name
 	std::string serviceName;
 
-	/// Service version for API compatibility
+	/// Service version string (human-readable, e.g. "1.2.3")
 	std::string version = "1.0.0";
+
+	/// Structured API version for compatibility checking (3.3)
+	ApiVersion apiVersion {1, 0, 0};
+
 	/// IDs of services this service depends on (must be started first)
+	/// Retained for backward compatibility — simple string-based deps
 	std::vector<std::string> dependencies {};
+
+	/// Versioned dependencies for API compatibility validation (3.3)
+	/// During topo sort, each typed dependency's actual apiVersion is
+	/// checked against the requiredVersion.
+	std::vector<ServiceDependency> typedDependencies {};
 
 	/// Boot priority within the same dependency level (lower = earlier)
 	int priority = 100;
@@ -124,6 +171,25 @@ struct ServiceManifest {
 
 	/// Groups this service belongs to — used by boot profiles and group start/stop
 	std::vector<std::string> groups {"default"};
+
+	// ─── Helpers ───
+
+	/**
+	 * Get all dependency service IDs (merges both simple and typed deps).
+	 * Useful for topo sort which only needs the IDs.
+	 */
+	std::vector<std::string> allDependencyIds() const {
+		std::vector<std::string> result = dependencies;
+		for (const auto& td : typedDependencies) {
+			// Avoid duplicates
+			bool found = false;
+			for (const auto& existing : result) {
+				if (existing == td.serviceId) { found = true; break; }
+			}
+			if (!found) result.push_back(td.serviceId);
+		}
+		return result;
+	}
 };
 
 } // namespace flx::services

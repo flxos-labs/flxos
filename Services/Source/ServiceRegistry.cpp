@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <flx/core/BootTimeline.hpp>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/services/ServiceRegistry.hpp>
 #include <queue>
@@ -34,8 +36,9 @@ void ServiceRegistry::addService(std::shared_ptr<IService> service) {
 	m_serviceMap[id] = service;
 	m_services.push_back(service);
 
+	auto allDeps = service->getManifest().allDependencyIds();
 	std::vector<std::string> unresolved {};
-	for (const auto& dep: service->getManifest().dependencies) {
+	for (const auto& dep: allDeps) {
 		if (!m_serviceMap.count(dep)) {
 			Log::warn(TAG, "Service '%s' depends on '%s' (not yet registered)", id.c_str(), dep.c_str());
 			unresolved.push_back(dep);
@@ -81,7 +84,8 @@ std::vector<std::string> ServiceRegistry::topologicalSort() const {
 	// Build edges: for each dependency, add edge dep -> service
 	for (const auto& svc: m_services) {
 		const auto& manifest = svc->getManifest();
-		for (const auto& dep: manifest.dependencies) {
+		auto allDeps = manifest.allDependencyIds();
+		for (const auto& dep: allDeps) {
 			// Only count dependencies on registered services
 			if (m_serviceMap.count(dep)) {
 				adj[dep].push_back(manifest.serviceId);
@@ -216,8 +220,9 @@ bool ServiceRegistry::startAll(bool guiMode) {
 		Log::info(TAG, "Starting service: %s...", manifest.serviceName.c_str());
 
 		// Ensure dependencies actually started
+		auto allDeps = manifest.allDependencyIds();
 		bool depsStarted = true;
-		for (const auto& dep: manifest.dependencies) {
+		for (const auto& dep: allDeps) {
 			auto depIt = m_serviceMap.find(dep);
 			if (depIt == m_serviceMap.end() || !depIt->second->isRunning()) {
 				Log::error(TAG, "  ✗ %s FAILED to start (dependency '%s' not running)", manifest.serviceName.c_str(), dep.c_str());
@@ -226,7 +231,24 @@ bool ServiceRegistry::startAll(bool guiMode) {
 			}
 		}
 
+		// Validate API version compatibility for typed dependencies (3.3)
+		for (const auto& td: manifest.typedDependencies) {
+			auto depIt = m_serviceMap.find(td.serviceId);
+			if (depIt != m_serviceMap.end()) {
+				const auto& depVersion = depIt->second->getManifest().apiVersion;
+				if (!depVersion.isCompatibleWith(td.requiredVersion)) {
+					Log::error(TAG, "  ✗ %s requires %s v%u.%u.x but found v%u.%u.%u (incompatible)",
+					           manifest.serviceName.c_str(), td.serviceId.c_str(),
+					           td.requiredVersion.major, td.requiredVersion.minor,
+					           depVersion.major, depVersion.minor, depVersion.patch);
+					depsStarted = false;
+					break;
+				}
+			}
+		}
+
 		if (!depsStarted) {
+			flx::core::BootTimeline::getInstance().record("service:" + id, "failed");
 			publishServiceEvent(Events::SERVICE_FAILED, id);
 			failed++;
 
@@ -237,12 +259,18 @@ bool ServiceRegistry::startAll(bool guiMode) {
 			continue;
 		}
 
+		flx::core::BootTimeline::getInstance().record("service:" + id, "start");
+
 		if (svc->start()) {
 			Log::info(TAG, "  ✓ %s started", manifest.serviceName.c_str());
+			flx::core::BootTimeline::getInstance().record(
+				"service:" + id, "started",
+				svc->getHeapDeltaBytes(), svc->getLastStartTimeUs());
 			publishServiceEvent(Events::SERVICE_STARTED, id);
 			started++;
 		} else {
 			Log::error(TAG, "  ✗ %s FAILED to start", manifest.serviceName.c_str());
+			flx::core::BootTimeline::getInstance().record("service:" + id, "failed");
 			publishServiceEvent(Events::SERVICE_FAILED, id);
 			failed++;
 
@@ -376,7 +404,8 @@ bool ServiceRegistry::hasCyclicDependencies() const {
 
 	for (const auto& svc: m_services) {
 		const auto& manifest = svc->getManifest();
-		for (const auto& dep: manifest.dependencies) {
+		auto allDeps = manifest.allDependencyIds();
+		for (const auto& dep: allDeps) {
 			if (!m_serviceMap.count(dep)) {
 				continue;
 			}
@@ -415,8 +444,8 @@ bool ServiceRegistry::hasCyclicDependencies() const {
 std::vector<std::string> ServiceRegistry::findDependents(const std::string& serviceId) const {
 	std::vector<std::string> result;
 	for (const auto& svc: m_services) {
-		const auto& deps = svc->getManifest().dependencies;
-		if (std::find(deps.begin(), deps.end(), serviceId) != deps.end()) {
+		auto allDeps = svc->getManifest().allDependencyIds();
+		if (std::find(allDeps.begin(), allDeps.end(), serviceId) != allDeps.end()) {
 			result.push_back(svc->getServiceId());
 		}
 	}
@@ -602,6 +631,12 @@ void ServiceRegistry::dumpServiceStates() const {
 }
 
 void ServiceRegistry::publishServiceEvent(const char* event, const std::string& serviceId) {
+	// Direct EventBus integration (2.7) — always publish to EventBus
+	flx::core::Bundle data;
+	data.putString("serviceId", serviceId);
+	flx::core::EventBus::getInstance().publish(event, data);
+
+	// Also notify via legacy callback if set
 	if (m_eventCallback) {
 		m_eventCallback(event, serviceId);
 	}
