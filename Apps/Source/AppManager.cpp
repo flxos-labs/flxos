@@ -249,6 +249,10 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 			Log::error("AppManager", "App '%s' requires Bluetooth (not available)", manifest.appId.c_str());
 			return LAUNCH_ID_INVALID;
 		}
+		if (hasCapability(manifest.capabilities, AppCapability::Camera) && !hwCaps.hasCamera()) {
+			Log::error("AppManager", "App '%s' requires Camera (not available)", manifest.appId.c_str());
+			return LAUNCH_ID_INVALID;
+		}
 		if (hasCapability(manifest.capabilities, AppCapability::I2C) && !hwCaps.hasI2C()) {
 			Log::error("AppManager", "App '%s' requires I2C (not available)", manifest.appId.c_str());
 			return LAUNCH_ID_INVALID;
@@ -265,7 +269,7 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 			Log::error("AppManager", "App '%s' requires GPIO (not available)", manifest.appId.c_str());
 			return LAUNCH_ID_INVALID;
 		}
-		if (hasCapability(manifest.capabilities, AppCapability::Storage) && !hwCaps.hasSdCard()) {
+		if (hasCapability(manifest.capabilities, AppCapability::Storage) && !hwCaps.hasStorage()) {
 			Log::error("AppManager", "App '%s' requires Storage (not available)", manifest.appId.c_str());
 			return LAUNCH_ID_INVALID;
 		}
