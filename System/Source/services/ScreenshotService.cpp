@@ -51,6 +51,52 @@ bool ensureDir(const std::string& path) {
 	return false;
 }
 
+uint8_t blendChannel(uint8_t src, uint8_t srcAlpha, uint8_t dst, uint8_t dstAlpha, uint8_t outAlpha) {
+	if (outAlpha == 0) return 0;
+
+	uint32_t srcPremul = static_cast<uint32_t>(src) * srcAlpha;
+	uint32_t dstPremul = (static_cast<uint32_t>(dst) * dstAlpha * (255 - srcAlpha) + 127) / 255;
+	return static_cast<uint8_t>((srcPremul + dstPremul + (outAlpha / 2)) / outAlpha);
+}
+
+void blendOverlayIntoBase(lv_draw_buf_t* base, const lv_draw_buf_t* overlay) {
+	if (!base || !overlay || !base->data || !overlay->data) return;
+	if (base->header.cf != LV_COLOR_FORMAT_ARGB8888 || overlay->header.cf != LV_COLOR_FORMAT_ARGB8888) return;
+
+	uint32_t blendWidth = LV_MIN(base->header.w, overlay->header.w);
+	uint32_t blendHeight = LV_MIN(base->header.h, overlay->header.h);
+
+	for (uint32_t y = 0; y < blendHeight; ++y) {
+		auto* dstRow = reinterpret_cast<lv_color32_t*>(static_cast<uint8_t*>(base->data) + y * base->header.stride);
+		auto* srcRow = reinterpret_cast<const lv_color32_t*>(static_cast<const uint8_t*>(overlay->data) + y * overlay->header.stride);
+
+		for (uint32_t x = 0; x < blendWidth; ++x) {
+			lv_color32_t& dst = dstRow[x];
+			const lv_color32_t& src = srcRow[x];
+
+			if (src.alpha == 0) continue;
+			if (src.alpha == 255) {
+				dst = src;
+				continue;
+			}
+
+			uint8_t outAlpha = static_cast<uint8_t>(src.alpha + ((static_cast<uint32_t>(dst.alpha) * (255 - src.alpha) + 127) / 255));
+			dst.red = blendChannel(src.red, src.alpha, dst.red, dst.alpha, outAlpha);
+			dst.green = blendChannel(src.green, src.alpha, dst.green, dst.alpha, outAlpha);
+			dst.blue = blendChannel(src.blue, src.alpha, dst.blue, dst.alpha, outAlpha);
+			dst.alpha = outAlpha;
+		}
+	}
+}
+
+lv_draw_buf_t* takeSnapshot(lv_obj_t* obj, const char* label) {
+	lv_draw_buf_t* snapshot = lv_snapshot_take(obj, LV_COLOR_FORMAT_ARGB8888);
+	if (!snapshot || !snapshot->data) {
+		Log::warn(TAG, "lv_snapshot_take(ARGB8888) failed for %s", label);
+	}
+	return snapshot;
+}
+
 } // namespace
 
 const ServiceManifest ScreenshotService::serviceManifest = {
@@ -81,38 +127,46 @@ bool ScreenshotService::capture(const std::string& savePath) {
 	lv_obj_t* screen = lv_screen_active();
 	int width = lv_obj_get_width(screen);
 	int height = lv_obj_get_height(screen);
-	lv_draw_buf_t* snap = lv_snapshot_take(screen, LV_COLOR_FORMAT_RGB888);
+	lv_draw_buf_t* snap = takeSnapshot(screen, "active screen");
 
 	if (!snap || !snap->data) {
-		Log::error(TAG, "lv_snapshot_take(RGB888) failed");
+		Log::error(TAG, "Failed to capture active screen snapshot");
 		flx::core::GuiLock::unlock();
 		return false;
 	}
 
-	// LVGL RGB888 stores as B-G-R per pixel, lodepng needs R-G-B
-	uint8_t* data = snap->data;
-	uint32_t stride = snap->header.stride;
+	/* Virtual keyboard, modals and other overlays live on LVGL's extra layers,
+	 * so compose them in explicitly before encoding. */
+	lv_draw_buf_t* topLayer = takeSnapshot(lv_layer_top(), "top layer");
+	lv_draw_buf_t* sysLayer = takeSnapshot(lv_layer_sys(), "sys layer");
+	blendOverlayIntoBase(snap, topLayer);
+	blendOverlayIntoBase(snap, sysLayer);
+
 	size_t rgbSize = static_cast<size_t>(width) * height * 3;
 	auto* rgbBuf = static_cast<uint8_t*>(malloc(rgbSize));
 
 	if (!rgbBuf) {
 		Log::error(TAG, "Failed to allocate RGB buffer (%u bytes)", (unsigned)rgbSize);
+		if (topLayer) lv_draw_buf_destroy(topLayer);
+		if (sysLayer) lv_draw_buf_destroy(sysLayer);
 		lv_draw_buf_destroy(snap);
 		flx::core::GuiLock::unlock();
 		return false;
 	}
 
-	// Copy with BGR→RGB swap, handling stride
+	// Copy BGRA -> RGB, handling stride
 	for (int y = 0; y < height; y++) {
-		const uint8_t* srcRow = data + y * stride;
+		const auto* srcRow = reinterpret_cast<const lv_color32_t*>(static_cast<const uint8_t*>(snap->data) + y * snap->header.stride);
 		uint8_t* dstRow = rgbBuf + y * width * 3;
 		for (int x = 0; x < width; x++) {
-			dstRow[x * 3 + 0] = srcRow[x * 3 + 2]; // R ← B
-			dstRow[x * 3 + 1] = srcRow[x * 3 + 1]; // G ← G
-			dstRow[x * 3 + 2] = srcRow[x * 3 + 0]; // B ← R
+			dstRow[x * 3 + 0] = srcRow[x].red;
+			dstRow[x * 3 + 1] = srcRow[x].green;
+			dstRow[x * 3 + 2] = srcRow[x].blue;
 		}
 	}
 
+	if (topLayer) lv_draw_buf_destroy(topLayer);
+	if (sysLayer) lv_draw_buf_destroy(sysLayer);
 	lv_draw_buf_destroy(snap);
 
 	// Save as PNG via lodepng

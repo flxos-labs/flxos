@@ -345,7 +345,7 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 	}
 
 	// 2. Create context
-	auto ctx = std::make_unique<AppContext>(&manifest, intent, launchId);
+	auto ctx = std::make_unique<AppContext>(manifest, intent, launchId);
 	auto paths = ctx->getPaths();
 	if (!paths.ensureDirectories()) {
 		xSemaphoreGive((SemaphoreHandle_t)m_mutex);

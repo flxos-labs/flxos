@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AppManifest.hpp"
 #include "AppPaths.hpp"
 #include "Intent.hpp"
 #include <cstdint>
@@ -9,9 +10,6 @@
 #include <string>
 
 namespace flx::apps {
-
-// Forward declarations
-struct AppManifest;
 
 /**
  * @brief Unique identifier for a specific app launch instance
@@ -49,12 +47,12 @@ using ResultCallback = std::function<void(ResultCode resultCode, const flx::core
 class AppContext {
 public:
 
-	AppContext(const AppManifest* manifest, const Intent& intent, LaunchId launchId)
+	AppContext(const AppManifest& manifest, const Intent& intent, LaunchId launchId)
 		: m_manifest(manifest), m_intent(intent), m_launchId(launchId) {}
 
 	// === Manifest access ===
 
-	const AppManifest* getManifest() const { return m_manifest; }
+	const AppManifest* getManifest() const { return &m_manifest; }
 	const std::string& getAppId() const;
 	AppPaths getPaths() const;
 	flx::core::Preferences getPreferences() const;
@@ -90,7 +88,7 @@ public:
 
 private:
 
-	const AppManifest* m_manifest;
+	AppManifest m_manifest;
 	Intent m_intent;
 	LaunchId m_launchId;
 
