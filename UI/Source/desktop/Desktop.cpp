@@ -126,6 +126,16 @@ void Desktop::init() {
 
 				if (enabled && path && path[0] != '\0') {
 					instance->createWallpaperImage(path);
+				} else if (enabled && instance->m_wallpaper_img != nullptr) {
+					if (!instance->m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
+						lv_image_cache_drop(instance->m_wallpaper_path.c_str());
+						instance->m_wallpaper_path.clear();
+					}
+					lv_obj_delete(instance->m_wallpaper_img);
+					instance->m_wallpaper_img = nullptr;
+					if (instance->m_wallpaper_icon) {
+						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+					}
 				}
 			},
 			this);
