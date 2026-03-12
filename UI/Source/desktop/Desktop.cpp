@@ -90,13 +90,19 @@ void Desktop::init() {
 				bool const enabled = lv_subject_get_int(subject);
 
 				if (enabled) {
-					if (instance->m_wallpaper_icon) {
-						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-					}
 					auto* pathSubject = flx::ui::theming::UiThemeManager::getInstance().getWallpaperPathSubject();
 					const char* path = static_cast<const char*>(lv_subject_get_pointer(pathSubject));
-					if (path && path[0] != '\0' && !instance->m_wallpaper_img) {
-						instance->createWallpaperImage(path);
+					if (path && path[0] != '\0') {
+						if (instance->m_wallpaper_icon) {
+							lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+						}
+						if (!instance->m_wallpaper_img) {
+							instance->createWallpaperImage(path);
+						}
+					} else {
+						if (instance->m_wallpaper_icon) {
+							lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+						}
 					}
 				} else {
 					if (instance->m_wallpaper_icon) {
@@ -125,14 +131,19 @@ void Desktop::init() {
 				bool const enabled = lv_subject_get_int(enabledSubject);
 
 				if (enabled && path && path[0] != '\0') {
-					instance->createWallpaperImage(path);
-				} else if (enabled && instance->m_wallpaper_img != nullptr) {
-					if (!instance->m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
-						lv_image_cache_drop(instance->m_wallpaper_path.c_str());
-						instance->m_wallpaper_path.clear();
+					if (instance->m_wallpaper_icon) {
+						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 					}
-					lv_obj_delete(instance->m_wallpaper_img);
-					instance->m_wallpaper_img = nullptr;
+					instance->createWallpaperImage(path);
+				} else if (enabled) {
+					if (instance->m_wallpaper_img != nullptr) {
+						if (!instance->m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
+							lv_image_cache_drop(instance->m_wallpaper_path.c_str());
+							instance->m_wallpaper_path.clear();
+						}
+						lv_obj_delete(instance->m_wallpaper_img);
+						instance->m_wallpaper_img = nullptr;
+					}
 					if (instance->m_wallpaper_icon) {
 						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 					}
