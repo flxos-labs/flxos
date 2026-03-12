@@ -3,6 +3,7 @@
 #include "lvgl.h"
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <flx/ui/desktop/modules/dock/Dock.hpp>
+#include <flx/ui/desktop/modules/floating_notifications/FloatingNotifications.hpp>
 #include <flx/ui/desktop/modules/launcher/Launcher.hpp>
 #include <flx/ui/desktop/modules/notification_panel/NotificationPanel.hpp>
 #include <flx/ui/desktop/modules/quick_access_panel/QuickAccessPanel.hpp>
@@ -35,6 +36,7 @@ private:
 	lv_obj_t* m_window_container {};
 	std::unique_ptr<UI::Modules::StatusBar> m_statusBarModule {};
 	lv_obj_t* m_status_bar {};
+	std::unique_ptr<UI::Modules::FloatingNotifications> m_floatingNotificationsModule {};
 	std::unique_ptr<UI::Modules::Dock> m_dockModule {};
 	lv_obj_t* m_dock {};
 	std::unique_ptr<UI::Modules::Launcher> m_launcherModule {};

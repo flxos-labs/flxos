@@ -1,6 +1,7 @@
 # UI component — LVGL UI framework, desktop, theming
 if(NOT FLXOS_HEADLESS_MODE_ENABLED)
     file(GLOB_RECURSE UI_SOURCES "Source/*.cpp")
+    list(APPEND UI_SOURCES "Source/desktop/modules/floating_notifications/FloatingNotifications.cpp")
 
     idf_component_register(
         SRCS ${UI_SOURCES}
