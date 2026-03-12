@@ -54,9 +54,9 @@ struct SystemDiagnostics {
 
 	// ── System ──
 
-	int64_t uptimeUs;        ///< System uptime in microseconds
-	int64_t bootTimeUs;      ///< Total boot time from BootTimeline
-	size_t taskCount;        ///< Number of FreeRTOS tasks
+	int64_t uptimeUs; ///< System uptime in microseconds
+	int64_t bootTimeUs; ///< Total boot time from BootTimeline
+	size_t taskCount; ///< Number of FreeRTOS tasks
 
 	// ── Counts ──
 
