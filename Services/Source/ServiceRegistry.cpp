@@ -238,9 +238,9 @@ bool ServiceRegistry::startAll(bool guiMode) {
 				const auto& depVersion = depIt->second->getManifest().apiVersion;
 				if (!depVersion.isCompatibleWith(td.requiredVersion)) {
 					Log::error(TAG, "  ✗ %s requires %s v%u.%u.x but found v%u.%u.%u (incompatible)",
-					           manifest.serviceName.c_str(), td.serviceId.c_str(),
-					           td.requiredVersion.major, td.requiredVersion.minor,
-					           depVersion.major, depVersion.minor, depVersion.patch);
+						manifest.serviceName.c_str(), td.serviceId.c_str(),
+						td.requiredVersion.major, td.requiredVersion.minor,
+						depVersion.major, depVersion.minor, depVersion.patch);
 					depsStarted = false;
 					break;
 				}

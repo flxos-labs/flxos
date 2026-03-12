@@ -16,6 +16,7 @@
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <memory>
+#include <string>
 #include <string_view>
 
 static constexpr std::string_view TAG = "Desktop";
@@ -31,6 +32,7 @@ Desktop::Desktop()
 	: m_screen(nullptr), m_wallpaper(nullptr), m_wallpaper_img(nullptr),
 	  m_wallpaper_icon(nullptr), m_window_container(nullptr),
 	  m_statusBarModule(nullptr), m_status_bar(nullptr),
+	  m_floatingNotificationsModule(nullptr),
 	  m_dockModule(nullptr), m_dock(nullptr),
 	  m_launcherModule(nullptr), m_launcher(nullptr),
 	  m_quickAccessPanelModule(nullptr), m_quick_access_panel(nullptr),
@@ -88,8 +90,19 @@ void Desktop::init() {
 				bool const enabled = lv_subject_get_int(subject);
 
 				if (enabled) {
-					if (instance->m_wallpaper_icon) {
-						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+					auto* pathSubject = flx::ui::theming::UiThemeManager::getInstance().getWallpaperPathSubject();
+					const char* path = static_cast<const char*>(lv_subject_get_pointer(pathSubject));
+					if (path && path[0] != '\0') {
+						if (instance->m_wallpaper_icon) {
+							lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+						}
+						if (!instance->m_wallpaper_img) {
+							instance->createWallpaperImage(path);
+						}
+					} else {
+						if (instance->m_wallpaper_icon) {
+							lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+						}
 					}
 				} else {
 					if (instance->m_wallpaper_icon) {
@@ -106,11 +119,43 @@ void Desktop::init() {
 				}
 			},
 			this);
+
+		// Wallpaper Path Observer
+		lv_subject_add_observer(
+			uiTheme.getWallpaperPathSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
+				const char* path = static_cast<const char*>(lv_subject_get_pointer(subject));
+
+				auto* enabledSubject = flx::ui::theming::UiThemeManager::getInstance().getWallpaperEnabledSubject();
+				bool const enabled = lv_subject_get_int(enabledSubject);
+
+				if (enabled && path && path[0] != '\0') {
+					if (instance->m_wallpaper_icon) {
+						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+					}
+					instance->createWallpaperImage(path);
+				} else if (enabled) {
+					if (instance->m_wallpaper_img != nullptr) {
+						if (!instance->m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
+							lv_image_cache_drop(instance->m_wallpaper_path.c_str());
+							instance->m_wallpaper_path.clear();
+						}
+						lv_obj_delete(instance->m_wallpaper_img);
+						instance->m_wallpaper_img = nullptr;
+					}
+					if (instance->m_wallpaper_icon) {
+						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+					}
+				}
+			},
+			this);
 	}
 	lv_obj_set_style_bg_opa(m_screen, UiConstants::OPA_COVER, 0);
 
 	m_statusBarModule.reset(new UI::Modules::StatusBar(m_screen));
 	m_status_bar = m_statusBarModule->getObj();
+	m_floatingNotificationsModule.reset(new UI::Modules::FloatingNotifications(m_screen, m_status_bar));
 
 	m_window_container = lv_obj_create(m_screen);
 	lv_obj_remove_style_all(m_window_container);
@@ -198,6 +243,11 @@ void Desktop::createWallpaperImage(const char* path) {
 		lv_image_cache_drop(m_wallpaper_path.c_str());
 	}
 
+	if (m_wallpaper_img != nullptr) {
+		lv_obj_delete(m_wallpaper_img);
+		m_wallpaper_img = nullptr;
+	}
+
 	m_wallpaper_path = path;
 	m_wallpaper_img = lv_image_create(m_wallpaper);
 	lv_image_set_src(m_wallpaper_img, path);
@@ -223,6 +273,9 @@ void Desktop::realign_panels() {
 			lv_obj_align(m_notification_panel, LV_ALIGN_TOP_MID, 0, 0);
 		}
 	}
+	if (m_floatingNotificationsModule) {
+		m_floatingNotificationsModule->realign();
+	}
 }
 
 void Desktop::on_start_click() {
@@ -240,7 +293,6 @@ void Desktop::on_up_click() {
 }
 
 void Desktop::on_app_click(lv_event_t* e) {
-	auto* d = (Desktop*)lv_event_get_user_data(e);
 	lv_obj_t* btn = lv_event_get_target_obj(e);
 
 	auto* appPtr = (flx::apps::App*)lv_obj_get_user_data(btn);

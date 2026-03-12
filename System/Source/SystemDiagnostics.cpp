@@ -24,7 +24,7 @@ SystemDiagnostics getSystemDiagnostics() {
 	const auto& allServices = registry.getAllServices();
 	diag.serviceCount = allServices.size();
 
-	for (const auto& svc : allServices) {
+	for (const auto& svc: allServices) {
 		if (!svc) continue;
 		const auto& manifest = svc->getManifest();
 		auto stats = svc->getServiceStats();
@@ -46,7 +46,7 @@ SystemDiagnostics getSystemDiagnostics() {
 	diag.appCount = installedApps.size();
 	diag.activeAppCount = 0;
 
-	for (const auto& app : installedApps) {
+	for (const auto& app: installedApps) {
 		if (!app) continue;
 
 		SystemDiagnostics::AppInfo info;
@@ -84,43 +84,43 @@ void dumpSystemDiagnostics() {
 	// System overview
 	int64_t uptimeSec = diag.uptimeUs / 1000000;
 	Log::info(TAG, "Uptime: %" PRId64 "s | Boot: %" PRId64 " ms | Tasks: %zu",
-	          uptimeSec, diag.bootTimeUs / 1000, diag.taskCount);
+		uptimeSec, diag.bootTimeUs / 1000, diag.taskCount);
 
 	// Memory
 	Log::info(TAG, "Memory: free=%" PRIu32 " KB, min_free=%" PRIu32 " KB",
-	          diag.memory.freeHeapBytes / 1024,
-	          diag.memory.minFreeHeapBytes / 1024);
+		diag.memory.freeHeapBytes / 1024,
+		diag.memory.minFreeHeapBytes / 1024);
 
 	// Services
 	Log::info(TAG, "─── Services (%zu) ───", diag.serviceCount);
-	for (const auto& svc : diag.services) {
+	for (const auto& svc: diag.services) {
 		const char* stateStr = flx::services::serviceStateToString(svc.state);
 		Log::info(TAG, "  [%s] %s (%s) v%s — starts: %" PRIu32 ", boot: %" PRId64 " ms, heap: %" PRId32 " B%s",
-		          stateStr,
-		          svc.name.c_str(),
-		          svc.id.c_str(),
-		          svc.version.c_str(),
-		          svc.stats.startCount,
-		          svc.stats.lastStartTimeUs / 1000,
-		          svc.stats.heapDeltaBytes,
-		          svc.required ? " [REQUIRED]" : "");
+			stateStr,
+			svc.name.c_str(),
+			svc.id.c_str(),
+			svc.version.c_str(),
+			svc.stats.startCount,
+			svc.stats.lastStartTimeUs / 1000,
+			svc.stats.heapDeltaBytes,
+			svc.required ? " [REQUIRED]" : "");
 	}
 
 	// Apps
 	Log::info(TAG, "─── Apps (%zu registered, %zu active) ───",
-	          diag.appCount, diag.activeAppCount);
-	for (const auto& app : diag.apps) {
+		diag.appCount, diag.activeAppCount);
+	for (const auto& app: diag.apps) {
 		const char* state = app.isActive ? "active" : "idle";
 		const char* blocked = app.isBlocked ? " [BLOCKED]" : "";
 		Log::info(TAG, "  [%s] %s (%s) — launches: %" PRIu32 ", start: %" PRId64 " ms, heap: %" PRId32 " B, total: %" PRIu32 " ms%s",
-		          state,
-		          app.appName.c_str(),
-		          app.packageName.c_str(),
-		          app.stats.launchCount,
-		          app.stats.lastStartTimeUs / 1000,
-		          app.stats.heapDeltaBytes,
-		          app.stats.totalActiveTimeMs,
-		          blocked);
+			state,
+			app.appName.c_str(),
+			app.packageName.c_str(),
+			app.stats.launchCount,
+			app.stats.lastStartTimeUs / 1000,
+			app.stats.heapDeltaBytes,
+			app.stats.totalActiveTimeMs,
+			blocked);
 	}
 
 	Log::info(TAG, "═══════════════════════════════════════════════");
