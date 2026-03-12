@@ -23,11 +23,11 @@ class BootTimeline {
 public:
 
 	struct Entry {
-		int64_t timestampUs;    ///< Absolute timestamp (esp_timer_get_time)
-		std::string component;  ///< "service:<id>" or "app:<id>"
-		std::string event;      ///< "start", "started", "failed", "stopped"
-		int32_t heapDelta;      ///< Heap change in bytes (negative = consumed)
-		int64_t durationUs;     ///< Duration of the operation in microseconds
+		int64_t timestampUs; ///< Absolute timestamp (esp_timer_get_time)
+		std::string component; ///< "service:<id>" or "app:<id>"
+		std::string event; ///< "start", "started", "failed", "stopped"
+		int32_t heapDelta; ///< Heap change in bytes (negative = consumed)
+		int64_t durationUs; ///< Duration of the operation in microseconds
 	};
 
 	static BootTimeline& getInstance();
@@ -40,7 +40,7 @@ public:
 	 * @param durationUs Duration of the operation in microseconds
 	 */
 	void record(const std::string& component, const std::string& event,
-	            int32_t heapDelta = 0, int64_t durationUs = 0);
+		int32_t heapDelta = 0, int64_t durationUs = 0);
 
 	/** Get all recorded entries */
 	const std::vector<Entry>& getEntries() const { return m_entries; }

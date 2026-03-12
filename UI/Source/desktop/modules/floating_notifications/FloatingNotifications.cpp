@@ -41,7 +41,7 @@ FloatingNotifications::~FloatingNotifications() {
 
 void FloatingNotifications::create() {
 	m_container = lv_obj_create(m_parent);
-	lv_obj_set_size(m_container, lv_pct(78), LV_SIZE_CONTENT);
+	lv_obj_set_size(m_container, lv_pct(90), LV_SIZE_CONTENT);
 	lv_obj_remove_flag(m_container, LV_OBJ_FLAG_SCROLLABLE);
 	lv_obj_add_flag(m_container, LV_OBJ_FLAG_FLOATING);
 	lv_obj_add_flag(m_container, LV_OBJ_FLAG_HIDDEN);

@@ -180,11 +180,14 @@ struct ServiceManifest {
 	 */
 	std::vector<std::string> allDependencyIds() const {
 		std::vector<std::string> result = dependencies;
-		for (const auto& td : typedDependencies) {
+		for (const auto& td: typedDependencies) {
 			// Avoid duplicates
 			bool found = false;
-			for (const auto& existing : result) {
-				if (existing == td.serviceId) { found = true; break; }
+			for (const auto& existing: result) {
+				if (existing == td.serviceId) {
+					found = true;
+					break;
+				}
 			}
 			if (!found) result.push_back(td.serviceId);
 		}

@@ -26,9 +26,9 @@
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #endif
+#include <cstring>
 #include <flx/core/BootTimeline.hpp>
 #include <flx/system/SystemDiagnostics.hpp>
-#include <cstring>
 #include <memory>
 #include <string_view>
 #include <sys/stat.h>
