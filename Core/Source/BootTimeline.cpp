@@ -13,7 +13,7 @@ BootTimeline& BootTimeline::getInstance() {
 }
 
 void BootTimeline::record(const std::string& component, const std::string& event,
-                          int32_t heapDelta, int64_t durationUs) {
+	int32_t heapDelta, int64_t durationUs) {
 	Entry entry;
 	entry.timestampUs = esp_timer_get_time();
 	entry.component = component;
@@ -31,7 +31,7 @@ void BootTimeline::dump() const {
 
 	int64_t bootTimeUs = getTotalBootTimeUs();
 	Log::info(TAG, "=== Boot Timeline (%zu entries, total %lld ms) ===",
-	          m_entries.size(), (long long)(bootTimeUs / 1000));
+		m_entries.size(), (long long)(bootTimeUs / 1000));
 
 	int64_t baseUs = m_entries.front().timestampUs;
 
@@ -42,16 +42,16 @@ void BootTimeline::dump() const {
 
 		if (e.durationUs > 0) {
 			Log::info(TAG, "  [+%lld ms] %s %s (%lld ms, heap %+ld B)",
-			          (long long)relativeMs,
-			          e.component.c_str(),
-			          e.event.c_str(),
-			          (long long)durationMs,
-			          (long)e.heapDelta);
+				(long long)relativeMs,
+				e.component.c_str(),
+				e.event.c_str(),
+				(long long)durationMs,
+				(long)e.heapDelta);
 		} else {
 			Log::info(TAG, "  [+%lld ms] %s %s",
-			          (long long)relativeMs,
-			          e.component.c_str(),
-			          e.event.c_str());
+				(long long)relativeMs,
+				e.component.c_str(),
+				e.event.c_str());
 		}
 	}
 

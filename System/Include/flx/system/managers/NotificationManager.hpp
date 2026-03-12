@@ -46,10 +46,12 @@ public:
 	// Getters
 	std::vector<Notification> getNotifications() const;
 	size_t getUnreadCount() const;
+	bool tryGetLatestNotification(Notification& out) const;
 
 	// Observables for UI binding
 	flx::Observable<int32_t>& getUnreadCountObservable() { return m_unread_count_subject; }
 	flx::Observable<int32_t>& getUpdateObservable() { return m_update_subject; }
+	flx::Observable<int32_t>& getLatestNotificationObservable() { return m_latest_notification_subject; }
 
 private:
 
@@ -57,9 +59,12 @@ private:
 	~NotificationManager() = default;
 
 	std::vector<Notification> m_notifications {};
+	Notification m_latest_notification {};
+	int32_t m_latest_notification_serial {0};
 	mutable std::mutex m_mutex {};
 	flx::Observable<int32_t> m_unread_count_subject {0};
 	flx::Observable<int32_t> m_update_subject {0};
+	flx::Observable<int32_t> m_latest_notification_subject {0};
 
 	std::string generateId();
 	void updateSubjects();

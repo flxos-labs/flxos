@@ -34,6 +34,11 @@ bool NotificationManager::onStart() {
 
 void NotificationManager::onStop() {
 	clearAll();
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
+		m_latest_notification = {};
+		m_latest_notification_serial = 0;
+	}
 	Log::info(TAG, "Notification service stopped");
 }
 
@@ -45,11 +50,12 @@ std::string NotificationManager::generateId() {
 }
 
 void NotificationManager::addNotification(const std::string& title, const std::string& message, const std::string& appName, const void* icon, int priority) {
+	Notification notif;
+	int32_t latestSerial = 0;
 	{ // Add scope block
 		std::lock_guard<std::mutex> lock(m_mutex);
 		Log::info(TAG, "New notification from %s: %s", appName.c_str(), title.c_str());
 
-		Notification notif;
 		notif.id = generateId();
 		notif.title = title;
 		notif.message = message;
@@ -60,9 +66,12 @@ void NotificationManager::addNotification(const std::string& title, const std::s
 		notif.isRead = false;
 
 		m_notifications.insert(m_notifications.begin(), notif);
+		m_latest_notification = notif;
+		latestSerial = ++m_latest_notification_serial;
 	} // lock_guard destructor releases mutex here
 
 	updateSubjects();
+	m_latest_notification_subject.setAndNotify(latestSerial);
 }
 
 void NotificationManager::removeNotification(const std::string& id) {
@@ -74,6 +83,11 @@ void NotificationManager::removeNotification(const std::string& id) {
 		if (it != m_notifications.end()) {
 			m_notifications.erase(it, m_notifications.end());
 			changed = true;
+
+			if (m_latest_notification.id == id) {
+				m_latest_notification = {};
+				m_latest_notification_serial = 0;
+			}
 		}
 	}
 	if (changed) {
@@ -86,6 +100,8 @@ void NotificationManager::clearAll() {
 		std::lock_guard<std::mutex> lock(m_mutex);
 		Log::info(TAG, "Clearing all notifications (%zu count)", m_notifications.size());
 		m_notifications.clear();
+		m_latest_notification = {};
+		m_latest_notification_serial = 0;
 	}
 	updateSubjects();
 }
@@ -135,6 +151,16 @@ size_t NotificationManager::getUnreadCount() const {
 		if (!n.isRead) count++;
 	}
 	return count;
+}
+
+bool NotificationManager::tryGetLatestNotification(Notification& out) const {
+	std::lock_guard<std::mutex> lock(m_mutex);
+	if (m_latest_notification_serial <= 0 || m_latest_notification.id.empty()) {
+		return false;
+	}
+
+	out = m_latest_notification;
+	return true;
 }
 
 void NotificationManager::updateSubjects() {

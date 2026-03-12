@@ -26,5 +26,5 @@ if(NOT FLXOS_HEADLESS_MODE_ENABLED AND CONFIG_LV_OS_IDLE_PERCENT_CUSTOM)
 endif()
 
 # Generate Partitions & Upload
-fatfs_create_spiflash_image(system ../assets/system FLASH_IN_PROJECT)
-fatfs_create_spiflash_image(data ../assets/data FLASH_IN_PROJECT)
+fatfs_create_spiflash_image(system ../storage/system FLASH_IN_PROJECT)
+fatfs_create_spiflash_image(data ../storage/data FLASH_IN_PROJECT)
