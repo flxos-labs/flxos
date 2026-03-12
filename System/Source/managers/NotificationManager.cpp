@@ -83,6 +83,11 @@ void NotificationManager::removeNotification(const std::string& id) {
 		if (it != m_notifications.end()) {
 			m_notifications.erase(it, m_notifications.end());
 			changed = true;
+
+			if (m_latest_notification.id == id) {
+				m_latest_notification = {};
+				m_latest_notification_serial = 0;
+			}
 		}
 	}
 	if (changed) {
@@ -95,6 +100,8 @@ void NotificationManager::clearAll() {
 		std::lock_guard<std::mutex> lock(m_mutex);
 		Log::info(TAG, "Clearing all notifications (%zu count)", m_notifications.size());
 		m_notifications.clear();
+		m_latest_notification = {};
+		m_latest_notification_serial = 0;
 	}
 	updateSubjects();
 }
