@@ -16,6 +16,7 @@
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <memory>
+#include <string>
 #include <string_view>
 
 static constexpr std::string_view TAG = "Desktop";
@@ -92,6 +93,11 @@ void Desktop::init() {
 					if (instance->m_wallpaper_icon) {
 						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 					}
+					auto* pathSubject = flx::ui::theming::UiThemeManager::getInstance().getWallpaperPathSubject();
+					const char* path = static_cast<const char*>(lv_subject_get_pointer(pathSubject));
+					if (path && path[0] != '\0' && !instance->m_wallpaper_img) {
+						instance->createWallpaperImage(path);
+					}
 				} else {
 					if (instance->m_wallpaper_icon) {
 						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
@@ -104,6 +110,22 @@ void Desktop::init() {
 						lv_obj_delete(instance->m_wallpaper_img);
 						instance->m_wallpaper_img = nullptr;
 					}
+				}
+			},
+			this);
+
+		// Wallpaper Path Observer
+		lv_subject_add_observer(
+			uiTheme.getWallpaperPathSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
+				const char* path = static_cast<const char*>(lv_subject_get_pointer(subject));
+
+				auto* enabledSubject = flx::ui::theming::UiThemeManager::getInstance().getWallpaperEnabledSubject();
+				bool const enabled = lv_subject_get_int(enabledSubject);
+
+				if (enabled && path && path[0] != '\0') {
+					instance->createWallpaperImage(path);
 				}
 			},
 			this);
@@ -198,6 +220,11 @@ void Desktop::createWallpaperImage(const char* path) {
 	// Drop cache for old wallpaper before loading new one
 	if (!m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
 		lv_image_cache_drop(m_wallpaper_path.c_str());
+	}
+
+	if (m_wallpaper_img != nullptr) {
+		lv_obj_delete(m_wallpaper_img);
+		m_wallpaper_img = nullptr;
 	}
 
 	m_wallpaper_path = path;

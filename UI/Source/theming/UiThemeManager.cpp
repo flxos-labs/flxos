@@ -17,9 +17,10 @@ void UiThemeManager::init() {
 	m_glass_enabled_bridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(sys.getGlassEnabledObservable());
 	m_transparency_enabled_bridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(sys.getTransparencyEnabledObservable());
 	m_wallpaper_enabled_bridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(sys.getWallpaperEnabledObservable());
+	m_wallpaper_path_bridge = std::make_unique<flx::ui::LvglStringObserverBridge>(sys.getWallpaperPathObservable());
 
 	// Additional subscription to trigger ThemeEngine update on theme change
-	sys.getThemeObservable().subscribe([this](const int32_t& val) {
+	sys.getThemeObservable().subscribe([](const int32_t& val) {
 		ThemeEngine::set_theme((ThemeType)val);
 	});
 }
@@ -28,5 +29,6 @@ lv_subject_t* UiThemeManager::getThemeSubject() { return m_theme_bridge->getSubj
 lv_subject_t* UiThemeManager::getGlassEnabledSubject() { return m_glass_enabled_bridge->getSubject(); }
 lv_subject_t* UiThemeManager::getTransparencyEnabledSubject() { return m_transparency_enabled_bridge->getSubject(); }
 lv_subject_t* UiThemeManager::getWallpaperEnabledSubject() { return m_wallpaper_enabled_bridge->getSubject(); }
+lv_subject_t* UiThemeManager::getWallpaperPathSubject() { return m_wallpaper_path_bridge->getSubject(); }
 
 } // namespace flx::ui::theming
