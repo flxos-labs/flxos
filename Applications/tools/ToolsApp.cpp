@@ -22,7 +22,7 @@ const AppManifest ToolsApp::manifest = {
 	.location = AppLocation::internal(),
 	.description = "Calculator, Stopwatch, Flashlight, Display Tester",
 	.sortPriority = 45,
-	.capabilities = AppCapability::GPIO,
+	.capabilities = AppCapability::None,
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ToolsApp>(); }};
 
 bool ToolsApp::onStart() {
