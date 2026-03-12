@@ -28,7 +28,7 @@ std::string AppPaths::getCacheDir() const {
 }
 
 std::string AppPaths::getAssetsDir() const {
-	return "/assets/apps/" + m_appId;
+	return "/system/apps/" + m_appId;
 }
 
 std::string AppPaths::getAssetsPath(const std::string& child) const {

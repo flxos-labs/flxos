@@ -228,7 +228,8 @@ flxos/
 │   ├── desktop/         #   WindowManager, StatusBar, Dock, Launcher
 │   ├── theming/         #   ThemeEngine, themes, style utilities
 │   └── components/      #   Reusable UI widgets (FileBrowser, etc.)
-├── assets/              # Static assets (fonts, images, branding)
+├── assets/              # Static repo assets (branding, docs images)
+├── storage/             # Flash-backed partition contents for /system and /data
 ├── components/          # Third-party libs (LVGL, LovyanGFX — git submodules)
 ├── scripts/             # Dev tools (formatting, linting, naming, analysis)
 ├── flxos.py             # CLI build tool
