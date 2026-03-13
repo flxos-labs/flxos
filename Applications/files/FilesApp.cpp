@@ -169,6 +169,8 @@ void FilesApp::createUI(void* parent) {
 
 	m_menuDropdown = lv_dropdown_create(m_header);
 	lv_obj_set_size(m_menuDropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_BTN_WIDTH), lv_dpx(LayoutConstants::SIZE_DROPDOWN_HEIGHT));
+	lv_dropdown_set_text(m_menuDropdown, LV_SYMBOL_BARS);
+	lv_dropdown_set_symbol(m_menuDropdown, nullptr);
 
 	m_pathLabel = lv_label_create(m_header);
 	lv_obj_set_flex_grow(m_pathLabel, 1);
