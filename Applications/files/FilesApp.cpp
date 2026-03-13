@@ -215,7 +215,7 @@ void FilesApp::onStop() {
 	++m_listReqVersion;
 
 	// Null out all widget pointers — LVGL owns the memory.
-	m_container = m_page = m_header = m_backBtn = m_pasteBtn = m_pathLabel = m_list = nullptr;
+	m_container = m_page = m_header = m_backBtn = m_menuDropdown = m_pathLabel = m_list = nullptr;
 	m_progressMbox = m_progressBar = m_progressLabel = nullptr;
 }
 
