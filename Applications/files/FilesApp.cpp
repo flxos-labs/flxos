@@ -181,6 +181,10 @@ void FilesApp::createUI(void* parent) {
 
 		char actionBuf[FILENAME_BUFSZ];
 		lv_dropdown_get_selected_str(obj, actionBuf, sizeof(actionBuf));
+
+		if (strcmp(actionBuf, "Home") == 0) {
+			app->goHome();
+		}
 	}, LV_EVENT_ALL, this);
 
 	m_pathLabel = lv_label_create(m_header);
