@@ -188,8 +188,9 @@ void FilesApp::createUI(void* parent) {
 			app->showInputDialog("New Folder", "", [app](const std::string& name) {
 				app->createFolder(name);
 			});
-		}
-	}, LV_EVENT_ALL, this);
+		} else if (strcmp(actionBuf, "Paste") == 0) {
+			app->pasteItem();
+		} }, LV_EVENT_ALL, this);
 
 	m_pathLabel = lv_label_create(m_header);
 	lv_obj_set_flex_grow(m_pathLabel, 1);
