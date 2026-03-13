@@ -35,7 +35,7 @@ private:
 	lv_obj_t* m_page = nullptr;
 	lv_obj_t* m_header = nullptr;
 	lv_obj_t* m_backBtn = nullptr;
-	lv_obj_t* m_pasteBtn = nullptr;
+	lv_obj_t* m_menuDropdown = nullptr;
 	lv_obj_t* m_pathLabel = nullptr;
 	lv_obj_t* m_list = nullptr;
 
