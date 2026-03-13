@@ -331,9 +331,9 @@ void FilesApp::refreshList() {
 	}
 
 	if (flx::ClipboardManager::getInstance().hasContent()) {
-		lv_obj_remove_flag(m_pasteBtn, LV_OBJ_FLAG_HIDDEN);
+		lv_dropdown_set_options(m_menuDropdown, "Home\nNew Folder\nPaste");
 	} else {
-		lv_obj_add_flag(m_pasteBtn, LV_OBJ_FLAG_HIDDEN);
+		lv_dropdown_set_options(m_menuDropdown, "Home\nNew Folder");
 	}
 
 	lv_list_add_text(m_list, "Loading...");
