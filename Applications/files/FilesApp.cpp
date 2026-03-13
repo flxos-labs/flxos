@@ -172,6 +172,17 @@ void FilesApp::createUI(void* parent) {
 	lv_dropdown_set_text(m_menuDropdown, LV_SYMBOL_BARS);
 	lv_dropdown_set_symbol(m_menuDropdown, nullptr);
 
+	lv_obj_add_event_cb(m_menuDropdown, [](lv_event_t* e) {
+		const lv_event_code_t code = lv_event_get_code(e);
+		if (code != LV_EVENT_VALUE_CHANGED) return;
+
+		auto* app = static_cast<FilesApp*>(lv_event_get_user_data(e));
+		lv_obj_t* obj = lv_event_get_target_obj(e);
+
+		char actionBuf[FILENAME_BUFSZ];
+		lv_dropdown_get_selected_str(obj, actionBuf, sizeof(actionBuf));
+	}, LV_EVENT_ALL, this);
+
 	m_pathLabel = lv_label_create(m_header);
 	lv_obj_set_flex_grow(m_pathLabel, 1);
 	lv_label_set_long_mode(m_pathLabel, LV_LABEL_LONG_SCROLL_CIRCULAR);
