@@ -184,6 +184,10 @@ void FilesApp::createUI(void* parent) {
 
 		if (strcmp(actionBuf, "Home") == 0) {
 			app->goHome();
+		} else if (strcmp(actionBuf, "New Folder") == 0) {
+			app->showInputDialog("New Folder", "", [app](const std::string& name) {
+				app->createFolder(name);
+			});
 		}
 	}, LV_EVENT_ALL, this);
 
