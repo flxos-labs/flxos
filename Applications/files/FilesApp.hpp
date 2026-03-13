@@ -35,7 +35,7 @@ private:
 	lv_obj_t* m_page = nullptr;
 	lv_obj_t* m_header = nullptr;
 	lv_obj_t* m_backBtn = nullptr;
-	lv_obj_t* m_pasteBtn = nullptr;
+	lv_obj_t* m_menuDropdown = nullptr;
 	lv_obj_t* m_pathLabel = nullptr;
 	lv_obj_t* m_list = nullptr;
 
@@ -63,8 +63,6 @@ private:
 	void handleMenuAction(const std::string& action, const std::string& name, bool isDir);
 	void showDeleteConfirm(const std::string& name, bool isDir);
 	void showInputDialog(const char* title, const std::string& defaultVal, std::function<void(std::string)> cb);
-
-	lv_obj_t* addHeaderButton(const char* symbol, std::function<void()> onClick);
 
 	void pasteItem();
 	void deleteItem(const std::string& name, bool isDir);

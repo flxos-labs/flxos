@@ -167,14 +167,30 @@ void FilesApp::createUI(void* parent) {
 	m_header = create_header(m_page, "", &backBtn);
 	m_backBtn = backBtn;
 
-	addHeaderButton(LV_SYMBOL_HOME, [this]() { goHome(); });
-	addHeaderButton(LV_SYMBOL_PLUS, [this]() {
-		showInputDialog("New Folder", "", [this](const std::string& name) {
-			createFolder(name);
-		});
-	});
+	m_menuDropdown = lv_dropdown_create(m_header);
+	lv_obj_set_size(m_menuDropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_BTN_WIDTH), lv_dpx(LayoutConstants::SIZE_DROPDOWN_HEIGHT));
+	lv_dropdown_set_text(m_menuDropdown, LV_SYMBOL_BARS);
+	lv_dropdown_set_symbol(m_menuDropdown, nullptr);
 
-	m_pasteBtn = addHeaderButton(LV_SYMBOL_PASTE, [this]() { pasteItem(); });
+	lv_obj_add_event_cb(m_menuDropdown, [](lv_event_t* e) {
+		const lv_event_code_t code = lv_event_get_code(e);
+		lv_obj_t* obj = lv_event_get_target_obj(e);
+		if (code != LV_EVENT_VALUE_CHANGED || lv_dropdown_is_open(obj)) return;
+
+		auto* app = static_cast<FilesApp*>(lv_event_get_user_data(e));
+
+		char actionBuf[FILENAME_BUFSZ];
+		lv_dropdown_get_selected_str(obj, actionBuf, sizeof(actionBuf));
+
+		if (strcmp(actionBuf, "Home") == 0) {
+			app->goHome();
+		} else if (strcmp(actionBuf, "New Folder") == 0) {
+			app->showInputDialog("New Folder", "", [app](const std::string& name) {
+				app->createFolder(name);
+			});
+		} else if (strcmp(actionBuf, "Paste") == 0) {
+			app->pasteItem();
+		} }, LV_EVENT_ALL, this);
 
 	m_pathLabel = lv_label_create(m_header);
 	lv_obj_set_flex_grow(m_pathLabel, 1);
@@ -199,34 +215,8 @@ void FilesApp::onStop() {
 	++m_listReqVersion;
 
 	// Null out all widget pointers — LVGL owns the memory.
-	m_container = m_page = m_header = m_backBtn = m_pasteBtn = m_pathLabel = m_list = nullptr;
+	m_container = m_page = m_header = m_backBtn = m_menuDropdown = m_pathLabel = m_list = nullptr;
 	m_progressMbox = m_progressBar = m_progressLabel = nullptr;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Header button factory
-// ─────────────────────────────────────────────────────────────────────────────
-
-lv_obj_t* FilesApp::addHeaderButton(const char* symbol, std::function<void()> onClick) {
-	lv_obj_t* btn = lv_button_create(m_header);
-	lv_obj_set_size(btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-
-	lv_obj_t* img = lv_image_create(btn);
-	lv_image_set_src(img, symbol);
-	lv_obj_center(img);
-
-	// Heap-allocate the callback so the lambda survives past this scope.
-	// Freed via LV_EVENT_DELETE on the button.
-	auto* cb = new std::function<void()>(std::move(onClick));
-	lv_obj_add_event_cb(btn, [](lv_event_t* e) {
-            auto* fn = static_cast<std::function<void()>*>(lv_event_get_user_data(e));
-            if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-                (*fn)();
-            } else if (lv_event_get_code(e) == LV_EVENT_DELETE) {
-                delete fn;
-            } }, LV_EVENT_ALL, cb);
-
-	return btn;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,9 +305,9 @@ void FilesApp::refreshList() {
 	}
 
 	if (flx::ClipboardManager::getInstance().hasContent()) {
-		lv_obj_remove_flag(m_pasteBtn, LV_OBJ_FLAG_HIDDEN);
+		lv_dropdown_set_options(m_menuDropdown, "Home\nNew Folder\nPaste");
 	} else {
-		lv_obj_add_flag(m_pasteBtn, LV_OBJ_FLAG_HIDDEN);
+		lv_dropdown_set_options(m_menuDropdown, "Home\nNew Folder");
 	}
 
 	lv_list_add_text(m_list, "Loading...");
