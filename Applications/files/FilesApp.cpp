@@ -167,14 +167,8 @@ void FilesApp::createUI(void* parent) {
 	m_header = create_header(m_page, "", &backBtn);
 	m_backBtn = backBtn;
 
-	addHeaderButton(LV_SYMBOL_HOME, [this]() { goHome(); });
-	addHeaderButton(LV_SYMBOL_PLUS, [this]() {
-		showInputDialog("New Folder", "", [this](const std::string& name) {
-			createFolder(name);
-		});
-	});
-
-	m_pasteBtn = addHeaderButton(LV_SYMBOL_PASTE, [this]() { pasteItem(); });
+	m_menuDropdown = lv_dropdown_create(m_header);
+	lv_obj_set_size(m_menuDropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_BTN_WIDTH), lv_dpx(LayoutConstants::SIZE_DROPDOWN_HEIGHT));
 
 	m_pathLabel = lv_label_create(m_header);
 	lv_obj_set_flex_grow(m_pathLabel, 1);
