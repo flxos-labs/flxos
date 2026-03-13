@@ -64,8 +64,6 @@ private:
 	void showDeleteConfirm(const std::string& name, bool isDir);
 	void showInputDialog(const char* title, const std::string& defaultVal, std::function<void(std::string)> cb);
 
-	lv_obj_t* addHeaderButton(const char* symbol, std::function<void()> onClick);
-
 	void pasteItem();
 	void deleteItem(const std::string& name, bool isDir);
 	void renameItem(const std::string& oldName, const std::string& newName);
