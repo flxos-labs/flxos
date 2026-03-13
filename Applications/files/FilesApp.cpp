@@ -220,32 +220,6 @@ void FilesApp::onStop() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Header button factory
-// ─────────────────────────────────────────────────────────────────────────────
-
-lv_obj_t* FilesApp::addHeaderButton(const char* symbol, std::function<void()> onClick) {
-	lv_obj_t* btn = lv_button_create(m_header);
-	lv_obj_set_size(btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-
-	lv_obj_t* img = lv_image_create(btn);
-	lv_image_set_src(img, symbol);
-	lv_obj_center(img);
-
-	// Heap-allocate the callback so the lambda survives past this scope.
-	// Freed via LV_EVENT_DELETE on the button.
-	auto* cb = new std::function<void()>(std::move(onClick));
-	lv_obj_add_event_cb(btn, [](lv_event_t* e) {
-            auto* fn = static_cast<std::function<void()>*>(lv_event_get_user_data(e));
-            if (lv_event_get_code(e) == LV_EVENT_CLICKED) {
-                (*fn)();
-            } else if (lv_event_get_code(e) == LV_EVENT_DELETE) {
-                delete fn;
-            } }, LV_EVENT_ALL, cb);
-
-	return btn;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Watchdog
 // ─────────────────────────────────────────────────────────────────────────────
 
