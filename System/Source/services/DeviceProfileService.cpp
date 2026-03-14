@@ -59,7 +59,7 @@ static const flx::system::DeviceProfile ACTIVE_PROFILE = {
 		.separateBus = flx::config::touch.enabled ? flx::config::touch.spi.separatePins : false,
 	},
 
-	.sdCard = {.supported = flx::config::sdcard.enabled, .mode = flx::config::sdcard.enabled ? "SPI" : "None"},
+	.sdCard = {.supported = flx::config::sdcard.enabled, .mode = flx::config::sdcard.enabled ? flx::config::sdcard.bus : "None"},
 
 	.connectivity = {.wifi = flx::config::capabilities.wifi, .bluetooth = flx::config::capabilities.bluetooth, .bleOnly = false, .flashSizeKb = 0,
 #if defined(CONFIG_ESP32S3_SPIRAM_SUPPORT) || defined(CONFIG_SPIRAM) || defined(CONFIG_ESP32_SPIRAM_SUPPORT)

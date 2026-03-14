@@ -814,13 +814,6 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
                 "        }",
                 "    }"
             ])
-        elif ptype == "sdcard":
-            lines.extend([
-                "    {",
-                "        auto sdcard = std::make_shared<flx::hal::sdcard::SpiSdCardDevice>();",
-                "        if (sdcard->start()) registry.registerDevice(sdcard);",
-                "    }"
-            ])
 
     lines.extend(
         [

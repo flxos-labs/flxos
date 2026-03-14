@@ -101,7 +101,16 @@ hardware:
       y_max: 3800
       offset_rotation: 0
   sdcard:
-    enabled: false
+    enabled: true
+    bus: sdmmc
+    mount_point: /sd
+    pins:
+      clk: 12
+      cmd: 11
+      d0: 13
+      d1: -1
+      d2: -1
+      d3: -1
   battery:
     enabled: false
   usb:

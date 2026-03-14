@@ -87,10 +87,10 @@ bool SpiSdCardDevice::mount(const std::string& mountPath) {
 	const spi_host_device_t host_id = static_cast<spi_host_device_t>(flx::config::sdcard.spiHost);
 
 	spi_bus_config_t bus_cfg = {};
-	if constexpr (flx::config::sdcard.pins.mosi != -1) {
-		bus_cfg.mosi_io_num = flx::config::sdcard.pins.mosi;
-		bus_cfg.miso_io_num = flx::config::sdcard.pins.miso;
-		bus_cfg.sclk_io_num = flx::config::sdcard.pins.sclk;
+	if constexpr (flx::config::sdcard.spiPins.mosi != -1) {
+		bus_cfg.mosi_io_num = flx::config::sdcard.spiPins.mosi;
+		bus_cfg.miso_io_num = flx::config::sdcard.spiPins.miso;
+		bus_cfg.sclk_io_num = flx::config::sdcard.spiPins.sclk;
 	} else {
 		bus_cfg.mosi_io_num = flx::config::display.pins.mosi;
 		bus_cfg.miso_io_num = flx::config::display.pins.miso;

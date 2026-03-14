@@ -2,6 +2,7 @@
 #include <Config.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/hal/DeviceRegistry.hpp>
+#include <flx/hal/sdcard/SdmmcSdCardDevice.hpp>
 #include <flx/hal/sdcard/SpiSdCardDevice.hpp>
 #include <flx/system/services/SdCardService.hpp>
 #include <string_view>
@@ -30,25 +31,43 @@ SdCardService& SdCardService::getInstance() {
 bool SdCardService::onStart() {
 	auto& registry = flx::hal::DeviceRegistry::getInstance();
 
-	// Create and start SPI SD card HAL device
-	auto sdcard = std::make_shared<flx::hal::sdcard::SpiSdCardDevice>();
-	if (!sdcard->start()) {
-		Log::warn(TAG, "Failed to start SD card HAL device");
+	std::string_view bus_type = flx::config::sdcard.bus;
+
+	if (bus_type == "sdmmc") {
+		Log::info(TAG, "Starting native SDMMC HAL device...");
+		auto sdmmc = std::make_shared<flx::hal::sdcard::SdmmcSdCardDevice>();
+		if (sdmmc->start()) {
+			registry.registerDevice(sdmmc);
+			m_device = sdmmc;
+		} else {
+			Log::warn(TAG, "Failed to start native SDMMC HAL device");
+		}
+	} else {
+		// Default to SPI if not specified or explicit "spi"
+		Log::info(TAG, "Starting SPI SD card HAL device...");
+		auto spi = std::make_shared<flx::hal::sdcard::SpiSdCardDevice>();
+		if (spi->start()) {
+			registry.registerDevice(spi);
+			m_device = spi;
+		} else {
+			Log::warn(TAG, "Failed to start SPI SD card HAL device");
+		}
+	}
+
+	if (!m_device) {
 		return false;
 	}
-	registry.registerDevice(sdcard);
-	m_device = sdcard;
 
 	// Mount it
 	const bool mounted = m_device->mount(flx::config::sdcard.mountPoint);
 	if (mounted) {
-		Log::info(TAG, "Mounted SD card via HAL");
+		Log::info(TAG, "Mounted SD card via HAL (%s)", bus_type.data());
 		flx::hal::sdcard::ISdCardDevice::CardInfo info;
 		if (m_device->getCardInfo(info)) {
 			Log::info(TAG, "SD Card Info: Size: %llu MB, Free: %llu MB, FS: %s", (unsigned long long)(info.totalBytes / (1024ULL * 1024ULL)), (unsigned long long)(info.freeBytes / (1024ULL * 1024ULL)), info.fsType.c_str());
 		}
 	} else {
-		Log::warn(TAG, "Failed to mount SD card via HAL");
+		Log::warn(TAG, "Failed to mount SD card via HAL (%s)", bus_type.data());
 	}
 
 	return mounted;
