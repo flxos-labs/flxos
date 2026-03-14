@@ -23,7 +23,7 @@ void UiThemeManager::init() {
 	sys.getThemeObservable().subscribe([](const int32_t& val) {
 		ThemeEngine::set_theme((ThemeType)val);
 	});
-	
+
 	// Apply the initial theme state loaded from settings
 	ThemeEngine::set_theme((ThemeType)sys.getThemeObservable().get());
 }
