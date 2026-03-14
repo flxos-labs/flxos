@@ -16,37 +16,30 @@ namespace flx::hal::sdcard {
 class SdmmcSdCardDevice final : public flx::hal::DeviceBase<ISdCardDevice> {
 public:
 
-	SdmmcSdCardDevice() { setState(State::Uninitialized); }
-	~SdmmcSdCardDevice() override {
-		if (getState() == State::Ready) stop();
-	}
+	SdmmcSdCardDevice();
+	~SdmmcSdCardDevice() override;
 
 	// ── IDevice ───────────────────────────────────────────────────────────
 	std::string_view getName() const override { return "SDMMC SD Card"; }
 	std::string_view getDescription() const override { return "Native SDMMC-attached SD card driver"; }
 
-	// TODO: Implement native SDMMC start logic if necessary.
-	bool start() override {
-		// Device is an unimplemented stub. Return false so it is not registered.
-		setState(State::Error);
-		return false;
-	}
-	bool stop() override {
-		return true;
-	}
+	bool start() override;
+	bool stop() override;
 
 	// ── ISdCardDevice ─────────────────────────────────────────────────────
-	// TODO: Implement actual Mount/Unmount logic for SDMMC via esp_vfs_fat_sdmmc_mount
-	bool mount(const std::string& mountPath) override { return false; }
-	bool unmount() override { return false; }
-	MountState getMountState() const override { return MountState::Unmounted; }
-	std::string getMountPath() const override { return ""; }
-	std::recursive_mutex& getLock() override { return m_lock; }
-	bool getCardInfo(CardInfo& info) const override { return false; }
+	bool mount(const std::string& mountPath) override;
+	bool unmount() override;
+	ISdCardDevice::MountState getMountState() const override;
+	std::string getMountPath() const override;
+	std::recursive_mutex& getLock() override;
+	bool getCardInfo(ISdCardDevice::CardInfo& info) const override;
 
 private:
 
+	std::string m_mountPath;
+	ISdCardDevice::MountState m_mountState {ISdCardDevice::MountState::Unmounted};
 	std::recursive_mutex m_lock;
+	void* m_card {nullptr};
 };
 
 } // namespace flx::hal::sdcard
