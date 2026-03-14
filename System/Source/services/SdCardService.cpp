@@ -32,7 +32,7 @@ bool SdCardService::onStart() {
 	auto& registry = flx::hal::DeviceRegistry::getInstance();
 
 	std::string_view bus_type = flx::config::sdcard.bus;
-	
+
 	if (bus_type == "sdmmc") {
 		Log::info(TAG, "Starting native SDMMC HAL device...");
 		auto sdmmc = std::make_shared<flx::hal::sdcard::SdmmcSdCardDevice>();
