@@ -897,12 +897,23 @@ function(_flx_generate_sdkconfig_frag PREFIX OUTPUT_FILE)
         string(APPEND _frag
             "\n# LVGL Font Configuration "
             "(6-tier auto from font_size=${_font_size}, ui_density=${_ui_density_lower}, effective=${_effective_font_size})\n")
-        string(APPEND _frag "CONFIG_LV_FONT_MONTSERRAT_${_f_sm}=y\n")
-        string(APPEND _frag "CONFIG_LV_FONT_MONTSERRAT_${_f_def}=y\n")
-        string(APPEND _frag "CONFIG_LV_FONT_MONTSERRAT_${_f_lg}=y\n")
-        string(APPEND _frag "CONFIG_LV_FONT_MONTSERRAT_${_f_sb}=y\n")
-        string(APPEND _frag "CONFIG_LV_FONT_MONTSERRAT_${_f_sh}=y\n")
-        string(APPEND _frag "CONFIG_LV_FONT_DEFAULT_MONTSERRAT_${_f_def}=y\n")
+
+        # Generate selected fonts, commented out except for Montserrat 14
+        set(_fonts_to_gen ${_f_sm} ${_f_def} ${_f_lg} ${_f_sb} ${_f_sh})
+        list(REMOVE_DUPLICATES _fonts_to_gen)
+        foreach(_f IN LISTS _fonts_to_gen)
+            if("${_f}" EQUAL "14")
+                string(APPEND _frag "CONFIG_LV_FONT_MONTSERRAT_${_f}=y\n")
+            else()
+                string(APPEND _frag "# CONFIG_LV_FONT_MONTSERRAT_${_f}=y\n")
+            endif()
+        endforeach()
+
+        if("${_f_def}" EQUAL "14")
+            string(APPEND _frag "CONFIG_LV_FONT_DEFAULT_MONTSERRAT_${_f_def}=y\n")
+        else()
+            string(APPEND _frag "# CONFIG_LV_FONT_DEFAULT_MONTSERRAT_${_f_def}=y\n")
+        endif()
     endif()
 
     # Headless mode Kconfig
