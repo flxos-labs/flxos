@@ -184,7 +184,7 @@ bool ServiceRegistry::startAll(bool guiMode) {
 
 		if (willStart.count(*it)) {
 			// If this service is starting, its dependencies MUST also start
-			for (const auto& dep: manifest.dependencies) {
+			for (const auto& dep: manifest.allDependencyIds()) {
 				auto depIt = m_serviceMap.find(dep);
 				if (depIt != m_serviceMap.end() && depIt->second->getManifest().guiRequired && !guiMode) {
 					Log::error(TAG, "Service '%s' depends on guiRequired service '%s', but running in headless mode — skipping dependency",
@@ -219,6 +219,8 @@ bool ServiceRegistry::startAll(bool guiMode) {
 
 		Log::info(TAG, "Starting service: %s...", manifest.serviceName.c_str());
 
+		flx::core::BootTimeline::getInstance().record("service:" + id, "start");
+
 		// Ensure dependencies actually started
 		auto allDeps = manifest.allDependencyIds();
 		bool depsStarted = true;
@@ -232,17 +234,19 @@ bool ServiceRegistry::startAll(bool guiMode) {
 		}
 
 		// Validate API version compatibility for typed dependencies (3.3)
-		for (const auto& td: manifest.typedDependencies) {
-			auto depIt = m_serviceMap.find(td.serviceId);
-			if (depIt != m_serviceMap.end()) {
-				const auto& depVersion = depIt->second->getManifest().apiVersion;
-				if (!depVersion.isCompatibleWith(td.requiredVersion)) {
-					Log::error(TAG, "  ✗ %s requires %s v%u.%u.x but found v%u.%u.%u (incompatible)",
-						manifest.serviceName.c_str(), td.serviceId.c_str(),
-						td.requiredVersion.major, td.requiredVersion.minor,
-						depVersion.major, depVersion.minor, depVersion.patch);
-					depsStarted = false;
-					break;
+		if (depsStarted) {
+			for (const auto& td: manifest.typedDependencies) {
+				auto depIt = m_serviceMap.find(td.serviceId);
+				if (depIt != m_serviceMap.end()) {
+					const auto& depVersion = depIt->second->getManifest().apiVersion;
+					if (!depVersion.isCompatibleWith(td.requiredVersion)) {
+						Log::error(TAG, "  ✗ %s requires %s v%u.%u.x but found v%u.%u.%u (incompatible)",
+							manifest.serviceName.c_str(), td.serviceId.c_str(),
+							td.requiredVersion.major, td.requiredVersion.minor,
+							depVersion.major, depVersion.minor, depVersion.patch);
+						depsStarted = false;
+						break;
+					}
 				}
 			}
 		}
@@ -258,8 +262,6 @@ bool ServiceRegistry::startAll(bool guiMode) {
 			}
 			continue;
 		}
-
-		flx::core::BootTimeline::getInstance().record("service:" + id, "start");
 
 		if (svc->start()) {
 			Log::info(TAG, "  ✓ %s started", manifest.serviceName.c_str());
@@ -331,19 +333,61 @@ bool ServiceRegistry::startService(const std::string& serviceId) {
 	auto& svc = it->second;
 	if (svc->isRunning()) return true;
 
+	const auto& manifest = svc->getManifest();
+
+	// Cycle protection (Issue 5)
+	if (m_startingServices.count(serviceId)) {
+		Log::error(TAG, "Circular dependency detected while starting '%s'", serviceId.c_str());
+		return false;
+	}
+	m_startingServices.insert(serviceId);
+
+	// Automated RAII-style cleanup for the starting set
+	struct StartingScope {
+		std::unordered_set<std::string>& set;
+		const std::string& id;
+		~StartingScope() { set.erase(id); }
+	} scope {m_startingServices, serviceId};
+
+	// Validate API version compatibility for typed dependencies BEFORE starting them (Issue 4)
+	for (const auto& td: manifest.typedDependencies) {
+		auto depIt = m_serviceMap.find(td.serviceId);
+		if (depIt != m_serviceMap.end()) {
+			const auto& depVersion = depIt->second->getManifest().apiVersion;
+			if (!depVersion.isCompatibleWith(td.requiredVersion)) {
+				Log::error(TAG, "Cannot start '%s': incompatible API version for '%s' (required v%u.%u.x, found v%u.%u.%u)",
+					serviceId.c_str(), td.serviceId.c_str(),
+					td.requiredVersion.major, td.requiredVersion.minor,
+					depVersion.major, depVersion.minor, depVersion.patch);
+				flx::core::BootTimeline::getInstance().record("service:" + serviceId, "failed");
+				publishServiceEvent(Events::SERVICE_FAILED, serviceId);
+				return false;
+			}
+		}
+	}
+
+	flx::core::BootTimeline::getInstance().record("service:" + serviceId, "start");
+
 	// Ensure dependencies are started first
-	for (const auto& depId: svc->getManifest().dependencies) {
+	for (const auto& depId: manifest.allDependencyIds()) {
 		if (!startService(depId)) {
 			Log::error(TAG, "Cannot start '%s': dependency '%s' failed", serviceId.c_str(), depId.c_str());
+			flx::core::BootTimeline::getInstance().record("service:" + serviceId, "failed");
+			publishServiceEvent(Events::SERVICE_FAILED, serviceId);
 			return false;
 		}
 	}
 
 	if (svc->start()) {
+		Log::info(TAG, "  ✓ %s started", manifest.serviceName.c_str());
+		flx::core::BootTimeline::getInstance().record(
+			"service:" + serviceId, "started",
+			svc->getHeapDeltaBytes(), svc->getLastStartTimeUs());
 		publishServiceEvent(Events::SERVICE_STARTED, serviceId);
 		return true;
 	}
 
+	flx::core::BootTimeline::getInstance().record("service:" + serviceId, "failed");
 	publishServiceEvent(Events::SERVICE_FAILED, serviceId);
 	return false;
 }

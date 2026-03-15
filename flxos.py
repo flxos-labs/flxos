@@ -474,6 +474,11 @@ def cmd_build(args):
     if args.dev:
         build_env["FLXOS_DEV_MODE"] = "1"
 
+    # Delete sdkconfig.h to force regeneration
+    for h_path in [BUILD_DIR / "config" / "sdkconfig.h", BUILD_DIR / "bootloader" / "config" / "sdkconfig.h"]:
+        if h_path.exists():
+            h_path.unlink()
+
     cmd = ["idf.py", "build"]
     result = subprocess.run(cmd, cwd=str(SCRIPT_DIR), env=build_env)
     return result.returncode
@@ -530,12 +535,18 @@ def _build_all(args):
         if args.dev:
             set_target_env["FLXOS_DEV_MODE"] = "1"
 
-        # Set target
-        set_result = subprocess.run(
-            ["idf.py", "set-target", target],
-            cwd=str(SCRIPT_DIR),
-            env=set_target_env
-        )
+        if not current_target or current_target != target:
+            set_result = subprocess.run(
+                ["idf.py", "set-target", target],
+                cwd=str(SCRIPT_DIR),
+                env=set_target_env
+            )
+        else:
+            if SDKCONFIG_FILE.exists():
+                SDKCONFIG_FILE.unlink()
+                print(f"  Deleted sdkconfig (profile changed)")
+            set_result = subprocess.CompletedProcess(["idf.py", "set-target", target], 0)
+
         if set_result.returncode != 0:
             print(f"  {C_RED}set-target failed, retrying with clean state...{C_RESET}")
             build_dir = SCRIPT_DIR / "build"
@@ -553,6 +564,11 @@ def _build_all(args):
                 print(f"  {C_RED}set-target retry failed. Skipping profile.{C_RESET}")
                 results[pid] = "❌"
                 continue
+
+        # Delete sdkconfig.h to force regeneration
+        for h_path in [BUILD_DIR / "config" / "sdkconfig.h", BUILD_DIR / "bootloader" / "config" / "sdkconfig.h"]:
+            if h_path.exists():
+                h_path.unlink()
 
         # Build with IDF_TARGET set correctly
         build_result = subprocess.run(
