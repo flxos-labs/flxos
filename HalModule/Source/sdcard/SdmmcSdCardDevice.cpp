@@ -71,10 +71,30 @@ bool SdmmcSdCardDevice::mount(const std::string& mountPath) {
 	// If pins are specified in config, we should set them.
 	// Note: On some ESP32 targets, SDMMC pins are fixed. On S3 they can be remapped.
 	if (flx::config::sdcard.sdmmcPins.clk != -1) {
+		// Basic validation: clk, cmd, and d0 must all be set if any remapping is done
+		if (flx::config::sdcard.sdmmcPins.cmd == -1 || flx::config::sdcard.sdmmcPins.d0 == -1) {
+			flx::Log::error(TAG, "Incomplete SDMMC pin configuration (requires clk, cmd, and d0).");
+			m_mountState = MountState::Error;
+			return false;
+		}
+
 		slot_config.clk = (gpio_num_t)flx::config::sdcard.sdmmcPins.clk;
 		slot_config.cmd = (gpio_num_t)flx::config::sdcard.sdmmcPins.cmd;
 		slot_config.d0 = (gpio_num_t)flx::config::sdcard.sdmmcPins.d0;
-		if (flx::config::sdcard.sdmmcPins.d1 != -1) {
+
+		// 4-bit mode validation: if any of d1-d3 are set, all must be set
+		bool any_d13 = (flx::config::sdcard.sdmmcPins.d1 != -1 ||
+			flx::config::sdcard.sdmmcPins.d2 != -1 ||
+			flx::config::sdcard.sdmmcPins.d3 != -1);
+
+		if (any_d13) {
+			if (flx::config::sdcard.sdmmcPins.d1 == -1 ||
+				flx::config::sdcard.sdmmcPins.d2 == -1 ||
+				flx::config::sdcard.sdmmcPins.d3 == -1) {
+				flx::Log::error(TAG, "Incomplete SDMMC 4-bit pin configuration (requires d0-d3).");
+				m_mountState = MountState::Error;
+				return false;
+			}
 			slot_config.d1 = (gpio_num_t)flx::config::sdcard.sdmmcPins.d1;
 			slot_config.d2 = (gpio_num_t)flx::config::sdcard.sdmmcPins.d2;
 			slot_config.d3 = (gpio_num_t)flx::config::sdcard.sdmmcPins.d3;
