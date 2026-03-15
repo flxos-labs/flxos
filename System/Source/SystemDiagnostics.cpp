@@ -1,5 +1,6 @@
 #include <flx/system/SystemDiagnostics.hpp>
 
+#include "esp_heap_caps.h"
 #include "esp_system.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
@@ -64,7 +65,7 @@ SystemDiagnostics getSystemDiagnostics() {
 	// ── Memory ──
 	diag.memory.freeHeapBytes = esp_get_free_heap_size();
 	diag.memory.minFreeHeapBytes = esp_get_minimum_free_heap_size();
-	diag.memory.totalHeapBytes = diag.memory.freeHeapBytes; // ESP-IDF doesn't have a direct total getter
+	diag.memory.totalHeapBytes = heap_caps_get_total_size(MALLOC_CAP_8BIT);
 
 	// ── System ──
 	diag.uptimeUs = esp_timer_get_time();
