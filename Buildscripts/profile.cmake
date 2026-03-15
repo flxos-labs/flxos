@@ -268,6 +268,7 @@ function(_flx_validate_profile PREFIX)
 
     _flx_yaml_get("${PREFIX}" "hardware_sdcard_bus" "spi" _sd_bus)
     if(NOT "${_sd_bus}" STREQUAL "" AND NOT "${_sd_bus}" STREQUAL "null")
+        string(TOLOWER "${_sd_bus}" _sd_bus)
         set(_valid_sd_buses spi sdmmc)
         list(FIND _valid_sd_buses "${_sd_bus}" _sd_bus_idx)
         if(_sd_bus_idx EQUAL -1)

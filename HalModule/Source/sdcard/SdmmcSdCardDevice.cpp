@@ -78,13 +78,6 @@ bool SdmmcSdCardDevice::mount(const std::string& mountPath) {
 			return false;
 		}
 
-		// Basic validation: clk, cmd, and d0 must all be set if any remapping is done
-		if (flx::config::sdcard.sdmmcPins.cmd == -1 || flx::config::sdcard.sdmmcPins.d0 == -1) {
-			flx::Log::error(TAG, "Incomplete SDMMC pin configuration (requires clk, cmd, and d0).");
-			m_mountState = MountState::Error;
-			return false;
-		}
-
 		slot_config.clk = (gpio_num_t)flx::config::sdcard.sdmmcPins.clk;
 		slot_config.cmd = (gpio_num_t)flx::config::sdcard.sdmmcPins.cmd;
 		slot_config.d0 = (gpio_num_t)flx::config::sdcard.sdmmcPins.d0;
