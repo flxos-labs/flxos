@@ -338,8 +338,6 @@ bool ServiceRegistry::startService(const std::string& serviceId) {
 	// Cycle protection (Issue 5)
 	if (m_startingServices.count(serviceId)) {
 		Log::error(TAG, "Circular dependency detected while starting '%s'", serviceId.c_str());
-		flx::core::BootTimeline::getInstance().record("service:" + serviceId, "failed");
-		publishServiceEvent(Events::SERVICE_FAILED, serviceId);
 		return false;
 	}
 	m_startingServices.insert(serviceId);
