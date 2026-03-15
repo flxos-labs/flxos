@@ -535,11 +535,14 @@ def _build_all(args):
         if args.dev:
             set_target_env["FLXOS_DEV_MODE"] = "1"
 
-        set_result = subprocess.run(
-            ["idf.py", "set-target", target],
-            cwd=str(SCRIPT_DIR),
-            env=set_target_env
-        )
+        if not current_target or current_target != target:
+            set_result = subprocess.run(
+                ["idf.py", "set-target", target],
+                cwd=str(SCRIPT_DIR),
+                env=set_target_env
+            )
+        else:
+            set_result = subprocess.CompletedProcess(["idf.py", "set-target", target], 0)
 
         if set_result.returncode != 0:
             print(f"  {C_RED}set-target failed, retrying with clean state...{C_RESET}")
