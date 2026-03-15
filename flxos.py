@@ -542,6 +542,9 @@ def _build_all(args):
                 env=set_target_env
             )
         else:
+            if SDKCONFIG_FILE.exists():
+                SDKCONFIG_FILE.unlink()
+                print(f"  Deleted sdkconfig (profile changed)")
             set_result = subprocess.CompletedProcess(["idf.py", "set-target", target], 0)
 
         if set_result.returncode != 0:
