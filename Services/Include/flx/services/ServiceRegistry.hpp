@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace flx::services {
@@ -190,6 +191,9 @@ private:
 
 	// Boot profile
 	std::vector<std::string> m_bootProfile;
+
+	// Recursion tracking for cycle protection
+	std::unordered_set<std::string> m_startingServices;
 
 	/** Check if a service belongs to the active boot profile (or any if no profile set) */
 	bool isInBootProfile(const ServiceManifest& manifest) const;

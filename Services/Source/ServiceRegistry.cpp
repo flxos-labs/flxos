@@ -334,19 +334,22 @@ bool ServiceRegistry::startService(const std::string& serviceId) {
 	if (svc->isRunning()) return true;
 
 	const auto& manifest = svc->getManifest();
-	flx::core::BootTimeline::getInstance().record("service:" + serviceId, "start");
 
-	// Ensure dependencies are started first (using allDependencyIds to cover both legacy and typed)
-	for (const auto& depId: manifest.allDependencyIds()) {
-		if (!startService(depId)) {
-			Log::error(TAG, "Cannot start '%s': dependency '%s' failed", serviceId.c_str(), depId.c_str());
-			flx::core::BootTimeline::getInstance().record("service:" + serviceId, "failed");
-			publishServiceEvent(Events::SERVICE_FAILED, serviceId);
-			return false;
-		}
+	// Cycle protection (Issue 5)
+	if (m_startingServices.count(serviceId)) {
+		Log::error(TAG, "Circular dependency detected while starting '%s'", serviceId.c_str());
+		return false;
 	}
+	m_startingServices.insert(serviceId);
 
-	// Validate API version compatibility for typed dependencies
+	// Automated RAII-style cleanup for the starting set
+	struct StartingScope {
+		std::unordered_set<std::string>& set;
+		const std::string& id;
+		~StartingScope() { set.erase(id); }
+	} scope {m_startingServices, serviceId};
+
+	// Validate API version compatibility for typed dependencies BEFORE starting them (Issue 4)
 	for (const auto& td: manifest.typedDependencies) {
 		auto depIt = m_serviceMap.find(td.serviceId);
 		if (depIt != m_serviceMap.end()) {
@@ -360,6 +363,18 @@ bool ServiceRegistry::startService(const std::string& serviceId) {
 				publishServiceEvent(Events::SERVICE_FAILED, serviceId);
 				return false;
 			}
+		}
+	}
+
+	flx::core::BootTimeline::getInstance().record("service:" + serviceId, "start");
+
+	// Ensure dependencies are started first
+	for (const auto& depId: manifest.allDependencyIds()) {
+		if (!startService(depId)) {
+			Log::error(TAG, "Cannot start '%s': dependency '%s' failed", serviceId.c_str(), depId.c_str());
+			flx::core::BootTimeline::getInstance().record("service:" + serviceId, "failed");
+			publishServiceEvent(Events::SERVICE_FAILED, serviceId);
+			return false;
 		}
 	}
 
