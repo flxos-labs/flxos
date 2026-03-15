@@ -33,6 +33,9 @@ sdkconfig.old
 sdkconfig
 sdkconfig.profile
 Profiles/*/Config.hpp
+Profiles/*/CMakeLists.txt
+Profiles/*/Source/hwd
+Profiles/*/GeneratedInit.cpp
 
 # ESP-IDF dependencies
 # For older versions or manual component management
