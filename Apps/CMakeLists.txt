@@ -4,12 +4,15 @@ set(APPS_SRCS
     "Source/AppPaths.cpp"
 )
 
-if(NOT FLXOS_HEADLESS_MODE_ENABLED)
+if(NOT "$ENV{FLXOS_HEADLESS_MODE_ENABLED}" STREQUAL "ON")
+    message("APPS: GRAPHICAL MODE DETECTED (via ENV)")
     list(APPEND APPS_SRCS
         "Source/AppManager.cpp"
         "Source/AppRegistry.cpp"
         "Source/ContentResolver.cpp"
     )
+else()
+    message("APPS: HEADLESS MODE DETECTED (via ENV)")
 endif()
 
 idf_component_register(
