@@ -7,7 +7,9 @@ else()
     file(GLOB _profile_yamls CONFIGURE_DEPENDS LIST_DIRECTORIES false "${CMAKE_CURRENT_SOURCE_DIR}/*/profile.yaml")
 endif()
 
+set(PROFILES_REQUIRES Core esp_driver_spi)
 set(ACTIVE_PROFILE_DIR "")
+
 foreach(_yaml IN LISTS _profile_yamls)
     get_filename_component(_dir "${_yaml}" DIRECTORY)
     get_filename_component(_name "${_dir}" NAME)
@@ -28,12 +30,12 @@ if(ACTIVE_PROFILE_DIR)
         idf_component_register(
             SRCS "${_profile_hwd_generated}"
             INCLUDE_DIRS "${ACTIVE_PROFILE_DIR}"
-            PRIV_REQUIRES Core
+            REQUIRES ${PROFILES_REQUIRES}
         )
     else()
         idf_component_register(
             INCLUDE_DIRS "${ACTIVE_PROFILE_DIR}"
-            PRIV_REQUIRES Core
+            REQUIRES ${PROFILES_REQUIRES}
         )
     endif()
 else()
@@ -43,7 +45,7 @@ else()
             "FlxOS: No profile selected.\n"
             "Run: idf.py menuconfig → FlxOS Configuration → Device Profile ID")
         # Register with a dummy include dir so CMake can still configure
-        idf_component_register()
+        idf_component_register(REQUIRES ${PROFILES_REQUIRES})
     else()
         message(FATAL_ERROR
             "FlxOS: Profile '${CONFIG_FLXOS_PROFILE}' not found!\n"
