@@ -12,10 +12,12 @@
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
 #include <flx/system/SystemManager.hpp>
+#if !CONFIG_FLXOS_HEADLESS_MODE
 #include <flx/system/managers/DisplayManager.hpp>
+#include <flx/system/managers/ThemeManager.hpp>
+#endif
 #include <flx/system/managers/PowerManager.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
-#include <flx/system/managers/ThemeManager.hpp>
 #include <flx/system/managers/TimeManager.hpp>
 #if FLXOS_SD_CARD_ENABLED
 #include <flx/system/services/SdCardService.hpp>
@@ -79,8 +81,10 @@ void SystemManager::registerServices() {
 	auto noDelete = [](auto*) {}; // Custom deleter that does nothing
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::system::services::HalInitService::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&SettingsManager::getInstance(), noDelete));
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	registry.addService(std::shared_ptr<flx::services::IService>(&DisplayManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&ThemeManager::getInstance(), noDelete));
+#endif
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::connectivity::ConnectivityManager::getInstance(), noDelete));
 
 	registry.addService(std::shared_ptr<flx::services::IService>(&PowerManager::getInstance(), noDelete));
