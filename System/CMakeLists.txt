@@ -1,10 +1,9 @@
+# System component — FlxOS System Services and Managers
 set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule Apps)
 set(SYSTEM_SRCS
     "Source/SystemManager.cpp"
     "Source/SystemDiagnostics.cpp"
     "Source/managers/SettingsManager.cpp"
-    "Source/managers/DisplayManager.cpp"
-    "Source/managers/ThemeManager.cpp"
     "Source/managers/TimeManager.cpp"
     "Source/managers/PowerManager.cpp"
     "Source/services/SdCardService.cpp"
@@ -15,12 +14,17 @@ set(SYSTEM_SRCS
     "Source/services/HalInitService.cpp"
 )
 
-if(NOT FLXOS_HEADLESS_MODE_ENABLED)
+if(NOT "$ENV{FLXOS_HEADLESS_MODE_ENABLED}" STREQUAL "ON")
+    message("SYSTEM: GRAPHICAL MODE DETECTED (via ENV)")
     list(APPEND SYSTEM_REQUIRES lvgl)
     list(APPEND SYSTEM_SRCS
+        "Source/managers/DisplayManager.cpp"
+        "Source/managers/ThemeManager.cpp"
         "Source/managers/NotificationManager.cpp"
         "Source/services/ScreenshotService.cpp"
     )
+else()
+    message("SYSTEM: HEADLESS MODE DETECTED (via ENV)")
 endif()
 
 idf_component_register(

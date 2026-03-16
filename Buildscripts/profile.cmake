@@ -1239,6 +1239,7 @@ function(flx_load_profile)
         message(STATUS "FlxOS: Headless mode enabled — excluding lvgl and LovyanGFX")
         set(HEADLESS_MODE_ENABLED ON PARENT_SCOPE)
         set(FLXOS_HEADLESS_MODE_ENABLED ON CACHE INTERNAL "Resolved FlxOS headless mode")
+        set(ENV{FLXOS_HEADLESS_MODE_ENABLED} "ON")
         # EXCLUDE_COMPONENTS must be set in parent scope for project.cmake
         set(EXCLUDE_COMPONENTS ${EXCLUDE_COMPONENTS} lvgl LovyanGFX PARENT_SCOPE)
     else()

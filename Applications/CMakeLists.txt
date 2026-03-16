@@ -1,5 +1,11 @@
 # Applications component — built-in GUI apps (settings, files, calendar, etc.)
-if(NOT FLXOS_HEADLESS_MODE_ENABLED)
+set(APP_REQUIRES "")
+set(APP_SOURCES "")
+
+if(FLXOS_HEADLESS_MODE_ENABLED STREQUAL "ON")
+    message("APPLICATIONS: HEADLESS MODE DETECTED (ON)")
+else()
+    message("APPLICATIONS: GRAPHICAL MODE DETECTED (OFF)")
     file(GLOB_RECURSE APP_SOURCES
         "settings/*.cpp"
         "files/*.cpp"
@@ -9,15 +15,11 @@ if(NOT FLXOS_HEADLESS_MODE_ENABLED)
         "system_info/*.cpp"
         "tools/*.cpp"
     )
-
-    idf_component_register(
-        SRCS ${APP_SOURCES}
-        INCLUDE_DIRS "."
-        REQUIRES Core Apps UI Connectivity System
-    )
-else()
-    idf_component_register(
-        SRCS
-        INCLUDE_DIRS "."
-    )
+    set(APP_REQUIRES Core Apps UI Connectivity System)
 endif()
+
+idf_component_register(
+    SRCS ${APP_SOURCES}
+    INCLUDE_DIRS "."
+    REQUIRES ${APP_REQUIRES}
+)
