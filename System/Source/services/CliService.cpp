@@ -25,7 +25,9 @@
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
 #include <flx/core/GuiLock.hpp>
+#if !CONFIG_FLXOS_HEADLESS_MODE
 #include <flx/system/managers/DisplayManager.hpp>
+#endif
 #include <flx/system/services/FileOperationTypes.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <sstream>
@@ -607,6 +609,7 @@ static int cmdCat(int argc, char** argv) {
 	return 0;
 }
 
+#if !CONFIG_FLXOS_HEADLESS_MODE
 // Command: brightness - Display brightness control
 static int cmdBrightness(int argc, char** argv) {
 	auto& display = flx::system::DisplayManager::getInstance();
@@ -662,6 +665,7 @@ static int cmdDisplayTest(int argc, char** argv) {
 
 	return 0;
 }
+#endif
 
 // Command: time - Display/Set time
 static int cmdTime(int argc, char** argv) {
@@ -844,8 +848,10 @@ void CliService::registerCommands() {
 	REGISTER_CLI_CMD("df", "Display filesystem usage", &cmdStorage); // Alias
 
 	// Phase 4: System Control
+#if !CONFIG_FLXOS_HEADLESS_MODE
 	REGISTER_CLI_CMD("brightness", "Set display brightness (0-100)", &cmdBrightness);
 	REGISTER_CLI_CMD("display_test", "Test low-level display driver (color_hex or off)", &cmdDisplayTest);
+#endif
 	REGISTER_CLI_CMD("time", "Show system time", &cmdTime);
 	REGISTER_CLI_CMD("loglevel", "Set log level for tags", &cmdLogLevel);
 	REGISTER_CLI_CMD("clear", "Clear terminal screen", &cmdClear);
