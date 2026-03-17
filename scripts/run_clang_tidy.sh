@@ -1,5 +1,7 @@
 #!/bin/bash
 # Run clang-tidy on FlxOS source files
+
+set -euo pipefail
 # Requires compile_commands.json from build directory
 #
 # Usage:
