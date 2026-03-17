@@ -20,9 +20,11 @@ patterns = [
 
 exclude_values = {'0', '1', '100', 'LV_SIZE_CONTENT', 'LV_PCT(100)', 'LV_PCT(0)', 'LV_RADIUS_CIRCLE'}
 
+from typing import List
+
 search_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-def is_hardcoded(val):
+def is_hardcoded(val: str) -> bool:
     val = val.strip()
     if val in exclude_values:
         return False
@@ -53,7 +55,8 @@ def find_hardcoded() -> list:
     target_dirs = {'System', 'UI', 'Connectivity', 'Kernel', 'Services', 'Core', 'Apps', 'Applications', 'Firmware', 'HalModule', 'Profiles'}
     for root, dirs, files in os.walk(search_dir):
         if root == search_dir:
-             dirs[:] = [d for d in dirs if d in target_dirs]
+             dirs.clear()
+             dirs.extend([d for d in os.listdir(root) if d in target_dirs and os.path.isdir(os.path.join(root, d))])
         for file in files:
             if file.endswith(('.cpp', '.hpp')):
                 path = os.path.join(root, file)
