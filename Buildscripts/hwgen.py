@@ -542,7 +542,7 @@ def derive_topology_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
                 {
                     "type": "sdcard",
                     "bus": sd_bus_name,
-                    "pins": _compact_dict({"cs": sdcard.get("cs")}),
+                    "pins": _filter_pins({"cs": sdcard.get("cs")}, ("cs",)),
                     "max_freq_khz": sdcard.get("max_freq_khz"),
                     "mount_point": sdcard.get("mount_point"),
                 }
