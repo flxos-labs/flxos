@@ -34,32 +34,32 @@ Most ESP32 projects glue together a display driver, a menu loop, and call it don
 
 <table>
   <tr>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162944_home_screen.png" width="200"/><br/><sub>Home screen</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_161725_home_screen_with_dock_status_bar_wallpaper.png" width="200"/><br/><sub>Home screen with dock, status bar &amp; wallpaper</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162948_floating_notification.png" width="200"/><br/><sub>Floating notification</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162944_home_screen.png" width="200" alt="Home screen"/><br/><sub>Home screen</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_161725_home_screen_with_dock_status_bar_wallpaper.png" width="200" alt="Home screen with dock, status bar and wallpaper"/><br/><sub>Home screen with dock, status bar &amp; wallpaper</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162948_floating_notification.png" width="200" alt="Floating notification"/><br/><sub>Floating notification</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162819_notification_panel.png" width="200"/><br/><sub>Notification panel</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162917_quickaccess_panel.png" width="200"/><br/><sub>Quick Access panel</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162354_sleek_app_launcher.png" width="200"/><br/><sub>App launcher</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162819_notification_panel.png" width="200" alt="Notification panel"/><br/><sub>Notification panel</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162917_quickaccess_panel.png" width="200" alt="Quick Access panel"/><br/><sub>Quick Access panel</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162354_sleek_app_launcher.png" width="200" alt="App launcher"/><br/><sub>App launcher</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_161649_calender_app.png" width="200"/><br/><sub>Calendar app</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162706_files_app.png" width="200"/><br/><sub>Files app</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162756_settings_app.png" width="200"/><br/><sub>Settings app</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_161649_calendar_app.png" width="200" alt="Calendar app"/><br/><sub>Calendar app</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162706_files_app.png" width="200" alt="Files app"/><br/><sub>Files app</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_162756_settings_app.png" width="200" alt="Settings app"/><br/><sub>Settings app</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_164350_tools_app.png" width="200"/><br/><sub>Tools app</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_163034_system_info_app_in_material_theme.png" width="200"/><br/><sub>System Info (Material theme)</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_163047_system_info_app_in_hyprland_dark_theme.png" width="200"/><br/><sub>System Info (Hyprland dark theme)</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_164350_tools_app.png" width="200" alt="Tools app"/><br/><sub>Tools app</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_163034_system_info_app_in_material_theme.png" width="200" alt="System Info app in Material theme"/><br/><sub>System Info (Material theme)</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_163047_system_info_app_in_hyprland_dark_theme.png" width="200" alt="System Info app in Hyprland dark theme"/><br/><sub>System Info (Hyprland dark theme)</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_161745_dynamic_tiling_dwindle_layout_with_4_apps.png" width="200"/><br/><sub>Dynamic dwindle tiling (4 apps)</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_163129_open_image_in_image_viewer_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="200"/><br/><sub>Image viewer + Files (dwindle)</sub></td>
-    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_163152_open_text_file_in_text_editor_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="200"/><br/><sub>Text editor + Files (dwindle)</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_161745_dynamic_tiling_dwindle_layout_with_4_apps.png" width="200" alt="Dynamic dwindle tiling with 4 apps"/><br/><sub>Dynamic dwindle tiling (4 apps)</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_163129_open_image_in_image_viewer_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="200" alt="Image viewer and Files app side by side with dynamic dwindle layout"/><br/><sub>Image viewer + Files (dwindle)</sub></td>
+    <td align="center"><img src="assets/flxos_screenshots/scr_20260312_163152_open_text_file_in_text_editor_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="200" alt="Text editor and Files app side by side with dynamic dwindle layout"/><br/><sub>Text editor + Files (dwindle)</sub></td>
   </tr>
   <tr>
-    <td align="center" colspan="3"><img src="assets/flxos_screenshots/scr_20260312_163214_text_editor_with_on_screen_keyboard.png" width="200"/><br/><sub>Text editor with on-screen keyboard</sub></td>
+    <td align="center" colspan="3"><img src="assets/flxos_screenshots/scr_20260312_163214_text_editor_with_on_screen_keyboard.png" width="200" alt="Text editor with on-screen keyboard"/><br/><sub>Text editor with on-screen keyboard</sub></td>
   </tr>
 </table>
 
