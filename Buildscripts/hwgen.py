@@ -481,49 +481,71 @@ def derive_topology_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
         peripherals["touch"] = touch_peripheral
 
     if bool(sdcard.get("enabled")):
-        sd_spi_host_raw = sdcard.get("spi_host")
-        sd_pins = _filter_pins(_as_dict(sdcard.get("pins")), ("mosi", "miso", "sclk"))
-        sd_host_literal = _spi_host_literal(sd_spi_host_raw, default=display_host_num or 2)
-        sd_host_num = _spi_host_number(sd_host_literal)
+        sd_bus_type = str(sdcard.get("bus", "spi")).strip().lower()
 
-        share_display_bus = bool(
-            display_bus_name
-            and (
-                str(sd_spi_host_raw).strip().lower() == "shared"
-                or (
-                    display_host_num is not None
-                    and sd_host_num is not None
-                    and display_host_num == sd_host_num
-                    and not sd_pins
-                )
-            )
-        )
-
-        if share_display_bus and display_bus_name:
-            sd_bus_name = display_bus_name
-        else:
-            preferred = _spi_bus_name(sd_host_literal, "spi_sdcard")
-            if display_bus_name and preferred == display_bus_name:
-                preferred = f"{preferred}_sdcard"
-            sd_bus_name = preferred if preferred not in buses else _unique_bus_name(preferred, buses)
+        if sd_bus_type == "sdmmc":
+            sd_bus_name = "sdmmc0"
             sd_bus_cfg = _compact_dict(
                 {
-                    "type": "spi",
-                    "host": sd_host_literal,
-                    "freq_khz": sdcard.get("max_freq_khz"),
-                    "pins": sd_pins,
+                    "type": "sdmmc",
+                    "pins": _filter_pins(
+                        _as_dict(sdcard.get("pins")), ("clk", "cmd", "d0", "d1", "d2", "d3")
+                    ),
                 }
             )
             buses[sd_bus_name] = sd_bus_cfg
 
-        sd_peripheral = _compact_dict(
-            {
-                "type": "sdcard",
-                "bus": sd_bus_name,
-                "pins": _filter_pins(_as_dict(sdcard.get("pins")), ("cs",)),
-                "max_freq_khz": sdcard.get("max_freq_khz"),
-            }
-        )
+            sd_peripheral = _compact_dict(
+                {
+                    "type": "sdcard",
+                    "bus": sd_bus_name,
+                    "mount_point": sdcard.get("mount_point"),
+                }
+            )
+        else:
+            sd_spi_host_raw = sdcard.get("spi_host")
+            sd_pins = _filter_pins(_as_dict(sdcard.get("pins")), ("mosi", "miso", "sclk"))
+            sd_host_literal = _spi_host_literal(sd_spi_host_raw, default=display_host_num or 2)
+            sd_host_num = _spi_host_number(sd_host_literal)
+
+            share_display_bus = bool(
+                display_bus_name
+                and (
+                    str(sd_spi_host_raw).strip().lower() == "shared"
+                    or (
+                        display_host_num is not None
+                        and sd_host_num is not None
+                        and display_host_num == sd_host_num
+                        and not sd_pins
+                    )
+                )
+            )
+
+            if share_display_bus and display_bus_name:
+                sd_bus_name = display_bus_name
+            else:
+                preferred = _spi_bus_name(sd_host_literal, "spi_sdcard")
+                if display_bus_name and preferred == display_bus_name:
+                    preferred = f"{preferred}_sdcard"
+                sd_bus_name = preferred if preferred not in buses else _unique_bus_name(preferred, buses)
+                sd_bus_cfg = _compact_dict(
+                    {
+                        "type": "spi",
+                        "host": sd_host_literal,
+                        "freq_khz": sdcard.get("max_freq_khz"),
+                        "pins": sd_pins,
+                    }
+                )
+                buses[sd_bus_name] = sd_bus_cfg
+
+            sd_peripheral = _compact_dict(
+                {
+                    "type": "sdcard",
+                    "bus": sd_bus_name,
+                    "pins": _filter_pins(_as_dict(sdcard.get("pins")), ("cs",)),
+                    "max_freq_khz": sdcard.get("max_freq_khz"),
+                }
+            )
         peripherals["sdcard"] = sd_peripheral
 
     if bool(cli.get("enabled")):
