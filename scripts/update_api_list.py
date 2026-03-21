@@ -37,8 +37,14 @@ def update_api_list() -> None:
     if not os.path.exists(lvgl_path):
         lvgl_path = os.path.join(project_root, "components", "lvgl", "src")
         
-    header_cmd = f'find "{lvgl_path}" -name "*.h" ! -name "*_private.h" ! -path "*/private/*" 2>/dev/null'
-    headers = os.popen(header_cmd).read().splitlines()
+    headers = []
+    if os.path.isdir(lvgl_path):
+        for root, dirs, files in os.walk(lvgl_path):
+            # Exclude any directory named "private" to mimic '! -path "*/private/*"'
+            dirs[:] = [d for d in dirs if d != "private"]
+            for name in files:
+                if name.endswith(".h") and not name.endswith("_private.h"):
+                    headers.append(os.path.join(root, name))
     
     if not headers:
         print("No headers found. Check paths.")
