@@ -14,7 +14,7 @@ namespace flx::hal::i2c {
  * inherit from this class to get bus injection, address management,
  * and convenient register I/O helpers.
  *
- * Compared to Tactility's I2cDevice:
+ * Compared to legacy implementation's I2cDevice:
  *  - Bus is injected (not hardcoded to a port number)
  *  - Bit manipulation helpers (readBit8, writeBit8, modifyRegister8)
  *  - Type-safe address stored as uint8_t
