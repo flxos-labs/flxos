@@ -9,7 +9,7 @@ namespace flx::hal::display {
  * @brief No-op display device for headless / CI builds.
  *
  * Satisfies all IDisplayDevice queries with safe defaults.
- * Surpasses Tactility — Tactility has NO headless build support.
+ * Surpasses legacy implementation — legacy implementation has NO headless build support.
  *
  * Registered by HalInitService when CONFIG_FLXOS_HEADLESS_MODE=1.
  * This allows all system services that query DeviceRegistry for a display
