@@ -9,7 +9,7 @@ namespace flx::hal::uart {
 /**
  * @brief Abstract interface for a UART bus controller.
  *
- * Surpasses Tactility's C-kernel shim. Brings UART communication natively into
+ * Surpasses legacy implementation's C-kernel shim. Brings UART communication natively into
  * the FlxOS HAL as a discoverable, observable device registry citizen.
  * Useful for modems, GPS receivers, custom peripherals.
  */
