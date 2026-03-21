@@ -82,24 +82,34 @@ bool SdmmcSdCardDevice::mount(const std::string& mountPath) {
 		slot_config.cmd = (gpio_num_t)flx::config::sdcard.sdmmcPins.cmd;
 		slot_config.d0 = (gpio_num_t)flx::config::sdcard.sdmmcPins.d0;
 
-		// 4-bit mode validation: if any of d1-d3 are set, all must be set
-		bool any_d13 = (flx::config::sdcard.sdmmcPins.d1 != -1 ||
-			flx::config::sdcard.sdmmcPins.d2 != -1 ||
-			flx::config::sdcard.sdmmcPins.d3 != -1);
+		const int cfg_d1 = flx::config::sdcard.sdmmcPins.d1;
+		const int cfg_d2 = flx::config::sdcard.sdmmcPins.d2;
+		const int cfg_d3 = flx::config::sdcard.sdmmcPins.d3;
 
-		if (any_d13) {
-			if (flx::config::sdcard.sdmmcPins.d1 == -1 ||
-				flx::config::sdcard.sdmmcPins.d2 == -1 ||
-				flx::config::sdcard.sdmmcPins.d3 == -1) {
-				flx::Log::error(TAG, "Incomplete SDMMC 4-bit pin configuration (requires d0-d3).");
-				m_mountState = MountState::Error;
-				return false;
-			}
-			slot_config.d1 = (gpio_num_t)flx::config::sdcard.sdmmcPins.d1;
-			slot_config.d2 = (gpio_num_t)flx::config::sdcard.sdmmcPins.d2;
-			slot_config.d3 = (gpio_num_t)flx::config::sdcard.sdmmcPins.d3;
+		// 4-bit mode: d1, d2, and d3 must all be set together.
+		// 1-bit mode with explicit D3: only d3 is set (d1 and d2 remain -1).
+		//   This is needed on boards where the SD card CS/D3 pin must be managed
+		//   by the SDMMC driver to properly take the card out of SPI mode.
+		const bool is_4bit = (cfg_d1 != -1 && cfg_d2 != -1 && cfg_d3 != -1);
+		const bool d3_only = (cfg_d1 == -1 && cfg_d2 == -1 && cfg_d3 != -1);
+		const bool any_d123 = (cfg_d1 != -1 || cfg_d2 != -1 || cfg_d3 != -1);
+
+		if (any_d123 && !is_4bit && !d3_only) {
+			flx::Log::error(TAG, "Incomplete SDMMC pin configuration (requires d1, d2, and d3 for 4-bit mode).");
+			m_mountState = MountState::Error;
+			return false;
+		}
+
+		if (is_4bit) {
+			slot_config.d1 = (gpio_num_t)cfg_d1;
+			slot_config.d2 = (gpio_num_t)cfg_d2;
+			slot_config.d3 = (gpio_num_t)cfg_d3;
 			slot_config.width = 4;
 		} else {
+			// 1-bit mode: configure D3 if explicitly specified (needed as CS on some boards)
+			if (d3_only) {
+				slot_config.d3 = (gpio_num_t)cfg_d3;
+			}
 			slot_config.width = 1;
 		}
 	}
