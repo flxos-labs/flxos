@@ -32,8 +32,19 @@ def get_prefix(api):
 
 def update_api_list() -> None:
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    header_cmd = f'find "{project_root}/components/lvgl/src" -name "*.h" ! -name "*_private.h" ! -path "*/private/*"'
-    headers = os.popen(header_cmd).read().splitlines()
+    
+    lvgl_path = os.path.join(project_root, "Libraries", "lvgl", "src")
+    if not os.path.exists(lvgl_path):
+        lvgl_path = os.path.join(project_root, "components", "lvgl", "src")
+        
+    headers = []
+    if os.path.isdir(lvgl_path):
+        for root, dirs, files in os.walk(lvgl_path):
+            # Exclude any directory named "private" to mimic '! -path "*/private/*"'
+            dirs[:] = [d for d in dirs if d != "private"]
+            for name in files:
+                if name.endswith(".h") and not name.endswith("_private.h"):
+                    headers.append(os.path.join(root, name))
     
     if not headers:
         print("No headers found. Check paths.")

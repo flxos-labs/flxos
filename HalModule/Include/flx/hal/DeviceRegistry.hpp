@@ -13,7 +13,7 @@ namespace flx::hal {
 /**
  * @brief Callback invoked when a device is added or removed from the registry.
  *
- * Surpasses Tactility — Tactility has no equivalent observer pattern on devices.
+ * Surpasses legacy implementation — legacy implementation has no equivalent observer pattern on devices.
  *
  * @param device  The device that was added or removed.
  * @param added   true if device was registered, false if deregistered.
@@ -23,11 +23,11 @@ using DeviceChangeCallback = std::function<void(const std::shared_ptr<IDevice>&,
 /**
  * @brief Thread-safe, observable central registry for all HAL devices.
  *
- * Key improvements over Tactility:
+ * Key improvements over legacy implementation:
  *  - Observable: subscribe to device add/remove events
  *  - Health reporting: centralized device health aggregation
  *  - Thread-safe: recursive_mutex handles nested lock scenarios
- *  - No C kernel shim: pure C++ (Tactility bridges to device_for_each_of_type())
+ *  - No C kernel shim: pure C++ (legacy implementation bridges to device_for_each_of_type())
  *  - Type-safe queries: findFirst<IDisplayDevice>(Type::Display)
  *
  * Usage:
@@ -106,7 +106,7 @@ public:
 
 	/**
      * @brief Subscribe to device add/remove events.
-     * Surpasses Tactility — no equivalent exists.
+     * Surpasses legacy implementation — no equivalent exists.
      *
      * @param callback  Function called when a device is registered/deregistered.
      * @return          Subscription ID (use with unsubscribe()).
@@ -123,7 +123,7 @@ public:
 
 	/**
      * @brief Aggregated health report across all registered devices.
-     * Surpasses Tactility — no equivalent health query API.
+     * Surpasses legacy implementation — no equivalent health query API.
      */
 	struct HealthReport {
 		size_t totalDevices = 0;

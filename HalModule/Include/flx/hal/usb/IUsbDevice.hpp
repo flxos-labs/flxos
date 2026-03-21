@@ -8,7 +8,7 @@ namespace flx::hal::usb {
 /**
  * @brief Abstract interface for USB peripheral device controllers.
  *
- * Surpasses Tactility's simple tt::hal::usb namespace functions.
+ * Surpasses legacy implementation's simple tt::hal::usb namespace functions.
  * Encapsulates TinyUSB or native ESP-IDF USB driver.
  *
  * Supports switching modes dynamically (e.g. Mass Storage vs CDC Serial).

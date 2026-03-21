@@ -10,9 +10,9 @@ namespace flx::hal::i2c {
 /**
  * @brief Abstract interface for an I²C bus controller.
  *
- * Key improvements over Tactility's I2c namespace:
+ * Key improvements over legacy implementation's I2c namespace:
  *  - Object-oriented with DeviceRegistry registration
- *  - Real bus locking (Tactility's getLock() returns a NoLock!)
+ *  - Real bus locking (legacy implementation's getLock() returns a NoLock!)
  *  - Bus scanning (enumerate connected device addresses)
  *  - Transaction batching via writeRead()
  *  - Convenience register read/write helpers
@@ -61,7 +61,7 @@ public:
 	virtual bool readRegister16(uint8_t addr, uint8_t reg, uint16_t& value) = 0;
 	virtual bool writeRegister16(uint8_t addr, uint8_t reg, uint16_t value) = 0;
 
-	// ── Bus scanning (surpasses Tactility) ────────────────────────────────
+	// ── Bus scanning (surpasses legacy implementation) ────────────────────────────────
 	/**
      * @brief Probe all I²C addresses and return responding ones.
      * Scans the standard range 0x03–0x77.
@@ -70,11 +70,11 @@ public:
      */
 	virtual std::vector<uint8_t> scan(uint32_t timeoutMs = 10) = 0;
 
-	// ── Bus locking (surpasses Tactility) ─────────────────────────────────
+	// ── Bus locking (surpasses legacy implementation) ─────────────────────────────────
 	/**
      * @brief Access the bus mutex for RAII locking.
      * Usage: std::lock_guard<std::recursive_mutex> lock(bus.getLock());
-     * Tactility's II2cDevice::getLock() returns a dummy NoLock — unusable.
+     * Legacy implementation's II2cDevice::getLock() returns a dummy NoLock — unusable.
      */
 	virtual std::recursive_mutex& getLock() = 0;
 

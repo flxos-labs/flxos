@@ -10,7 +10,7 @@ namespace flx::hal {
  * @brief Global hardware capability query interface.
  *
  * Blends compile-time YAML profile constraints with runtime DeviceRegistry state.
- * Solves the Tactility problem of "UI components crashing when a peripheral is disconnected".
+ * Solves the legacy implementation problem of "UI components crashing when a peripheral is disconnected".
  *
  * Example Usage:
  *   if (flx::hal::getCapabilities().hasGps()) {

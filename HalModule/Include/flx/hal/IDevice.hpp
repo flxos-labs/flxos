@@ -44,7 +44,7 @@ public:
 
 	/**
      * @brief Lifecycle state of the device.
-     * Tactility has NO equivalent — devices are either started or not.
+     * Legacy implementation has NO equivalent — devices are either started or not.
      */
 	enum class State : uint8_t {
 		Uninitialized,
@@ -85,7 +85,7 @@ public:
 	// ── Health ────────────────────────────────────────────────────────────
 	/**
      * @brief Convenience health query.
-     * Surpasses Tactility — Tactility has no device health monitoring.
+     * Surpasses legacy implementation — legacy implementation has no device health monitoring.
      */
 	virtual bool isHealthy() const { return getState() == State::Ready; }
 

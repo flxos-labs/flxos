@@ -44,13 +44,13 @@ enum class GpioInterruptEdge : uint8_t {
 /**
  * @brief Abstract interface for GPIO controller devices.
  *
- * Key improvements over Tactility's GPIO namespace functions:
+ * Key improvements over legacy implementation's GPIO namespace functions:
  *  - Object-oriented, registered in DeviceRegistry
  *  - Hardware interrupt (ISR) support with callbacks
  *  - Software debouncing for button inputs
  *  - Pin count introspection
  *
- * Tactility has gpio_get/gpio_set free functions with no controller object.
+ * The legacy implementation has gpio_get/gpio_set free functions with no controller object.
  * FlxOS encapsulates GPIO into a device that can be health-checked and observed.
  */
 class IGpioController : public flx::hal::IDevice {
@@ -84,7 +84,7 @@ public:
      */
 	virtual int getPinCount() const = 0;
 
-	// ── Interrupts (surpasses Tactility) ──────────────────────────────────
+	// ── Interrupts (surpasses legacy implementation) ──────────────────────────────────
 	/**
 	 * Callback type invoked when a GPIO edge is detected.
 	 * The callback is dispatched from a normal FreeRTOS task context (not from
@@ -115,7 +115,7 @@ public:
 		return false;
 	}
 
-	// ── Debounced input (surpasses Tactility) ─────────────────────────────
+	// ── Debounced input (surpasses legacy implementation) ─────────────────────────────
 	/**
      * @brief Configure a debounced input with a callback.
      * The callback fires from task context after the level is stable for debounceMs.
