@@ -84,7 +84,7 @@ public:
 	/**
      * @brief Update touch calibration at runtime.
      * Persist the result to NVS via SettingsManager if needed.
-     * legacy implementation has no runtime recalibration support.
+     * Legacy implementation has no runtime recalibration support.
      */
 	virtual void setCalibration(const CalibrationData& cal) { (void)cal; }
 };
