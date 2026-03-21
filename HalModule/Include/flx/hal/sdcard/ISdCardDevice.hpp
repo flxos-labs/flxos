@@ -54,7 +54,7 @@ public:
 	/**
      * @brief Direct access to the SPI bus mutex for this SD card.
      * Used by BusManager to prevent SPI contention with the display.
-     * legacy implementation has no centralized bus contention management.
+     * Legacy implementation has no centralized bus contention management.
      */
 	virtual std::recursive_mutex& getLock() = 0;
 

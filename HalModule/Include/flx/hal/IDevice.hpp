@@ -44,7 +44,7 @@ public:
 
 	/**
      * @brief Lifecycle state of the device.
-     * legacy implementation has NO equivalent — devices are either started or not.
+     * Legacy implementation has NO equivalent — devices are either started or not.
      */
 	enum class State : uint8_t {
 		Uninitialized,

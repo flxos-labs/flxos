@@ -50,7 +50,7 @@ enum class GpioInterruptEdge : uint8_t {
  *  - Software debouncing for button inputs
  *  - Pin count introspection
  *
- * legacy implementation has gpio_get/gpio_set free functions with no controller object.
+ * The legacy implementation has gpio_get/gpio_set free functions with no controller object.
  * FlxOS encapsulates GPIO into a device that can be health-checked and observed.
  */
 class IGpioController : public flx::hal::IDevice {
