@@ -14,7 +14,7 @@ namespace flx::hal::sdcard {
  *  - SpiSdCardDevice (SPI-attached SD cards — most common)
  *  - SdmmcSdCardDevice (native SDMMC interface — T-HMI, etc.)
  *
- * Key improvements over Tactility's SdCardDevice:
+ * Key improvements over legacy implementation's SdCardDevice:
  *  - MountState enum for fine-grained status
  *  - CardInfo struct (total/free bytes, FS type, max frequency)
  *  - Centralized bus lock for SPI contention management
@@ -50,15 +50,15 @@ public:
 	virtual std::string getMountPath() const = 0;
 	virtual bool isMounted() const { return getMountState() == MountState::Mounted; }
 
-	// ── Bus lock (surpasses Tactility) ────────────────────────────────────
+	// ── Bus lock (surpasses legacy implementation) ────────────────────────────────────
 	/**
      * @brief Direct access to the SPI bus mutex for this SD card.
      * Used by BusManager to prevent SPI contention with the display.
-     * Tactility has no centralized bus contention management.
+     * legacy implementation has no centralized bus contention management.
      */
 	virtual std::recursive_mutex& getLock() = 0;
 
-	// ── Card info (surpasses Tactility) ───────────────────────────────────
+	// ── Card info (surpasses legacy implementation) ───────────────────────────────────
 	/**
      * @brief Filesystem and capacity info from the mounted card.
      */
