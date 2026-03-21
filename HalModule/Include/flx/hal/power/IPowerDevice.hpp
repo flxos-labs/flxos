@@ -11,7 +11,7 @@ namespace flx::hal::power {
  *
  * Implemented by drivers like AXP2101, BQ25896, or simple ADC battery monitors.
  *
- * Key improvements over Tactility's PowerDevice:
+ * Key improvements over legacy implementation's PowerDevice:
  *  - Event-driven: PowerEvent enumerates state changes.
  *  - Subscription pattern: No more polling `isCharging()` in a loop.
  *  - Advanced metrics: getTemperatureCelsius().

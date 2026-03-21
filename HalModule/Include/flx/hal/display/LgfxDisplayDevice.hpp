@@ -32,7 +32,7 @@ namespace flx::hal::display {
  *
  * This single class handles ALL 40+ display panels supported by LovyanGFX via
  * the compile-time flx::config::* constexpr dispatch in lv_lgfx_user.hpp.
- * Tactility requires a separate driver package per display chip.
+ * Legacy implementation requires a separate driver package per display chip.
  */
 class LgfxDisplayDevice final : public flx::hal::DeviceBase<IDisplayDevice> {
 public:
@@ -84,7 +84,7 @@ public:
 	/**
      * @brief Observable brightness [0–255].
      * DisplayManager subscribes to this instead of calling setBacklightDuty directly.
-     * Surpasses Tactility — no observable pattern on Tactility devices.
+     * Surpasses legacy implementation — no observable pattern on legacy implementation devices.
      */
 	flx::Observable<uint8_t>& getBrightnessObservable() { return m_brightness; }
 

@@ -26,8 +26,8 @@ struct GpsPosition {
 /**
  * @brief Abstract interface for a GNSS/GPS receiver device.
  *
- * FlxOS elevates Tactility's ad-hoc Meshtastic GPS port into a formal HAL device.
- * Key enhancements over Tactility:
+ * FlxOS elevates legacy implementation's ad-hoc Meshtastic GPS port into a formal HAL device.
+ * Key enhancements over legacy implementation:
  *  - Formal GpsState enum.
  *  - subscribePosition replaces ad-hoc UI polling.
  *  - requestColdStart() exposed to clear ephemeral data.

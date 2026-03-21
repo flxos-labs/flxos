@@ -32,10 +32,10 @@ enum class ColorFormat : uint8_t {
  * Implemented by LgfxDisplayDevice (LovyanGFX-backed) and
  * HeadlessDisplayDevice (no-op stub for headless builds).
  *
- * Key improvements over Tactility's DisplayDevice:
- *  - Power control API (Tactility: missing)
- *  - Screenshot capture (Tactility: missing)
- *  - Bitmap draw API (Tactility: missing)
+ * Key improvements over legacy implementation's DisplayDevice:
+ *  - Power control API (legacy implementation: missing)
+ *  - Screenshot capture (legacy implementation: missing)
+ *  - Bitmap draw API (legacy implementation: missing)
  *  - LVGL display handle exposed directly
  *  - Observable brightness/rotation via DeviceBase pattern
  *  - DMA buffer info query
@@ -57,16 +57,16 @@ public:
 	virtual void setBacklightDuty(uint8_t duty) = 0;
 	virtual uint8_t getBacklightDuty() const = 0;
 
-	// ── Power control (surpasses Tactility) ───────────────────────────────
+	// ── Power control (surpasses legacy implementation) ───────────────────────────────
 	virtual bool supportsPowerControl() const { return false; }
 	virtual void setPowerOn(bool on) { (void)on; }
 	virtual bool isPoweredOn() const { return true; }
 
-	// ── E-paper full refresh (passes Tactility) ───────────────────────────
+	// ── E-paper full refresh (passes legacy implementation) ───────────────────────────
 	/** Request a full (non-partial) refresh for e-paper displays. */
 	virtual void requestFullRefresh() {}
 
-	// ── Gamma (matches Tactility) ─────────────────────────────────────────
+	// ── Gamma (matches legacy implementation) ─────────────────────────────────────────
 	virtual void setGammaCurve(uint8_t index) { (void)index; }
 	virtual uint8_t getGammaCurveCount() const { return 0; }
 
@@ -85,7 +85,7 @@ public:
      */
 	virtual std::shared_ptr<flx::hal::touch::ITouchDevice> getAttachedTouch() const = 0;
 
-	// ── Raw pixel access (surpasses Tactility) ────────────────────────────
+	// ── Raw pixel access (surpasses legacy implementation) ────────────────────────────
 	/**
      * @brief Draw raw pixel data directly to the display (bypasses LVGL).
      * Useful for screenshot restore or framebuffer operations.
@@ -100,11 +100,11 @@ public:
 		return false;
 	}
 
-	// ── Display test (surpasses Tactility) ────────────────────────────────
+	// ── Display test (surpasses legacy implementation) ────────────────────────────────
 	/** Fill the screen with a solid color for hardware validation. */
 	virtual void runColorTest(uint32_t color) { (void)color; }
 
-	// ── Screenshot (surpasses Tactility) ──────────────────────────────────
+	// ── Screenshot (surpasses legacy implementation) ──────────────────────────────────
 	/**
      * @brief Capture a screenshot into a caller-provided buffer.
      * @param buffer      Output buffer (must hold width × height × bytes_per_pixel).
@@ -117,7 +117,7 @@ public:
 		return false;
 	}
 
-	// ── DMA buffer info (surpasses Tactility) ─────────────────────────────
+	// ── DMA buffer info (surpasses legacy implementation) ─────────────────────────────
 	struct BufferInfo {
 		size_t bufferSize = 0; ///< Active DMA buffer size in bytes
 		size_t dmaFreeAtInit = 0; ///< Free DMA heap at device init time
