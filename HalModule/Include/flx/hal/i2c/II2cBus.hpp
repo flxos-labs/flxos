@@ -74,7 +74,7 @@ public:
 	/**
      * @brief Access the bus mutex for RAII locking.
      * Usage: std::lock_guard<std::recursive_mutex> lock(bus.getLock());
-     * legacy implementation's II2cDevice::getLock() returns a dummy NoLock — unusable.
+     * Legacy implementation's II2cDevice::getLock() returns a dummy NoLock — unusable.
      */
 	virtual std::recursive_mutex& getLock() = 0;
 

@@ -32,7 +32,7 @@ namespace flx::hal::display {
  *
  * This single class handles ALL 40+ display panels supported by LovyanGFX via
  * the compile-time flx::config::* constexpr dispatch in lv_lgfx_user.hpp.
- * legacy implementation requires a separate driver package per display chip.
+ * Legacy implementation requires a separate driver package per display chip.
  */
 class LgfxDisplayDevice final : public flx::hal::DeviceBase<IDisplayDevice> {
 public:
