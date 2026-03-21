@@ -32,7 +32,12 @@ def get_prefix(api):
 
 def update_api_list() -> None:
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    header_cmd = f'find "{project_root}/components/lvgl/src" -name "*.h" ! -name "*_private.h" ! -path "*/private/*"'
+    
+    lvgl_path = os.path.join(project_root, "Libraries", "lvgl", "src")
+    if not os.path.exists(lvgl_path):
+        lvgl_path = os.path.join(project_root, "components", "lvgl", "src")
+        
+    header_cmd = f'find "{lvgl_path}" -name "*.h" ! -name "*_private.h" ! -path "*/private/*" 2>/dev/null'
     headers = os.popen(header_cmd).read().splitlines()
     
     if not headers:

@@ -1,6 +1,6 @@
 # LVGL API List
 
-*Last Updated: 2026-02-01 23:40:40*
+*Last Updated: 2026-03-20 17:43:59*
 
 Sorted from highly featured (most functions) to least featured.
 
