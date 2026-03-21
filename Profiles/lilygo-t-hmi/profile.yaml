@@ -110,7 +110,7 @@ hardware:
       d0: 13
       d1: -1
       d2: -1
-      d3: 10
+      d3: -1
   battery:
     enabled: false
   usb:
