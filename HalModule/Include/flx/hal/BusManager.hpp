@@ -11,7 +11,7 @@ namespace flx::hal {
 /**
  * @brief Centralized Bus Contention Manager.
  *
- * Surpasses Tactility's ad-hoc SPI locking by providing a centralized
+ * Surpasses legacy implementation's ad-hoc SPI locking by providing a centralized
  * registry of locks for shared buses, particularly SPI where display,
  * touch, and SD card might share the same physical lines.
  */
