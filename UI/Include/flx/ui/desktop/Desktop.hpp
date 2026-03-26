@@ -9,6 +9,7 @@
 #include <flx/ui/desktop/modules/quick_access_panel/QuickAccessPanel.hpp>
 #include <flx/ui/desktop/modules/status_bar/StatusBar.hpp>
 #include <flx/ui/desktop/modules/swipe_manager/SwipeManager.hpp>
+#include <flx/ui/wallpaper/IWallpaperProvider.hpp>
 #include <memory>
 #include <string>
 
@@ -22,6 +23,7 @@ public:
 	~Desktop();
 
 	void init();
+	void onFrame(uint32_t delta_ms);
 
 	// These now delegate to WM
 	void openApp(const std::string& packageName);
@@ -31,7 +33,6 @@ private:
 
 	lv_obj_t* m_screen {};
 	lv_obj_t* m_wallpaper {};
-	lv_obj_t* m_wallpaper_img {};
 	lv_obj_t* m_wallpaper_icon {};
 	lv_obj_t* m_window_container {};
 	std::unique_ptr<UI::Modules::StatusBar> m_statusBarModule {};
@@ -51,7 +52,7 @@ private:
 	lv_obj_t* m_app_container {};
 	std::unique_ptr<UI::Modules::SwipeManager> m_swipeManagerModule {};
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_rotationObserver;
-	std::string m_wallpaper_path;
+	std::unique_ptr<flx::ui::wallpaper::IWallpaperProvider> m_wallpaperProvider;
 
 	void update_notification_list();
 	void realign_panels();

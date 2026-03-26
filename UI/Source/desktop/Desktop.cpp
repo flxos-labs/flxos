@@ -1,10 +1,10 @@
-#include "misc/cache/instance/lv_image_cache.h"
 #include <ctime>
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
+#include <flx/system/managers/WallpaperManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/desktop/Desktop.hpp>
 #include <flx/ui/desktop/window_manager/WindowManager.hpp>
@@ -15,6 +15,7 @@
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
+#include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -29,7 +30,7 @@ Desktop& Desktop::getInstance() {
 }
 
 Desktop::Desktop()
-	: m_screen(nullptr), m_wallpaper(nullptr), m_wallpaper_img(nullptr),
+	: m_screen(nullptr), m_wallpaper(nullptr),
 	  m_wallpaper_icon(nullptr), m_window_container(nullptr),
 	  m_statusBarModule(nullptr), m_status_bar(nullptr),
 	  m_floatingNotificationsModule(nullptr),
@@ -69,6 +70,9 @@ void Desktop::init() {
 		lv_obj_set_style_text_opa(m_wallpaper_icon, UiConstants::OPA_30, 0);
 		lv_obj_center(m_wallpaper_icon);
 
+		m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::StaticImageProvider>();
+		m_wallpaperProvider->initialize();
+
 		// Theme Change Observer
 		lv_subject_add_observer_obj(
 			uiTheme.getThemeSubject(),
@@ -96,25 +100,21 @@ void Desktop::init() {
 						if (instance->m_wallpaper_icon) {
 							lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 						}
-						if (!instance->m_wallpaper_img) {
-							instance->createWallpaperImage(path);
-						}
+						instance->createWallpaperImage(path);
 					} else {
 						if (instance->m_wallpaper_icon) {
 							lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+						}
+						if (instance->m_wallpaperProvider) {
+							instance->m_wallpaperProvider->destroy();
 						}
 					}
 				} else {
 					if (instance->m_wallpaper_icon) {
 						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
 					}
-					if (instance->m_wallpaper_img != nullptr) {
-						if (!instance->m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
-							lv_image_cache_drop(instance->m_wallpaper_path.c_str());
-							instance->m_wallpaper_path.clear();
-						}
-						lv_obj_delete(instance->m_wallpaper_img);
-						instance->m_wallpaper_img = nullptr;
+					if (instance->m_wallpaperProvider) {
+						instance->m_wallpaperProvider->destroy();
 					}
 				}
 			},
@@ -136,13 +136,8 @@ void Desktop::init() {
 					}
 					instance->createWallpaperImage(path);
 				} else if (enabled) {
-					if (instance->m_wallpaper_img != nullptr) {
-						if (!instance->m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
-							lv_image_cache_drop(instance->m_wallpaper_path.c_str());
-							instance->m_wallpaper_path.clear();
-						}
-						lv_obj_delete(instance->m_wallpaper_img);
-						instance->m_wallpaper_img = nullptr;
+					if (instance->m_wallpaperProvider) {
+						instance->m_wallpaperProvider->destroy();
 					}
 					if (instance->m_wallpaper_icon) {
 						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
@@ -227,6 +222,13 @@ void Desktop::init() {
 	}
 }
 
+void Desktop::onFrame(uint32_t delta_ms) {
+	if (m_wallpaperProvider && m_wallpaper) {
+		m_wallpaperProvider->render(m_wallpaper, delta_ms);
+	}
+	flx::system::WallpaperManager::getInstance().onFrame(delta_ms);
+}
+
 void Desktop::configure_panel_style(lv_obj_t* panel) {
 	lv_obj_set_size(panel, lv_pct(LayoutConstants::PANEL_WIDTH_PCT), lv_pct(LayoutConstants::PANEL_HEIGHT_PCT));
 	lv_obj_set_style_pad_all(panel, 0, 0);
@@ -238,24 +240,11 @@ void Desktop::configure_panel_style(lv_obj_t* panel) {
 }
 
 void Desktop::createWallpaperImage(const char* path) {
-	// Drop cache for old wallpaper before loading new one
-	if (!m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
-		lv_image_cache_drop(m_wallpaper_path.c_str());
+	if (!m_wallpaperProvider || !m_wallpaper || !path || path[0] == '\0') {
+		return;
 	}
-
-	if (m_wallpaper_img != nullptr) {
-		lv_obj_delete(m_wallpaper_img);
-		m_wallpaper_img = nullptr;
-	}
-
-	m_wallpaper_path = path;
-	m_wallpaper_img = lv_image_create(m_wallpaper);
-	lv_image_set_src(m_wallpaper_img, path);
-	lv_obj_set_size(m_wallpaper_img, lv_pct(100), lv_pct(100));
-	lv_obj_set_style_pad_all(m_wallpaper_img, 0, 0);
-	lv_obj_set_style_border_width(m_wallpaper_img, 0, 0);
-	lv_image_set_inner_align(m_wallpaper_img, LV_IMAGE_ALIGN_COVER);
-	lv_obj_move_background(m_wallpaper_img);
+	m_wallpaperProvider->render(m_wallpaper, 0);
+	m_wallpaperProvider->setSource(path);
 }
 
 void Desktop::realign_panels() {
