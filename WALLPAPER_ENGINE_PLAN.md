@@ -1,6 +1,6 @@
 # FlxOS Ultimate Wallpaper Engine Plan
 
-**Status**: Design Phase  
+**Status**: Implementation In Progress  
 **Version**: 1.1  
 **Last Updated**: March 25, 2026  
 **Target Platform**: ESP32, ESP32-S3, ESP32-P4  
@@ -861,12 +861,12 @@ public:
 **Tasks:**
 - [ ] Spike A: GIF decode path on device (max tested dimensions, frame count, decode time)
 - [ ] Spike B: Lottie/ThorVG validation on target boards (heap use, frame time, fallback behavior)
-- [ ] Implement `AnimatedGifProvider`
-- [ ] Implement `LottieProvider`
-- [ ] Add animation speed control (0-100%)
+- [x] Implement `AnimatedGifProvider`
+- [x] Implement `LottieProvider`
+- [x] Add animation speed control (0-100%)
 - [ ] Test with sample GIF and Lottie files
-- [ ] Update Settings UI to select wallpaper type
-- [ ] Add animation speed slider to Settings
+- [x] Update Settings UI to select wallpaper type
+- [x] Add animation speed slider to Settings
 - [ ] Add strict acceptance gates:
     - GIF: sustained >= 24 FPS for 240x320, <= 180KB extra heap
     - Lottie: sustained >= 24 FPS for "medium" complexity scenes, <= 220KB extra heap

@@ -53,10 +53,14 @@ private:
 	std::unique_ptr<UI::Modules::SwipeManager> m_swipeManagerModule {};
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_rotationObserver;
 	std::unique_ptr<flx::ui::wallpaper::IWallpaperProvider> m_wallpaperProvider;
+	std::string m_wallpaperProviderType {""};
+	std::string m_wallpaperProviderSource {""};
+	int32_t m_wallpaperProviderSpeed {-1};
 
 	void update_notification_list();
 	void realign_panels();
 	void configure_panel_style(lv_obj_t* panel);
+	void syncWallpaperProvider(uint32_t delta_ms);
 
 	void on_start_click();
 	void on_up_click();
