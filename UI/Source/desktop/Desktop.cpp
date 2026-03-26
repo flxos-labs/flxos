@@ -1,4 +1,5 @@
 #include <ctime>
+#include <esp_heap_caps.h>
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/core/Bundle.hpp>
@@ -26,6 +27,10 @@
 #include <string_view>
 
 static constexpr std::string_view TAG = "Desktop";
+static constexpr uint32_t WALLPAPER_GATE_WINDOW_MS = 5000;
+static constexpr float WALLPAPER_GATE_MIN_FPS = 24.0f;
+static constexpr uint32_t WALLPAPER_GATE_GIF_MAX_EXTRA_HEAP_BYTES = 180 * 1024;
+static constexpr uint32_t WALLPAPER_GATE_LOTTIE_MAX_EXTRA_HEAP_BYTES = 220 * 1024;
 
 namespace UI {
 
@@ -205,6 +210,10 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_wallpaperProviderSource.clear();
 		m_wallpaperProviderSpeed = -1;
 		m_lastWallpaperFailureKey.clear();
+		m_providerBaselineHeapBytes = 0;
+		m_providerPerfWindowMs = 0;
+		m_providerPerfFrameCount = 0;
+		m_providerPerfKey.clear();
 		updatePlaceholderIconVisibility(true);
 		return;
 	}
@@ -228,10 +237,14 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::StaticImageProvider>();
 		}
 
+		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
 		m_wallpaperProvider->initialize();
 		m_wallpaperProviderType = type;
 		m_wallpaperProviderSource.clear();
 		m_wallpaperProviderSpeed = -1;
+		m_providerPerfWindowMs = 0;
+		m_providerPerfFrameCount = 0;
+		m_providerPerfKey.clear();
 	}
 
 	if (!m_wallpaperProvider) {
@@ -242,6 +255,10 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 	if (m_wallpaperProviderSource != source) {
 		m_wallpaperProvider->setSource(source);
 		m_wallpaperProviderSource = source;
+		m_providerPerfWindowMs = 0;
+		m_providerPerfFrameCount = 0;
+		m_providerPerfKey.clear();
+		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
 	}
 
 	if (m_wallpaperProviderSpeed != speed) {
@@ -259,6 +276,8 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 			handleWallpaperProviderFailure(type, source, providerError);
 			return;
 		}
+
+		evaluateWallpaperAcceptanceGate(type, source, delta_ms);
 
 		if (m_wallpaperProvider->isReady()) {
 			m_lastWallpaperFailureKey.clear();
@@ -295,6 +314,74 @@ void Desktop::handleWallpaperProviderFailure(const std::string& requestedType, c
 
 	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
 	wallpaperManager.setWallpaper(source, "static");
+}
+
+void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std::string& source, uint32_t delta_ms) {
+	if (!(type == "animated" || type == "gif" || type == "lottie")) {
+		return;
+	}
+
+	if (source.empty()) {
+		return;
+	}
+
+	std::string const key = type + "|" + source;
+	if (m_providerPerfKey != key) {
+		m_providerPerfKey = key;
+		m_providerPerfWindowMs = 0;
+		m_providerPerfFrameCount = 0;
+		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+	}
+
+	m_providerPerfWindowMs += delta_ms;
+	m_providerPerfFrameCount += 1;
+
+	if (m_providerPerfWindowMs < WALLPAPER_GATE_WINDOW_MS) {
+		return;
+	}
+
+	float fps = 0.0f;
+	if (m_providerPerfWindowMs > 0) {
+		fps = (static_cast<float>(m_providerPerfFrameCount) * 1000.0f) / static_cast<float>(m_providerPerfWindowMs);
+	}
+
+	uint32_t const currentHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+	uint32_t const baselineHeap = m_providerBaselineHeapBytes;
+	uint32_t const extraHeapBytes = (baselineHeap > currentHeap) ? (baselineHeap - currentHeap) : 0;
+
+	uint32_t maxExtraHeapBytes = WALLPAPER_GATE_GIF_MAX_EXTRA_HEAP_BYTES;
+	const char* gateReason = "Animated acceptance gate failed";
+	if (type == "lottie") {
+		maxExtraHeapBytes = WALLPAPER_GATE_LOTTIE_MAX_EXTRA_HEAP_BYTES;
+		gateReason = "Lottie acceptance gate failed";
+	}
+
+	bool const fpsOk = fps >= WALLPAPER_GATE_MIN_FPS;
+	bool const heapOk = extraHeapBytes <= maxExtraHeapBytes;
+
+	if (!fpsOk || !heapOk) {
+		Log::warn(TAG,
+			"Wallpaper acceptance gate failed for type=%s source=%s: fps=%.2f (min %.2f), extra_heap=%u (max %u)",
+			type.c_str(),
+			source.c_str(),
+			fps,
+			WALLPAPER_GATE_MIN_FPS,
+			static_cast<unsigned>(extraHeapBytes),
+			static_cast<unsigned>(maxExtraHeapBytes));
+		handleWallpaperProviderFailure(type, source, gateReason);
+		return;
+	}
+
+	Log::info(TAG,
+		"Wallpaper acceptance gate passed for type=%s source=%s: fps=%.2f, extra_heap=%u",
+		type.c_str(),
+		source.c_str(),
+		fps,
+		static_cast<unsigned>(extraHeapBytes));
+
+	m_providerPerfWindowMs = 0;
+	m_providerPerfFrameCount = 0;
+	m_providerBaselineHeapBytes = currentHeap;
 }
 
 void Desktop::configure_panel_style(lv_obj_t* panel) {
