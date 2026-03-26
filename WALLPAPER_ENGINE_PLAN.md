@@ -47,15 +47,44 @@ Transform FlxOS wallpaper system from a basic static image viewer into a profess
 
 ## Current State Analysis
 
-### Existing Wallpaper System
+### Breaking Changes Summary (Phase 1)
+
+**As of March 26, 2026**, the wallpaper system has been refactored with architectural breaking changes to consolidate ownership:
+
+**Before (Legacy):**
+- Wallpaper state owned by `ThemeManager` (core SystemManager service)
+- Dual-bridge pattern via `UiThemeManager` for LVGL synchronization
+- Desktop observers managed wallpaper changes reactively
+- Fragmented ownership across 3 layers
+
+**After (Current):**
+- Wallpaper state **exclusively** owned by `WallpaperManager` (dedicated service)
+- No intermediate bridges; `DisplaySettings` and `Desktop` observe directly
+- Provider lifecycle managed by `WallpaperManager`
+- Clear, singular point of truth for wallpaper state
+
+**Files Modified (Breaking Changes):**
+- `System/Include/flx/system/managers/ThemeManager.hpp` - removed wallpaper observables
+- `System/Source/managers/ThemeManager.cpp` - removed wallpaper subject registration
+- `UI/Include/flx/ui/theming/UiThemeManager.hpp` - removed wallpaper bridge members
+- `UI/Source/theming/UiThemeManager.cpp` - removed wallpaper bridge instantiation
+- `UI/Include/flx/ui/desktop/Desktop.hpp` - removed observer management
+- `UI/Source/desktop/Desktop.cpp` - removed observers and `createWallpaperImage()` method
+- `Applications/settings/display/DisplaySettings.hpp` - wired directly to `WallpaperManager`
+
+**Impact:**
+- ✅ Cleaner architecture with single source of truth
+- ✅ Easier to extend with new providers (Phase 2+)
+- ✅ Reduced complexity in `Desktop` rendering loop
+- ✅ Settings now have direct access to wallpaper controls
+
+### Existing Wallpaper System (Post-Phase 1 Breaking Changes)
 
 **What's Implemented:**
 ```
-System Layer (ThemeManager)
-    ↓ Observable properties
-UI Bridge (UiThemeManager)
-    ↓ LVGL synchronization
-Desktop Shell (Desktop.cpp)
+WallpaperManager Service (System Layer)
+    ↓ Observable properties + onFrame() callback
+Desktop Shell (UI Layer)
     ↓ LVGL Image widget rendering
 ```
 
@@ -79,45 +108,60 @@ Desktop Shell (Desktop.cpp)
 - ❌ No aspect ratio options (only cover mode)
 - ❌ No wallpaper preview system
 
-### Architecture Diagram
+### Architecture Diagram (Post-Breaking Changes)
 
 ```
-┌──────────────────────────────────┐
-│  Settings (user selects wallpaper)│
-└────────────┬─────────────────────┘
+┌──────────────────────────────────────┐
+│  DisplaySettings (UI)                 │
+│  - Observes wp_enabled, wp_source    │
+└────────────┬──────────────────────────┘
              │
-┌────────────▼─────────────────────┐
-│  ThemeManager (System/)           │
-│  - wp_enabled (Observable)        │
-│  - wp_path (StringObservable)     │
-│  - Settings persistence           │
-└────────────┬─────────────────────┘
+┌────────────▼──────────────────────────┐
+│  WallpaperManager (System/)            │
+│  - wp_enabled (Observable)            │
+│  - wp_type (Observable)               │
+│  - wp_source (StringObservable)       │
+│  - wp_effects (Observable)            │
+│  - animation_speed (Observable)       │
+│  - quality_level (Observable)         │
+│  - CPU usage monitoring               │
+│  - Settings persistence via SM        │
+│  - IWallpaperProvider lifecycle owner │
+└────────────┬──────────────────────────┘
              │
-┌────────────▼─────────────────────┐
-│  UiThemeManager (UI/)             │
-│  - LVGL bridge                    │
-│  - Observer synchronization       │
-└────────────┬─────────────────────┘
-             │
-┌────────────▼─────────────────────┐
-│  Desktop (UI/Source/desktop/)     │
-│  - m_wallpaper container          │
-│  - m_wallpaper_img (lv_image)     │
-│  - createWallpaperImage()         │
-└────────────┬─────────────────────┘
-             │
-┌────────────▼─────────────────────┐
-│  LVGL Rendering Engine            │
-└──────────────────────────────────┘
+        ┌────┴────┐
+        │          │
+┌───────▼──┐  ┌───▼────────────────────┐
+│ Desktop  │  │ GuiTask                │
+│ onFrame()│  │ Calls Desktop::onFrame()│
+│ callback │  │ continuously           │
+└───────┬──┘  └────────────────────────┘
+        │
+┌───────▼──────────────────────────────┐
+│  IWallpaperProvider                   │
+│  ├─ StaticImageProvider  [Phase 1]   │
+│  ├─ AnimatedGifProvider  [Phase 2]   │
+│  ├─ LottieProvider       [Phase 2]   │
+│  ├─ DynamicProvider      [Phase 4]   │
+│  └─ AdaptiveProvider     [Phase 5]   │
+├─────────────────────────────────────┤
+│  render() → LVGL Image widget       │
+└───────┬──────────────────────────────┘
+        │
+┌───────▼──────────────────────────────┐
+│  LVGL Rendering Engine                │
+└───────────────────────────────────────┘
 ```
 
-### Settings Storage
+### Settings Storage (Managed by WallpaperManager)
 ```
-Settings (NVS or SPIFFS):
-  ├─ wp_enabled: 1/0
-  ├─ wp_path: "/path/to/wallpaper.png"
-  ├─ wp_type: "static|animated|lottie|dynamic|adaptive"
-  └─ wp_effects: JSON string with effect config
+Settings (NVS or SPIFFS) - persisted via SettingsManager:
+  ├─ wp_enabled: 1/0 (boolean)
+  ├─ wp_source: "/path/to/wallpaper.png" (string path/URL)
+  ├─ wp_type: "static|animated|lottie|dynamic|adaptive" (provider type)
+  ├─ wp_effects: JSON string with effect pipeline config
+  ├─ animation_speed: 0-100 (percentage)
+  └─ quality_level: "low|medium|high" (adaptive quality)
 ```
 
 ---
@@ -772,21 +816,43 @@ public:
 
 **Goal**: Core infrastructure and provider interface
 
+**Status**: ✅ COMPLETED with breaking changes
+
+**Breaking Changes**: 
+- Consolidated wallpaper state ownership from ThemeManager → WallpaperManager (exclusive ownership)
+- Removed dual-bridge pattern (ThemeManager/UiThemeManager no longer manage wallpaper observables)
+- Desktop is now a pure rendering container; wallpaper provider lifecycle owned by WallpaperManager
+- DisplaySettings now wires directly to WallpaperManager observables
+
 **Tasks:**
-- [ ] Create `WallpaperManager` service class skeleton
-- [ ] Define `IWallpaperProvider` interface
-- [ ] Implement `StaticImageProvider` (refactor existing code)
-- [ ] Update `ServiceRegistry` to register `WallpaperManager`
-- [ ] Create Observable properties for wallpaper settings
-- [ ] Integrate `Desktop::onFrame()` callback to `WallpaperManager`
+- [x] Create `WallpaperManager` service class skeleton
+- [x] Define `IWallpaperProvider` interface
+- [x] Implement `StaticImageProvider` (refactor existing code)
+- [x] Update `ServiceRegistry` to register `WallpaperManager`
+- [x] Create Observable properties for wallpaper settings
+- [x] Integrate `Desktop::onFrame()` callback to `WallpaperManager`
+- [x] Remove wallpaper state from ThemeManager (breaking change)
+- [x] Remove wallpaper bridges from UiThemeManager (breaking change)
+- [x] Update DisplaySettings to use WallpaperManager directly (breaking change)
 
-**Files to Create:**
-- `System/Include/flx/core/managers/WallpaperManager.hpp`
-- `System/Source/managers/WallpaperManager.cpp`
-- `UI/Include/flx/ui/wallpaper/IWallpaperProvider.hpp`
-- `UI/Source/wallpaper/providers/StaticImageProvider.cpp`
+**Files Created:**
+- `System/Include/flx/system/managers/WallpaperManager.hpp` ✅
+- `System/Source/managers/WallpaperManager.cpp` ✅
+- `UI/Include/flx/ui/wallpaper/IWallpaperProvider.hpp` ✅
+- `UI/Source/wallpaper/providers/StaticImageProvider.hpp` ✅
+- `UI/Source/wallpaper/providers/StaticImageProvider.cpp` ✅
 
-**Deliverable**: Wallpaper system works exactly as before, but refactored into engine
+**Files Modified (Breaking Changes):**
+- `System/Include/flx/system/managers/ThemeManager.hpp` - removed wallpaper observables
+- `System/Source/managers/ThemeManager.cpp` - removed wallpaper registration
+- `UI/Include/flx/ui/theming/UiThemeManager.hpp` - removed wallpaper bridges
+- `UI/Source/theming/UiThemeManager.cpp` - removed wallpaper bridge initialization
+- `UI/Include/flx/ui/desktop/Desktop.hpp` - removed wallpaper observer methods
+- `UI/Source/desktop/Desktop.cpp` - removed wallpaper observers and createWallpaperImage()
+- `Applications/settings/display/DisplaySettings.hpp` - wired to WallpaperManager instead of ThemeManager
+- `UI/Source/tasks/GuiTask.cpp` - added Desktop::onFrame() callback
+
+**Deliverable**: Wallpaper system works exactly as before, but refactored into engine with consolidated ownership
 
 ### Phase 2: Animation Support (Weeks 3-4)
 

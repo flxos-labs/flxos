@@ -56,11 +56,7 @@ private:
 
 	void update_notification_list();
 	void realign_panels();
-	void configure_panel_style(lv_obj_t* panel);
 
-	void createWallpaperImage(const char* path);
-
-	void on_start_click();
 	void on_up_click();
 	static void on_app_click(lv_event_t* e);
 };
