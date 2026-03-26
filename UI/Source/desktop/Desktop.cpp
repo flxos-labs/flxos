@@ -1,9 +1,12 @@
 #include <ctime>
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
+#include <flx/core/Bundle.hpp>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/desktop/Desktop.hpp>
@@ -201,6 +204,7 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_wallpaperProviderType.clear();
 		m_wallpaperProviderSource.clear();
 		m_wallpaperProviderSpeed = -1;
+		m_lastWallpaperFailureKey.clear();
 		updatePlaceholderIconVisibility(true);
 		return;
 	}
@@ -248,6 +252,49 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 	updatePlaceholderIconVisibility(source.empty());
 
 	m_wallpaperProvider->render(m_wallpaper, delta_ms);
+
+	if (!source.empty()) {
+		std::string const providerError = m_wallpaperProvider->getLastError();
+		if (!providerError.empty() && !m_wallpaperProvider->isReady()) {
+			handleWallpaperProviderFailure(type, source, providerError);
+			return;
+		}
+
+		if (m_wallpaperProvider->isReady()) {
+			m_lastWallpaperFailureKey.clear();
+		}
+	}
+}
+
+void Desktop::handleWallpaperProviderFailure(const std::string& requestedType, const std::string& source, const std::string& error) {
+	if (requestedType.empty() || requestedType == "static") {
+		return;
+	}
+
+	std::string const failureKey = requestedType + "|" + source + "|" + error;
+	if (failureKey == m_lastWallpaperFailureKey) {
+		return;
+	}
+	m_lastWallpaperFailureKey = failureKey;
+
+	Log::warn(TAG, "Wallpaper provider '%s' failed: %s. Falling back to static.", requestedType.c_str(), error.c_str());
+
+	flx::core::Bundle data;
+	data.putString("requested_type", requestedType);
+	data.putString("source", source);
+	data.putString("error", error);
+	data.putString("fallback_type", "static");
+	flx::core::EventBus::getInstance().publish("wallpaper.error", data);
+
+	flx::system::NotificationManager::getInstance().addNotification(
+		"Wallpaper Fallback",
+		"Failed to load wallpaper. Switched to static mode.",
+		"Wallpaper",
+		LV_SYMBOL_WARNING,
+		2);
+
+	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
+	wallpaperManager.setWallpaper(source, "static");
 }
 
 void Desktop::configure_panel_style(lv_obj_t* panel) {
