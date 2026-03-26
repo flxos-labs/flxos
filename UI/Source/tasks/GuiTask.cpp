@@ -179,8 +179,11 @@ void GuiTask::run(void* /*data*/) {
 	Log::info(TAG, "GUI task loop started");
 	setWatchdogTimeout(5000);
 
+	uint64_t lastLoopStartUs = static_cast<uint64_t>(esp_timer_get_time());
 	while (true) {
 		uint64_t const loopStartUs = static_cast<uint64_t>(esp_timer_get_time());
+		uint32_t const frameDeltaMs = static_cast<uint32_t>((loopStartUs - lastLoopStartUs) / 1000ULL);
+		lastLoopStartUs = loopStartUs;
 		heartbeat();
 		if (!m_paused) {
 			lock();
@@ -200,7 +203,7 @@ void GuiTask::run(void* /*data*/) {
 #else
 				delay = lv_timer_handler();
 #endif
-				UI::Desktop::getInstance().onFrame(delay);
+				UI::Desktop::getInstance().onFrame(frameDeltaMs);
 				uint64_t const handlerUs = static_cast<uint64_t>(esp_timer_get_time()) - handlerStartUs;
 				if (handlerUs > m_perfStats.maxHandlerUs) {
 					m_perfStats.maxHandlerUs = handlerUs;

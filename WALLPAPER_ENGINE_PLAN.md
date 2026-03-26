@@ -352,7 +352,7 @@ Applications/
 
 ### 1. WallpaperManager Service
 
-**Location**: `System/Include/flx/core/managers/WallpaperManager.hpp`
+**Location**: `System/Include/flx/system/managers/WallpaperManager.hpp`
 
 **Responsibilities:**
 - Main service coordinating all wallpaper operations

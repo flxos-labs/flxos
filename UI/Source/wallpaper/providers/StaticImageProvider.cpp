@@ -58,6 +58,7 @@ void StaticImageProvider::setSource(const std::string& source) {
 	m_last_error.clear();
 	if (m_image_obj != nullptr) {
 		if (m_image_path.empty()) {
+			lv_image_set_src(m_image_obj, nullptr);
 			m_ready = false;
 			return;
 		}
