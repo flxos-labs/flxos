@@ -15,6 +15,8 @@
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
+#include <flx/ui/wallpaper/providers/AnimatedGifProvider.hpp>
+#include <flx/ui/wallpaper/providers/LottieProvider.hpp>
 #include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
 #include <memory>
 #include <string>
@@ -69,9 +71,6 @@ void Desktop::init() {
 		lv_image_set_src(m_wallpaper_icon, LV_SYMBOL_IMAGE);
 		lv_obj_set_style_text_opa(m_wallpaper_icon, UiConstants::OPA_30, 0);
 		lv_obj_center(m_wallpaper_icon);
-
-		m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::StaticImageProvider>();
-		m_wallpaperProvider->initialize();
 
 		// Theme Change Observer
 		lv_subject_add_observer_obj(
@@ -163,10 +162,72 @@ void Desktop::init() {
 }
 
 void Desktop::onFrame(uint32_t delta_ms) {
-	if (m_wallpaperProvider && m_wallpaper) {
-		m_wallpaperProvider->render(m_wallpaper, delta_ms);
-	}
+	syncWallpaperProvider(delta_ms);
 	flx::system::WallpaperManager::getInstance().onFrame(delta_ms);
+}
+
+void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
+	if (m_wallpaper == nullptr) {
+		return;
+	}
+
+	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
+	bool const enabled = wallpaperManager.getWallpaperEnabledObservable().get() != 0;
+	std::string type = wallpaperManager.getWallpaperTypeObservable().get();
+	std::string const source = wallpaperManager.getWallpaperSourceObservable().get();
+	int32_t const speed = wallpaperManager.getAnimationSpeedObservable().get();
+
+	if (!enabled) {
+		if (m_wallpaperProvider) {
+			m_wallpaperProvider->destroy();
+			m_wallpaperProvider.reset();
+		}
+		m_wallpaperProviderType.clear();
+		m_wallpaperProviderSource.clear();
+		m_wallpaperProviderSpeed = -1;
+		return;
+	}
+
+	if (type.empty()) {
+		type = "static";
+	}
+
+	if (!m_wallpaperProvider || m_wallpaperProviderType != type) {
+		if (m_wallpaperProvider) {
+			m_wallpaperProvider->destroy();
+			m_wallpaperProvider.reset();
+		}
+
+		if (type == "animated" || type == "gif") {
+			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::AnimatedGifProvider>();
+		} else if (type == "lottie") {
+			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::LottieProvider>();
+		} else {
+			type = "static";
+			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::StaticImageProvider>();
+		}
+
+		m_wallpaperProvider->initialize();
+		m_wallpaperProviderType = type;
+		m_wallpaperProviderSource.clear();
+		m_wallpaperProviderSpeed = -1;
+	}
+
+	if (!m_wallpaperProvider) {
+		return;
+	}
+
+	if (m_wallpaperProviderSource != source) {
+		m_wallpaperProvider->setSource(source);
+		m_wallpaperProviderSource = source;
+	}
+
+	if (m_wallpaperProviderSpeed != speed) {
+		m_wallpaperProvider->setAnimationSpeed(speed);
+		m_wallpaperProviderSpeed = speed;
+	}
+
+	m_wallpaperProvider->render(m_wallpaper, delta_ms);
 }
 
 void Desktop::configure_panel_style(lv_obj_t* panel) {
