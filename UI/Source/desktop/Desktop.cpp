@@ -43,7 +43,12 @@ Desktop::Desktop()
 	  m_notification_list(nullptr), m_clear_all_btn(nullptr), m_greetings(nullptr), m_app_container(nullptr),
 	  m_swipeManagerModule(nullptr) {}
 
-Desktop::~Desktop() = default;
+Desktop::~Desktop() {
+	if (m_wallpaperProvider) {
+		m_wallpaperProvider->destroy();
+		m_wallpaperProvider.reset();
+	}
+}
 
 void Desktop::init() {
 	Log::info(TAG, "Initializing Desktop Environment...");
@@ -171,6 +176,17 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		return;
 	}
 
+	auto updatePlaceholderIconVisibility = [this](bool show) {
+		if (!m_wallpaper_icon) {
+			return;
+		}
+		if (show) {
+			lv_obj_clear_flag(m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+		} else {
+			lv_obj_add_flag(m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+		}
+	};
+
 	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
 	bool const enabled = wallpaperManager.getWallpaperEnabledObservable().get() != 0;
 	std::string type = wallpaperManager.getWallpaperTypeObservable().get();
@@ -185,6 +201,7 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_wallpaperProviderType.clear();
 		m_wallpaperProviderSource.clear();
 		m_wallpaperProviderSpeed = -1;
+		updatePlaceholderIconVisibility(true);
 		return;
 	}
 
@@ -214,6 +231,7 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 	}
 
 	if (!m_wallpaperProvider) {
+		updatePlaceholderIconVisibility(true);
 		return;
 	}
 
@@ -226,6 +244,8 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_wallpaperProvider->setAnimationSpeed(speed);
 		m_wallpaperProviderSpeed = speed;
 	}
+
+	updatePlaceholderIconVisibility(source.empty());
 
 	m_wallpaperProvider->render(m_wallpaper, delta_ms);
 }
