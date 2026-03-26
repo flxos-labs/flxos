@@ -57,12 +57,17 @@ private:
 	std::string m_wallpaperProviderSource {""};
 	int32_t m_wallpaperProviderSpeed {-1};
 	std::string m_lastWallpaperFailureKey {""};
+	uint32_t m_providerBaselineHeapBytes {0};
+	uint32_t m_providerPerfWindowMs {0};
+	uint32_t m_providerPerfFrameCount {0};
+	std::string m_providerPerfKey {""};
 
 	void update_notification_list();
 	void realign_panels();
 	void configure_panel_style(lv_obj_t* panel);
 	void syncWallpaperProvider(uint32_t delta_ms);
 	void handleWallpaperProviderFailure(const std::string& requestedType, const std::string& source, const std::string& error);
+	void evaluateWallpaperAcceptanceGate(const std::string& type, const std::string& source, uint32_t delta_ms);
 
 	void on_start_click();
 	void on_up_click();
