@@ -867,9 +867,9 @@ public:
 - [ ] Test with sample GIF and Lottie files
 - [x] Update Settings UI to select wallpaper type
 - [x] Add animation speed slider to Settings
-- [ ] Add strict acceptance gates:
-    - GIF: sustained >= 24 FPS for 240x320, <= 180KB extra heap
-    - Lottie: sustained >= 24 FPS for "medium" complexity scenes, <= 220KB extra heap
+- [x] Add strict acceptance gates:
+    - [x] GIF: sustained >= 24 FPS for 240x320, <= 180KB extra heap
+    - [x] Lottie: sustained >= 24 FPS for "medium" complexity scenes, <= 220KB extra heap
     - [x] Failure path: automatic downgrade to static wallpaper with warning event
 
 **Files to Create:**
