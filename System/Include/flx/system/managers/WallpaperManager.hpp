@@ -38,7 +38,7 @@ private:
 	WallpaperManager() = default;
 	~WallpaperManager() = default;
 
-	flx::Observable<int32_t> m_wallpaper_enabled_subject {1};
+	flx::Observable<int32_t> m_wallpaper_enabled_subject {0};
 	flx::StringObservable m_wallpaper_source_subject {""};
 	flx::StringObservable m_wallpaper_type_subject {"static"};
 	flx::StringObservable m_wallpaper_effects_subject {"{}"};
