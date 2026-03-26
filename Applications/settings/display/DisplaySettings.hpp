@@ -6,7 +6,7 @@
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
 #include <flx/system/managers/ThemeManager.hpp>
-#include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/system/managers/WallpaperManager.hpp>
 #include <flx/ui/components/FileBrowser.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
@@ -28,13 +28,14 @@ protected:
 	void createUI() override {
 		auto& dm = DisplayManager::getInstance();
 		auto& tm = ThemeManager::getInstance();
+		auto& wm = flx::system::WallpaperManager::getInstance();
 
 		m_brightnessBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getBrightnessObservable());
 		m_rotationBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getRotationObservable());
 		m_fpsBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getShowFpsObservable());
 		m_themeBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getThemeObservable());
-		m_wpEnabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getWallpaperEnabledObservable());
-		m_wpPathBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(tm.getWallpaperPathObservable());
+		m_wpEnabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(wm.getWallpaperEnabledObservable());
+		m_wpPathBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(wm.getWallpaperSourceObservable());
 		m_transpBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getTransparencyEnabledObservable());
 		m_glassBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getGlassEnabledObservable());
 

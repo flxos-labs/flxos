@@ -85,66 +85,6 @@ void Desktop::init() {
 				}
 			},
 			m_wallpaper, nullptr);
-
-		// Wallpaper Enabled Observer
-		lv_subject_add_observer(
-			uiTheme.getWallpaperEnabledSubject(),
-			[](lv_observer_t* observer, lv_subject_t* subject) {
-				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
-				bool const enabled = lv_subject_get_int(subject);
-
-				if (enabled) {
-					auto* pathSubject = flx::ui::theming::UiThemeManager::getInstance().getWallpaperPathSubject();
-					const char* path = static_cast<const char*>(lv_subject_get_pointer(pathSubject));
-					if (path && path[0] != '\0') {
-						if (instance->m_wallpaper_icon) {
-							lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-						}
-						instance->createWallpaperImage(path);
-					} else {
-						if (instance->m_wallpaper_icon) {
-							lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-						}
-						if (instance->m_wallpaperProvider) {
-							instance->m_wallpaperProvider->destroy();
-						}
-					}
-				} else {
-					if (instance->m_wallpaper_icon) {
-						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-					}
-					if (instance->m_wallpaperProvider) {
-						instance->m_wallpaperProvider->destroy();
-					}
-				}
-			},
-			this);
-
-		// Wallpaper Path Observer
-		lv_subject_add_observer(
-			uiTheme.getWallpaperPathSubject(),
-			[](lv_observer_t* observer, lv_subject_t* subject) {
-				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
-				const char* path = static_cast<const char*>(lv_subject_get_pointer(subject));
-
-				auto* enabledSubject = flx::ui::theming::UiThemeManager::getInstance().getWallpaperEnabledSubject();
-				bool const enabled = lv_subject_get_int(enabledSubject);
-
-				if (enabled && path && path[0] != '\0') {
-					if (instance->m_wallpaper_icon) {
-						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-					}
-					instance->createWallpaperImage(path);
-				} else if (enabled) {
-					if (instance->m_wallpaperProvider) {
-						instance->m_wallpaperProvider->destroy();
-					}
-					if (instance->m_wallpaper_icon) {
-						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-					}
-				}
-			},
-			this);
 	}
 	lv_obj_set_style_bg_opa(m_screen, UiConstants::OPA_COVER, 0);
 
@@ -237,14 +177,6 @@ void Desktop::configure_panel_style(lv_obj_t* panel) {
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_FLOATING);
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
 	UI::StyleUtils::apply_glass(panel, lv_dpx(UiConstants::GLASS_BLUR_SMALL));
-}
-
-void Desktop::createWallpaperImage(const char* path) {
-	if (!m_wallpaperProvider || !m_wallpaper || !path || path[0] == '\0') {
-		return;
-	}
-	m_wallpaperProvider->render(m_wallpaper, 0);
-	m_wallpaperProvider->setSource(path);
 }
 
 void Desktop::realign_panels() {

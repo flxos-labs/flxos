@@ -16,15 +16,13 @@ const flx::services::ServiceManifest ThemeManager::serviceManifest = {
 	.autoStart = true,
 	.guiRequired = false,
 	.capabilities = flx::services::ServiceCapability::None,
-	.description = "Theme engine, wallpaper, and glass effects",
+	.description = "Theme engine and glass effects",
 };
 
 bool ThemeManager::onStart() {
 	SettingsManager::getInstance().registerSetting("theme", m_theme_subject);
 	SettingsManager::getInstance().registerSetting("glass_enabled", m_glass_enabled_subject);
 	SettingsManager::getInstance().registerSetting("transp_enabled", m_transparency_enabled_subject);
-	SettingsManager::getInstance().registerSetting("wp_enabled", m_wallpaper_enabled_subject);
-	SettingsManager::getInstance().registerSetting("wp_path", m_wallpaper_path_subject);
 
 	Log::info(TAG, "Theme service started");
 	return true;
