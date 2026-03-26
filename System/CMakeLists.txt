@@ -20,6 +20,7 @@ if(NOT "$ENV{FLXOS_HEADLESS_MODE_ENABLED}" STREQUAL "ON")
     list(APPEND SYSTEM_SRCS
         "Source/managers/DisplayManager.cpp"
         "Source/managers/ThemeManager.cpp"
+        "Source/managers/WallpaperManager.cpp"
         "Source/managers/NotificationManager.cpp"
         "Source/services/ScreenshotService.cpp"
     )
