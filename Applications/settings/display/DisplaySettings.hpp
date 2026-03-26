@@ -241,7 +241,8 @@ protected:
 				}
 				const char* v = static_cast<const char*>(lv_subject_get_pointer(subject));
 				std::string type = v ? v : "static";
-				if (type == "static") {
+				bool const enabled = flx::system::WallpaperManager::getInstance().getWallpaperEnabledObservable().get() != 0;
+				if (!enabled || type == "static") {
 					lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
 				} else {
 					lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
