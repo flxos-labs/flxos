@@ -20,21 +20,16 @@ public:
 	lv_subject_t* getThemeSubject();
 	lv_subject_t* getGlassEnabledSubject();
 	lv_subject_t* getTransparencyEnabledSubject();
-	lv_subject_t* getWallpaperEnabledSubject();
-	lv_subject_t* getWallpaperPathSubject();
 
 private:
 
 	UiThemeManager() = default;
 	~UiThemeManager();
 
-	// LVGL subjects (integers)
 	// LVGL Bridges
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_theme_bridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_glass_enabled_bridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_transparency_enabled_bridge;
-	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wallpaper_enabled_bridge;
-	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_wallpaper_path_bridge;
 };
 
 } // namespace flx::ui::theming

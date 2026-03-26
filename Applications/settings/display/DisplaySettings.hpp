@@ -6,7 +6,7 @@
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
 #include <flx/system/managers/ThemeManager.hpp>
-#include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/system/managers/WallpaperManager.hpp>
 #include <flx/ui/components/FileBrowser.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
@@ -28,13 +28,16 @@ protected:
 	void createUI() override {
 		auto& dm = DisplayManager::getInstance();
 		auto& tm = ThemeManager::getInstance();
+		auto& wm = flx::system::WallpaperManager::getInstance();
 
 		m_brightnessBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getBrightnessObservable());
 		m_rotationBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getRotationObservable());
 		m_fpsBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getShowFpsObservable());
 		m_themeBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getThemeObservable());
-		m_wpEnabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getWallpaperEnabledObservable());
-		m_wpPathBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(tm.getWallpaperPathObservable());
+		m_wpEnabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(wm.getWallpaperEnabledObservable());
+		m_wpPathBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(wm.getWallpaperSourceObservable());
+		m_wpTypeBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(wm.getWallpaperTypeObservable());
+		m_wpAnimSpeedBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(wm.getAnimationSpeedObservable());
 		m_transpBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getTransparencyEnabledObservable());
 		m_glassBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(tm.getGlassEnabledObservable());
 
@@ -126,6 +129,65 @@ protected:
 			},
 			wpValLabel, nullptr);
 
+		lv_obj_t* wpTypeBtn =
+			add_list_btn(m_list, LV_SYMBOL_LIST, "Wallpaper Type");
+		lv_obj_set_flex_grow(lv_obj_get_child(wpTypeBtn, 1), 1);
+		lv_obj_t* wpTypeLabel = lv_label_create(wpTypeBtn);
+
+		lv_subject_add_observer_obj(
+			m_wpTypeBridge->getSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				lv_obj_t* label = lv_observer_get_target_obj(observer);
+				if (!label) {
+					return;
+				}
+				const char* v = static_cast<const char*>(lv_subject_get_pointer(subject));
+				if (v == nullptr) {
+					lv_label_set_text(label, "Static");
+					return;
+				}
+
+				std::string type = v;
+				if (type == "animated" || type == "gif") {
+					lv_label_set_text(label, "Animated GIF");
+				} else if (type == "lottie") {
+					lv_label_set_text(label, "Lottie");
+				} else {
+					lv_label_set_text(label, "Static");
+				}
+			},
+			wpTypeLabel, nullptr);
+
+		lv_obj_add_event_cb(
+			wpTypeBtn,
+			[](lv_event_t* e) {
+				auto* self = static_cast<DisplaySettings*>(lv_event_get_user_data(e));
+				auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
+				std::string currentType = wallpaperManager.getWallpaperTypeObservable().get();
+				std::string nextType = "static";
+				if (currentType == "static") {
+					nextType = "animated";
+				} else if (currentType == "animated" || currentType == "gif") {
+					nextType = "lottie";
+				}
+
+				wallpaperManager.setWallpaper(
+					wallpaperManager.getWallpaperSourceObservable().get(),
+					nextType);
+
+				if (self->m_fileBrowser) {
+					self->m_fileBrowser->hide();
+				}
+			},
+			LV_EVENT_CLICKED, this);
+
+		lv_obj_t* wpAnimSpeedBtn =
+			add_list_btn(m_list, LV_SYMBOL_PLAY, "Animation Speed");
+		lv_obj_t* wpAnimSlider = lv_slider_create(wpAnimSpeedBtn);
+		lv_obj_set_flex_grow(wpAnimSlider, 1);
+		lv_slider_set_range(wpAnimSlider, 0, 100);
+		lv_slider_bind_value(wpAnimSlider, m_wpAnimSpeedBridge->getSubject());
+
 		// Sync button state with wallpaper enablement
 		auto update_chooser_state = [](lv_obj_t* btn, int32_t enabled) {
 			if (enabled) {
@@ -138,6 +200,9 @@ protected:
 		// Initial state
 		update_chooser_state(
 			chooseWpBtn,
+			lv_subject_get_int(m_wpEnabledBridge->getSubject()));
+		update_chooser_state(
+			wpAnimSpeedBtn,
 			lv_subject_get_int(m_wpEnabledBridge->getSubject()));
 
 		// Observer for changes
@@ -154,16 +219,55 @@ protected:
 			},
 			chooseWpBtn, nullptr);
 
+		lv_subject_add_observer_obj(
+			m_wpEnabledBridge->getSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				lv_obj_t* btn = lv_observer_get_target_obj(observer);
+				int32_t const val = lv_subject_get_int(subject);
+				if (val) {
+					lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				} else {
+					lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				}
+			},
+			wpAnimSpeedBtn, nullptr);
+
+		lv_subject_add_observer_obj(
+			m_wpTypeBridge->getSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				lv_obj_t* btn = lv_observer_get_target_obj(observer);
+				if (!btn) {
+					return;
+				}
+				const char* v = static_cast<const char*>(lv_subject_get_pointer(subject));
+				std::string type = v ? v : "static";
+				bool const enabled = flx::system::WallpaperManager::getInstance().getWallpaperEnabledObservable().get() != 0;
+				if (!enabled || type == "static") {
+					lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				} else {
+					lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				}
+			},
+			wpAnimSpeedBtn, nullptr);
+
 		lv_obj_add_event_cb(
 			chooseWpBtn,
 			[](lv_event_t* e) {
 				auto* self = static_cast<DisplaySettings*>(lv_event_get_user_data(e));
+				auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
+				std::string const type = wallpaperManager.getWallpaperTypeObservable().get();
 				if (!self->m_fileBrowser) {
 					self->m_fileBrowser = new flx::ui::FileBrowser(self->m_parent, [self]() {
 						self->m_fileBrowser->hide();
 					});
 				}
-				self->m_fileBrowser->setExtensions({".png", ".jpg", ".jpeg", ".bmp"});
+				if (type == "animated" || type == "gif") {
+					self->m_fileBrowser->setExtensions({".gif"});
+				} else if (type == "lottie") {
+					self->m_fileBrowser->setExtensions({".json"});
+				} else {
+					self->m_fileBrowser->setExtensions({".png", ".jpg", ".jpeg", ".bmp", ".webp"});
+				}
 				self->m_fileBrowser->show(false, [self](const std::string& path) {
 					static char path_buf[256];
 					strncpy(path_buf, path.c_str(), sizeof(path_buf) - 1);
@@ -225,6 +329,8 @@ private:
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_themeBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wpEnabledBridge;
 	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_wpPathBridge;
+	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_wpTypeBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wpAnimSpeedBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_transpBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_glassBridge;
 };

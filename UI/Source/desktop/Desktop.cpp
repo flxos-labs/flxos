@@ -1,10 +1,14 @@
-#include "misc/cache/instance/lv_image_cache.h"
 #include <ctime>
+#include <esp_heap_caps.h>
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
+#include <flx/core/Bundle.hpp>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
+#include <flx/system/managers/WallpaperManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/desktop/Desktop.hpp>
 #include <flx/ui/desktop/window_manager/WindowManager.hpp>
@@ -15,11 +19,18 @@
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
+#include <flx/ui/wallpaper/providers/AnimatedGifProvider.hpp>
+#include <flx/ui/wallpaper/providers/LottieProvider.hpp>
+#include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
 #include <memory>
 #include <string>
 #include <string_view>
 
 static constexpr std::string_view TAG = "Desktop";
+static constexpr uint32_t WALLPAPER_GATE_WINDOW_MS = 5000;
+static constexpr float WALLPAPER_GATE_MIN_FPS = 24.0f;
+static constexpr uint32_t WALLPAPER_GATE_GIF_MAX_EXTRA_HEAP_BYTES = 180 * 1024;
+static constexpr uint32_t WALLPAPER_GATE_LOTTIE_MAX_EXTRA_HEAP_BYTES = 220 * 1024;
 
 namespace UI {
 
@@ -29,7 +40,7 @@ Desktop& Desktop::getInstance() {
 }
 
 Desktop::Desktop()
-	: m_screen(nullptr), m_wallpaper(nullptr), m_wallpaper_img(nullptr),
+	: m_screen(nullptr), m_wallpaper(nullptr),
 	  m_wallpaper_icon(nullptr), m_window_container(nullptr),
 	  m_statusBarModule(nullptr), m_status_bar(nullptr),
 	  m_floatingNotificationsModule(nullptr),
@@ -40,7 +51,12 @@ Desktop::Desktop()
 	  m_notification_list(nullptr), m_clear_all_btn(nullptr), m_greetings(nullptr), m_app_container(nullptr),
 	  m_swipeManagerModule(nullptr) {}
 
-Desktop::~Desktop() = default;
+Desktop::~Desktop() {
+	if (m_wallpaperProvider) {
+		m_wallpaperProvider->destroy();
+		m_wallpaperProvider.reset();
+	}
+}
 
 void Desktop::init() {
 	Log::info(TAG, "Initializing Desktop Environment...");
@@ -81,75 +97,6 @@ void Desktop::init() {
 				}
 			},
 			m_wallpaper, nullptr);
-
-		// Wallpaper Enabled Observer
-		lv_subject_add_observer(
-			uiTheme.getWallpaperEnabledSubject(),
-			[](lv_observer_t* observer, lv_subject_t* subject) {
-				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
-				bool const enabled = lv_subject_get_int(subject);
-
-				if (enabled) {
-					auto* pathSubject = flx::ui::theming::UiThemeManager::getInstance().getWallpaperPathSubject();
-					const char* path = static_cast<const char*>(lv_subject_get_pointer(pathSubject));
-					if (path && path[0] != '\0') {
-						if (instance->m_wallpaper_icon) {
-							lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-						}
-						if (!instance->m_wallpaper_img) {
-							instance->createWallpaperImage(path);
-						}
-					} else {
-						if (instance->m_wallpaper_icon) {
-							lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-						}
-					}
-				} else {
-					if (instance->m_wallpaper_icon) {
-						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-					}
-					if (instance->m_wallpaper_img != nullptr) {
-						if (!instance->m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
-							lv_image_cache_drop(instance->m_wallpaper_path.c_str());
-							instance->m_wallpaper_path.clear();
-						}
-						lv_obj_delete(instance->m_wallpaper_img);
-						instance->m_wallpaper_img = nullptr;
-					}
-				}
-			},
-			this);
-
-		// Wallpaper Path Observer
-		lv_subject_add_observer(
-			uiTheme.getWallpaperPathSubject(),
-			[](lv_observer_t* observer, lv_subject_t* subject) {
-				auto* instance = (Desktop*)lv_observer_get_user_data(observer);
-				const char* path = static_cast<const char*>(lv_subject_get_pointer(subject));
-
-				auto* enabledSubject = flx::ui::theming::UiThemeManager::getInstance().getWallpaperEnabledSubject();
-				bool const enabled = lv_subject_get_int(enabledSubject);
-
-				if (enabled && path && path[0] != '\0') {
-					if (instance->m_wallpaper_icon) {
-						lv_obj_add_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-					}
-					instance->createWallpaperImage(path);
-				} else if (enabled) {
-					if (instance->m_wallpaper_img != nullptr) {
-						if (!instance->m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
-							lv_image_cache_drop(instance->m_wallpaper_path.c_str());
-							instance->m_wallpaper_path.clear();
-						}
-						lv_obj_delete(instance->m_wallpaper_img);
-						instance->m_wallpaper_img = nullptr;
-					}
-					if (instance->m_wallpaper_icon) {
-						lv_obj_remove_flag(instance->m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
-					}
-				}
-			},
-			this);
 	}
 	lv_obj_set_style_bg_opa(m_screen, UiConstants::OPA_COVER, 0);
 
@@ -227,6 +174,216 @@ void Desktop::init() {
 	}
 }
 
+void Desktop::onFrame(uint32_t delta_ms) {
+	syncWallpaperProvider(delta_ms);
+	flx::system::WallpaperManager::getInstance().onFrame(delta_ms);
+}
+
+void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
+	if (m_wallpaper == nullptr) {
+		return;
+	}
+
+	auto updatePlaceholderIconVisibility = [this](bool show) {
+		if (!m_wallpaper_icon) {
+			return;
+		}
+		if (show) {
+			lv_obj_clear_flag(m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+		} else {
+			lv_obj_add_flag(m_wallpaper_icon, LV_OBJ_FLAG_HIDDEN);
+		}
+	};
+
+	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
+	bool const enabled = wallpaperManager.getWallpaperEnabledObservable().get() != 0;
+	std::string type = wallpaperManager.getWallpaperTypeObservable().get();
+	std::string const source = wallpaperManager.getWallpaperSourceObservable().get();
+	int32_t const speed = wallpaperManager.getAnimationSpeedObservable().get();
+
+	if (!enabled) {
+		if (m_wallpaperProvider) {
+			m_wallpaperProvider->destroy();
+			m_wallpaperProvider.reset();
+		}
+		m_wallpaperProviderType.clear();
+		m_wallpaperProviderSource.clear();
+		m_wallpaperProviderSpeed = -1;
+		m_lastWallpaperFailureKey.clear();
+		m_providerBaselineHeapBytes = 0;
+		m_providerPerfWindowMs = 0;
+		m_providerPerfFrameCount = 0;
+		m_providerPerfKey.clear();
+		updatePlaceholderIconVisibility(true);
+		return;
+	}
+
+	if (type.empty()) {
+		type = "static";
+	}
+
+	if (!m_wallpaperProvider || m_wallpaperProviderType != type) {
+		if (m_wallpaperProvider) {
+			m_wallpaperProvider->destroy();
+			m_wallpaperProvider.reset();
+		}
+
+		if (type == "animated" || type == "gif") {
+			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::AnimatedGifProvider>();
+		} else if (type == "lottie") {
+			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::LottieProvider>();
+		} else {
+			type = "static";
+			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::StaticImageProvider>();
+		}
+
+		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+		m_wallpaperProvider->initialize();
+		m_wallpaperProviderType = type;
+		m_wallpaperProviderSource.clear();
+		m_wallpaperProviderSpeed = -1;
+		m_providerPerfWindowMs = 0;
+		m_providerPerfFrameCount = 0;
+		m_providerPerfKey.clear();
+	}
+
+	if (!m_wallpaperProvider) {
+		updatePlaceholderIconVisibility(true);
+		return;
+	}
+
+	if (m_wallpaperProviderSource != source) {
+		m_wallpaperProvider->setSource(source);
+		m_wallpaperProviderSource = source;
+		m_providerPerfWindowMs = 0;
+		m_providerPerfFrameCount = 0;
+		m_providerPerfKey.clear();
+		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+	}
+
+	if (m_wallpaperProviderSpeed != speed) {
+		m_wallpaperProvider->setAnimationSpeed(speed);
+		m_wallpaperProviderSpeed = speed;
+	}
+
+	updatePlaceholderIconVisibility(source.empty());
+
+	m_wallpaperProvider->render(m_wallpaper, delta_ms);
+
+	if (!source.empty()) {
+		std::string const providerError = m_wallpaperProvider->getLastError();
+		if (!providerError.empty() && !m_wallpaperProvider->isReady()) {
+			handleWallpaperProviderFailure(type, source, providerError);
+			return;
+		}
+
+		evaluateWallpaperAcceptanceGate(type, source, delta_ms);
+
+		if (m_wallpaperProvider->isReady()) {
+			m_lastWallpaperFailureKey.clear();
+		}
+	}
+}
+
+void Desktop::handleWallpaperProviderFailure(const std::string& requestedType, const std::string& source, const std::string& error) {
+	if (requestedType.empty() || requestedType == "static") {
+		return;
+	}
+
+	std::string const failureKey = requestedType + "|" + source + "|" + error;
+	if (failureKey == m_lastWallpaperFailureKey) {
+		return;
+	}
+	m_lastWallpaperFailureKey = failureKey;
+
+	Log::warn(TAG, "Wallpaper provider '%s' failed: %s. Falling back to static.", requestedType.c_str(), error.c_str());
+
+	flx::core::Bundle data;
+	data.putString("requested_type", requestedType);
+	data.putString("source", source);
+	data.putString("error", error);
+	data.putString("fallback_type", "static");
+	flx::core::EventBus::getInstance().publish("wallpaper.error", data);
+
+	flx::system::NotificationManager::getInstance().addNotification(
+		"Wallpaper Fallback",
+		"Failed to load wallpaper. Switched to static mode.",
+		"Wallpaper",
+		LV_SYMBOL_WARNING,
+		2);
+
+	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
+	wallpaperManager.setWallpaper(source, "static");
+}
+
+void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std::string& source, uint32_t delta_ms) {
+	if (!(type == "animated" || type == "gif" || type == "lottie")) {
+		return;
+	}
+
+	if (source.empty()) {
+		return;
+	}
+
+	std::string const key = type + "|" + source;
+	if (m_providerPerfKey != key) {
+		m_providerPerfKey = key;
+		m_providerPerfWindowMs = 0;
+		m_providerPerfFrameCount = 0;
+		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+	}
+
+	m_providerPerfWindowMs += delta_ms;
+	m_providerPerfFrameCount += 1;
+
+	if (m_providerPerfWindowMs < WALLPAPER_GATE_WINDOW_MS) {
+		return;
+	}
+
+	float fps = 0.0f;
+	if (m_providerPerfWindowMs > 0) {
+		fps = (static_cast<float>(m_providerPerfFrameCount) * 1000.0f) / static_cast<float>(m_providerPerfWindowMs);
+	}
+
+	uint32_t const currentHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+	uint32_t const baselineHeap = m_providerBaselineHeapBytes;
+	uint32_t const extraHeapBytes = (baselineHeap > currentHeap) ? (baselineHeap - currentHeap) : 0;
+
+	uint32_t maxExtraHeapBytes = WALLPAPER_GATE_GIF_MAX_EXTRA_HEAP_BYTES;
+	const char* gateReason = "Animated acceptance gate failed";
+	if (type == "lottie") {
+		maxExtraHeapBytes = WALLPAPER_GATE_LOTTIE_MAX_EXTRA_HEAP_BYTES;
+		gateReason = "Lottie acceptance gate failed";
+	}
+
+	bool const fpsOk = fps >= WALLPAPER_GATE_MIN_FPS;
+	bool const heapOk = extraHeapBytes <= maxExtraHeapBytes;
+
+	if (!fpsOk || !heapOk) {
+		Log::warn(TAG,
+			"Wallpaper acceptance gate failed for type=%s source=%s: fps=%.2f (min %.2f), extra_heap=%u (max %u)",
+			type.c_str(),
+			source.c_str(),
+			fps,
+			WALLPAPER_GATE_MIN_FPS,
+			static_cast<unsigned>(extraHeapBytes),
+			static_cast<unsigned>(maxExtraHeapBytes));
+		handleWallpaperProviderFailure(type, source, gateReason);
+		return;
+	}
+
+	Log::info(TAG,
+		"Wallpaper acceptance gate passed for type=%s source=%s: fps=%.2f, extra_heap=%u",
+		type.c_str(),
+		source.c_str(),
+		fps,
+		static_cast<unsigned>(extraHeapBytes));
+
+	m_providerPerfWindowMs = 0;
+	m_providerPerfFrameCount = 0;
+	m_providerBaselineHeapBytes = currentHeap;
+}
+
 void Desktop::configure_panel_style(lv_obj_t* panel) {
 	lv_obj_set_size(panel, lv_pct(LayoutConstants::PANEL_WIDTH_PCT), lv_pct(LayoutConstants::PANEL_HEIGHT_PCT));
 	lv_obj_set_style_pad_all(panel, 0, 0);
@@ -235,27 +392,6 @@ void Desktop::configure_panel_style(lv_obj_t* panel) {
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_FLOATING);
 	lv_obj_add_flag(panel, LV_OBJ_FLAG_HIDDEN);
 	UI::StyleUtils::apply_glass(panel, lv_dpx(UiConstants::GLASS_BLUR_SMALL));
-}
-
-void Desktop::createWallpaperImage(const char* path) {
-	// Drop cache for old wallpaper before loading new one
-	if (!m_wallpaper_path.empty() && lv_image_cache_is_enabled()) {
-		lv_image_cache_drop(m_wallpaper_path.c_str());
-	}
-
-	if (m_wallpaper_img != nullptr) {
-		lv_obj_delete(m_wallpaper_img);
-		m_wallpaper_img = nullptr;
-	}
-
-	m_wallpaper_path = path;
-	m_wallpaper_img = lv_image_create(m_wallpaper);
-	lv_image_set_src(m_wallpaper_img, path);
-	lv_obj_set_size(m_wallpaper_img, lv_pct(100), lv_pct(100));
-	lv_obj_set_style_pad_all(m_wallpaper_img, 0, 0);
-	lv_obj_set_style_border_width(m_wallpaper_img, 0, 0);
-	lv_image_set_inner_align(m_wallpaper_img, LV_IMAGE_ALIGN_COVER);
-	lv_obj_move_background(m_wallpaper_img);
 }
 
 void Desktop::realign_panels() {
