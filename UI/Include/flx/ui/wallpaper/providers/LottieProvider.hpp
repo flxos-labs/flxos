@@ -1,8 +1,8 @@
 #pragma once
 
-#include <flx/ui/wallpaper/IWallpaperProvider.hpp>
 #include <cstddef>
 #include <cstdint>
+#include <flx/ui/wallpaper/IWallpaperProvider.hpp>
 #include <string>
 
 namespace flx::ui::wallpaper {
