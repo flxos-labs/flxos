@@ -15,6 +15,7 @@
 #if !CONFIG_FLXOS_HEADLESS_MODE
 #include <flx/system/managers/DisplayManager.hpp>
 #include <flx/system/managers/ThemeManager.hpp>
+#include <flx/system/managers/WallpaperManager.hpp>
 #endif
 #include <flx/system/managers/PowerManager.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
@@ -84,6 +85,7 @@ void SystemManager::registerServices() {
 #if !CONFIG_FLXOS_HEADLESS_MODE
 	registry.addService(std::shared_ptr<flx::services::IService>(&DisplayManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&ThemeManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&WallpaperManager::getInstance(), noDelete));
 #endif
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::connectivity::ConnectivityManager::getInstance(), noDelete));
 
