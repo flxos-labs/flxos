@@ -3,7 +3,6 @@
 #include <cstdint>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
-#include <flx/system/managers/ThemeManager.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
 
 static constexpr const char* TAG = "WallpaperManager";
@@ -13,7 +12,7 @@ namespace flx::system {
 const flx::services::ServiceManifest WallpaperManager::serviceManifest = {
 	.serviceId = "com.flxos.wallpaper",
 	.serviceName = "Wallpaper",
-	.dependencies = {"com.flxos.settings", "com.flxos.theme"},
+	.dependencies = {"com.flxos.settings"},
 	.priority = 30,
 	.required = false,
 	.autoStart = true,
@@ -23,6 +22,8 @@ const flx::services::ServiceManifest WallpaperManager::serviceManifest = {
 };
 
 bool WallpaperManager::onStart() {
+	SettingsManager::getInstance().registerSetting("wp_enabled", m_wallpaper_enabled_subject);
+	SettingsManager::getInstance().registerSetting("wp_source", m_wallpaper_source_subject);
 	SettingsManager::getInstance().registerSetting("wp_type", m_wallpaper_type_subject);
 	SettingsManager::getInstance().registerSetting("wp_effects", m_wallpaper_effects_subject);
 	SettingsManager::getInstance().registerSetting("wp_animation_speed", m_animation_speed_subject);
@@ -55,26 +56,26 @@ void WallpaperManager::onFrame(uint32_t delta_ms) {
 
 void WallpaperManager::setWallpaper(const std::string& source, const std::string& type) {
 	m_wallpaper_type_subject.set(type.c_str());
-	ThemeManager::getInstance().getWallpaperPathObservable().set(source.c_str());
-	ThemeManager::getInstance().getWallpaperEnabledObservable().set(source.empty() ? 0 : 1);
+	m_wallpaper_source_subject.set(source.c_str());
+	m_wallpaper_enabled_subject.set(source.empty() ? 0 : 1);
 }
 
 void WallpaperManager::setAnimationSpeed(int32_t speed) {
-	speed = std::clamp(speed, 0, 100);
+	speed = std::clamp(speed, static_cast<int32_t>(0), static_cast<int32_t>(100));
 	m_animation_speed_subject.set(speed);
 }
 
 void WallpaperManager::setQualityLevel(int32_t level) {
-	level = std::clamp(level, 0, 2);
+	level = std::clamp(level, static_cast<int32_t>(0), static_cast<int32_t>(2));
 	m_quality_level_subject.set(level);
 }
 
 flx::Observable<int32_t>& WallpaperManager::getWallpaperEnabledObservable() {
-	return ThemeManager::getInstance().getWallpaperEnabledObservable();
+	return m_wallpaper_enabled_subject;
 }
 
 flx::StringObservable& WallpaperManager::getWallpaperSourceObservable() {
-	return ThemeManager::getInstance().getWallpaperPathObservable();
+	return m_wallpaper_source_subject;
 }
 
 } // namespace flx::system
