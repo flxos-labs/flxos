@@ -870,7 +870,7 @@ public:
 - [ ] Add strict acceptance gates:
     - GIF: sustained >= 24 FPS for 240x320, <= 180KB extra heap
     - Lottie: sustained >= 24 FPS for "medium" complexity scenes, <= 220KB extra heap
-    - Failure path: automatic downgrade to static wallpaper with warning event
+    - [x] Failure path: automatic downgrade to static wallpaper with warning event
 
 **Files to Create:**
 - `UI/Source/wallpaper/providers/AnimatedGifProvider.cpp`
