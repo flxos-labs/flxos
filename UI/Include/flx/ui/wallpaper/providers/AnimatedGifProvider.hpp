@@ -21,11 +21,15 @@ public:
 
 private:
 
+	void applyAnimationSpeed();
+
 	lv_obj_t* m_parent = nullptr;
 	lv_obj_t* m_gif_obj = nullptr;
 	std::string m_source;
 	std::string m_last_error;
 	int32_t m_animation_speed = 50;
+	uint32_t m_speed_phase_ms = 0;
+	bool m_speed_paused = false;
 	bool m_ready = false;
 };
 
