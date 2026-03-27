@@ -20,6 +20,7 @@
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <flx/ui/wallpaper/providers/AnimatedGifProvider.hpp>
+#include <flx/ui/wallpaper/providers/DynamicProvider.hpp>
 #include <flx/ui/wallpaper/providers/LottieProvider.hpp>
 #include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
 #include <memory>
@@ -232,6 +233,8 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::AnimatedGifProvider>();
 		} else if (type == "lottie") {
 			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::LottieProvider>();
+		} else if (type == "dynamic") {
+			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::DynamicProvider>();
 		} else {
 			type = "static";
 			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::StaticImageProvider>();
