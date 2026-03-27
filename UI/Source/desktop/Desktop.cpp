@@ -22,12 +22,15 @@
 #include <flx/ui/wallpaper/providers/AnimatedGifProvider.hpp>
 #include <flx/ui/wallpaper/providers/LottieProvider.hpp>
 #include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
+#include <algorithm>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <string_view>
 
 static constexpr std::string_view TAG = "Desktop";
 static constexpr uint32_t WALLPAPER_GATE_WINDOW_MS = 5000;
+static constexpr uint32_t WALLPAPER_BENCHMARK_WINDOW_MS = 1000;
 static constexpr float WALLPAPER_GATE_MIN_FPS = 24.0f;
 static constexpr uint32_t WALLPAPER_GATE_GIF_MAX_EXTRA_HEAP_BYTES = 180 * 1024;
 static constexpr uint32_t WALLPAPER_GATE_LOTTIE_MAX_EXTRA_HEAP_BYTES = 220 * 1024;
@@ -214,6 +217,14 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_providerPerfWindowMs = 0;
 		m_providerPerfFrameCount = 0;
 		m_providerPerfKey.clear();
+		m_providerBenchmarkWindowMs = 0;
+		m_providerBenchmarkFrameCount = 0;
+		m_providerBenchmarkTotalFrameMs = 0;
+		m_providerBenchmarkMaxFrameMs = 0;
+		m_providerBenchmarkFrameSamples.clear();
+		m_providerBenchmarkBaselineHeapBytes = 0;
+		m_providerBenchmarkKey.clear();
+		m_providerBenchmarkWriteFailed = false;
 		updatePlaceholderIconVisibility(true);
 		return;
 	}
@@ -245,6 +256,14 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_providerPerfWindowMs = 0;
 		m_providerPerfFrameCount = 0;
 		m_providerPerfKey.clear();
+		m_providerBenchmarkWindowMs = 0;
+		m_providerBenchmarkFrameCount = 0;
+		m_providerBenchmarkTotalFrameMs = 0;
+		m_providerBenchmarkMaxFrameMs = 0;
+		m_providerBenchmarkFrameSamples.clear();
+		m_providerBenchmarkBaselineHeapBytes = 0;
+		m_providerBenchmarkKey.clear();
+		m_providerBenchmarkWriteFailed = false;
 	}
 
 	if (!m_wallpaperProvider) {
@@ -259,6 +278,14 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_providerPerfFrameCount = 0;
 		m_providerPerfKey.clear();
 		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+		m_providerBenchmarkWindowMs = 0;
+		m_providerBenchmarkFrameCount = 0;
+		m_providerBenchmarkTotalFrameMs = 0;
+		m_providerBenchmarkMaxFrameMs = 0;
+		m_providerBenchmarkFrameSamples.clear();
+		m_providerBenchmarkBaselineHeapBytes = m_providerBaselineHeapBytes;
+		m_providerBenchmarkKey = type + "|" + source;
+		m_providerBenchmarkWriteFailed = false;
 	}
 
 	if (m_wallpaperProviderSpeed != speed) {
@@ -298,10 +325,19 @@ void Desktop::handleWallpaperProviderFailure(const std::string& requestedType, c
 
 	Log::warn(TAG, "Wallpaper provider '%s' failed: %s. Falling back to static.", requestedType.c_str(), error.c_str());
 
+	std::string reasonCode = "render_error";
+	size_t const sep = error.find(':');
+	if (sep != std::string::npos && sep > 0) {
+		reasonCode = error.substr(0, sep);
+	} else if (!error.empty()) {
+		reasonCode = error;
+	}
+
 	flx::core::Bundle data;
 	data.putString("requested_type", requestedType);
 	data.putString("source", source);
 	data.putString("error", error);
+	data.putString("reason_code", reasonCode);
 	data.putString("fallback_type", "static");
 	flx::core::EventBus::getInstance().publish("wallpaper.error", data);
 
@@ -331,6 +367,112 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 		m_providerPerfWindowMs = 0;
 		m_providerPerfFrameCount = 0;
 		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+	}
+
+	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
+	bool const benchmarkEnabled = wallpaperManager.getBenchmarkEnabledObservable().get() != 0;
+	if (benchmarkEnabled) {
+		if (m_providerBenchmarkKey != key) {
+			m_providerBenchmarkKey = key;
+			m_providerBenchmarkWindowMs = 0;
+			m_providerBenchmarkFrameCount = 0;
+			m_providerBenchmarkTotalFrameMs = 0;
+			m_providerBenchmarkMaxFrameMs = 0;
+			m_providerBenchmarkFrameSamples.clear();
+			m_providerBenchmarkBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+			m_providerBenchmarkWriteFailed = false;
+		}
+
+		m_providerBenchmarkWindowMs += delta_ms;
+		m_providerBenchmarkFrameCount += 1;
+		m_providerBenchmarkTotalFrameMs += static_cast<uint64_t>(delta_ms);
+		m_providerBenchmarkFrameSamples.push_back(delta_ms);
+		if (delta_ms > m_providerBenchmarkMaxFrameMs) {
+			m_providerBenchmarkMaxFrameMs = delta_ms;
+		}
+
+		if (m_providerBenchmarkWindowMs >= WALLPAPER_BENCHMARK_WINDOW_MS) {
+			float benchmarkFps = 0.0f;
+			if (m_providerBenchmarkWindowMs > 0) {
+				benchmarkFps = (static_cast<float>(m_providerBenchmarkFrameCount) * 1000.0f)
+					/ static_cast<float>(m_providerBenchmarkWindowMs);
+			}
+
+			float averageFrameMs = 0.0f;
+			if (m_providerBenchmarkFrameCount > 0) {
+				averageFrameMs = static_cast<float>(m_providerBenchmarkTotalFrameMs)
+					/ static_cast<float>(m_providerBenchmarkFrameCount);
+			}
+
+			uint32_t p95FrameMs = 0;
+			if (!m_providerBenchmarkFrameSamples.empty()) {
+				size_t const p95Index = ((m_providerBenchmarkFrameSamples.size() - 1U) * 95U) / 100U;
+				std::nth_element(
+					m_providerBenchmarkFrameSamples.begin(),
+					m_providerBenchmarkFrameSamples.begin() + static_cast<std::ptrdiff_t>(p95Index),
+					m_providerBenchmarkFrameSamples.end());
+				p95FrameMs = m_providerBenchmarkFrameSamples[p95Index];
+			}
+
+			uint32_t const benchCurrentHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+			uint32_t const benchBaselineHeap = m_providerBenchmarkBaselineHeapBytes;
+			uint32_t const benchExtraHeapBytes = (benchBaselineHeap > benchCurrentHeap)
+				? (benchBaselineHeap - benchCurrentHeap)
+				: 0;
+			uint32_t constexpr watchdogIncidents = 0;
+
+			FILE* benchmarkFile = std::fopen(m_providerBenchmarkPath.c_str(), "a");
+			if (benchmarkFile != nullptr) {
+				if (!m_providerBenchmarkHeaderWritten) {
+					std::fprintf(benchmarkFile, "timestamp_ms,type,fps,avg_frame_ms,p95_frame_ms,max_frame_ms,extra_heap_bytes,watchdog_incidents,source\\n");
+					m_providerBenchmarkHeaderWritten = true;
+				}
+
+				std::fprintf(
+					benchmarkFile,
+					"%llu,%s,%.2f,%.2f,%u,%u,%u,%u,%s\\n",
+					static_cast<unsigned long long>(lv_tick_get()),
+					type.c_str(),
+					benchmarkFps,
+					averageFrameMs,
+					static_cast<unsigned>(p95FrameMs),
+					static_cast<unsigned>(m_providerBenchmarkMaxFrameMs),
+					static_cast<unsigned>(benchExtraHeapBytes),
+					static_cast<unsigned>(watchdogIncidents),
+					source.c_str());
+				std::fclose(benchmarkFile);
+			} else if (!m_providerBenchmarkWriteFailed) {
+				Log::warn(TAG,
+					"Wallpaper benchmark enabled but unable to write CSV at '%s'",
+					m_providerBenchmarkPath.c_str());
+				m_providerBenchmarkWriteFailed = true;
+			}
+
+			Log::info(TAG,
+				"Wallpaper benchmark type=%s fps=%.2f avg_ms=%.2f p95_ms=%u max_ms=%u extra_heap=%u",
+				type.c_str(),
+				benchmarkFps,
+				averageFrameMs,
+				static_cast<unsigned>(p95FrameMs),
+				static_cast<unsigned>(m_providerBenchmarkMaxFrameMs),
+				static_cast<unsigned>(benchExtraHeapBytes));
+
+			m_providerBenchmarkWindowMs = 0;
+			m_providerBenchmarkFrameCount = 0;
+			m_providerBenchmarkTotalFrameMs = 0;
+			m_providerBenchmarkMaxFrameMs = 0;
+			m_providerBenchmarkFrameSamples.clear();
+			m_providerBenchmarkBaselineHeapBytes = benchCurrentHeap;
+		}
+	} else if (m_providerBenchmarkWindowMs != 0 || m_providerBenchmarkFrameCount != 0) {
+		m_providerBenchmarkWindowMs = 0;
+		m_providerBenchmarkFrameCount = 0;
+		m_providerBenchmarkTotalFrameMs = 0;
+		m_providerBenchmarkMaxFrameMs = 0;
+		m_providerBenchmarkFrameSamples.clear();
+		m_providerBenchmarkBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+		m_providerBenchmarkKey = key;
+		m_providerBenchmarkWriteFailed = false;
 	}
 
 	m_providerPerfWindowMs += delta_ms;
