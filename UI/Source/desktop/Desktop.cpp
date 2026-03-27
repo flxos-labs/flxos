@@ -427,13 +427,13 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 			FILE* benchmarkFile = std::fopen(m_providerBenchmarkPath.c_str(), "a");
 			if (benchmarkFile != nullptr) {
 				if (!m_providerBenchmarkHeaderWritten) {
-					std::fprintf(benchmarkFile, "timestamp_ms,type,fps,avg_frame_ms,p95_frame_ms,max_frame_ms,extra_heap_bytes,watchdog_incidents,source\\n");
+					std::fprintf(benchmarkFile, "timestamp_ms,type,fps,avg_frame_ms,p95_frame_ms,max_frame_ms,extra_heap_bytes,watchdog_incidents,source\n");
 					m_providerBenchmarkHeaderWritten = true;
 				}
 
 				std::fprintf(
 					benchmarkFile,
-					"%llu,%s,%.2f,%.2f,%u,%u,%u,%u,%s\\n",
+					"%llu,%s,%.2f,%.2f,%u,%u,%u,%u,%s\n",
 					static_cast<unsigned long long>(lv_tick_get()),
 					type.c_str(),
 					benchmarkFps,
