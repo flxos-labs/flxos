@@ -8,7 +8,16 @@
   "effects": {},
   "metadata": {
     "author": "FlxOS Team",
-    "tags": ["animated", "colourful", "generative"],
-    "thumbnail": "/data/wallpapers/presets/builtin/plasma/thumbnail.png"
+    "license": "Apache-2.0",
+    "tags": [
+      "animated",
+      "colourful",
+      "generative"
+    ],
+    "thumbnail": "/data/wallpapers/presets/builtin/plasma/thumbnail.png",
+    "perf": {
+      "min_fps": 24,
+      "max_extra_heap_kb": 180
+    }
   }
 }
