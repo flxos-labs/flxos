@@ -28,6 +28,7 @@ bool WallpaperManager::onStart() {
 	SettingsManager::getInstance().registerSetting("wp_effects", m_wallpaper_effects_subject);
 	SettingsManager::getInstance().registerSetting("wp_animation_speed", m_animation_speed_subject);
 	SettingsManager::getInstance().registerSetting("wp_quality_level", m_quality_level_subject);
+	SettingsManager::getInstance().registerSetting("wp_benchmark", m_benchmark_enabled_subject);
 	Log::info(TAG, "Wallpaper service started");
 	return true;
 }
