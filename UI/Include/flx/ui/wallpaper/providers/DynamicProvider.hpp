@@ -46,11 +46,13 @@ private:
 	static constexpr int32_t CANVAS_H = 160;
 
 	void parseSource(const std::string& source);
+	void parseQueryParams(const std::string& query);
 	void createCanvas(lv_obj_t* parent);
 	void renderPlasma(uint32_t elapsed_ms);
 	void renderPerlin(uint32_t elapsed_ms);
 	void renderGradient(uint32_t elapsed_ms);
 	void drawPixel(int32_t x, int32_t y, uint8_t r, uint8_t g, uint8_t b);
+	void applyPalette(float& r, float& g, float& b) const;
 	static float smoothNoise(float x, float y);
 
 	lv_obj_t* m_parent {nullptr};
@@ -59,9 +61,13 @@ private:
 	std::string m_algorithm {"plasma"};
 	std::string m_source;
 	std::string m_last_error;
+	std::string m_palette {"vivid"};
 
 	uint32_t m_total_elapsed_ms {0};
 	int32_t m_animation_speed {50};
+	int32_t m_param_speed {100};
+	int32_t m_param_particles {96};
+	int32_t m_param_noise_scale {100};
 	bool m_ready {false};
 };
 

@@ -2,6 +2,7 @@
 
 #include "lvgl.h"
 #include <functional>
+#include <string>
 
 namespace System::Apps::WallpaperEngine {
 
@@ -25,7 +26,20 @@ public:
 
 private:
 
+	void setAlgorithm(const std::string& algorithm);
+	void applyDynamicSource() const;
+	void syncFromCurrentWallpaper();
+
 	lv_obj_t* m_container {nullptr};
+	lv_obj_t* m_speedSlider {nullptr};
+	lv_obj_t* m_noiseSlider {nullptr};
+	lv_obj_t* m_particlesSlider {nullptr};
+	lv_obj_t* m_paletteLabel {nullptr};
+	std::string m_algorithm {"plasma"};
+	std::string m_palette {"vivid"};
+	int32_t m_speed {100};
+	int32_t m_particles {96};
+	int32_t m_noise {100};
 	std::function<void()> m_onBack;
 };
 
