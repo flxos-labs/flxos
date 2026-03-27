@@ -1,0 +1,14 @@
+{
+  "id": "plasma",
+  "name": "Plasma",
+  "description": "Vibrant sinusoidal colour interference pattern",
+  "version": "1.0",
+  "type": "dynamic",
+  "source": "algo://plasma",
+  "effects": {},
+  "metadata": {
+    "author": "FlxOS Team",
+    "tags": ["animated", "colourful", "generative"],
+    "thumbnail": "/data/wallpapers/presets/builtin/plasma/thumbnail.png"
+  }
+}
