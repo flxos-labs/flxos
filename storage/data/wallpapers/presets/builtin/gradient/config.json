@@ -1,0 +1,23 @@
+{
+  "id": "gradient",
+  "name": "Gradient Waves",
+  "description": "Smooth animated colour gradient waves",
+  "version": "1.0",
+  "type": "dynamic",
+  "source": "algo://gradient",
+  "effects": {},
+  "metadata": {
+    "author": "FlxOS Team",
+    "license": "Apache-2.0",
+    "tags": [
+      "animated",
+      "gradient",
+      "calm"
+    ],
+    "thumbnail": "/data/wallpapers/presets/builtin/gradient/thumbnail.png",
+    "perf": {
+      "min_fps": 24,
+      "max_extra_heap_kb": 180
+    }
+  }
+}
