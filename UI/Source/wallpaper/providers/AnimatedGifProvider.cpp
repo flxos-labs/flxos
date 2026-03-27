@@ -92,6 +92,15 @@ void AnimatedGifProvider::setSource(const std::string& source) {
 	m_last_error.clear();
 
 #if LV_USE_GIF
+	if (m_gif_obj != nullptr && m_source.empty()) {
+		lv_obj_delete(m_gif_obj);
+		m_gif_obj = nullptr;
+		m_ready = false;
+		m_speed_phase_ms = 0;
+		m_speed_paused = false;
+		return;
+	}
+
 	if (m_gif_obj != nullptr && !m_source.empty()) {
 		lv_gif_set_src(m_gif_obj, m_source.c_str());
 		m_ready = lv_gif_is_loaded(m_gif_obj);
