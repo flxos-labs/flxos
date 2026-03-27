@@ -70,6 +70,71 @@ void WallpaperManager::setQualityLevel(int32_t level) {
 	m_quality_level_subject.set(level);
 }
 
+void WallpaperManager::applyEffect(const std::string& effect_name, const std::string& params_json) {
+	// The effects observable stores a simple JSON-like string.
+	// We use a minimal key-value update: if the effect key already exists we replace it.
+	// Format: {"blur":5,"brightness":0.8,...}
+	std::string effects = m_wallpaper_effects_subject.get();
+	if (effects.empty() || effects == "{}") {
+		effects = "{\"" + effect_name + "\":" + params_json + "}";
+	} else {
+		// Remove trailing '}'
+		if (!effects.empty() && effects.back() == '}') {
+			effects.pop_back();
+		}
+		// Check if key already present (simple search)
+		std::string key = "\"" + effect_name + "\":";
+		auto pos = effects.find(key);
+		if (pos != std::string::npos) {
+			// Find end of existing value
+			size_t val_start = pos + key.size();
+			size_t val_end = effects.find_first_of(",}", val_start);
+			if (val_end == std::string::npos) {
+				val_end = effects.size();
+			}
+			effects = effects.substr(0, val_start) + params_json + effects.substr(val_end) + "}";
+		} else {
+			effects += ",\"" + effect_name + "\":" + params_json + "}";
+		}
+	}
+	m_wallpaper_effects_subject.set(effects.c_str());
+	Log::info(TAG, "Applied effect '%s': %s", effect_name.c_str(), params_json.c_str());
+}
+
+void WallpaperManager::removeEffect(const std::string& effect_name) {
+	std::string effects = m_wallpaper_effects_subject.get();
+	if (effects.empty() || effects == "{}") {
+		return;
+	}
+	std::string key = "\"" + effect_name + "\":";
+	auto pos = effects.find(key);
+	if (pos == std::string::npos) {
+		return;
+	}
+	// Find start of key (may be preceded by '{' or ',')
+	size_t key_start = pos;
+	if (key_start > 0 && effects[key_start - 1] == ',') {
+		--key_start;
+	}
+	// Find end of value
+	size_t val_start = pos + key.size();
+	size_t val_end = effects.find_first_of(",}", val_start);
+	if (val_end == std::string::npos) {
+		val_end = effects.size();
+	}
+	// If no preceding comma, remove trailing comma if present
+	size_t remove_end = val_end;
+	if (key_start == pos && val_end < effects.size() && effects[val_end] == ',') {
+		remove_end = val_end + 1;
+	}
+	effects = effects.substr(0, key_start) + effects.substr(remove_end);
+	if (effects.empty()) {
+		effects = "{}";
+	}
+	m_wallpaper_effects_subject.set(effects.c_str());
+	Log::info(TAG, "Removed effect '%s'", effect_name.c_str());
+}
+
 flx::Observable<int32_t>& WallpaperManager::getWallpaperEnabledObservable() {
 	return m_wallpaper_enabled_subject;
 }

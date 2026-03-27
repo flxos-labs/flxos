@@ -797,10 +797,10 @@ public:
 **Goal**: Deliver a dedicated app that controls the engine without duplicating engine logic.
 
 **Tasks:**
-- [ ] Create `WallpaperEngineApp` shell and navigation pages.
-- [ ] Bind app controls to `WallpaperManager` observables and APIs.
-- [ ] Add preset browser and preview card powered by `PresetLibrary` metadata.
-- [ ] Add effect editor rows and animation controls.
+- [x] Create `WallpaperEngineApp` shell and navigation pages.
+- [x] Bind app controls to `WallpaperManager` observables and APIs.
+- [x] Add preset browser and preview card powered by `PresetLibrary` metadata.
+- [x] Add effect editor rows and animation controls.
 - [ ] Add runtime error/fallback indicator sourced from wallpaper events.
 - [ ] Add app-level integration tests for apply/rollback/fallback UX.
 
@@ -883,12 +883,12 @@ public:
 **Goal**: Visual effects pipeline
 
 **Tasks:**
-- [ ] Create `EffectPipeline` architecture
-- [ ] Implement `BlurEffect` (canvas-based)
-- [ ] Implement `BrightnessEffect`
-- [ ] Implement `FadeTransitionEffect`
+- [x] Create `EffectPipeline` architecture
+- [x] Implement `BlurEffect`
+- [x] Implement `BrightnessEffect`
+- [x] Implement `FadeTransitionEffect`
 - [ ] Update Settings UI with effect controls
-- [ ] Create effect parameter UI components (sliders, toggles)
+- [x] Create effect parameter UI components (sliders, toggles)
 
 **Files to Create:**
 - `UI/Include/flx/ui/wallpaper/EffectPipeline.hpp`
@@ -903,12 +903,12 @@ public:
 **Goal**: Generative algorithmic wallpapers
 
 **Tasks:**
-- [ ] Implement `DynamicProvider` with canvas rendering
-- [ ] Implement Plasma algorithm
-- [ ] Implement Perlin Noise algorithm
-- [ ] Implement Gradient Waves
-- [ ] Implement `PerformanceMonitor` for adaptive quality
-- [ ] Add dynamic wallpaper selection to Settings
+- [x] Implement `DynamicProvider` with canvas rendering
+- [x] Implement Plasma algorithm
+- [x] Implement Perlin Noise algorithm
+- [x] Implement Gradient Waves
+- [x] Implement `PerformanceMonitor` for adaptive quality
+- [x] Add dynamic wallpaper selection to Settings (via WallpaperEngineApp DynamicPage)
 - [ ] Add algorithm parameter controls
 
 **Files to Create:**
@@ -937,11 +937,11 @@ public:
     - Source format: layered design files + exported master assets
     - Conversion: scripted resize/compress and metadata generation
     - Validation: schema + size/fps/heap checks in CI
-- [ ] Implement `PresetLibrary` class
-- [ ] Create preset JSON format and loader
+- [x] Implement `PresetLibrary` class
+- [x] Create preset JSON format and loader
 - [ ] Generate preset thumbnails
-- [ ] Create Preset Gallery UI in Settings
-- [ ] Add "Apply Preset" button
+- [x] Create Preset Gallery UI (PresetsPage in WallpaperEngineApp)
+- [x] Add "Apply Preset" button (WallpaperPreviewCard)
 - [ ] Add release gate: no preset is shipped without thumbnail, attribution metadata, and passing perf envelope
 
 **Files to Create:**
