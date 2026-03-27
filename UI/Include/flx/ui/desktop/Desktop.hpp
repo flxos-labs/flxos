@@ -12,6 +12,7 @@
 #include <flx/ui/wallpaper/IWallpaperProvider.hpp>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace UI {
 
@@ -61,6 +62,16 @@ private:
 	uint32_t m_providerPerfWindowMs {0};
 	uint32_t m_providerPerfFrameCount {0};
 	std::string m_providerPerfKey {""};
+	uint32_t m_providerBenchmarkWindowMs {0};
+	uint32_t m_providerBenchmarkFrameCount {0};
+	uint64_t m_providerBenchmarkTotalFrameMs {0};
+	uint32_t m_providerBenchmarkMaxFrameMs {0};
+	std::vector<uint32_t> m_providerBenchmarkFrameSamples {};
+	uint32_t m_providerBenchmarkBaselineHeapBytes {0};
+	std::string m_providerBenchmarkKey {""};
+	std::string m_providerBenchmarkPath {"/data/wallpaper_benchmark.csv"};
+	bool m_providerBenchmarkHeaderWritten {false};
+	bool m_providerBenchmarkWriteFailed {false};
 
 	void update_notification_list();
 	void realign_panels();
