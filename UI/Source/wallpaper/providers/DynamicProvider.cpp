@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846f
@@ -20,6 +21,10 @@ void DynamicProvider::initialize() {
 	m_ready = false;
 	m_total_elapsed_ms = 0;
 	m_animation_speed = 50;
+	m_param_speed = 100;
+	m_param_particles = 96;
+	m_param_noise_scale = 100;
+	m_palette = "vivid";
 }
 
 void DynamicProvider::destroy() {
@@ -34,7 +39,11 @@ void DynamicProvider::destroy() {
 	m_parent = nullptr;
 	m_source.clear();
 	m_last_error.clear();
+	m_palette = "vivid";
 	m_total_elapsed_ms = 0;
+	m_param_speed = 100;
+	m_param_particles = 96;
+	m_param_noise_scale = 100;
 	m_ready = false;
 }
 
@@ -63,7 +72,8 @@ void DynamicProvider::render(lv_obj_t* parent, uint32_t elapsed_ms) {
 
 	// Scale elapsed time by animation speed (0-100%)
 	uint32_t const speed_pct = static_cast<uint32_t>(std::max(m_animation_speed, static_cast<int32_t>(1)));
-	uint32_t const scaled_ms = (elapsed_ms * speed_pct) / 50U; // 50% = normal speed
+	uint32_t const param_speed_pct = static_cast<uint32_t>(std::max(m_param_speed, static_cast<int32_t>(1)));
+	uint32_t const scaled_ms = (((elapsed_ms * speed_pct) / 50U) * param_speed_pct) / 100U; // 50% = normal speed
 	m_total_elapsed_ms += scaled_ms;
 
 	if (m_algorithm == "perlin") {
@@ -99,15 +109,69 @@ size_t DynamicProvider::getMemoryUsage() const {
 // ---------------------------------------------------------------------------
 
 void DynamicProvider::parseSource(const std::string& source) {
-	// Expected format: "algo://algorithm_name"
+	// Expected format: "algo://algorithm_name?speed=100&palette=vivid&particles=96&noise=100"
+	m_algorithm = "plasma";
+	m_param_speed = 100;
+	m_param_particles = 96;
+	m_param_noise_scale = 100;
+	m_palette = "vivid";
+
 	const std::string prefix = "algo://";
 	if (source.rfind(prefix, 0) == 0) {
-		m_algorithm = source.substr(prefix.size());
+		std::string const tail = source.substr(prefix.size());
+		size_t const query_pos = tail.find('?');
+		if (query_pos == std::string::npos) {
+			m_algorithm = tail;
+		} else {
+			m_algorithm = tail.substr(0, query_pos);
+			if (query_pos + 1 < tail.size()) {
+				parseQueryParams(tail.substr(query_pos + 1));
+			}
+		}
 	} else if (!source.empty()) {
 		// Treat bare names like "plasma", "perlin", "gradient" directly
 		m_algorithm = source;
 	} else {
 		m_algorithm = "plasma";
+	}
+
+	if (m_algorithm.empty()) {
+		m_algorithm = "plasma";
+	}
+
+	m_param_speed = std::clamp(m_param_speed, static_cast<int32_t>(10), static_cast<int32_t>(200));
+	m_param_particles = std::clamp(m_param_particles, static_cast<int32_t>(16), static_cast<int32_t>(256));
+	m_param_noise_scale = std::clamp(m_param_noise_scale, static_cast<int32_t>(25), static_cast<int32_t>(200));
+	if (!(m_palette == "vivid" || m_palette == "cool" || m_palette == "sunset")) {
+		m_palette = "vivid";
+	}
+}
+
+void DynamicProvider::parseQueryParams(const std::string& query) {
+	size_t start = 0;
+	while (start < query.size()) {
+		size_t end = query.find('&', start);
+		if (end == std::string::npos) {
+			end = query.size();
+		}
+
+		std::string const pair = query.substr(start, end - start);
+		size_t const eq = pair.find('=');
+		if (eq != std::string::npos && eq + 1 < pair.size()) {
+			std::string const key = pair.substr(0, eq);
+			std::string const value = pair.substr(eq + 1);
+			if (key == "speed") {
+				m_param_speed = std::atoi(value.c_str());
+			} else if (key == "particles") {
+				m_param_particles = std::atoi(value.c_str());
+			} else if (key == "noise") {
+				m_param_noise_scale = std::atoi(value.c_str());
+			} else if (key == "palette") {
+				m_palette = value;
+			}
+		}
+
+		start = end + 1;
 	}
 }
 
@@ -152,15 +216,16 @@ void DynamicProvider::drawPixel(int32_t x, int32_t y, uint8_t r, uint8_t g, uint
 
 void DynamicProvider::renderPlasma(uint32_t elapsed_ms) {
 	float const t = static_cast<float>(elapsed_ms) * 0.001f;
+	float const detail = static_cast<float>(m_param_particles) / 96.0f;
 	for (int32_t y = 0; y < CANVAS_H; ++y) {
 		for (int32_t x = 0; x < CANVAS_W; ++x) {
 			float const fx = static_cast<float>(x) / static_cast<float>(CANVAS_W);
 			float const fy = static_cast<float>(y) / static_cast<float>(CANVAS_H);
 
-			float v = std::sin(fx * 6.0f + t);
-			v += std::sin(fy * 6.0f - t);
-			v += std::sin((fx + fy) * 4.0f + t * 0.5f);
-			v += std::sin(std::sqrt(fx * fx + fy * fy) * 8.0f - t);
+			float v = std::sin(fx * 6.0f * detail + t);
+			v += std::sin(fy * 6.0f * detail - t);
+			v += std::sin((fx + fy) * 4.0f * detail + t * 0.5f);
+			v += std::sin(std::sqrt(fx * fx + fy * fy) * 8.0f * detail - t);
 			v = (v + 4.0f) / 8.0f; // normalise to [0,1]
 
 			// Hue rotation mapped to RGB
@@ -185,6 +250,7 @@ void DynamicProvider::renderPlasma(uint32_t elapsed_ms) {
 			auto clamp8 = [](float f) -> uint8_t {
 				return static_cast<uint8_t>(std::max(0.0f, std::min(1.0f, f)) * 255.0f);
 			};
+			applyPalette(r2, g2, b2);
 			drawPixel(x, y, clamp8(r2), clamp8(g2), clamp8(b2));
 		}
 	}
@@ -222,10 +288,11 @@ float DynamicProvider::smoothNoise(float x, float y) {
 
 void DynamicProvider::renderPerlin(uint32_t elapsed_ms) {
 	float const t = static_cast<float>(elapsed_ms) * 0.0004f;
+	float const noiseScale = static_cast<float>(m_param_noise_scale) / 100.0f;
 	for (int32_t y = 0; y < CANVAS_H; ++y) {
 		for (int32_t x = 0; x < CANVAS_W; ++x) {
-			float const fx = static_cast<float>(x) * 0.06f;
-			float const fy = static_cast<float>(y) * 0.06f;
+			float const fx = static_cast<float>(x) * 0.06f * noiseScale;
+			float const fy = static_cast<float>(y) * 0.06f * noiseScale;
 
 			// Layered octaves
 			float n = smoothNoise(fx + t, fy) * 0.5f;
@@ -249,6 +316,14 @@ void DynamicProvider::renderPerlin(uint32_t elapsed_ms) {
 				g = lerp_chan(100, 230, t2);
 				b = lerp_chan(180, 255, t2);
 			}
+
+			float rf = static_cast<float>(r) / 255.0f;
+			float gf = static_cast<float>(g) / 255.0f;
+			float bf = static_cast<float>(b) / 255.0f;
+			applyPalette(rf, gf, bf);
+			r = static_cast<uint8_t>(std::max(0.0f, std::min(1.0f, rf)) * 255.0f);
+			g = static_cast<uint8_t>(std::max(0.0f, std::min(1.0f, gf)) * 255.0f);
+			b = static_cast<uint8_t>(std::max(0.0f, std::min(1.0f, bf)) * 255.0f);
 			drawPixel(x, y, r, g, b);
 		}
 	}
@@ -260,14 +335,15 @@ void DynamicProvider::renderPerlin(uint32_t elapsed_ms) {
 
 void DynamicProvider::renderGradient(uint32_t elapsed_ms) {
 	float const t = static_cast<float>(elapsed_ms) * 0.0008f;
+	float const detail = static_cast<float>(m_param_particles) / 96.0f;
 	for (int32_t y = 0; y < CANVAS_H; ++y) {
 		float const fy = static_cast<float>(y) / static_cast<float>(CANVAS_H);
 		for (int32_t x = 0; x < CANVAS_W; ++x) {
 			float const fx = static_cast<float>(x) / static_cast<float>(CANVAS_W);
 
 			// Two gradient waves with phase offset
-			float wave1 = (std::sin(fx * static_cast<float>(M_PI) * 2.0f + t) + 1.0f) * 0.5f;
-			float wave2 = (std::sin(fy * static_cast<float>(M_PI) * 2.0f + t * 1.3f) + 1.0f) * 0.5f;
+			float wave1 = (std::sin(fx * static_cast<float>(M_PI) * 2.0f * detail + t) + 1.0f) * 0.5f;
+			float wave2 = (std::sin(fy * static_cast<float>(M_PI) * 2.0f * detail + t * 1.3f) + 1.0f) * 0.5f;
 			float blend = (wave1 + wave2) * 0.5f;
 
 			// Colour A → B → C cycle
@@ -295,8 +371,21 @@ void DynamicProvider::renderGradient(uint32_t elapsed_ms) {
 			auto to8 = [](float f2) -> uint8_t {
 				return static_cast<uint8_t>(std::max(0.0f, std::min(1.0f, f2)) * 255.0f);
 			};
+			applyPalette(r, g, b);
 			drawPixel(x, y, to8(r), to8(g), to8(b));
 		}
+	}
+}
+
+void DynamicProvider::applyPalette(float& r, float& g, float& b) const {
+	if (m_palette == "cool") {
+		r *= 0.75f;
+		g *= 0.95f;
+		b = std::min(1.0f, b * 1.15f);
+	} else if (m_palette == "sunset") {
+		r = std::min(1.0f, r * 1.15f);
+		g *= 0.85f;
+		b *= 0.70f;
 	}
 }
 

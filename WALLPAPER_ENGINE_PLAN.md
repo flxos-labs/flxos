@@ -1,8 +1,8 @@
 # FlxOS Ultimate Wallpaper Engine Plan
 
 **Status**: Implementation In Progress  
-**Version**: 1.1  
-**Last Updated**: March 25, 2026  
+**Version**: 1.2  
+**Last Updated**: March 27, 2026  
 **Target Platform**: ESP32, ESP32-S3, ESP32-P4  
 
 ---
@@ -23,6 +23,8 @@
 12. [Hard-Part De-Risk Plan](#hard-part-de-risk-plan)
 13. [LVGL and FreeRTOS Concurrency Model](#lvgl-and-freertos-concurrency-model)
 14. [Preset Production Pipeline](#preset-production-pipeline)
+15. [Execution Continuation (March 27)](#execution-continuation-march-27)
+16. [Ticket Breakdown (P0)](#ticket-breakdown-p0)
 
 ---
 
@@ -801,7 +803,7 @@ public:
 - [x] Bind app controls to `WallpaperManager` observables and APIs.
 - [x] Add preset browser and preview card powered by `PresetLibrary` metadata.
 - [x] Add effect editor rows and animation controls.
-- [ ] Add runtime error/fallback indicator sourced from wallpaper events.
+- [x] Add runtime error/fallback indicator sourced from wallpaper events.
 - [ ] Add app-level integration tests for apply/rollback/fallback UX.
 
 **Files to Create:**
@@ -887,7 +889,7 @@ public:
 - [x] Implement `BlurEffect`
 - [x] Implement `BrightnessEffect`
 - [x] Implement `FadeTransitionEffect`
-- [ ] Update Settings UI with effect controls
+- [x] Update Settings UI with effect controls
 - [x] Create effect parameter UI components (sliders, toggles)
 
 **Files to Create:**
@@ -909,7 +911,7 @@ public:
 - [x] Implement Gradient Waves
 - [x] Implement `PerformanceMonitor` for adaptive quality
 - [x] Add dynamic wallpaper selection to Settings (via WallpaperEngineApp DynamicPage)
-- [ ] Add algorithm parameter controls
+- [x] Add algorithm parameter controls
 
 **Files to Create:**
 - `UI/Source/wallpaper/providers/DynamicProvider.cpp`
@@ -939,10 +941,10 @@ public:
     - Validation: schema + size/fps/heap checks in CI
 - [x] Implement `PresetLibrary` class
 - [x] Create preset JSON format and loader
-- [ ] Generate preset thumbnails
+- [x] Generate preset thumbnails
 - [x] Create Preset Gallery UI (PresetsPage in WallpaperEngineApp)
 - [x] Add "Apply Preset" button (WallpaperPreviewCard)
-- [ ] Add release gate: no preset is shipped without thumbnail, attribution metadata, and passing perf envelope
+- [x] Add release gate: no preset is shipped without thumbnail, attribution metadata, and passing perf envelope
 
 **Files to Create:**
 - `UI/Include/flx/ui/wallpaper/PresetLibrary.hpp`
@@ -1480,15 +1482,217 @@ The preset goal is feasible only with explicit ownership and automation.
 
 This wallpaper engine will elevate FlxOS from a basic embedded OS to a polished desktop experience rivaling commercial OS. The modular provider architecture enables extensibility, while LVGL's rich drawing capabilities provide impressive visual effects on resource-constrained hardware.
 
+## Execution Continuation (March 27)
+
+This section converts the roadmap into immediate, owner-friendly work items for the next implementation window.
+
+### Focus for Next 14 Days
+
+1. Close Phase 2 validation gaps (GIF/Lottie on real hardware).
+2. Finish Phase 3 UI wiring for effect controls in Settings and Wallpaper Engine App.
+3. Add fallback/error UX and integration tests for apply/rollback/fallback behavior.
+
+### Sprint Backlog (Prioritized)
+
+#### P0 - Must Complete
+
+- [ ] Implement hardware benchmark harness for GIF decode/playback:
+    - target profiles: `generic-esp32`, `generic-esp32s3`
+    - metrics: fps, frame jitter, extra heap, watchdog stability
+    - artifacts: CSV metrics + pass/fail summary
+- [ ] Implement Lottie complexity gate:
+    - parse complexity metadata (`layers`, `shapes`, estimated ops)
+    - reject or downgrade above threshold before activation
+    - emit warning event with reason code
+- [ ] Add runtime fallback indicator in Wallpaper Engine App:
+    - surface `wallpaper.error` and `FALLBACK_STATIC` reason
+    - action button: retry previous wallpaper
+    - action button: open source selector
+- [ ] Add integration tests:
+    - apply valid animated wallpaper -> active
+    - apply invalid/corrupt wallpaper -> fallback static
+    - switch providers repeatedly -> no leaks/crashes
+
+#### P1 - Should Complete
+
+- [x] Add effect controls to Display Settings (not only app pages):
+    - blur radius slider
+    - brightness slider
+    - transition toggle
+- [x] Add algorithm parameter controls for dynamic wallpapers:
+    - speed, palette, particle count, noise scale
+    - quality-aware clamping by board profile
+- [x] Generate baseline preset thumbnails automatically during build tooling.
+
+#### P2 - Nice to Have
+
+- [ ] Add lightweight on-device FPS overlay (debug mode only).
+- [ ] Add preset diagnostics screen (heap/fps/format/complexity summary).
+
+### Acceptance Matrix for This Window
+
+| Item | Pass Criteria | Verification Method |
+|------|---------------|---------------------|
+| GIF playback | >= 24 FPS @ 240x320 for 60s, no WDT reset | benchmark harness + log parse |
+| Lottie medium scenes | >= 24 FPS, <= 220KB extra heap | board run + heap snapshots |
+| Fallback UX | Error shown within 1s, retry works | integration test + manual check |
+| Provider switching | 1000 switches, no black frame, no leak trend | soak test + heap delta |
+| Settings sync | reboot restores type/source/effects/speed | persistence integration test |
+
+### Code Areas to Touch Next
+
+- `UI/Source/wallpaper/providers/AnimatedGifProvider.cpp`
+- `UI/Source/wallpaper/providers/LottieProvider.cpp`
+- `System/Source/managers/WallpaperManager.cpp`
+- `Applications/wallpaper_engine/pages/EffectsPage.cpp`
+- `Applications/wallpaper_engine/WallpaperEngineApp.cpp`
+- `Applications/settings/display/DisplaySettings.*`
+- `UI/Source/wallpaper/PerformanceMonitor.cpp`
+- `UI/Source/wallpaper/PresetLibrary.cpp`
+
+### Open Decisions (Blockers to Resolve Early)
+
+1. GIF decode strategy:
+     - full predecode (higher memory, stable frame pacing)
+     - streaming decode (lower memory, risk of jitter)
+2. Lottie runtime policy on low-end boards:
+     - hard reject above complexity gate
+     - auto-convert to poster frame at install time
+3. Default quality profile by board class:
+     - conservative defaults for ESP32
+     - medium defaults for ESP32-S3
+
+### Done Criteria for "Plan v1.2"
+
+- [ ] Phase 2 marked complete with real hardware evidence attached.
+- [ ] Remaining Phase 3 UI tasks marked complete.
+- [ ] App fallback indicator and integration tests merged.
+- [ ] At least 3 production-ready presets pass perf envelope.
+
+## Ticket Breakdown (P0)
+
+This section converts P0 backlog into implementation-ready tickets with explicit scope, files, acceptance, and test evidence.
+
+### WPE-P0-01: GIF Playback Benchmark Harness
+
+**Goal:** Generate reproducible on-device GIF playback metrics and pass/fail report.
+
+**Scope:**
+- Add benchmark mode to `AnimatedGifProvider` and/or dedicated harness utility.
+- Capture: average FPS, P95 frame time, peak extra heap, watchdog incidents.
+- Export CSV and summary log for each board profile.
+
+**Primary Files:**
+- `UI/Source/wallpaper/providers/AnimatedGifProvider.cpp`
+- `UI/Source/wallpaper/providers/AnimatedGifProvider.hpp`
+- `scripts/` benchmark helper (new script if needed)
+
+**Acceptance:**
+- 240x320: >= 24 FPS sustained for 60s.
+- 320x480: >= 20 FPS sustained for 60s.
+- Additional heap <= 180KB.
+- No watchdog reset.
+
+**Evidence Required:**
+- `artifacts/wallpaper/gif_benchmark_<profile>.csv`
+- `artifacts/wallpaper/gif_benchmark_summary.md`
+
+### WPE-P0-02: Lottie Complexity Gate + Downgrade
+
+**Goal:** Prevent unsupported Lottie scenes from causing runtime instability.
+
+**Scope:**
+- Add metadata-driven complexity scoring.
+- Enforce threshold by profile (`esp32`, `esp32s3`, `esp32p4`).
+- On threshold violation, downgrade to poster/static fallback.
+- Emit structured reason (`complexity_exceeded`, `parse_error`, `render_error`).
+
+**Primary Files:**
+- `UI/Source/wallpaper/providers/LottieProvider.cpp`
+- `System/Source/managers/WallpaperManager.cpp`
+- `UI/Include/flx/ui/wallpaper/PresetLibrary.hpp`
+- `UI/Source/wallpaper/PresetLibrary.cpp`
+
+**Acceptance:**
+- Medium scenes: >= 24 FPS on ESP32-S3.
+- Peak extra heap <= 220KB.
+- Unsupported scene never crashes UI; fallback always applied.
+
+**Evidence Required:**
+- `artifacts/wallpaper/lottie_gate_matrix.md`
+- Runtime logs containing reason codes for rejected scenes.
+
+### WPE-P0-03: Fallback/Error UX in Wallpaper Engine App
+
+**Goal:** Make fallback behavior visible and actionable for users.
+
+**Scope:**
+- Add top-of-page error banner in app when fallback occurs.
+- Show reason text and previous wallpaper reference.
+- Provide actions: retry previous, choose new source.
+- Auto-dismiss after successful apply.
+
+**Primary Files:**
+- `Applications/wallpaper_engine/WallpaperEngineApp.cpp`
+- `Applications/wallpaper_engine/WallpaperEngineApp.hpp`
+- `Applications/wallpaper_engine/pages/PresetsPage.cpp`
+
+**Acceptance:**
+- Banner appears within 1 second of fallback event.
+- Retry path works for recoverable errors.
+- Banner clears after successful wallpaper activation.
+
+**Evidence Required:**
+- Integration test logs + screenshots from emulator/device.
+
+### WPE-P0-04: Integration Test Suite (Apply/Rollback/Fallback)
+
+**Goal:** Lock behavior with repeatable tests before Phase 5 content scaling.
+
+**Scope:**
+- Add integration tests for:
+    - valid animated apply -> active
+    - invalid source -> static fallback
+    - provider switch loop (1000 iterations)
+    - persistence restore after reboot
+- Add memory trend assertion for switch soak.
+
+**Primary Files:**
+- `System/Source/managers/WallpaperManager_test.cpp`
+- `UI/` integration test harness files (existing test tree)
+
+**Acceptance:**
+- All P0 integration tests pass on CI and one physical board.
+- Provider-switch soak shows no monotonic leak trend.
+
+**Evidence Required:**
+- CI run URL/reference
+- Test report artifact in `artifacts/wallpaper/tests/`
+
+### P0 Execution Order
+
+1. `WPE-P0-01` (metrics baseline)
+2. `WPE-P0-02` (guardrails from baseline)
+3. `WPE-P0-03` (user-visible resilience)
+4. `WPE-P0-04` (regression lock)
+
+### Exit Checklist for Advancing to P1
+
+- [ ] GIF and Lottie acceptance gates pass with attached artifacts.
+- [ ] Fallback UX merged and manually validated.
+- [ ] Integration suite green in CI.
+- [ ] No new critical regressions in desktop rendering path.
+- [ ] Plan updated with measured throughput and revised dates.
+
 **Next Steps:**
-1. Review and approve this plan
-2. Create development branch
-3. Begin Phase 1 implementation
-4. Iterate through phases with community feedback
+1. Approve this continuation scope.
+2. Execute P0 backlog first and attach benchmark artifacts.
+3. Promote P1 items once P0 acceptance matrix passes.
+4. Re-baseline timeline for Phases 5-7 using measured throughput.
 
 ---
 
-**Document Version**: 1.1  
-**Last Updated**: March 25, 2026  
-**Status**: Ready for Implementation  
+**Document Version**: 1.2  
+**Last Updated**: March 27, 2026  
+**Status**: In Active Execution  
 **Maintainer**: FlxOS Development Team

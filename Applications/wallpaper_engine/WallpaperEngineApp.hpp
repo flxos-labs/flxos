@@ -7,7 +7,9 @@
 #include "pages/PresetsPage.hpp"
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManifest.hpp>
+#include <flx/core/EventBus.hpp>
 #include <memory>
+#include <string>
 
 namespace System::Apps {
 
@@ -48,9 +50,26 @@ private:
 	void showDynamicPage();
 	void showAdaptivePage();
 	void hideAllPages();
+	void ensureFallbackBanner();
+	void handleWallpaperErrorEvent(const flx::core::Bundle& data);
+	void showFallbackBanner(const std::string& message);
+	void hideFallbackBanner();
+	void retryLastWallpaper();
+	void openSourceSelector();
+	void pollBannerDismissState();
 
 	lv_obj_t* m_container {nullptr};
 	lv_obj_t* m_mainMenu {nullptr};
+	lv_obj_t* m_fallbackBanner {nullptr};
+	lv_obj_t* m_fallbackLabel {nullptr};
+	lv_obj_t* m_retryBtn {nullptr};
+	lv_obj_t* m_chooseSourceBtn {nullptr};
+	lv_timer_t* m_bannerPollTimer {nullptr};
+	flx::core::EventBus::SubscriptionId m_wallpaperErrorSubscriptionId {0};
+	std::string m_lastFailedType;
+	std::string m_lastFailedSource;
+	std::string m_lastReasonCode;
+	uint32_t m_lastErrorTickMs {0};
 
 	std::unique_ptr<WallpaperEngine::PresetsPage> m_presetsPage;
 	std::unique_ptr<WallpaperEngine::EffectsPage> m_effectsPage;

@@ -33,6 +33,7 @@ public:
 	flx::StringObservable& getWallpaperEffectsObservable() { return m_wallpaper_effects_subject; }
 	flx::Observable<int32_t>& getAnimationSpeedObservable() { return m_animation_speed_subject; }
 	flx::Observable<int32_t>& getQualityLevelObservable() { return m_quality_level_subject; }
+	flx::Observable<int32_t>& getBenchmarkEnabledObservable() { return m_benchmark_enabled_subject; }
 	flx::Observable<int32_t>& getCpuUsageObservable() { return m_cpu_usage_subject; }
 
 private:
@@ -46,6 +47,7 @@ private:
 	flx::StringObservable m_wallpaper_effects_subject {"{}"};
 	flx::Observable<int32_t> m_animation_speed_subject {50};
 	flx::Observable<int32_t> m_quality_level_subject {1};
+	flx::Observable<int32_t> m_benchmark_enabled_subject {0};
 	flx::Observable<int32_t> m_cpu_usage_subject {0};
 	float m_frame_time_ema_ms = 0.0f;
 };

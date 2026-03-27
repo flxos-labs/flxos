@@ -8,7 +8,16 @@
   "effects": {},
   "metadata": {
     "author": "FlxOS Team",
-    "tags": ["animated", "gradient", "calm"],
-    "thumbnail": "/data/wallpapers/presets/builtin/gradient/thumbnail.png"
+    "license": "Apache-2.0",
+    "tags": [
+      "animated",
+      "gradient",
+      "calm"
+    ],
+    "thumbnail": "/data/wallpapers/presets/builtin/gradient/thumbnail.png",
+    "perf": {
+      "min_fps": 24,
+      "max_extra_heap_kb": 180
+    }
   }
 }
