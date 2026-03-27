@@ -431,6 +431,20 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 					m_providerBenchmarkHeaderWritten = true;
 				}
 
+				std::string escapedSource;
+				escapedSource.reserve(source.size() + 2);
+				escapedSource.push_back('"');
+				for (char const ch : source) {
+					if (ch == '"') {
+						escapedSource += "\"\"";
+					} else if (ch == '\n' || ch == '\r') {
+						escapedSource.push_back(' ');
+					} else {
+						escapedSource.push_back(ch);
+					}
+				}
+				escapedSource.push_back('"');
+
 				std::fprintf(
 					benchmarkFile,
 					"%llu,%s,%.2f,%.2f,%u,%u,%u,%u,%s\n",
@@ -442,7 +456,7 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 					static_cast<unsigned>(m_providerBenchmarkMaxFrameMs),
 					static_cast<unsigned>(benchExtraHeapBytes),
 					static_cast<unsigned>(watchdogIncidents),
-					source.c_str());
+					escapedSource.c_str());
 				std::fclose(benchmarkFile);
 			} else if (!m_providerBenchmarkWriteFailed) {
 				Log::warn(TAG,
