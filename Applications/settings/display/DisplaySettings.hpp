@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdio>
 #include <cstring>
 
 #include "lvgl.h"
@@ -29,6 +30,44 @@ protected:
 		auto& dm = DisplayManager::getInstance();
 		auto& tm = ThemeManager::getInstance();
 		auto& wm = flx::system::WallpaperManager::getInstance();
+
+		auto parse_int_effect = [&wm](const std::string& key, int32_t fallback) {
+			std::string const effects = wm.getWallpaperEffectsObservable().get();
+			std::string const needle = "\"" + key + "\":";
+			size_t const pos = effects.find(needle);
+			if (pos == std::string::npos) {
+				return fallback;
+			}
+
+			char* end_ptr = nullptr;
+			long const parsed = std::strtol(effects.c_str() + pos + needle.size(), &end_ptr, 10);
+			if (end_ptr == nullptr || end_ptr == effects.c_str() + pos + needle.size()) {
+				return fallback;
+			}
+			return static_cast<int32_t>(parsed);
+		};
+
+		auto parse_float_effect = [&wm](const std::string& key, float fallback) {
+			std::string const effects = wm.getWallpaperEffectsObservable().get();
+			std::string const needle = "\"" + key + "\":";
+			size_t const pos = effects.find(needle);
+			if (pos == std::string::npos) {
+				return fallback;
+			}
+
+			char* end_ptr = nullptr;
+			float const parsed = std::strtof(effects.c_str() + pos + needle.size(), &end_ptr);
+			if (end_ptr == nullptr || end_ptr == effects.c_str() + pos + needle.size()) {
+				return fallback;
+			}
+			return parsed;
+		};
+
+		auto has_true_effect = [&wm](const std::string& key) {
+			std::string const effects = wm.getWallpaperEffectsObservable().get();
+			std::string const needle = "\"" + key + "\":true";
+			return effects.find(needle) != std::string::npos;
+		};
 
 		m_brightnessBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getBrightnessObservable());
 		m_rotationBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(dm.getRotationObservable());
@@ -188,6 +227,71 @@ protected:
 		lv_slider_set_range(wpAnimSlider, 0, 100);
 		lv_slider_bind_value(wpAnimSlider, m_wpAnimSpeedBridge->getSubject());
 
+		lv_obj_t* wpBlurBtn =
+			add_list_btn(m_list, LV_SYMBOL_EDIT, "Blur");
+		lv_obj_t* wpBlurSlider = lv_slider_create(wpBlurBtn);
+		lv_obj_set_flex_grow(wpBlurSlider, 1);
+		lv_slider_set_range(wpBlurSlider, 0, 20);
+		lv_slider_set_value(wpBlurSlider, parse_int_effect("blur", 0), LV_ANIM_OFF);
+		lv_obj_add_event_cb(
+			wpBlurSlider,
+			[](lv_event_t* e) {
+				auto* sliderObj = lv_event_get_target_obj(e);
+				int32_t const blur = lv_slider_get_value(sliderObj);
+				auto& manager = flx::system::WallpaperManager::getInstance();
+				if (blur <= 0) {
+					manager.removeEffect("blur");
+				} else {
+					manager.applyEffect("blur", std::to_string(blur));
+				}
+			},
+			LV_EVENT_VALUE_CHANGED, nullptr);
+
+		lv_obj_t* wpBrightnessBtn =
+			add_list_btn(m_list, LV_SYMBOL_EYE_OPEN, "Brightness");
+		lv_obj_t* wpBrightnessSlider = lv_slider_create(wpBrightnessBtn);
+		lv_obj_set_flex_grow(wpBrightnessSlider, 1);
+		lv_slider_set_range(wpBrightnessSlider, 50, 150);
+		float const brightnessValue = parse_float_effect("brightness", 1.0f);
+		int32_t const brightnessPercent = static_cast<int32_t>(brightnessValue * 100.0f);
+		lv_slider_set_value(wpBrightnessSlider, brightnessPercent, LV_ANIM_OFF);
+		lv_obj_add_event_cb(
+			wpBrightnessSlider,
+			[](lv_event_t* e) {
+				auto* sliderObj = lv_event_get_target_obj(e);
+				int32_t const brightnessPercentLocal = lv_slider_get_value(sliderObj);
+				float const brightness = static_cast<float>(brightnessPercentLocal) / 100.0f;
+				auto& manager = flx::system::WallpaperManager::getInstance();
+				if (brightnessPercentLocal == 100) {
+					manager.removeEffect("brightness");
+				} else {
+					char value_buf[16];
+					std::snprintf(value_buf, sizeof(value_buf), "%.2f", static_cast<double>(brightness));
+					manager.applyEffect("brightness", value_buf);
+				}
+			},
+			LV_EVENT_VALUE_CHANGED, nullptr);
+
+		lv_obj_t* wpTransitionBtn =
+			add_list_btn(m_list, LV_SYMBOL_REFRESH, "Transitions");
+		lv_obj_set_flex_grow(lv_obj_get_child(wpTransitionBtn, 1), 1);
+		lv_obj_t* wpTransitionSw = lv_switch_create(wpTransitionBtn);
+		if (has_true_effect("fade_transition")) {
+			lv_obj_add_state(wpTransitionSw, LV_STATE_CHECKED);
+		}
+		lv_obj_add_event_cb(
+			wpTransitionSw,
+			[](lv_event_t* e) {
+				auto* sw = lv_event_get_target_obj(e);
+				auto& manager = flx::system::WallpaperManager::getInstance();
+				if (lv_obj_has_state(sw, LV_STATE_CHECKED)) {
+					manager.applyEffect("fade_transition", "true");
+				} else {
+					manager.removeEffect("fade_transition");
+				}
+			},
+			LV_EVENT_VALUE_CHANGED, nullptr);
+
 		// Sync button state with wallpaper enablement
 		auto update_chooser_state = [](lv_obj_t* btn, int32_t enabled) {
 			if (enabled) {
@@ -203,6 +307,15 @@ protected:
 			lv_subject_get_int(m_wpEnabledBridge->getSubject()));
 		update_chooser_state(
 			wpAnimSpeedBtn,
+			lv_subject_get_int(m_wpEnabledBridge->getSubject()));
+		update_chooser_state(
+			wpBlurBtn,
+			lv_subject_get_int(m_wpEnabledBridge->getSubject()));
+		update_chooser_state(
+			wpBrightnessBtn,
+			lv_subject_get_int(m_wpEnabledBridge->getSubject()));
+		update_chooser_state(
+			wpTransitionBtn,
 			lv_subject_get_int(m_wpEnabledBridge->getSubject()));
 
 		// Observer for changes
@@ -231,6 +344,45 @@ protected:
 				}
 			},
 			wpAnimSpeedBtn, nullptr);
+
+		lv_subject_add_observer_obj(
+			m_wpEnabledBridge->getSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				lv_obj_t* btn = lv_observer_get_target_obj(observer);
+				int32_t const val = lv_subject_get_int(subject);
+				if (val) {
+					lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				} else {
+					lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				}
+			},
+			wpBlurBtn, nullptr);
+
+		lv_subject_add_observer_obj(
+			m_wpEnabledBridge->getSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				lv_obj_t* btn = lv_observer_get_target_obj(observer);
+				int32_t const val = lv_subject_get_int(subject);
+				if (val) {
+					lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				} else {
+					lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				}
+			},
+			wpBrightnessBtn, nullptr);
+
+		lv_subject_add_observer_obj(
+			m_wpEnabledBridge->getSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				lv_obj_t* btn = lv_observer_get_target_obj(observer);
+				int32_t const val = lv_subject_get_int(subject);
+				if (val) {
+					lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				} else {
+					lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+				}
+			},
+			wpTransitionBtn, nullptr);
 
 		lv_subject_add_observer_obj(
 			m_wpTypeBridge->getSubject(),
