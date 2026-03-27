@@ -118,6 +118,14 @@ else
     echo -e "${YELLOW}  ⊘ Skipped (script not found)${NC}"
 fi
 
+# 7. Wallpaper Preset Gates
+echo -e "\n${BLUE}═══ 7. Wallpaper Preset Gates ═══${NC}"
+if [ -f "$SCRIPT_DIR/run_wallpaper_assets.sh" ]; then
+    run_check "Wallpaper Preset Assets" "$SCRIPT_DIR/run_wallpaper_assets.sh" "wallpaper_presets"
+else
+    echo -e "${YELLOW}  ⊘ Skipped (script not found)${NC}"
+fi
+
 # Summary
 echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════${NC}"

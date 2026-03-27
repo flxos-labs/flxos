@@ -1,12 +1,117 @@
 #include <flx/ui/wallpaper/PresetLibrary.hpp>
 
+#include "cJSON.h"
 #include <algorithm>
+#include <cstdio>
+#include <dirent.h>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
+#include <string>
+#include <sys/stat.h>
+#include <vector>
 
 static constexpr const char* TAG = "PresetLibrary";
 
 namespace flx::ui::wallpaper {
+
+namespace {
+
+static constexpr const char* BUILTIN_PRESET_ROOT = "/data/wallpapers/presets/builtin";
+
+bool fileExists(const std::string& path) {
+	struct stat st {};
+	return ::stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode);
+}
+
+std::string readFileText(const std::string& path) {
+	FILE* f = std::fopen(path.c_str(), "rb");
+	if (f == nullptr) {
+		return {};
+	}
+	if (std::fseek(f, 0, SEEK_END) != 0) {
+		std::fclose(f);
+		return {};
+	}
+	long const len = std::ftell(f);
+	if (len <= 0) {
+		std::fclose(f);
+		return {};
+	}
+	if (std::fseek(f, 0, SEEK_SET) != 0) {
+		std::fclose(f);
+		return {};
+	}
+
+	std::string text(static_cast<size_t>(len), '\0');
+	if (std::fread(text.data(), 1, static_cast<size_t>(len), f) != static_cast<size_t>(len)) {
+		std::fclose(f);
+		return {};
+	}
+	std::fclose(f);
+	return text;
+}
+
+std::string jsonStringOr(cJSON* obj, const char* key, const char* fallback = "") {
+	if (obj == nullptr || key == nullptr) {
+		return fallback;
+	}
+	cJSON* item = cJSON_GetObjectItem(obj, key);
+	if (item != nullptr && cJSON_IsString(item) && item->valuestring != nullptr) {
+		return item->valuestring;
+	}
+	return fallback;
+}
+
+bool loadPresetConfig(const std::string& configPath, WallpaperPreset& outPreset) {
+	if (!fileExists(configPath)) {
+		return false;
+	}
+
+	std::string const raw = readFileText(configPath);
+	if (raw.empty()) {
+		return false;
+	}
+
+	cJSON* root = cJSON_Parse(raw.c_str());
+	if (root == nullptr) {
+		return false;
+	}
+
+	outPreset.id = jsonStringOr(root, "id");
+	outPreset.name = jsonStringOr(root, "name");
+	outPreset.description = jsonStringOr(root, "description");
+	outPreset.type = jsonStringOr(root, "type", "static");
+	outPreset.source = jsonStringOr(root, "source");
+	outPreset.is_builtin = true;
+
+	cJSON* effects = cJSON_GetObjectItem(root, "effects");
+	if (effects != nullptr) {
+		char* effectsText = cJSON_PrintUnformatted(effects);
+		if (effectsText != nullptr) {
+			outPreset.effects = effectsText;
+			cJSON_free(effectsText);
+		}
+	}
+
+	cJSON* metadata = cJSON_GetObjectItem(root, "metadata");
+	if (metadata != nullptr && cJSON_IsObject(metadata)) {
+		outPreset.thumbnail = jsonStringOr(metadata, "thumbnail");
+	}
+
+	cJSON_Delete(root);
+
+	if (outPreset.id.empty() || outPreset.type.empty()) {
+		return false;
+	}
+
+	if (outPreset.name.empty()) {
+		outPreset.name = outPreset.id;
+	}
+
+	return true;
+}
+
+} // namespace
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -100,6 +205,37 @@ bool PresetLibrary::deleteUserPreset(const std::string& id) {
 // ---------------------------------------------------------------------------
 
 void PresetLibrary::registerBuiltinPresets() {
+	bool loadedFromConfig = false;
+	DIR* root = opendir(BUILTIN_PRESET_ROOT);
+	if (root != nullptr) {
+		std::vector<std::string> dirs;
+		while (dirent* ent = readdir(root)) {
+			std::string const name = ent->d_name;
+			if (name == "." || name == "..") {
+				continue;
+			}
+			dirs.push_back(name);
+		}
+		closedir(root);
+
+		std::sort(dirs.begin(), dirs.end());
+		for (const auto& dir : dirs) {
+			WallpaperPreset preset;
+			std::string const configPath = std::string(BUILTIN_PRESET_ROOT) + "/" + dir + "/config.json";
+			if (!loadPresetConfig(configPath, preset)) {
+				continue;
+			}
+
+			m_presets[preset.id] = preset;
+			m_order.push_back(preset.id);
+			loadedFromConfig = true;
+		}
+	}
+
+	if (loadedFromConfig) {
+		return;
+	}
+
 	// --- Dynamic: Plasma ---
 	{
 		WallpaperPreset p;
