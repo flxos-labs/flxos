@@ -1,0 +1,14 @@
+{
+  "id": "perlin",
+  "name": "Cloud Noise",
+  "description": "Smooth organic noise cloud pattern",
+  "version": "1.0",
+  "type": "dynamic",
+  "source": "algo://perlin",
+  "effects": {},
+  "metadata": {
+    "author": "FlxOS Team",
+    "tags": ["animated", "noise", "clouds"],
+    "thumbnail": "/data/wallpapers/presets/builtin/perlin/thumbnail.png"
+  }
+}
