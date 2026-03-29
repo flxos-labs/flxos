@@ -409,12 +409,16 @@ void Desktop::handleWallpaperProviderFailure(const std::string& requestedType, c
 }
 
 void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std::string& source, uint32_t delta_ms) {
-	if (!(type == "animated" || type == "gif" || type == "lottie")) {
-		setWallpaperPerfOverlayVisible(false);
+	auto const resetOverlayMetrics = [this]() {
 		m_overlayWindowMs = 0;
 		m_overlayFrameCount = 0;
 		m_overlayTotalFrameMs = 0;
 		m_overlayMaxFrameMs = 0;
+	};
+
+	if (!(type == "animated" || type == "gif" || type == "lottie")) {
+		setWallpaperPerfOverlayVisible(false);
+		resetOverlayMetrics();
 		return;
 	}
 
@@ -429,6 +433,7 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 		m_providerPerfWindowMs = 0;
 		m_providerPerfFrameCount = 0;
 		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+		resetOverlayMetrics();
 	}
 
 	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
@@ -437,18 +442,12 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 	m_lastBenchmarkEnabled = benchmarkEnabled;
 	if (!benchmarkEnabled) {
 		setWallpaperPerfOverlayVisible(false);
-		m_overlayWindowMs = 0;
-		m_overlayFrameCount = 0;
-		m_overlayTotalFrameMs = 0;
-		m_overlayMaxFrameMs = 0;
+		resetOverlayMetrics();
 	}
 
 	if (benchmarkEnabled) {
 		if (benchmarkRisingEdge) {
-			m_overlayWindowMs = 0;
-			m_overlayFrameCount = 0;
-			m_overlayTotalFrameMs = 0;
-			m_overlayMaxFrameMs = 0;
+			resetOverlayMetrics();
 		}
 
 		m_overlayWindowMs += delta_ms;
@@ -478,10 +477,7 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 			setWallpaperPerfOverlayVisible(true);
 			updateWallpaperPerfOverlay(type, overlayFps, overlayAvgMs, m_overlayMaxFrameMs, overlayExtraHeapBytes);
 
-			m_overlayWindowMs = 0;
-			m_overlayFrameCount = 0;
-			m_overlayTotalFrameMs = 0;
-			m_overlayMaxFrameMs = 0;
+			resetOverlayMetrics();
 		}
 	}
 
