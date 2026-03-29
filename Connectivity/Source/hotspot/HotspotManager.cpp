@@ -460,7 +460,7 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
 			for (auto it = self->m_clients.begin(); it != self->m_clients.end();
-				 ++it) {
+				++it) {
 				if (memcmp(it->mac, event->mac, 6) == 0) {
 					self->m_clients.erase(it);
 					break;
