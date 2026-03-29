@@ -1471,7 +1471,7 @@ This section converts the roadmap into immediate, owner-friendly work items for 
 ### Repository Delta (March 28)
 
 - Wallpaper-specific CLI commands were removed from `flxos.py` as part of CLI cleanup.
-- Wallpaper validation helper scripts previously added under `scripts/` were removed.
+- Wallpaper validation and asset helper scripts remain available under `scripts/` (e.g. `scripts/run_wallpaper_assets.sh`, `scripts/validate_wallpaper_presets.py`, `scripts/generate_wallpaper_thumbnails.py`).
 - Benchmark/report helpers for wallpaper metrics remain available in `scripts/run_wallpaper_benchmark_report.sh` and `scripts/wallpaper_benchmark_report.py`.
 
 ### Sprint Backlog (Prioritized)
@@ -1540,7 +1540,7 @@ This section converts the roadmap into immediate, owner-friendly work items for 
      - conservative defaults for ESP32
      - medium defaults for ESP32-S3
 
-### Done Criteria for "Plan v1.3"
+### Done Criteria for "Plan v1.4"
 
 - [ ] Phase 2 marked complete with real hardware evidence attached.
 - [ ] Remaining Phase 3 UI tasks marked complete.

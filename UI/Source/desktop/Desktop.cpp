@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <cstdio>
 #include <ctime>
 #include <esp_heap_caps.h>
 #include <flx/apps/AppManager.hpp>
@@ -22,8 +24,6 @@
 #include <flx/ui/wallpaper/providers/AnimatedGifProvider.hpp>
 #include <flx/ui/wallpaper/providers/LottieProvider.hpp>
 #include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
-#include <algorithm>
-#include <cstdio>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -433,6 +433,8 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 
 	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
 	bool const benchmarkEnabled = wallpaperManager.getBenchmarkEnabledObservable().get() != 0;
+	bool const benchmarkRisingEdge = benchmarkEnabled && !m_lastBenchmarkEnabled;
+	m_lastBenchmarkEnabled = benchmarkEnabled;
 	if (!benchmarkEnabled) {
 		setWallpaperPerfOverlayVisible(false);
 		m_overlayWindowMs = 0;
@@ -442,6 +444,13 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 	}
 
 	if (benchmarkEnabled) {
+		if (benchmarkRisingEdge) {
+			m_overlayWindowMs = 0;
+			m_overlayFrameCount = 0;
+			m_overlayTotalFrameMs = 0;
+			m_overlayMaxFrameMs = 0;
+		}
+
 		m_overlayWindowMs += delta_ms;
 		m_overlayFrameCount += 1;
 		m_overlayTotalFrameMs += static_cast<uint64_t>(delta_ms);
@@ -452,14 +461,12 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 		if (m_overlayWindowMs >= WALLPAPER_OVERLAY_UPDATE_MS) {
 			float overlayFps = 0.0f;
 			if (m_overlayWindowMs > 0) {
-				overlayFps = (static_cast<float>(m_overlayFrameCount) * 1000.0f)
-					/ static_cast<float>(m_overlayWindowMs);
+				overlayFps = (static_cast<float>(m_overlayFrameCount) * 1000.0f) / static_cast<float>(m_overlayWindowMs);
 			}
 
 			float overlayAvgMs = 0.0f;
 			if (m_overlayFrameCount > 0) {
-				overlayAvgMs = static_cast<float>(m_overlayTotalFrameMs)
-					/ static_cast<float>(m_overlayFrameCount);
+				overlayAvgMs = static_cast<float>(m_overlayTotalFrameMs) / static_cast<float>(m_overlayFrameCount);
 			}
 
 			uint32_t const overlayCurrentHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
@@ -479,7 +486,7 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 	}
 
 	if (benchmarkEnabled) {
-		if (m_providerBenchmarkKey != key) {
+		if (benchmarkRisingEdge || m_providerBenchmarkKey != key) {
 			m_providerBenchmarkKey = key;
 			m_providerBenchmarkWindowMs = 0;
 			m_providerBenchmarkFrameCount = 0;
@@ -501,14 +508,12 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 		if (m_providerBenchmarkWindowMs >= WALLPAPER_BENCHMARK_WINDOW_MS) {
 			float benchmarkFps = 0.0f;
 			if (m_providerBenchmarkWindowMs > 0) {
-				benchmarkFps = (static_cast<float>(m_providerBenchmarkFrameCount) * 1000.0f)
-					/ static_cast<float>(m_providerBenchmarkWindowMs);
+				benchmarkFps = (static_cast<float>(m_providerBenchmarkFrameCount) * 1000.0f) / static_cast<float>(m_providerBenchmarkWindowMs);
 			}
 
 			float averageFrameMs = 0.0f;
 			if (m_providerBenchmarkFrameCount > 0) {
-				averageFrameMs = static_cast<float>(m_providerBenchmarkTotalFrameMs)
-					/ static_cast<float>(m_providerBenchmarkFrameCount);
+				averageFrameMs = static_cast<float>(m_providerBenchmarkTotalFrameMs) / static_cast<float>(m_providerBenchmarkFrameCount);
 			}
 
 			uint32_t p95FrameMs = 0;

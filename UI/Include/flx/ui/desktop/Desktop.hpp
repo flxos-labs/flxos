@@ -77,6 +77,7 @@ private:
 	uint32_t m_overlayFrameCount {0};
 	uint64_t m_overlayTotalFrameMs {0};
 	uint32_t m_overlayMaxFrameMs {0};
+	bool m_lastBenchmarkEnabled {false};
 
 	void update_notification_list();
 	void realign_panels();
