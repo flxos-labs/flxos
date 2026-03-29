@@ -28,7 +28,9 @@ const flx::apps::AppManifest ImageViewerApp::manifest = {
 	.description = "View image files",
 	.sortPriority = 100,
 	.capabilities = AppCapability::Storage,
+	.requiredServices = {},
 	.supportedMimeTypes = {"image/bmp", "image/*"},
+	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ImageViewerApp>(); }};
 
 std::string ImageViewerApp::getPackageName() const { return manifest.appId; }

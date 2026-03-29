@@ -29,6 +29,9 @@ const AppManifest WallpaperEngineApp::manifest = {
 	.location = AppLocation::internal(),
 	.description = "Browse presets, apply effects, and configure generative wallpapers",
 	.sortPriority = 15,
+	.requiredServices = {},
+	.supportedMimeTypes = {},
+	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<WallpaperEngineApp>(); }};
 
 // ---------------------------------------------------------------------------

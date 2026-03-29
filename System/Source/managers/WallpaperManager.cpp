@@ -1,6 +1,9 @@
 #include <algorithm>
+#include <cerrno>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
+#include "cJSON.h"
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
@@ -8,6 +11,35 @@
 static constexpr const char* TAG = "WallpaperManager";
 
 namespace flx::system {
+
+namespace {
+
+cJSON* parseJsonValue(const std::string& value) {
+	if (value == "true") {
+		return cJSON_CreateBool(1);
+	}
+	if (value == "false") {
+		return cJSON_CreateBool(0);
+	}
+
+	char* end_ptr = nullptr;
+	errno = 0;
+	long const maybe_int = std::strtol(value.c_str(), &end_ptr, 10);
+	if (errno == 0 && end_ptr != value.c_str() && *end_ptr == '\0') {
+		return cJSON_CreateNumber(static_cast<double>(maybe_int));
+	}
+
+	end_ptr = nullptr;
+	errno = 0;
+	double const maybe_double = std::strtod(value.c_str(), &end_ptr);
+	if (errno == 0 && end_ptr != value.c_str() && *end_ptr == '\0') {
+		return cJSON_CreateNumber(maybe_double);
+	}
+
+	return cJSON_CreateString(value.c_str());
+}
+
+} // namespace
 
 const flx::services::ServiceManifest WallpaperManager::serviceManifest = {
 	.serviceId = "com.flxos.wallpaper",
@@ -69,6 +101,60 @@ void WallpaperManager::setAnimationSpeed(int32_t speed) {
 void WallpaperManager::setQualityLevel(int32_t level) {
 	level = std::clamp(level, static_cast<int32_t>(0), static_cast<int32_t>(2));
 	m_quality_level_subject.set(level);
+}
+
+void WallpaperManager::applyEffect(const std::string& key, const std::string& value) {
+	if (key.empty()) {
+		return;
+	}
+
+	std::string const current = m_wallpaper_effects_subject.get();
+	cJSON* root = cJSON_Parse(current.c_str());
+	if (root == nullptr || !cJSON_IsObject(root)) {
+		if (root != nullptr) {
+			cJSON_Delete(root);
+		}
+		root = cJSON_CreateObject();
+	}
+
+	cJSON* item = parseJsonValue(value);
+	if (item != nullptr) {
+		cJSON_DeleteItemFromObject(root, key.c_str());
+		cJSON_AddItemToObject(root, key.c_str(), item);
+	}
+
+	char* out = cJSON_PrintUnformatted(root);
+	if (out != nullptr) {
+		m_wallpaper_effects_subject.set(out);
+		cJSON_free(out);
+	}
+
+	cJSON_Delete(root);
+}
+
+void WallpaperManager::removeEffect(const std::string& key) {
+	if (key.empty()) {
+		return;
+	}
+
+	std::string const current = m_wallpaper_effects_subject.get();
+	cJSON* root = cJSON_Parse(current.c_str());
+	if (root == nullptr || !cJSON_IsObject(root)) {
+		if (root != nullptr) {
+			cJSON_Delete(root);
+		}
+		root = cJSON_CreateObject();
+	}
+
+	cJSON_DeleteItemFromObject(root, key.c_str());
+
+	char* out = cJSON_PrintUnformatted(root);
+	if (out != nullptr) {
+		m_wallpaper_effects_subject.set(out);
+		cJSON_free(out);
+	}
+
+	cJSON_Delete(root);
 }
 
 flx::Observable<int32_t>& WallpaperManager::getWallpaperEnabledObservable() {
