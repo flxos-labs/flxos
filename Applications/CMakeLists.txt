@@ -14,6 +14,7 @@ else()
         "image_viewer/*.cpp"
         "system_info/*.cpp"
         "tools/*.cpp"
+        "wallpaper_engine/*.cpp"
     )
     set(APP_REQUIRES Core Apps UI Connectivity System)
 endif()
