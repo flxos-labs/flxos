@@ -34,6 +34,7 @@ static constexpr uint32_t WALLPAPER_BENCHMARK_WINDOW_MS = 1000;
 static constexpr float WALLPAPER_GATE_MIN_FPS = 24.0f;
 static constexpr uint32_t WALLPAPER_GATE_GIF_MAX_EXTRA_HEAP_BYTES = 180 * 1024;
 static constexpr uint32_t WALLPAPER_GATE_LOTTIE_MAX_EXTRA_HEAP_BYTES = 220 * 1024;
+static constexpr uint32_t WALLPAPER_OVERLAY_UPDATE_MS = 400;
 
 namespace UI {
 
@@ -87,6 +88,17 @@ void Desktop::init() {
 		lv_image_set_src(m_wallpaper_icon, LV_SYMBOL_IMAGE);
 		lv_obj_set_style_text_opa(m_wallpaper_icon, UiConstants::OPA_30, 0);
 		lv_obj_center(m_wallpaper_icon);
+
+		m_wallpaper_perf_overlay = lv_label_create(m_wallpaper);
+		lv_label_set_text(m_wallpaper_perf_overlay, "WP -- fps");
+		lv_obj_set_style_bg_opa(m_wallpaper_perf_overlay, LV_OPA_70, 0);
+		lv_obj_set_style_bg_color(m_wallpaper_perf_overlay, lv_color_hex(0x101820), 0);
+		lv_obj_set_style_text_color(m_wallpaper_perf_overlay, lv_color_hex(0xE8F1FF), 0);
+		lv_obj_set_style_pad_hor(m_wallpaper_perf_overlay, lv_dpx(UiConstants::PAD_SMALL), 0);
+		lv_obj_set_style_pad_ver(m_wallpaper_perf_overlay, lv_dpx(UiConstants::PAD_TINY), 0);
+		lv_obj_set_style_radius(m_wallpaper_perf_overlay, lv_dpx(UiConstants::RADIUS_SMALL), 0);
+		lv_obj_align(m_wallpaper_perf_overlay, LV_ALIGN_TOP_RIGHT, -lv_dpx(UiConstants::OFFSET_TINY), lv_dpx(UiConstants::OFFSET_TINY));
+		lv_obj_add_flag(m_wallpaper_perf_overlay, LV_OBJ_FLAG_HIDDEN);
 
 		// Theme Change Observer
 		lv_subject_add_observer_obj(
@@ -225,6 +237,11 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_providerBenchmarkBaselineHeapBytes = 0;
 		m_providerBenchmarkKey.clear();
 		m_providerBenchmarkWriteFailed = false;
+		m_overlayWindowMs = 0;
+		m_overlayFrameCount = 0;
+		m_overlayTotalFrameMs = 0;
+		m_overlayMaxFrameMs = 0;
+		setWallpaperPerfOverlayVisible(false);
 		updatePlaceholderIconVisibility(true);
 		return;
 	}
@@ -264,9 +281,14 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_providerBenchmarkBaselineHeapBytes = 0;
 		m_providerBenchmarkKey.clear();
 		m_providerBenchmarkWriteFailed = false;
+		m_overlayWindowMs = 0;
+		m_overlayFrameCount = 0;
+		m_overlayTotalFrameMs = 0;
+		m_overlayMaxFrameMs = 0;
 	}
 
 	if (!m_wallpaperProvider) {
+		setWallpaperPerfOverlayVisible(false);
 		updatePlaceholderIconVisibility(true);
 		return;
 	}
@@ -286,6 +308,10 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 		m_providerBenchmarkBaselineHeapBytes = m_providerBaselineHeapBytes;
 		m_providerBenchmarkKey = type + "|" + source;
 		m_providerBenchmarkWriteFailed = false;
+		m_overlayWindowMs = 0;
+		m_overlayFrameCount = 0;
+		m_overlayTotalFrameMs = 0;
+		m_overlayMaxFrameMs = 0;
 	}
 
 	if (m_wallpaperProviderSpeed != speed) {
@@ -294,6 +320,9 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 	}
 
 	updatePlaceholderIconVisibility(source.empty());
+	if (source.empty()) {
+		setWallpaperPerfOverlayVisible(false);
+	}
 
 	m_wallpaperProvider->render(m_wallpaper, delta_ms);
 
@@ -310,6 +339,33 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 			m_lastWallpaperFailureKey.clear();
 		}
 	}
+}
+
+void Desktop::setWallpaperPerfOverlayVisible(bool visible) {
+	if (!m_wallpaper_perf_overlay) {
+		return;
+	}
+
+	if (visible) {
+		lv_obj_clear_flag(m_wallpaper_perf_overlay, LV_OBJ_FLAG_HIDDEN);
+	} else {
+		lv_obj_add_flag(m_wallpaper_perf_overlay, LV_OBJ_FLAG_HIDDEN);
+	}
+}
+
+void Desktop::updateWallpaperPerfOverlay(const std::string& type, float fps, float avgFrameMs, uint32_t maxFrameMs, uint32_t extraHeapBytes) {
+	if (!m_wallpaper_perf_overlay) {
+		return;
+	}
+
+	lv_label_set_text_fmt(
+		m_wallpaper_perf_overlay,
+		"WP %s  %.1f fps\navg %.1f ms  max %u ms\nheap +%u KB",
+		type.c_str(),
+		fps,
+		avgFrameMs,
+		static_cast<unsigned>(maxFrameMs),
+		static_cast<unsigned>(extraHeapBytes / 1024));
 }
 
 void Desktop::handleWallpaperProviderFailure(const std::string& requestedType, const std::string& source, const std::string& error) {
@@ -354,10 +410,16 @@ void Desktop::handleWallpaperProviderFailure(const std::string& requestedType, c
 
 void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std::string& source, uint32_t delta_ms) {
 	if (!(type == "animated" || type == "gif" || type == "lottie")) {
+		setWallpaperPerfOverlayVisible(false);
+		m_overlayWindowMs = 0;
+		m_overlayFrameCount = 0;
+		m_overlayTotalFrameMs = 0;
+		m_overlayMaxFrameMs = 0;
 		return;
 	}
 
 	if (source.empty()) {
+		setWallpaperPerfOverlayVisible(false);
 		return;
 	}
 
@@ -371,6 +433,51 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 
 	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
 	bool const benchmarkEnabled = wallpaperManager.getBenchmarkEnabledObservable().get() != 0;
+	if (!benchmarkEnabled) {
+		setWallpaperPerfOverlayVisible(false);
+		m_overlayWindowMs = 0;
+		m_overlayFrameCount = 0;
+		m_overlayTotalFrameMs = 0;
+		m_overlayMaxFrameMs = 0;
+	}
+
+	if (benchmarkEnabled) {
+		m_overlayWindowMs += delta_ms;
+		m_overlayFrameCount += 1;
+		m_overlayTotalFrameMs += static_cast<uint64_t>(delta_ms);
+		if (delta_ms > m_overlayMaxFrameMs) {
+			m_overlayMaxFrameMs = delta_ms;
+		}
+
+		if (m_overlayWindowMs >= WALLPAPER_OVERLAY_UPDATE_MS) {
+			float overlayFps = 0.0f;
+			if (m_overlayWindowMs > 0) {
+				overlayFps = (static_cast<float>(m_overlayFrameCount) * 1000.0f)
+					/ static_cast<float>(m_overlayWindowMs);
+			}
+
+			float overlayAvgMs = 0.0f;
+			if (m_overlayFrameCount > 0) {
+				overlayAvgMs = static_cast<float>(m_overlayTotalFrameMs)
+					/ static_cast<float>(m_overlayFrameCount);
+			}
+
+			uint32_t const overlayCurrentHeap = heap_caps_get_free_size(MALLOC_CAP_8BIT);
+			uint32_t const overlayBaselineHeap = m_providerBenchmarkBaselineHeapBytes;
+			uint32_t const overlayExtraHeapBytes = (overlayBaselineHeap > overlayCurrentHeap)
+				? (overlayBaselineHeap - overlayCurrentHeap)
+				: 0;
+
+			setWallpaperPerfOverlayVisible(true);
+			updateWallpaperPerfOverlay(type, overlayFps, overlayAvgMs, m_overlayMaxFrameMs, overlayExtraHeapBytes);
+
+			m_overlayWindowMs = 0;
+			m_overlayFrameCount = 0;
+			m_overlayTotalFrameMs = 0;
+			m_overlayMaxFrameMs = 0;
+		}
+	}
+
 	if (benchmarkEnabled) {
 		if (m_providerBenchmarkKey != key) {
 			m_providerBenchmarkKey = key;
