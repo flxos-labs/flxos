@@ -188,10 +188,10 @@ void DynamicPage::applyDynamicSource() const {
 		sizeof(source),
 		"algo://%s?speed=%d&palette=%s&particles=%d&noise=%d",
 		m_algorithm.c_str(),
-		m_speed,
+		static_cast<int>(m_speed),
 		m_palette.c_str(),
-		m_particles,
-		m_noise);
+		static_cast<int>(m_particles),
+		static_cast<int>(m_noise));
 
 	flx::system::WallpaperManager::getInstance().setWallpaper(source, "dynamic");
 }

@@ -20,6 +20,7 @@ static_assert(flx::config::profile.id[0] != '\0', "No device profile selected.")
 #include "system_info/SystemInfoApp.hpp"
 #include "text_editor/TextEditorApp.hpp"
 #include "tools/ToolsApp.hpp"
+#include "wallpaper_engine/WallpaperEngineApp.hpp"
 #endif
 
 #include <flx/services/ServiceRegistry.hpp>
@@ -56,6 +57,7 @@ extern "C" void app_main(void) {
 	appRegistry.addApp(System::Apps::SystemInfoApp::manifest);
 	appRegistry.addApp(System::Apps::TextEditorApp::manifest);
 	appRegistry.addApp(System::Apps::ToolsApp::manifest);
+	appRegistry.addApp(System::Apps::WallpaperEngineApp::manifest);
 
 	// Initial welcome notification
 	Log::info(TAG, "Sending welcome notification");

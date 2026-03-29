@@ -22,6 +22,7 @@
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <flx/ui/wallpaper/providers/AnimatedGifProvider.hpp>
+#include <flx/ui/wallpaper/providers/DynamicProvider.hpp>
 #include <flx/ui/wallpaper/providers/LottieProvider.hpp>
 #include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
 #include <memory>
@@ -260,6 +261,8 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::AnimatedGifProvider>();
 		} else if (type == "lottie") {
 			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::LottieProvider>();
+		} else if (type == "dynamic") {
+			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::DynamicProvider>();
 		} else {
 			type = "static";
 			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::StaticImageProvider>();
@@ -532,13 +535,27 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 			FILE* benchmarkFile = std::fopen(m_providerBenchmarkPath.c_str(), "a");
 			if (benchmarkFile != nullptr) {
 				if (!m_providerBenchmarkHeaderWritten) {
-					std::fprintf(benchmarkFile, "timestamp_ms,type,fps,avg_frame_ms,p95_frame_ms,max_frame_ms,extra_heap_bytes,watchdog_incidents,source\\n");
+					std::fprintf(benchmarkFile, "timestamp_ms,type,fps,avg_frame_ms,p95_frame_ms,max_frame_ms,extra_heap_bytes,watchdog_incidents,source\n");
 					m_providerBenchmarkHeaderWritten = true;
 				}
 
+				std::string escapedSource;
+				escapedSource.reserve(source.size() + 2);
+				escapedSource.push_back('"');
+				for (char const ch : source) {
+					if (ch == '"') {
+						escapedSource += "\"\"";
+					} else if (ch == '\n' || ch == '\r') {
+						escapedSource.push_back(' ');
+					} else {
+						escapedSource.push_back(ch);
+					}
+				}
+				escapedSource.push_back('"');
+
 				std::fprintf(
 					benchmarkFile,
-					"%llu,%s,%.2f,%.2f,%u,%u,%u,%u,%s\\n",
+					"%llu,%s,%.2f,%.2f,%u,%u,%u,%u,%s\n",
 					static_cast<unsigned long long>(lv_tick_get()),
 					type.c_str(),
 					benchmarkFps,
@@ -547,7 +564,7 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 					static_cast<unsigned>(m_providerBenchmarkMaxFrameMs),
 					static_cast<unsigned>(benchExtraHeapBytes),
 					static_cast<unsigned>(watchdogIncidents),
-					source.c_str());
+					escapedSource.c_str());
 				std::fclose(benchmarkFile);
 			} else if (!m_providerBenchmarkWriteFailed) {
 				Log::warn(TAG,
