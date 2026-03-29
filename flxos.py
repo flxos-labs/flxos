@@ -6,7 +6,6 @@ Usage:
     python flxos.py list [--json]            List all profiles
     python flxos.py select <id>              Select profile for build
     python flxos.py build [--all] [--dev]    Build current/all profiles
-    python flxos.py wallpaper-assets         Generate and validate wallpaper preset assets
     python flxos.py validate [id]            Validate profile YAMLs
     python flxos.py info <id>                Show profile details
     python flxos.py new <id>                 Scaffold profile YAML
@@ -467,11 +466,6 @@ def cmd_build(args):
 
     print(f"{C_BOLD}Building profile: {profile_id}{C_RESET}")
 
-    assets_result = cmd_wallpaper_assets(args)
-    if assets_result != 0:
-        print(f"{C_RED}Error: wallpaper asset pipeline failed. Aborting build.{C_RESET}")
-        return assets_result
-
     if args.dev:
         print(f"  {C_YELLOW}Dev mode: forcing 4MB partition table for faster flash{C_RESET}")
 
@@ -512,12 +506,6 @@ def _build_all(args):
         # Keep selected profile synced in both defaults and active sdkconfig.
         _set_sdkconfig_value(SDKCONFIG_DEFAULTS, "CONFIG_FLXOS_PROFILE", pid)
         _set_sdkconfig_value(SDKCONFIG_FILE, "CONFIG_FLXOS_PROFILE", pid, create_if_missing=False)
-
-        assets_result = cmd_wallpaper_assets(args)
-        if assets_result != 0:
-            print(f"  {C_RED}Wallpaper asset pipeline failed. Skipping profile.{C_RESET}")
-            results[pid] = "❌"
-            continue
 
         # Detect current IDF_TARGET from CMake cache
         current_target = _get_cached_idf_target()
@@ -1293,17 +1281,6 @@ def cmd_hwgen(args):
     return result.returncode
 
 
-def cmd_wallpaper_assets(_args):
-    """Generate and validate wallpaper preset assets."""
-    run_script = SCRIPT_DIR / "scripts" / "run_wallpaper_assets.sh"
-    if not run_script.exists():
-        print(f"{C_RED}Error: missing script {run_script}{C_RESET}")
-        return 1
-
-    result = subprocess.run(["bash", str(run_script)], cwd=str(SCRIPT_DIR))
-    return result.returncode
-
-
 # ── Helpers ────────────────────────────────────────────────────────────────
 
 def _normalize_version(version_text: str) -> Optional[tuple[str, str]]:
@@ -1779,9 +1756,6 @@ def main():
     p_build.add_argument("--all", action="store_true", help="Build all profiles")
     p_build.add_argument("--dev", action="store_true", help="Dev mode: force 4MB partition for faster flash")
 
-    # wallpaper assets
-    sub.add_parser("wallpaper-assets", help="Generate and validate wallpaper preset assets")
-
     # validate
     p_val = sub.add_parser("validate", help="Validate profile YAML files")
     p_val.add_argument("profile_id", nargs="?", default=None, help="Profile ID (or all)")
@@ -1852,7 +1826,6 @@ def main():
         "cdn": cmd_cdn,
         "doctor": cmd_doctor,
         "hwgen": cmd_hwgen,
-        "wallpaper-assets": cmd_wallpaper_assets,
     }
 
     return commands[args.command](args)
