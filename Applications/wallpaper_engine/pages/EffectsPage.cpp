@@ -65,8 +65,10 @@ EffectsPage::EffectsPage(lv_obj_t* parent, std::function<void()> onBack)
 			if (!lbl) return;
 			int32_t v = lv_subject_get_int(subject);
 			if (v <= 0) lv_label_set_text(lbl, "Low");
-			else if (v == 1) lv_label_set_text(lbl, "Medium");
-			else lv_label_set_text(lbl, "High");
+			else if (v == 1)
+				lv_label_set_text(lbl, "Medium");
+			else
+				lv_label_set_text(lbl, "High");
 		},
 		qualLabel, nullptr);
 
