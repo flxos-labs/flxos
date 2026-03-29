@@ -37,7 +37,7 @@ DynamicPage::DynamicPage(lv_obj_t* parent, std::function<void()> onBack)
 	lv_obj_t* list = create_settings_list(m_container);
 	lv_list_add_text(list, "Select Algorithm");
 
-	for (const auto& algo : ALGORITHMS) {
+	for (const auto& algo: ALGORITHMS) {
 		lv_obj_t* btn = add_list_btn(list, LV_SYMBOL_LOOP, algo.label);
 		lv_obj_set_flex_grow(lv_obj_get_child(btn, 1), 1);
 

@@ -280,8 +280,7 @@ bool LottieProvider::prepareSourceForLoad(const std::string& source) {
 	int32_t const complexity = computeComplexityScore(path, layers, shapes, ops);
 	int32_t const threshold = complexityThresholdForCurrentTarget();
 	if (complexity > threshold) {
-		m_last_error = "complexity_exceeded:score=" + std::to_string(complexity)
-			+ ",threshold=" + std::to_string(threshold);
+		m_last_error = "complexity_exceeded:score=" + std::to_string(complexity) + ",threshold=" + std::to_string(threshold);
 		return false;
 	}
 

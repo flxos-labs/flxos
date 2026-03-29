@@ -132,7 +132,7 @@ const WallpaperPreset* PresetLibrary::getPreset(const std::string& id) const {
 std::vector<const WallpaperPreset*> PresetLibrary::listPresets() const {
 	std::vector<const WallpaperPreset*> result;
 	result.reserve(m_order.size());
-	for (const auto& id : m_order) {
+	for (const auto& id: m_order) {
 		auto it = m_presets.find(id);
 		if (it != m_presets.end()) {
 			result.push_back(&it->second);
@@ -144,7 +144,7 @@ std::vector<const WallpaperPreset*> PresetLibrary::listPresets() const {
 std::vector<const WallpaperPreset*> PresetLibrary::listPresetsByType(
 	const std::string& type) const {
 	std::vector<const WallpaperPreset*> result;
-	for (const auto& id : m_order) {
+	for (const auto& id: m_order) {
 		auto it = m_presets.find(id);
 		if (it != m_presets.end() && it->second.type == type) {
 			result.push_back(&it->second);
@@ -219,7 +219,7 @@ void PresetLibrary::registerBuiltinPresets() {
 		closedir(root);
 
 		std::sort(dirs.begin(), dirs.end());
-		for (const auto& dir : dirs) {
+		for (const auto& dir: dirs) {
 			WallpaperPreset preset;
 			std::string const configPath = std::string(BUILTIN_PRESET_ROOT) + "/" + dir + "/config.json";
 			if (!loadPresetConfig(configPath, preset)) {
