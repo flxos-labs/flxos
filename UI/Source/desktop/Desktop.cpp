@@ -542,7 +542,7 @@ void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std
 				std::string escapedSource;
 				escapedSource.reserve(source.size() + 2);
 				escapedSource.push_back('"');
-				for (char const ch : source) {
+				for (char const ch: source) {
 					if (ch == '"') {
 						escapedSource += "\"\"";
 					} else if (ch == '\n' || ch == '\r') {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "lvgl.h"
 #include "../widgets/WallpaperPreviewCard.hpp"
+#include "lvgl.h"
 #include <flx/ui/wallpaper/PresetLibrary.hpp>
 #include <functional>
 #include <memory>

@@ -43,7 +43,7 @@ PresetsPage::PresetsPage(lv_obj_t* parent, std::function<void()> onBack)
 		lv_obj_t* empty = lv_label_create(list);
 		lv_label_set_text(empty, "No presets available");
 	} else {
-		for (const auto* preset : presets) {
+		for (const auto* preset: presets) {
 			auto card = std::make_unique<WallpaperPreviewCard>(
 				list, *preset,
 				[this](const std::string& id) { applyPreset(id); });

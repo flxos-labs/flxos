@@ -1,9 +1,9 @@
+#include "cJSON.h"
 #include <algorithm>
 #include <cerrno>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include "cJSON.h"
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>

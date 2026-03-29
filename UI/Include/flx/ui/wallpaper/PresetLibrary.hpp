@@ -16,13 +16,13 @@ namespace flx::ui::wallpaper {
  * @brief Metadata record for a single wallpaper preset.
  */
 struct WallpaperPreset {
-	std::string id;          ///< Unique preset identifier, e.g. "plasma"
-	std::string name;        ///< Human-readable display name
+	std::string id; ///< Unique preset identifier, e.g. "plasma"
+	std::string name; ///< Human-readable display name
 	std::string description; ///< Short description shown in the preset browser
-	std::string type;        ///< Provider type: "static" | "animated" | "lottie" | "dynamic"
-	std::string source;      ///< File path or algorithm URI passed to the provider
-	std::string effects;     ///< JSON string of effect configuration (may be empty)
-	std::string thumbnail;   ///< Path to preview image (may be empty)
+	std::string type; ///< Provider type: "static" | "animated" | "lottie" | "dynamic"
+	std::string source; ///< File path or algorithm URI passed to the provider
+	std::string effects; ///< JSON string of effect configuration (may be empty)
+	std::string thumbnail; ///< Path to preview image (may be empty)
 	bool is_builtin {false}; ///< True for shipped presets; false for user-created ones
 };
 
