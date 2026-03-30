@@ -7,20 +7,14 @@ static_assert(flx::config::profile.id[0] != '\0', "No device profile selected.")
 #include <flx/core/Logger.hpp>
 #include <flx/system/SystemManager.hpp>
 
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 #include "font/lv_symbol_def.h"
-#include <flx/apps/AppRegistry.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 
-#include "calendar/CalendarApp.hpp"
-#include "files/FilesApp.hpp"
-#include "image_viewer/ImageViewerApp.hpp"
-#include "settings/SettingsApp.hpp"
-#include "system_info/SystemInfoApp.hpp"
-#include "text_editor/TextEditorApp.hpp"
-#include "tools/ToolsApp.hpp"
-#include "wallpaper_engine/WallpaperEngineApp.hpp"
+namespace System::Apps {
+void registerBuiltInApps();
+}
 #endif
 
 #include <flx/services/ServiceRegistry.hpp>
@@ -46,18 +40,10 @@ extern "C" void app_main(void) {
 		flx::system::CliService::getInstance().start();
 	}
 
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 	// Register built-in apps with the AppRegistry
 	Log::info(TAG, "Registering apps with AppRegistry...");
-	auto& appRegistry = flx::apps::AppRegistry::getInstance();
-	appRegistry.addApp(System::Apps::SettingsApp::manifest);
-	appRegistry.addApp(System::Apps::CalendarApp::manifest);
-	appRegistry.addApp(System::Apps::FilesApp::manifest);
-	appRegistry.addApp(System::Apps::ImageViewerApp::manifest);
-	appRegistry.addApp(System::Apps::SystemInfoApp::manifest);
-	appRegistry.addApp(System::Apps::TextEditorApp::manifest);
-	appRegistry.addApp(System::Apps::ToolsApp::manifest);
-	appRegistry.addApp(System::Apps::WallpaperEngineApp::manifest);
+	System::Apps::registerBuiltInApps();
 
 	// Initial welcome notification
 	Log::info(TAG, "Sending welcome notification");

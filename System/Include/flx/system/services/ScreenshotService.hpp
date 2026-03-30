@@ -1,11 +1,13 @@
 #pragma once
 
-#include "lvgl.h"
+#include <cstdint>
 #include <flx/core/Singleton.hpp>
 #include <flx/services/IService.hpp>
 #include <flx/services/ServiceManifest.hpp>
 #include <functional>
 #include <string>
+
+struct _lv_timer_t;
 
 namespace flx::services {
 
@@ -77,7 +79,7 @@ private:
 	ScreenshotService();
 	~ScreenshotService();
 
-	lv_timer_t* m_timer {nullptr};
+	_lv_timer_t* m_timer {nullptr};
 	int m_countdownRemaining {0};
 	std::string m_storagePath;
 	CaptureCallback m_onComplete {nullptr};
