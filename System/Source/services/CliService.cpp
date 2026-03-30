@@ -25,7 +25,7 @@
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
 #include <flx/core/GuiLock.hpp>
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 #include <flx/system/managers/DisplayManager.hpp>
 #endif
 #include <flx/system/services/FileOperationTypes.hpp>
@@ -121,7 +121,7 @@ static bool runFsBlocking(
 
 	bool const waited = xSemaphoreTake(state->sem, pdMS_TO_TICKS(timeoutMs)) == pdTRUE;
 	if (!waited) {
-		flx::services::FileSystemService::getInstance().cancel(opId);
+		(void)flx::services::FileSystemService::getInstance().cancel(opId);
 		outResult.opId = opId;
 		outResult.success = false;
 		outResult.state = flx::services::FileOpState::Cancelled;
@@ -609,7 +609,7 @@ static int cmdCat(int argc, char** argv) {
 	return 0;
 }
 
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 // Command: brightness - Display brightness control
 static int cmdBrightness(int argc, char** argv) {
 	auto& display = flx::system::DisplayManager::getInstance();
@@ -848,7 +848,7 @@ void CliService::registerCommands() {
 	REGISTER_CLI_CMD("df", "Display filesystem usage", &cmdStorage); // Alias
 
 	// Phase 4: System Control
-#if !CONFIG_FLXOS_HEADLESS_MODE
+	#if LV_USE_LOVYAN_GFX
 	REGISTER_CLI_CMD("brightness", "Set display brightness (0-100)", &cmdBrightness);
 	REGISTER_CLI_CMD("display_test", "Test low-level display driver (color_hex or off)", &cmdDisplayTest);
 #endif

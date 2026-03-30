@@ -67,7 +67,7 @@ using UniqueDir = std::unique_ptr<DIR, DirCloser>;
 	return isLvRootPath(path) || path == "/";
 }
 
-[[nodiscard]] bool isUnderMount(std::string_view path, std::string_view mount) {
+[[maybe_unused]] [[nodiscard]] bool isUnderMount(std::string_view path, std::string_view mount) {
 	if (mount.empty()) return false;
 	if (path.size() < mount.size()) return false;
 	if (path.compare(0, mount.size(), mount) != 0) return false;

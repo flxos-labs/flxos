@@ -1,5 +1,3 @@
-#include <driver/adc.h>
-#include <driver/gpio.h>
 #include <flx/core/Logger.hpp>
 #include <flx/hal/power/AdcPowerDevice.hpp>
 
