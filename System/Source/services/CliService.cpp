@@ -847,8 +847,8 @@ void CliService::registerCommands() {
 	REGISTER_CLI_CMD("cat", "Print file contents", &cmdCat);
 	REGISTER_CLI_CMD("df", "Display filesystem usage", &cmdStorage); // Alias
 
-	// Phase 4: System Control
-	#if LV_USE_LOVYAN_GFX
+// Phase 4: System Control
+#if LV_USE_LOVYAN_GFX
 	REGISTER_CLI_CMD("brightness", "Set display brightness (0-100)", &cmdBrightness);
 	REGISTER_CLI_CMD("display_test", "Test low-level display driver (color_hex or off)", &cmdDisplayTest);
 #endif

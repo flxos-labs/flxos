@@ -257,7 +257,8 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 		ConnectivityManager::getInstance().getWifiMutex());
 
 	wifi_config_t wifi_config = {};
-	strncpy((char*)wifi_config.ap.ssid, ssid, sizeof(wifi_config.ap.ssid));
+	strncpy((char*)wifi_config.ap.ssid, ssid, sizeof(wifi_config.ap.ssid) - 1);
+	wifi_config.ap.ssid[sizeof(wifi_config.ap.ssid) - 1] = '\0';
 	wifi_config.ap.ssid_len = strlen(ssid);
 	wifi_config.ap.max_connection = max_connections;
 	wifi_config.ap.authmode = auth_mode;
@@ -265,7 +266,8 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 	wifi_config.ap.ssid_hidden = hidden ? 1 : 0;
 
 	if (auth_mode != WIFI_AUTH_OPEN && password) {
-		strncpy((char*)wifi_config.ap.password, password, sizeof(wifi_config.ap.password));
+		strncpy((char*)wifi_config.ap.password, password, sizeof(wifi_config.ap.password) - 1);
+		wifi_config.ap.password[sizeof(wifi_config.ap.password) - 1] = '\0';
 	}
 
 	// Determine target mode to avoid killing existing station connection
