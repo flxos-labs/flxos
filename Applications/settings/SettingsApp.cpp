@@ -17,6 +17,9 @@ const AppManifest SettingsApp::manifest = {
 	.description = "System configuration and preferences",
 	.sortPriority = 10,
 	.capabilities = AppCapability::WiFi | AppCapability::Bluetooth,
+	.requiredServices = {},
+	.supportedMimeTypes = {},
+	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<SettingsApp>(); }};
 
 } // namespace System::Apps

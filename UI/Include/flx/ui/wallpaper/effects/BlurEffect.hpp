@@ -1,7 +1,7 @@
 #pragma once
 
-#include <flx/ui/wallpaper/EffectPipeline.hpp>
 #include <cstdint>
+#include <flx/ui/wallpaper/EffectPipeline.hpp>
 #include <string>
 
 namespace flx::ui::wallpaper::effects {

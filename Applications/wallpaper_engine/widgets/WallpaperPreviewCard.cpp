@@ -51,7 +51,7 @@ WallpaperPreviewCard::WallpaperPreviewCard(
 
 	// Apply button — callback data is heap-allocated and freed on LV_EVENT_DELETE
 	// so no dangling pointer occurs if the button is deleted before this C++ object.
-	auto* cbData = new CallbackData{preset.id, std::move(onApply)};
+	auto* cbData = new CallbackData {preset.id, std::move(onApply)};
 
 	lv_obj_t* applyBtn = lv_button_create(card);
 	lv_obj_t* applyLabel = lv_label_create(applyBtn);

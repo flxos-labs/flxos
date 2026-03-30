@@ -1,7 +1,7 @@
 #pragma once
 
-#include <flx/ui/wallpaper/IWallpaperProvider.hpp>
 #include <cstdint>
+#include <flx/ui/wallpaper/IWallpaperProvider.hpp>
 #include <string>
 
 namespace flx::ui::wallpaper {

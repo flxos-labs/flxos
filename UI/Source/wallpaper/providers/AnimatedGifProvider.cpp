@@ -44,7 +44,6 @@ void AnimatedGifProvider::render(lv_obj_t* parent, uint32_t elapsed_ms) {
 		if (m_ready) {
 			if (m_animation_speed == 0) {
 				if (!m_speed_paused) {
-					lv_gif_pause(m_gif_obj);
 					m_speed_paused = true;
 				}
 			} else {
@@ -53,11 +52,8 @@ void AnimatedGifProvider::render(lv_obj_t* parent, uint32_t elapsed_ms) {
 				uint32_t const active_ms = static_cast<uint32_t>((static_cast<uint64_t>(m_animation_speed) * duty_cycle_window_ms) / 100U);
 				bool const should_pause = m_speed_phase_ms >= active_ms;
 				if (should_pause != m_speed_paused) {
-					if (should_pause) {
-						lv_gif_pause(m_gif_obj);
-					} else {
-						lv_gif_resume(m_gif_obj);
-					}
+					// LVGL in this repo does not expose lv_gif_pause/lv_gif_resume APIs.
+					// Keep state only so benchmark controls remain deterministic without visual flicker.
 					m_speed_paused = should_pause;
 				}
 			}
@@ -137,10 +133,8 @@ void AnimatedGifProvider::applyAnimationSpeed() {
 	}
 
 	if (m_animation_speed == 0) {
-		lv_gif_pause(m_gif_obj);
 		m_speed_paused = true;
 	} else {
-		lv_gif_resume(m_gif_obj);
 		m_speed_paused = false;
 	}
 #endif

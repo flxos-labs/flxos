@@ -177,7 +177,7 @@ void DynamicProvider::parseQueryParams(const std::string& query) {
 
 void DynamicProvider::createCanvas(lv_obj_t* parent) {
 	size_t const buf_bytes = static_cast<size_t>(CANVAS_W) *
-	                         static_cast<size_t>(CANVAS_H) * 4U; // ARGB8888
+		static_cast<size_t>(CANVAS_H) * 4U; // ARGB8888
 	m_canvas_buf = std::malloc(buf_bytes);
 	if (m_canvas_buf == nullptr) {
 		m_last_error = "Failed to allocate canvas buffer";
@@ -202,7 +202,8 @@ void DynamicProvider::drawPixel(int32_t x, int32_t y, uint8_t r, uint8_t g, uint
 	}
 	// ARGB8888 layout: B G R A (little-endian)
 	size_t const offset = (static_cast<size_t>(y) * static_cast<size_t>(CANVAS_W) +
-	                       static_cast<size_t>(x)) * 4U;
+							  static_cast<size_t>(x)) *
+		4U;
 	auto* buf = static_cast<uint8_t*>(m_canvas_buf);
 	buf[offset + 0] = b;
 	buf[offset + 1] = g;
@@ -238,15 +239,36 @@ void DynamicProvider::renderPlasma(uint32_t elapsed_ms) {
 			float const x2 = c * (1.0f - std::abs(std::fmod(hue / 60.0f, 2.0f) - 1.0f));
 			float const m2 = l - c * 0.5f;
 			float r2 {}, g2 {}, b2 {};
-			if (hue < 60.0f) { r2 = c; g2 = x2; b2 = 0; }
-			else if (hue < 120.0f) { r2 = x2; g2 = c; b2 = 0; }
-			else if (hue < 180.0f) { r2 = 0; g2 = c; b2 = x2; }
-			else if (hue < 240.0f) { r2 = 0; g2 = x2; b2 = c; }
-			else if (hue < 300.0f) { r2 = x2; g2 = 0; b2 = c; }
-			else { r2 = c; g2 = 0; b2 = x2; }
+			if (hue < 60.0f) {
+				r2 = c;
+				g2 = x2;
+				b2 = 0;
+			} else if (hue < 120.0f) {
+				r2 = x2;
+				g2 = c;
+				b2 = 0;
+			} else if (hue < 180.0f) {
+				r2 = 0;
+				g2 = c;
+				b2 = x2;
+			} else if (hue < 240.0f) {
+				r2 = 0;
+				g2 = x2;
+				b2 = c;
+			} else if (hue < 300.0f) {
+				r2 = x2;
+				g2 = 0;
+				b2 = c;
+			} else {
+				r2 = c;
+				g2 = 0;
+				b2 = x2;
+			}
 
 			// Add lightness offset to produce final [0,1] RGB
-			r2 += m2; g2 += m2; b2 += m2;
+			r2 += m2;
+			g2 += m2;
+			b2 += m2;
 			auto clamp8 = [](float f) -> uint8_t {
 				return static_cast<uint8_t>(std::max(0.0f, std::min(1.0f, f)) * 255.0f);
 			};
@@ -361,12 +383,36 @@ void DynamicProvider::renderGradient(uint32_t elapsed_ms) {
 			float const t2 = v * (1.0f - s * (1.0f - f));
 			float r {}, g {}, b {};
 			switch (i % 6) {
-				case 0: r = v; g = t2; b = p; break;
-				case 1: r = q; g = v; b = p; break;
-				case 2: r = p; g = v; b = t2; break;
-				case 3: r = p; g = q; b = v; break;
-				case 4: r = t2; g = p; b = v; break;
-				default: r = v; g = p; b = q; break;
+				case 0:
+					r = v;
+					g = t2;
+					b = p;
+					break;
+				case 1:
+					r = q;
+					g = v;
+					b = p;
+					break;
+				case 2:
+					r = p;
+					g = v;
+					b = t2;
+					break;
+				case 3:
+					r = p;
+					g = q;
+					b = v;
+					break;
+				case 4:
+					r = t2;
+					g = p;
+					b = v;
+					break;
+				default:
+					r = v;
+					g = p;
+					b = q;
+					break;
 			}
 			auto to8 = [](float f2) -> uint8_t {
 				return static_cast<uint8_t>(std::max(0.0f, std::min(1.0f, f2)) * 255.0f);

@@ -23,6 +23,9 @@ const AppManifest ToolsApp::manifest = {
 	.description = "Calculator, Stopwatch, Flashlight, Display Tester",
 	.sortPriority = 45,
 	.capabilities = AppCapability::None,
+	.requiredServices = {},
+	.supportedMimeTypes = {},
+	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ToolsApp>(); }};
 
 bool ToolsApp::onStart() {

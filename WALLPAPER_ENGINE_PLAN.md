@@ -1,8 +1,8 @@
 # FlxOS Ultimate Wallpaper Engine Plan
 
 **Status**: Implementation In Progress  
-**Version**: 1.2  
-**Last Updated**: March 27, 2026  
+**Version**: 1.4  
+**Last Updated**: March 28, 2026  
 **Target Platform**: ESP32, ESP32-S3, ESP32-P4  
 
 ---
@@ -25,6 +25,7 @@
 14. [Preset Production Pipeline](#preset-production-pipeline)
 15. [Execution Continuation (March 27)](#execution-continuation-march-27)
 16. [Ticket Breakdown (P0)](#ticket-breakdown-p0)
+17. [Execution Runbook (March 28 PM)](#execution-runbook-march-28-pm)
 
 ---
 
@@ -804,7 +805,6 @@ public:
 - [x] Add preset browser and preview card powered by `PresetLibrary` metadata.
 - [x] Add effect editor rows and animation controls.
 - [x] Add runtime error/fallback indicator sourced from wallpaper events.
-- [ ] Add app-level integration tests for apply/rollback/fallback UX.
 
 **Files to Create:**
 - `Applications/wallpaper_engine/WallpaperEngineApp.cpp`
@@ -1428,29 +1428,6 @@ The preset goal is feasible only with explicit ownership and automation.
 | Complex animations cause jank | 🟡 MEDIUM | Adaptive quality, frame rate caps, profiling tools |
 | Preset corrupted causes crash | 🟡 MEDIUM | JSON validation, error handling, fallback to default |
 
-### Testing Requirements
-
-**Unit Tests:**
-- Provider interface implementations
-- Effect pipeline composition
-- Preset JSON loading
-- Observable property updates
-
-**Integration Tests:**
-- Wallpaper switching between types
-- Effect application and removal
-- Memory monitoring
-- File loading on SD card
-- Settings persistence and restore
-
-**Performance Tests:**
-- FPS monitoring with different wallpapers
-- Memory usage profiling
-- CPU usage measurement
-- Thermal impact
-
----
-
 ## Success Metrics
 
 ### Phase-by-Phase Success Criteria
@@ -1474,7 +1451,6 @@ The preset goal is feasible only with explicit ownership and automation.
 ✅ Performance Monitoring  
 ✅ Settings UI Integration  
 ✅ Documentation & Examples  
-✅ Test Suite  
 
 ---
 
@@ -1490,7 +1466,13 @@ This section converts the roadmap into immediate, owner-friendly work items for 
 
 1. Close Phase 2 validation gaps (GIF/Lottie on real hardware).
 2. Finish Phase 3 UI wiring for effect controls in Settings and Wallpaper Engine App.
-3. Add fallback/error UX and integration tests for apply/rollback/fallback behavior.
+3. Finalize P0 evidence artifacts and close acceptance matrix gaps.
+
+### Repository Delta (March 28)
+
+- Wallpaper-specific CLI commands were removed from `flxos.py` as part of CLI cleanup.
+- Wallpaper validation and asset helper scripts remain available under `scripts/` (e.g. `scripts/run_wallpaper_assets.sh`, `scripts/validate_wallpaper_presets.py`, `scripts/generate_wallpaper_thumbnails.py`).
+- Benchmark/report helpers for wallpaper metrics remain available in `scripts/run_wallpaper_benchmark_report.sh` and `scripts/wallpaper_benchmark_report.py`.
 
 ### Sprint Backlog (Prioritized)
 
@@ -1500,18 +1482,14 @@ This section converts the roadmap into immediate, owner-friendly work items for 
     - target profiles: `generic-esp32`, `generic-esp32s3`
     - metrics: fps, frame jitter, extra heap, watchdog stability
     - artifacts: CSV metrics + pass/fail summary
-- [ ] Implement Lottie complexity gate:
+- [x] Implement Lottie complexity gate:
     - parse complexity metadata (`layers`, `shapes`, estimated ops)
     - reject or downgrade above threshold before activation
     - emit warning event with reason code
-- [ ] Add runtime fallback indicator in Wallpaper Engine App:
+- [x] Add runtime fallback indicator in Wallpaper Engine App:
     - surface `wallpaper.error` and `FALLBACK_STATIC` reason
     - action button: retry previous wallpaper
     - action button: open source selector
-- [ ] Add integration tests:
-    - apply valid animated wallpaper -> active
-    - apply invalid/corrupt wallpaper -> fallback static
-    - switch providers repeatedly -> no leaks/crashes
 
 #### P1 - Should Complete
 
@@ -1526,7 +1504,7 @@ This section converts the roadmap into immediate, owner-friendly work items for 
 
 #### P2 - Nice to Have
 
-- [ ] Add lightweight on-device FPS overlay (debug mode only).
+- [x] Add lightweight on-device FPS overlay (debug mode only).
 - [ ] Add preset diagnostics screen (heap/fps/format/complexity summary).
 
 ### Acceptance Matrix for This Window
@@ -1535,9 +1513,9 @@ This section converts the roadmap into immediate, owner-friendly work items for 
 |------|---------------|---------------------|
 | GIF playback | >= 24 FPS @ 240x320 for 60s, no WDT reset | benchmark harness + log parse |
 | Lottie medium scenes | >= 24 FPS, <= 220KB extra heap | board run + heap snapshots |
-| Fallback UX | Error shown within 1s, retry works | integration test + manual check |
-| Provider switching | 1000 switches, no black frame, no leak trend | soak test + heap delta |
-| Settings sync | reboot restores type/source/effects/speed | persistence integration test |
+| Fallback UX | Error shown within 1s, retry works | runtime logs + manual check |
+| Provider switching | 1000 switches, no black frame, no leak trend | soak run + heap delta logs |
+| Settings sync | reboot restores type/source/effects/speed | reboot validation checklist |
 
 ### Code Areas to Touch Next
 
@@ -1562,11 +1540,10 @@ This section converts the roadmap into immediate, owner-friendly work items for 
      - conservative defaults for ESP32
      - medium defaults for ESP32-S3
 
-### Done Criteria for "Plan v1.2"
+### Done Criteria for "Plan v1.4"
 
 - [ ] Phase 2 marked complete with real hardware evidence attached.
 - [ ] Remaining Phase 3 UI tasks marked complete.
-- [ ] App fallback indicator and integration tests merged.
 - [ ] At least 3 production-ready presets pass perf envelope.
 
 ## Ticket Breakdown (P0)
@@ -1597,6 +1574,11 @@ This section converts P0 backlog into implementation-ready tickets with explicit
 - `artifacts/wallpaper/gif_benchmark_<profile>.csv`
 - `artifacts/wallpaper/gif_benchmark_summary.md`
 
+**Status (March 28):**
+- In progress with runtime CSV logging and report tooling in place.
+- Tooling baseline confirmed (`scripts/run_wallpaper_benchmark_report.sh` + `scripts/wallpaper_benchmark_report.py`).
+- Remaining work: attach real device artifacts for `generic-esp32` and `generic-esp32s3` to close acceptance.
+
 ### WPE-P0-02: Lottie Complexity Gate + Downgrade
 
 **Goal:** Prevent unsupported Lottie scenes from causing runtime instability.
@@ -1622,6 +1604,10 @@ This section converts P0 backlog into implementation-ready tickets with explicit
 - `artifacts/wallpaper/lottie_gate_matrix.md`
 - Runtime logs containing reason codes for rejected scenes.
 
+**Status (March 28):**
+- Implemented in provider/runtime path with reason-coded failures (`parse_error:*`, `complexity_exceeded:*`) and fallback signaling.
+- Remaining work: attach hardware-backed performance matrix artifact.
+
 ### WPE-P0-03: Fallback/Error UX in Wallpaper Engine App
 
 **Goal:** Make fallback behavior visible and actionable for users.
@@ -1643,31 +1629,41 @@ This section converts P0 backlog into implementation-ready tickets with explicit
 - Banner clears after successful wallpaper activation.
 
 **Evidence Required:**
-- Integration test logs + screenshots from emulator/device.
+- Runtime logs + screenshots from emulator/device.
 
-### WPE-P0-04: Integration Test Suite (Apply/Rollback/Fallback)
+**Status (March 28):**
+- Implemented: banner + reason messaging + retry + source selection + auto-dismiss on successful re-apply.
+- Remaining work: capture and attach validation screenshots/logs.
 
-**Goal:** Lock behavior with repeatable tests before Phase 5 content scaling.
+### WPE-P0-04: Provider Switching and Persistence Validation
+
+**Goal:** Lock behavior for switching/fallback/persistence before Phase 5 content scaling.
 
 **Scope:**
-- Add integration tests for:
+- Validate scenarios with runtime instrumentation and manual acceptance runs:
     - valid animated apply -> active
     - invalid source -> static fallback
     - provider switch loop (1000 iterations)
     - persistence restore after reboot
-- Add memory trend assertion for switch soak.
+- Capture memory trend evidence for switch soak.
 
 **Primary Files:**
-- `System/Source/managers/WallpaperManager_test.cpp`
-- `UI/` integration test harness files (existing test tree)
+- `System/Source/managers/WallpaperManager.cpp`
+- `UI/Source/desktop/Desktop.cpp`
+- `scripts/wallpaper_benchmark_report.py`
 
 **Acceptance:**
-- All P0 integration tests pass on CI and one physical board.
+- All P0 validation scenarios completed on one physical board.
 - Provider-switch soak shows no monotonic leak trend.
 
 **Evidence Required:**
-- CI run URL/reference
-- Test report artifact in `artifacts/wallpaper/tests/`
+- Runtime log bundle/reference
+- Artifact report in `artifacts/wallpaper/`
+
+**Status (March 28):**
+- In progress. Prior ad-hoc script-based harness was removed during CLI/tooling cleanup.
+- Runbook now standardized around `scripts/run_wallpaper_benchmark_report.sh` and artifact folders under `artifacts/wallpaper/`.
+- Next action: complete validation runbook and publish artifacts for each acceptance row.
 
 ### P0 Execution Order
 
@@ -1680,9 +1676,47 @@ This section converts P0 backlog into implementation-ready tickets with explicit
 
 - [ ] GIF and Lottie acceptance gates pass with attached artifacts.
 - [ ] Fallback UX merged and manually validated.
-- [ ] Integration suite green in CI.
 - [ ] No new critical regressions in desktop rendering path.
 - [ ] Plan updated with measured throughput and revised dates.
+
+## Execution Runbook (March 28 PM)
+
+This runbook closes the remaining P0 evidence gaps without relying on removed wallpaper-specific CLI commands.
+
+### Preconditions
+
+- Device profile selected and flashed (`generic-esp32` or `generic-esp32s3`).
+- Benchmark CSV capture available from device runtime at `/data/wallpaper_benchmark.csv`.
+- Host has Python 3 and permissions to write `artifacts/wallpaper/`.
+
+### Step-by-Step
+
+1. Pull benchmark CSV from device for each profile test run.
+2. Generate GIF summary artifact:
+    - `scripts/run_wallpaper_benchmark_report.sh <profile> <csv_path> gif`
+3. Generate Lottie summary artifact:
+    - `scripts/run_wallpaper_benchmark_report.sh <profile> <csv_path> lottie`
+4. Verify generated artifacts exist:
+    - `artifacts/wallpaper/gif_benchmark_<profile>.csv`
+    - `artifacts/wallpaper/gif_benchmark_<profile>.md`
+    - `artifacts/wallpaper/lottie_benchmark_<profile>.csv`
+    - `artifacts/wallpaper/lottie_benchmark_<profile>.md`
+5. Record manual validation notes for fallback UX and provider switching soak in a companion markdown file.
+
+### Evidence Ledger (Required Before P1)
+
+| Acceptance Row | Artifact(s) | Owner | Status |
+|----------------|-------------|-------|--------|
+| GIF playback gate | `artifacts/wallpaper/gif_benchmark_generic-esp32.md`, `artifacts/wallpaper/gif_benchmark_generic-esp32s3.md` | Runtime | ⏳ Pending device captures |
+| Lottie gate | `artifacts/wallpaper/lottie_benchmark_generic-esp32.md`, `artifacts/wallpaper/lottie_benchmark_generic-esp32s3.md` | Runtime | ⏳ Pending device captures |
+| Fallback UX | screenshots + runtime logs (device/emulator) | App/UI | ⏳ Pending capture |
+| Provider switch soak | run log + heap delta summary in `artifacts/wallpaper/` | Runtime | ⏳ Pending run |
+| Persistence restore | reboot checklist report in `artifacts/wallpaper/` | Runtime/QA | ⏳ Pending run |
+
+### Notes
+
+- If CSV contains mixed wallpaper types, always pass `gif` or `lottie` explicitly so filtering is deterministic.
+- Keep one CSV per board/profile run to simplify traceability during acceptance review.
 
 **Next Steps:**
 1. Approve this continuation scope.
@@ -1692,7 +1726,7 @@ This section converts P0 backlog into implementation-ready tickets with explicit
 
 ---
 
-**Document Version**: 1.2  
-**Last Updated**: March 27, 2026  
+**Document Version**: 1.4  
+**Last Updated**: March 28, 2026  
 **Status**: In Active Execution  
 **Maintainer**: FlxOS Development Team

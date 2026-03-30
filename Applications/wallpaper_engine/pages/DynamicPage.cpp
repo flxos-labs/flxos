@@ -37,7 +37,7 @@ DynamicPage::DynamicPage(lv_obj_t* parent, std::function<void()> onBack)
 	lv_obj_t* list = create_settings_list(m_container);
 	lv_list_add_text(list, "Select Algorithm");
 
-	for (const auto& algo : ALGORITHMS) {
+	for (const auto& algo: ALGORITHMS) {
 		lv_obj_t* btn = add_list_btn(list, LV_SYMBOL_LOOP, algo.label);
 		lv_obj_set_flex_grow(lv_obj_get_child(btn, 1), 1);
 
@@ -188,10 +188,10 @@ void DynamicPage::applyDynamicSource() const {
 		sizeof(source),
 		"algo://%s?speed=%d&palette=%s&particles=%d&noise=%d",
 		m_algorithm.c_str(),
-		m_speed,
+		static_cast<int>(m_speed),
 		m_palette.c_str(),
-		m_particles,
-		m_noise);
+		static_cast<int>(m_particles),
+		static_cast<int>(m_noise));
 
 	flx::system::WallpaperManager::getInstance().setWallpaper(source, "dynamic");
 }

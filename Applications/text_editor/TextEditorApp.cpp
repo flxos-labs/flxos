@@ -23,7 +23,9 @@ const AppManifest TextEditorApp::manifest = {
 	.description = "Create and edit text files",
 	.sortPriority = 40,
 	.capabilities = AppCapability::Storage,
+	.requiredServices = {},
 	.supportedMimeTypes = {"text/plain", "text/*"},
+	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<TextEditorApp>(); }};
 
 static constexpr const char* TAG = "TextEditorApp";
