@@ -66,9 +66,11 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 	esp_wifi_set_storage(WIFI_STORAGE_RAM);
 
 	wifi_config_t wifi_config = {};
-	strncpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid));
+	strncpy((char*)wifi_config.sta.ssid, ssid, sizeof(wifi_config.sta.ssid) - 1);
+	wifi_config.sta.ssid[sizeof(wifi_config.sta.ssid) - 1] = '\0';
 	if (password != nullptr) {
-		strncpy((char*)wifi_config.sta.password, password, sizeof(wifi_config.sta.password));
+		strncpy((char*)wifi_config.sta.password, password, sizeof(wifi_config.sta.password) - 1);
+		wifi_config.sta.password[sizeof(wifi_config.sta.password) - 1] = '\0';
 	}
 
 	wifi_mode_t current_mode = WIFI_MODE_NULL;
