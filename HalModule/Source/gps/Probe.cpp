@@ -12,7 +12,6 @@ std::shared_ptr<UartGpsDevice> ProbeGpsDevice(std::shared_ptr<flx::hal::uart::IU
 
 	const uint32_t bauds[] = {9600, 38400, 115200, 4800};
 	bool found = false;
-	uint32_t foundBaud = 0;
 
 	for (uint32_t baud: bauds) {
 		flx::Log::info(TAG, "Probing GPS at %lu baud...", baud);
@@ -41,7 +40,6 @@ std::shared_ptr<UartGpsDevice> ProbeGpsDevice(std::shared_ptr<flx::hal::uart::IU
 
 		if (trafficDetected) {
 			found = true;
-			foundBaud = baud;
 			flx::Log::info(TAG, "GPS module detected at %lu baud", baud);
 			break;
 		}
