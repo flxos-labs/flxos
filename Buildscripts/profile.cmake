@@ -866,6 +866,7 @@ function(_flx_generate_sdkconfig_frag PREFIX OUTPUT_FILE)
         string(APPEND _frag "CONFIG_LV_USE_SNAPSHOT=y\n")
         string(APPEND _frag "CONFIG_LV_USE_SYSMON=y\n")
         string(APPEND _frag "CONFIG_LV_USE_PERF_MONITOR=y\n")
+        string(APPEND _frag "CONFIG_LV_PERF_MONITOR_ALIGN_TOP_LEFT=y\n")
         # We also need to inject the LGFX user file explicitly for LVGL
         string(APPEND _frag "CONFIG_LV_LGFX_USER_INCLUDE=\"../../../../../../HalModule/Include/flx/hal/lv_lgfx_user.hpp\"\n")
         string(APPEND _frag "CONFIG_LV_BUILD_EXAMPLES=n\n")
