@@ -19,7 +19,7 @@
 #include "esp_adc/adc_cali_scheme.h"
 #include "esp_adc/adc_oneshot.h"
 #endif
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 #include "display/lv_display.h"
 #include "misc/lv_color.h"
 #include "misc/lv_types.h"
@@ -147,7 +147,7 @@ SystemStats SystemInfoService::getSystemStats() {
 	stats.displayResY = 0;
 	stats.displayBpp = 0;
 	stats.colorFormat = "Unknown";
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 	lv_display_t* disp = lv_display_get_default();
 	if (disp) {
 		stats.displayResX = lv_display_get_horizontal_resolution(disp);
