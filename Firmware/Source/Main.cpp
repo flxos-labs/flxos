@@ -7,7 +7,7 @@ static_assert(flx::config::profile.id[0] != '\0', "No device profile selected.")
 #include <flx/core/Logger.hpp>
 #include <flx/system/SystemManager.hpp>
 
-#if LV_USE_LOVYAN_GFX
+#if CONFIG_LV_USE_LOVYAN_GFX
 #include "font/lv_symbol_def.h"
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/ui/GuiTask.hpp>
@@ -40,7 +40,7 @@ extern "C" void app_main(void) {
 		flx::system::CliService::getInstance().start();
 	}
 
-#if LV_USE_LOVYAN_GFX
+#if CONFIG_LV_USE_LOVYAN_GFX
 	// Register built-in apps with the AppRegistry
 	Log::info(TAG, "Registering apps with AppRegistry...");
 	System::Apps::registerBuiltInApps();
