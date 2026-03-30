@@ -12,7 +12,7 @@
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
 #include <flx/system/SystemManager.hpp>
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 #include <flx/system/managers/DisplayManager.hpp>
 #include <flx/system/managers/ThemeManager.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
@@ -25,7 +25,7 @@
 #endif
 #include <flx/system/services/DeviceProfileService.hpp>
 #include <flx/system/services/HalInitService.hpp>
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #endif
@@ -82,7 +82,7 @@ void SystemManager::registerServices() {
 	auto noDelete = [](auto*) {}; // Custom deleter that does nothing
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::system::services::HalInitService::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&SettingsManager::getInstance(), noDelete));
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 	registry.addService(std::shared_ptr<flx::services::IService>(&DisplayManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&ThemeManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&WallpaperManager::getInstance(), noDelete));
@@ -97,7 +97,7 @@ void SystemManager::registerServices() {
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::SdCardService::getInstance(), noDelete));
 #endif
 
-#if !CONFIG_FLXOS_HEADLESS_MODE
+#if LV_USE_LOVYAN_GFX
 	registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
 #endif
@@ -110,7 +110,7 @@ esp_err_t SystemManager::initServices() {
 	auto& registry = flx::services::ServiceRegistry::getInstance();
 
 	bool guiMode = true;
-#if CONFIG_FLXOS_HEADLESS_MODE
+#if !LV_USE_LOVYAN_GFX
 	guiMode = false;
 #endif
 
