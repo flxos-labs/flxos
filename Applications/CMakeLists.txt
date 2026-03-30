@@ -8,9 +8,15 @@ else()
     message("APPLICATIONS: GRAPHICAL MODE DETECTED (OFF)")
     # Auto-discover all application translation units so adding a new app
     # does not require touching CMake.
-    file(GLOB_RECURSE APP_SOURCES
-        "*.cpp"
-    )
+    if(DEFINED CMAKE_SCRIPT_MODE_FILE)
+        file(GLOB_RECURSE APP_SOURCES
+            "*.cpp"
+        )
+    else()
+        file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS
+            "*.cpp"
+        )
+    endif()
     set(APP_REQUIRES Core Apps UI Connectivity System)
 endif()
 
