@@ -19,7 +19,7 @@ void PerformanceMonitor::recordFrame(uint32_t frame_time_ms) {
 	if (m_window_elapsed_ms >= WINDOW_MS) {
 		float const window_fps = (m_window_elapsed_ms > 0U)
 			? (static_cast<float>(m_window_frame_count) * 1000.0f) /
-			  static_cast<float>(m_window_elapsed_ms)
+				static_cast<float>(m_window_elapsed_ms)
 			: 0.0f;
 		constexpr float alpha = 0.3f;
 		m_ema_fps = (m_ema_fps > 0.0f)
@@ -65,7 +65,7 @@ bool PerformanceMonitor::shouldReduceQuality() const {
 	}
 	Metrics const m = getMetrics();
 	return (m.average_fps < (TARGET_FPS * 0.8f)) ||
-	       (m.cpu_usage_percent > CPU_WARNING_PCT);
+		(m.cpu_usage_percent > CPU_WARNING_PCT);
 }
 
 int32_t PerformanceMonitor::getAdaptiveQualityLevel() const {

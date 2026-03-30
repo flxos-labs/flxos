@@ -29,6 +29,9 @@ const AppManifest WallpaperEngineApp::manifest = {
 	.location = AppLocation::internal(),
 	.description = "Browse presets, apply effects, and configure generative wallpapers",
 	.sortPriority = 15,
+	.requiredServices = {},
+	.supportedMimeTypes = {},
+	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<WallpaperEngineApp>(); }};
 
 // ---------------------------------------------------------------------------
@@ -55,7 +58,7 @@ void WallpaperEngineApp::createUI(void* parent) {
 
 	m_bannerPollTimer = lv_timer_create(
 		[](lv_timer_t* timer) {
-			auto* app = static_cast<WallpaperEngineApp*>(timer->user_data);
+			auto* app = static_cast<WallpaperEngineApp*>(lv_timer_get_user_data(timer));
 			if (app != nullptr) {
 				app->pollBannerDismissState();
 			}
@@ -114,7 +117,7 @@ void WallpaperEngineApp::ensureFallbackBanner() {
 	lv_obj_set_style_radius(m_fallbackBanner, 0, 0);
 	lv_obj_set_style_border_width(m_fallbackBanner, 0, 0);
 	lv_obj_set_style_bg_color(m_fallbackBanner, lv_palette_main(LV_PALETTE_RED), 0);
-	lv_obj_set_style_bg_opa(m_fallbackBanner, LV_OPA_85, 0);
+	lv_obj_set_style_bg_opa(m_fallbackBanner, LV_OPA_80, 0);
 	lv_obj_set_style_pad_all(m_fallbackBanner, 8, 0);
 	lv_obj_set_style_pad_column(m_fallbackBanner, 8, 0);
 	lv_obj_set_style_pad_row(m_fallbackBanner, 8, 0);

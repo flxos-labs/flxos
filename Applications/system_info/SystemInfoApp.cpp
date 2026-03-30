@@ -46,6 +46,9 @@ const AppManifest SystemInfoApp::manifest = {
 	.location = AppLocation::internal(),
 	.description = "System diagnostics and hardware information",
 	.sortPriority = 30,
+	.requiredServices = {},
+	.supportedMimeTypes = {},
+	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<SystemInfoApp>(); }};
 
 SystemInfoApp::SystemInfoApp() {

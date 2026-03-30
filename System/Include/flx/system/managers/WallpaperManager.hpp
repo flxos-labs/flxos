@@ -24,8 +24,8 @@ public:
 	void setWallpaper(const std::string& source, const std::string& type);
 	void setAnimationSpeed(int32_t speed);
 	void setQualityLevel(int32_t level);
-	void applyEffect(const std::string& effect_name, const std::string& params_json);
-	void removeEffect(const std::string& effect_name);
+	void applyEffect(const std::string& key, const std::string& value);
+	void removeEffect(const std::string& key);
 
 	flx::Observable<int32_t>& getWallpaperEnabledObservable();
 	flx::StringObservable& getWallpaperSourceObservable();

@@ -66,7 +66,7 @@ public:
 	/** Remove all effects, resetting styles on @p target if provided. */
 	void clearAll(lv_obj_t* target = nullptr) {
 		if (target != nullptr) {
-			for (auto& [name, effect] : m_effects) {
+			for (auto& [name, effect]: m_effects) {
 				effect->reset(target);
 			}
 		}
@@ -78,7 +78,7 @@ public:
 		if (target == nullptr) {
 			return;
 		}
-		for (auto& [name, effect] : m_effects) {
+		for (auto& [name, effect]: m_effects) {
 			effect->process(target, elapsed_ms);
 		}
 	}

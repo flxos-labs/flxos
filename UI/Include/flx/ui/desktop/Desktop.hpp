@@ -50,6 +50,7 @@ private:
 	lv_obj_t* m_notification_list {};
 	lv_obj_t* m_clear_all_btn {};
 	lv_obj_t* m_greetings {};
+	lv_obj_t* m_wallpaper_perf_overlay {};
 	lv_obj_t* m_app_container {};
 	std::unique_ptr<UI::Modules::SwipeManager> m_swipeManagerModule {};
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_rotationObserver;
@@ -72,10 +73,17 @@ private:
 	std::string m_providerBenchmarkPath {"/data/wallpaper_benchmark.csv"};
 	bool m_providerBenchmarkHeaderWritten {false};
 	bool m_providerBenchmarkWriteFailed {false};
+	uint32_t m_overlayWindowMs {0};
+	uint32_t m_overlayFrameCount {0};
+	uint64_t m_overlayTotalFrameMs {0};
+	uint32_t m_overlayMaxFrameMs {0};
+	bool m_lastBenchmarkEnabled {false};
 
 	void update_notification_list();
 	void realign_panels();
 	void configure_panel_style(lv_obj_t* panel);
+	void setWallpaperPerfOverlayVisible(bool visible);
+	void updateWallpaperPerfOverlay(const std::string& type, float fps, float avgFrameMs, uint32_t maxFrameMs, uint32_t extraHeapBytes);
 	void syncWallpaperProvider(uint32_t delta_ms);
 	void handleWallpaperProviderFailure(const std::string& requestedType, const std::string& source, const std::string& error);
 	void evaluateWallpaperAcceptanceGate(const std::string& type, const std::string& source, uint32_t delta_ms);
