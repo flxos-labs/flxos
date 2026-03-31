@@ -257,15 +257,17 @@ esp_err_t HotspotManager::start(const char* ssid, const char* password, int chan
 		ConnectivityManager::getInstance().getWifiMutex());
 
 	wifi_config_t wifi_config = {};
-	strncpy((char*)wifi_config.ap.ssid, ssid, sizeof(wifi_config.ap.ssid));
-	wifi_config.ap.ssid_len = strlen(ssid);
+	size_t const copied_ssid_len = strnlen(ssid, sizeof(wifi_config.ap.ssid));
+	memcpy(wifi_config.ap.ssid, ssid, copied_ssid_len);
+	wifi_config.ap.ssid_len = static_cast<uint8_t>(copied_ssid_len);
 	wifi_config.ap.max_connection = max_connections;
 	wifi_config.ap.authmode = auth_mode;
 	wifi_config.ap.channel = channel;
 	wifi_config.ap.ssid_hidden = hidden ? 1 : 0;
 
 	if (auth_mode != WIFI_AUTH_OPEN && password) {
-		strncpy((char*)wifi_config.ap.password, password, sizeof(wifi_config.ap.password));
+		strncpy((char*)wifi_config.ap.password, password, sizeof(wifi_config.ap.password) - 1);
+		wifi_config.ap.password[sizeof(wifi_config.ap.password) - 1] = '\0';
 	}
 
 	// Determine target mode to avoid killing existing station connection
@@ -460,7 +462,7 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
 			for (auto it = self->m_clients.begin(); it != self->m_clients.end();
-				++it) {
+				 ++it) {
 				if (memcmp(it->mac, event->mac, 6) == 0) {
 					self->m_clients.erase(it);
 					break;

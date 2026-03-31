@@ -6,16 +6,17 @@ if(FLXOS_HEADLESS_MODE_ENABLED STREQUAL "ON")
     message("APPLICATIONS: HEADLESS MODE DETECTED (ON)")
 else()
     message("APPLICATIONS: GRAPHICAL MODE DETECTED (OFF)")
-    file(GLOB_RECURSE APP_SOURCES
-        "settings/*.cpp"
-        "files/*.cpp"
-        "calendar/*.cpp"
-        "text_editor/*.cpp"
-        "image_viewer/*.cpp"
-        "system_info/*.cpp"
-        "tools/*.cpp"
-        "wallpaper_engine/*.cpp"
-    )
+    # Auto-discover all application translation units so adding a new app
+    # does not require touching CMake.
+    if(DEFINED CMAKE_SCRIPT_MODE_FILE)
+        file(GLOB_RECURSE APP_SOURCES
+            "*.cpp"
+        )
+    else()
+        file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS
+            "*.cpp"
+        )
+    endif()
     set(APP_REQUIRES Core Apps UI Connectivity System)
 endif()
 

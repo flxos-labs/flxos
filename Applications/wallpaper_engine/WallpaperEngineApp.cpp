@@ -261,8 +261,6 @@ void WallpaperEngineApp::showMainMenu() {
 		lv_obj_set_size(m_mainMenu, lv_pct(100), lv_pct(100));
 		lv_obj_set_style_border_width(m_mainMenu, 0, 0);
 
-		lv_list_add_text(m_mainMenu, "Wallpaper Engine");
-
 		// Presets
 		lv_obj_t* presetsBtn = add_list_btn(m_mainMenu, LV_SYMBOL_IMAGE, "Presets");
 		lv_obj_add_event_cb(

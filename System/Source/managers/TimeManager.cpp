@@ -103,7 +103,7 @@ void TimeManager::setTimeZone(const char* tz) {
 void TimeManager::setCompileTime() {
 	char s_month[5];
 	int day, year, hour, minute, second;
-	struct tm t = {0};
+	struct tm t {};
 	static const char month_names[] = "JanFebMarAprMayJunJulAugSepOctNovDec";
 
 	sscanf(__DATE__, "%s %d %d", s_month, &day, &year);
