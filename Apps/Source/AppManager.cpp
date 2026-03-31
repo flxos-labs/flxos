@@ -520,7 +520,8 @@ void AppManager::finishAppImpl(LaunchId id, ResultCode resultCode, const flx::co
 	if (leakedBytes > 1024) {
 		Log::warn("AppManager", "Possible leak: %s retained %ld bytes after finish", pkg.c_str(), (long)leakedBytes);
 	}
-	long externalRefs = static_cast<long>(appWeak.use_count());
+	const long totalRefs = static_cast<long>(appWeak.use_count());
+	const long externalRefs = std::max(0L, totalRefs - 1L); // Exclude the always-on registered-app reference.
 	if (externalRefs > 0) {
 		Log::warn("AppManager", "Ref leak: %s still has %ld external refs after finish", pkg.c_str(), externalRefs);
 	}
@@ -637,7 +638,8 @@ bool AppManager::stopAppImpl(const std::string& packageName, bool closeUI) {
 	if (leakedBytes > 1024) {
 		Log::warn("AppManager", "Possible leak: %s retained %ld bytes after stop", packageName.c_str(), (long)leakedBytes);
 	}
-	long externalRefs = static_cast<long>(appWeak.use_count());
+	const long totalRefs = static_cast<long>(appWeak.use_count());
+	const long externalRefs = std::max(0L, totalRefs - 1L); // Exclude the always-on registered-app reference.
 	if (externalRefs > 0) {
 		Log::warn("AppManager", "Ref leak: %s still has %ld external refs after stop", packageName.c_str(), externalRefs);
 	}

@@ -13,7 +13,7 @@ else()
         "Source/wallpaper/providers/LottieProvider.cpp"
     )
     list(APPEND UI_REQUIRES lvgl)
-    list(APPEND UI_PRIV_REQUIRES LovyanGFX HalModule Profiles json)
+        list(APPEND UI_PRIV_REQUIRES LovyanGFX HalModule Profiles json)
 endif()
 
 idf_component_register(
