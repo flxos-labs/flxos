@@ -45,7 +45,7 @@ Current baseline from latest run:
 
 | Date | Artifact | Status | Notes |
 |---|---|---|---|
-| 2026-03-31 | /tmp/flxos-premium-baseline/*.log | Complete | Initial baseline logs captured from all five quality scripts. |
+| 2026-03-31 | reports/premium_readiness/2026-03-31/premium_baseline_logs/*.log | Complete | Initial baseline logs from all five quality scripts, stored under versioned reports directory. |
 | 2026-03-31 | reports/premium_readiness/2026-03-31/premium_baseline_report.md | Complete | Regenerated after quick wins; current score is 1/5 gates passing. |
 
 ## Blockers and Decisions
