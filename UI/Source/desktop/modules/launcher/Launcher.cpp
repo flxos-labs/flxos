@@ -1,14 +1,8 @@
-#include "core/lv_obj.h"
-#include "core/lv_obj_pos.h"
-#include "core/lv_obj_style.h"
-#include "core/lv_obj_style_gen.h"
-#include "display/lv_display.h"
-#include "layouts/flex/lv_flex.h"
-#include "misc/lv_area.h"
-#include "misc/lv_event.h"
-#include "misc/lv_text.h"
-#include "misc/lv_types.h"
-#include "widgets/label/lv_label.h"
+#include <core/lv_obj.h>
+#include <core/lv_obj_pos.h>
+#include <core/lv_obj_style.h>
+#include <core/lv_obj_style_gen.h>
+#include <display/lv_display.h>
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/apps/AppRegistry.hpp>
@@ -16,6 +10,12 @@
 #include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
+#include <layouts/flex/lv_flex.h>
+#include <misc/lv_area.h>
+#include <misc/lv_event.h>
+#include <misc/lv_text.h>
+#include <misc/lv_types.h>
+#include <widgets/label/lv_label.h>
 
 namespace UI::Modules {
 
