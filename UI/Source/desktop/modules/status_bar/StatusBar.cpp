@@ -1,21 +1,14 @@
-#include "core/lv_obj.h"
-#include "core/lv_obj_pos.h"
-#include "core/lv_obj_scroll.h"
-#include "core/lv_obj_style.h"
-#include "core/lv_obj_style_gen.h"
-#include "core/lv_obj_tree.h"
-#include "core/lv_observer.h"
-#include "display/lv_display.h"
-#include "flx/connectivity/ConnectivityManager.hpp"
-#include "font/lv_symbol_def.h"
-#include "layouts/flex/lv_flex.h"
-#include "misc/lv_area.h"
-#include "misc/lv_timer.h"
-#include "misc/lv_types.h"
-#include "widgets/image/lv_image.h"
-#include "widgets/label/lv_label.h"
+#include <core/lv_obj.h>
+#include <core/lv_obj_pos.h>
+#include <core/lv_obj_scroll.h>
+#include <core/lv_obj_style.h>
+#include <core/lv_obj_style_gen.h>
+#include <core/lv_obj_tree.h>
+#include <core/lv_observer.h>
 #include <cstdint>
 #include <ctime>
+#include <display/lv_display.h>
+#include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
@@ -26,7 +19,14 @@
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
+#include <font/lv_symbol_def.h>
+#include <layouts/flex/lv_flex.h>
+#include <misc/lv_area.h>
+#include <misc/lv_timer.h>
+#include <misc/lv_types.h>
 #include <string>
+#include <widgets/image/lv_image.h>
+#include <widgets/label/lv_label.h>
 
 namespace UI::Modules {
 

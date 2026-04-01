@@ -1,28 +1,28 @@
-#include "core/lv_obj.h"
-#include "core/lv_obj_event.h"
-#include "core/lv_obj_pos.h"
-#include "core/lv_obj_style.h"
-#include "core/lv_obj_style_gen.h"
-#include "core/lv_obj_tree.h"
-#include "core/lv_observer.h"
-#include "display/lv_display.h"
-#include "draw/lv_draw_rect.h"
-#include "font/lv_symbol_def.h"
-#include "layouts/flex/lv_flex.h"
-#include "lv_api_map_v9_1.h"
-#include "misc/lv_area.h"
-#include "misc/lv_event.h"
-#include "misc/lv_text.h"
-#include "misc/lv_types.h"
-#include "widgets/button/lv_button.h"
-#include "widgets/label/lv_label.h"
+#include <core/lv_obj.h>
+#include <core/lv_obj_event.h>
+#include <core/lv_obj_pos.h>
+#include <core/lv_obj_style.h>
+#include <core/lv_obj_style_gen.h>
+#include <core/lv_obj_tree.h>
+#include <core/lv_observer.h>
 #include <ctime>
+#include <display/lv_display.h>
+#include <draw/lv_draw_rect.h>
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/desktop/modules/notification_panel/NotificationPanel.hpp>
 #include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
+#include <font/lv_symbol_def.h>
+#include <layouts/flex/lv_flex.h>
+#include <lv_api_map_v9_1.h>
+#include <misc/lv_area.h>
+#include <misc/lv_event.h>
+#include <misc/lv_text.h>
+#include <misc/lv_types.h>
+#include <widgets/button/lv_button.h>
+#include <widgets/label/lv_label.h>
 
 namespace UI::Modules {
 

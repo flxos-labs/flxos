@@ -4,28 +4,14 @@
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
-#include "core/lv_obj.h"
-#include "core/lv_obj_pos.h"
-#include "core/lv_obj_style.h"
-#include "core/lv_obj_style_gen.h"
-#include "core/lv_observer.h"
-#include "display/lv_display.h"
-#include "draw/lv_draw_rect.h"
-#include "flx/ui/desktop/window_manager/WindowManager.hpp"
-#include "flx/ui/theming/themes/Themes.hpp"
-#include "font/lv_symbol_def.h"
-#include "layouts/flex/lv_flex.h"
-#include "misc/lv_area.h"
-#include "misc/lv_event.h"
-#include "misc/lv_log.h"
-#include "misc/lv_text.h"
-#include "misc/lv_timer.h"
-#include "misc/lv_types.h"
-#include "widgets/button/lv_button.h"
-#include "widgets/image/lv_image.h"
-#include "widgets/label/lv_label.h"
-#include "widgets/slider/lv_slider.h"
+#include <core/lv_obj.h>
+#include <core/lv_obj_pos.h>
+#include <core/lv_obj_style.h>
+#include <core/lv_obj_style_gen.h>
+#include <core/lv_observer.h>
 #include <cstdint>
+#include <display/lv_display.h>
+#include <draw/lv_draw_rect.h>
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/Intent.hpp>
 #include <flx/core/Logger.hpp>
@@ -33,8 +19,22 @@
 #include <flx/system/managers/ThemeManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #include <flx/ui/desktop/modules/dock/Dock.hpp>
+#include <flx/ui/desktop/window_manager/WindowManager.hpp>
 #include <flx/ui/managers/FocusManager.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
+#include <font/lv_symbol_def.h>
+#include <layouts/flex/lv_flex.h>
+#include <misc/lv_area.h>
+#include <misc/lv_event.h>
+#include <misc/lv_log.h>
+#include <misc/lv_text.h>
+#include <misc/lv_timer.h>
+#include <misc/lv_types.h>
+#include <widgets/button/lv_button.h>
+#include <widgets/image/lv_image.h>
+#include <widgets/label/lv_label.h>
+#include <widgets/slider/lv_slider.h>
 
 namespace UI::Modules {
 
