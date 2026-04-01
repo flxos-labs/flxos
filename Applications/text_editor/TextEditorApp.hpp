@@ -1,10 +1,10 @@
 #pragma once
 
-#include "lvgl.h"
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/ui/components/FileBrowser.hpp>
 #include <functional>
+#include <lvgl.h>
 #include <memory>
 #include <string>
 

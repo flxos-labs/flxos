@@ -1,31 +1,32 @@
-#include "SystemInfoApp.hpp"
-#include "core/lv_obj.h"
-#include "core/lv_obj_pos.h"
-#include "core/lv_obj_style.h"
-#include "core/lv_obj_style_gen.h"
-#include "display/lv_display.h"
-#include "esp_timer.h"
-#include "font/lv_font.h"
-#include "freertos/idf_additions.h"
-#include "layouts/flex/lv_flex.h"
-#include "misc/lv_anim.h"
-#include "misc/lv_area.h"
-#include "misc/lv_color.h"
-#include "misc/lv_types.h"
-#include "widgets/bar/lv_bar.h"
-#include "widgets/label/lv_label.h"
-#include "widgets/table/lv_table.h"
-#include "widgets/tabview/lv_tabview.h"
 #include <algorithm>
+#include <core/lv_obj.h>
+#include <core/lv_obj_pos.h>
+#include <core/lv_obj_style.h>
+#include <core/lv_obj_style_gen.h>
 #include <cstddef>
 #include <cstdint>
+#include <display/lv_display.h>
+#include <esp_timer.h>
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/DeviceProfileService.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
 #include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
+#include <font/lv_font.h>
+#include <freertos/idf_additions.h>
+#include <layouts/flex/lv_flex.h>
+#include <misc/lv_anim.h>
+#include <misc/lv_area.h>
+#include <misc/lv_color.h>
+#include <misc/lv_types.h>
 #include <string_view>
+#include <widgets/bar/lv_bar.h>
+#include <widgets/label/lv_label.h>
+#include <widgets/table/lv_table.h>
+#include <widgets/tabview/lv_tabview.h>
+
+#include "SystemInfoApp.hpp"
 
 static constexpr std::string_view TAG = "SystemInfoApp";
 
