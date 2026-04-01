@@ -87,9 +87,11 @@ jobs:
       - name: Install clang-format
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-format
+          sudo apt-get install -y clang-format-18
 
       - name: Check formatting
+        env:
+          CLANG_FORMAT: clang-format-18
         run: ./scripts/check_format.sh
 
   python-analysis:
