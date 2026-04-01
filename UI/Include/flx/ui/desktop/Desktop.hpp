@@ -1,6 +1,5 @@
 #pragma once
 
-#include "lvgl.h"
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <flx/ui/desktop/modules/dock/Dock.hpp>
 #include <flx/ui/desktop/modules/floating_notifications/FloatingNotifications.hpp>
@@ -10,6 +9,7 @@
 #include <flx/ui/desktop/modules/status_bar/StatusBar.hpp>
 #include <flx/ui/desktop/modules/swipe_manager/SwipeManager.hpp>
 #include <flx/ui/wallpaper/IWallpaperProvider.hpp>
+#include <lvgl.h>
 #include <memory>
 #include <string>
 #include <vector>
