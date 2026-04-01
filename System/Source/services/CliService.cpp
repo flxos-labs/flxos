@@ -5,12 +5,12 @@
 #include <flx/system/services/CliService.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
 
-#include "esp_console.h"
-#include "esp_err.h"
-#include "esp_system.h"
-#include "esp_timer.h"
-#include "freertos/idf_additions.h"
-#include "freertos/projdefs.h"
+#include <esp_console.h>
+#include <esp_err.h>
+#include <esp_system.h>
+#include <esp_timer.h>
+#include <freertos/idf_additions.h>
+#include <freertos/projdefs.h>
 
 #include <cerrno>
 #include <cstdint>
@@ -34,7 +34,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-#include "freertos/semphr.h"
+#include <freertos/semphr.h>
 
 static constexpr const char* TAG = "CLI";
 
