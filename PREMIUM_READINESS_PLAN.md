@@ -1,8 +1,8 @@
 # FlxOS Premium Readiness Master Plan
 
 Status: Active
-Version: 1.0
-Last Updated: 2026-03-31
+Version: 1.1
+Last Updated: 2026-04-01
 Program Horizon: 12 weeks (rolling)
 
 ## 1. Program Objective
@@ -32,8 +32,32 @@ Overall initial baseline:
 - Gates passed: 0/5
 - Gates failed: 5/5
 
-Latest post-quick-win rerun (same date) is tracked in `PREMIUM_READINESS_TRACKER.md` and
-`reports/premium_readiness/2026-03-31/premium_baseline_report.md` (currently 1/5 gates passing).
+## 2.1 Current Checkpoint (2026-04-01)
+
+Latest baseline run from scripts/run_premium_baseline.sh:
+
+| Gate | Result | Current Value |
+|---|---|---|
+| Format | Pass | 0 files need formatting |
+| Naming | Fail | 80 issues |
+| Documentation | Fail | 835 issues (236 header + 599 API docs + 0 README) |
+| Includes | Fail | 674 include order issues |
+| Complexity | Fail | 87 issues |
+
+Checkpoint summary:
+- Gates passed: 1/5
+- Gates failed: 4/5
+- Net progress since baseline: formatting and README coverage sustained; naming/include/complexity unchanged.
+
+## 2.2 P0-04 Include Tranche Progress (2026-04-01)
+
+Targeted include-only reruns after tranche work show:
+- Include order issues: 347 (down from 674)
+- Net reduction: 327 issues
+- Evidence: reports/premium_readiness/2026-04-01/includes_p0_04_tranche1.log, reports/premium_readiness/2026-04-01/includes_p0_04_tranche2.log, reports/premium_readiness/2026-04-01/includes_p0_04_tranche3.log, reports/premium_readiness/2026-04-01/includes_p0_04_tranche4.log, and reports/premium_readiness/2026-04-01/includes_p0_04_tranche5.log
+
+Note:
+- This reflects focused include checker reruns; a full 5-gate baseline rerun is still required for the next global checkpoint snapshot.
 
 ## 3. Success Metrics
 
@@ -167,9 +191,9 @@ Governance:
 ## 6. Priority Backlog (Next 2 Weeks)
 
 1. Close WS1 quick wins.
-2. Publish module README skeletons for all missing modules.
-3. Reduce include issues by at least 40 percent via deterministic ordering sweep.
-4. Reduce top-10 complexity hotspots with behavior-preserving refactors.
+2. Start documentation tranche-1 to reduce file-header debt and public API doc gaps in highest-use modules.
+3. Completed 2026-04-01: reduce include issues below week-4 target (674 -> 347) via deterministic ordering sweeps in low-risk files first.
+4. Reduce top-4 complexity hotspots with behavior-preserving refactors and evidence logs.
 5. Establish first build matrix for two headless and two graphical profiles.
 
 ## 7. Risks and Mitigations
@@ -181,8 +205,16 @@ Governance:
 | Profile-mode differences cause hidden breakages | Runtime instability | Enforce matrix runs on every release branch cut |
 | Documentation backlog grows faster than edits | Drift | Add docs update requirement to PR checklist |
 
-## 8. Immediate Start Actions (Executed Today)
+## 8. Program Launch Actions (Executed 2026-03-31)
 
 1. Baseline quality run captured with logs and counts.
 2. Premium execution tracker initialized.
 3. Automated baseline script added for repeatable reporting.
+
+## 9. Current Sprint Focus (2026-04-01 to 2026-04-14)
+
+1. WS5 include-order tranches 1 and 2 complete: fixed 327 include-order issues in low-risk modules; week-4 target achieved (<= 350). Next is tranche-3 toward <= 120.
+2. WS2 hotspot decomposition prep: create extraction plans for FileSystemService, ServiceRegistry, AppManager, and Desktop.
+3. WS4 docs tranche-1: add file headers and API docs for top-impact headers to reduce docs issues by at least 120.
+4. WS1 naming signal cleanup: classify true violations vs acceptable external/C-style names and prepare rule-tuning proposal.
+5. WS6 matrix bootstrap: define 4-profile smoke command matrix and capture first reproducible local run evidence.
