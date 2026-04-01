@@ -1,33 +1,33 @@
-#include "Config.hpp"
-#include "esp_chip_info.h"
-#include "esp_err.h"
-#include "esp_heap_caps.h"
-#include "esp_idf_version.h"
-#include "esp_mac.h"
-#include "esp_system.h"
-#include "esp_timer.h"
-#include "esp_vfs_fat.h"
-#include "esp_wifi.h"
-#include "esp_wifi_types_generic.h"
-#include "freertos/task.h"
-#include "sdkconfig.h"
+#include <Config.hpp>
+#include <esp_chip_info.h>
+#include <esp_err.h>
+#include <esp_heap_caps.h>
+#include <esp_idf_version.h>
+#include <esp_mac.h>
+#include <esp_system.h>
+#include <esp_timer.h>
+#include <esp_vfs_fat.h>
+#include <esp_wifi.h>
+#include <esp_wifi_types_generic.h>
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
+#include <freertos/task.h>
+#include <sdkconfig.h>
 #if FLXOS_BATTERY_ENABLED
-#include "esp_adc/adc_cali.h"
-#include "esp_adc/adc_cali_scheme.h"
-#include "esp_adc/adc_oneshot.h"
+#include <esp_adc/adc_cali.h>
+#include <esp_adc/adc_cali_scheme.h>
+#include <esp_adc/adc_oneshot.h>
 #endif
 #if LV_USE_LOVYAN_GFX
-#include "display/lv_display.h"
-#include "misc/lv_color.h"
-#include "misc/lv_types.h"
+#include <display/lv_display.h>
+#include <misc/lv_color.h>
+#include <misc/lv_types.h>
 #endif
-#include "portmacro.h"
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
+#include <portmacro.h>
 #include <string_view>
 
 static constexpr std::string_view TAG = "SystemInfo";

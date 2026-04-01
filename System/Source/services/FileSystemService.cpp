@@ -1,8 +1,8 @@
 #include <flx/system/services/FileSystemService.hpp>
 
-#include "Config.hpp"
-#include "esp_timer.h"
-#include "sdkconfig.h"
+#include <Config.hpp>
+#include <esp_timer.h>
+#include <sdkconfig.h>
 
 #include <flx/core/Logger.hpp>
 #include <flx/hal/BusManager.hpp>
@@ -11,8 +11,8 @@
 #include <flx/system/services/SdCardService.hpp>
 #endif
 
-#include "freertos/projdefs.h"
-#include "freertos/queue.h"
+#include <freertos/projdefs.h>
+#include <freertos/queue.h>
 
 #include <array>
 #include <cerrno>

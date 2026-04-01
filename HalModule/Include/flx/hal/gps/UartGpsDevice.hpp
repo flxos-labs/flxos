@@ -1,11 +1,11 @@
 #pragma once
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include <atomic>
 #include <flx/hal/DeviceBase.hpp>
 #include <flx/hal/gps/IGpsDevice.hpp>
 #include <flx/hal/uart/IUartBus.hpp>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <memory>
 #include <mutex>
 #include <string>

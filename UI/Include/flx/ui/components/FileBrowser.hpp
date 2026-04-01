@@ -1,12 +1,12 @@
 #pragma once
 
-#include "lvgl.h"
 #include <algorithm>
 #include <atomic>
 #include <cctype>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <functional>
+#include <lvgl.h>
 #include <memory>
 #include <string.h>
 #include <vector>

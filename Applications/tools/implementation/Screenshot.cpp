@@ -1,4 +1,3 @@
-#include "Screenshot.hpp"
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
@@ -6,8 +5,8 @@
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
-#include "Config.hpp"
-#include "sdkconfig.h"
+#include <Config.hpp>
+#include <sdkconfig.h>
 
 #if FLXOS_SD_CARD_ENABLED
 #include <flx/system/services/SdCardService.hpp>
@@ -17,6 +16,8 @@
 #include <cstring>
 #include <ctime>
 #include <sys/stat.h>
+
+#include "Screenshot.hpp"
 
 static constexpr std::string_view TAG = "Screenshot";
 

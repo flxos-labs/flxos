@@ -1,11 +1,6 @@
-#include "esp_system.h"
-#include "esp_timer.h"
-#include "freertos/idf_additions.h"
-#include "freertos/projdefs.h"
-#include "freertos/queue.h"
-#include "freertos/semphr.h"
-#include "portmacro.h"
 #include <algorithm> // Explicitly include for std::find_if
+#include <esp_system.h>
+#include <esp_timer.h>
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/apps/AppRegistry.hpp>
@@ -15,7 +10,12 @@
 #include <flx/hal/HardwareCapabilities.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
+#include <freertos/idf_additions.h>
+#include <freertos/projdefs.h>
+#include <freertos/queue.h>
+#include <freertos/semphr.h>
 #include <limits>
+#include <portmacro.h>
 #include <utility>
 
 namespace flx::apps {

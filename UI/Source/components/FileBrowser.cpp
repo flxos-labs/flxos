@@ -1,9 +1,9 @@
 #include <flx/ui/components/FileBrowser.hpp>
 
-#include "flx/ui/theming/ui_constants/UiConstants.hpp"
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/ui/UiAsyncHelpers.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
 #include <algorithm>
 #include <cctype>

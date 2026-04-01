@@ -1,5 +1,5 @@
-#include "sdkconfig.h"
 #include <Config.hpp>
+#include <sdkconfig.h>
 
 // Profile must be selected at build time via profile.yaml
 static_assert(flx::config::profile.id[0] != '\0', "No device profile selected.");
@@ -8,9 +8,9 @@ static_assert(flx::config::profile.id[0] != '\0', "No device profile selected.")
 #include <flx/system/SystemManager.hpp>
 
 #if CONFIG_LV_USE_LOVYAN_GFX
-#include "font/lv_symbol_def.h"
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/ui/GuiTask.hpp>
+#include <font/lv_symbol_def.h>
 
 namespace System::Apps {
 void registerBuiltInApps();
@@ -21,8 +21,8 @@ void registerBuiltInApps();
 #include <flx/system/services/CliService.hpp>
 #include <memory>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <string_view>
 
 static constexpr std::string_view TAG = "Main";
