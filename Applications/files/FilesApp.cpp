@@ -1,28 +1,26 @@
-#include "FilesApp.hpp"
-
-#include "core/lv_obj.h"
-#include "core/lv_obj_event.h"
-#include "core/lv_obj_pos.h"
-#include "core/lv_obj_style.h"
-#include "core/lv_obj_style_gen.h"
-#include "core/lv_obj_tree.h"
-#include "core/lv_refr.h"
-#include "display/lv_display.h"
-#include "esp_timer.h"
-#include "font/lv_symbol_def.h"
-#include "layouts/flex/lv_flex.h"
-#include "misc/lv_anim.h"
-#include "misc/lv_color.h"
-#include "misc/lv_event.h"
-#include "misc/lv_types.h"
-#include "widgets/bar/lv_bar.h"
-#include "widgets/button/lv_button.h"
-#include "widgets/dropdown/lv_dropdown.h"
-#include "widgets/image/lv_image.h"
-#include "widgets/label/lv_label.h"
-#include "widgets/list/lv_list.h"
-#include "widgets/msgbox/lv_msgbox.h"
-#include "widgets/textarea/lv_textarea.h"
+#include <core/lv_obj.h>
+#include <core/lv_obj_event.h>
+#include <core/lv_obj_pos.h>
+#include <core/lv_obj_style.h>
+#include <core/lv_obj_style_gen.h>
+#include <core/lv_obj_tree.h>
+#include <core/lv_refr.h>
+#include <display/lv_display.h>
+#include <esp_timer.h>
+#include <font/lv_symbol_def.h>
+#include <layouts/flex/lv_flex.h>
+#include <misc/lv_anim.h>
+#include <misc/lv_color.h>
+#include <misc/lv_event.h>
+#include <misc/lv_types.h>
+#include <widgets/bar/lv_bar.h>
+#include <widgets/button/lv_button.h>
+#include <widgets/dropdown/lv_dropdown.h>
+#include <widgets/image/lv_image.h>
+#include <widgets/label/lv_label.h>
+#include <widgets/list/lv_list.h>
+#include <widgets/msgbox/lv_msgbox.h>
+#include <widgets/textarea/lv_textarea.h>
 
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppManifest.hpp>
@@ -39,6 +37,8 @@
 #include <cstring>
 #include <string_view>
 #include <utility>
+
+#include "FilesApp.hpp"
 
 static constexpr std::string_view TAG = "FilesApp";
 

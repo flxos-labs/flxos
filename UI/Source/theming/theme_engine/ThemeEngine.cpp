@@ -1,19 +1,19 @@
-#include "core/lv_obj_style.h"
-#include "core/lv_observer.h"
-#include "display/lv_display.h"
-#include "flx/ui/theming/themes/Themes.hpp"
-#include "lv_conf_internal.h"
-#include "misc/lv_types.h"
-#include "themes/default/lv_theme_default.h"
-#include "themes/lv_theme.h"
+#include <core/lv_obj_style.h>
+#include <core/lv_observer.h>
 #include <cstddef>
 #include <cstdint>
+#include <display/lv_display.h>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/ThemeManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
+#include <lv_conf_internal.h>
 #include <map>
+#include <misc/lv_types.h>
 #include <string_view>
+#include <themes/default/lv_theme_default.h>
+#include <themes/lv_theme.h>
 #include <vector>
 
 using namespace flx::ui;

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "IService.hpp"
-#include "ServiceManifest.hpp"
 #include <flx/core/Singleton.hpp>
+#include <flx/services/IService.hpp>
+#include <flx/services/ServiceManifest.hpp>
 #include <functional>
 #include <memory>
 #include <string>

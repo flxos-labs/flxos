@@ -1,22 +1,13 @@
-#include "display/lv_display.h"
-#include "esp_heap_caps.h"
-#include "esp_timer.h"
-#include "freertos/idf_additions.h"
-#include "freertos/projdefs.h"
-#include "lgfx/v1/lgfx_fonts.hpp"
-#include "libs/fsdrv/lv_fsdrv.h"
-#include "lv_init.h"
-#include "misc/lv_timer.h"
-#include "misc/lv_types.h"
-#include "portmacro.h"
-#include "sdkconfig.h"
-#include "tick/lv_tick.h"
 #include <cstddef>
 #include <cstdint>
+#include <display/lv_display.h>
+#include <esp_heap_caps.h>
+#include <esp_timer.h>
 #include <flx/apps/AppManager.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/hal/DeviceRegistry.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
 #include <flx/system/SystemManager.hpp>
@@ -25,17 +16,27 @@
 #include <flx/ui/desktop/Desktop.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
+#include <freertos/idf_additions.h>
+#include <freertos/projdefs.h>
+#include <lgfx/v1/lgfx_fonts.hpp>
+#include <libs/fsdrv/lv_fsdrv.h>
+#include <lv_init.h>
+#include <misc/lv_timer.h>
+#include <misc/lv_types.h>
+#include <portmacro.h>
+#include <sdkconfig.h>
 #include <string_view>
+#include <tick/lv_tick.h>
 
-static constexpr std::string_view TAG = "GuiTask";
-#include <flx/hal/DeviceRegistry.hpp>
 #if !CONFIG_FLXOS_HEADLESS_MODE
-#include "Config.hpp"
+#include <Config.hpp>
 #include <flx/hal/BusManager.hpp>
 #include <flx/hal/display/LgfxDisplayDevice.hpp>
 #else
 #include <flx/hal/display/HeadlessDisplayDevice.hpp>
 #endif
+
+static constexpr std::string_view TAG = "GuiTask";
 
 namespace flx::ui {
 

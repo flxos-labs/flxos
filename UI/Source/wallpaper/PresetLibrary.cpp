@@ -1,7 +1,7 @@
 #include <flx/ui/wallpaper/PresetLibrary.hpp>
 
-#include "cJSON.h"
 #include <algorithm>
+#include <cJSON.h>
 #include <cstdio>
 #include <dirent.h>
 #include <flx/core/Logger.hpp>

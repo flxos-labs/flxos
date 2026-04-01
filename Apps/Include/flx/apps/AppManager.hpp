@@ -1,7 +1,5 @@
 #pragma once
 
-#include "AppContext.hpp"
-#include "Intent.hpp"
 #include <cstdint>
 #include <flx/core/Bundle.hpp>
 #include <flx/core/Singleton.hpp>
@@ -12,6 +10,8 @@
 #include <vector>
 
 #include "App.hpp"
+#include "AppContext.hpp"
+#include "Intent.hpp"
 
 namespace flx::apps {
 
