@@ -1,7 +1,5 @@
 #pragma once
 
-#include "lvgl.h"
-#include "settings/SettingsPageBase.hpp"
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/Intent.hpp>
 #include <flx/system/SystemManager.hpp>
@@ -9,7 +7,10 @@
 #include <flx/system/managers/ThemeManager.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
+#include <lvgl.h>
 #include <memory>
+
+#include "settings/SettingsPageBase.hpp"
 
 using namespace flx::ui::common;
 using namespace flx::system;

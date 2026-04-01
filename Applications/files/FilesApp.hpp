@@ -1,8 +1,5 @@
 #pragma once
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "lvgl.h"
 #include <atomic>
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManifest.hpp>
@@ -10,7 +7,10 @@
 #include <flx/kernel/Task.hpp>
 #include <flx/system/services/FileSystemService.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <functional>
+#include <lvgl.h>
 #include <memory>
 #include <stack>
 #include <string>
