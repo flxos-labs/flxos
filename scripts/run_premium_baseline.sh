@@ -6,8 +6,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 DATE_TAG="$(date +%Y-%m-%d)"
-TIME_TAG="$(date +%H:%M:%S)"
-OUT_DIR="$PROJECT_ROOT/reports/premium_readiness/$DATE_TAG"
+TIME_TAG="$(date +%H-%M-%S)"
+OUT_DIR="$PROJECT_ROOT/reports/premium_readiness/${DATE_TAG}_${TIME_TAG}"
 REPORT_FILE="$OUT_DIR/premium_baseline_report.md"
 
 mkdir -p "$OUT_DIR"
@@ -20,14 +20,6 @@ CHECK_NAMES=(
     "Include Analysis"
     "Complexity Analysis"
 )
-CHECK_CMDS=(
-    "bash $SCRIPT_DIR/check_format.sh"
-    "python3 $SCRIPT_DIR/check_naming.py"
-    "python3 $SCRIPT_DIR/check_docs.py"
-    "python3 $SCRIPT_DIR/analyze_includes.py"
-    "python3 $SCRIPT_DIR/analyze_complexity.py"
-)
-
 PASS_COUNT=0
 FAIL_COUNT=0
 TOTAL_ISSUES=0
@@ -78,6 +70,28 @@ extract_signal_line() {
     echo "$signal"
 }
 
+run_check() {
+    local check_id="$1"
+
+    case "$check_id" in
+        format)
+            bash "$SCRIPT_DIR/check_format.sh"
+            ;;
+        naming)
+            python3 "$SCRIPT_DIR/check_naming.py"
+            ;;
+        docs)
+            python3 "$SCRIPT_DIR/check_docs.py"
+            ;;
+        includes)
+            python3 "$SCRIPT_DIR/analyze_includes.py"
+            ;;
+        complexity)
+            python3 "$SCRIPT_DIR/analyze_complexity.py"
+            ;;
+    esac
+}
+
 declare -a RESULT_STATUS
 declare -a RESULT_EXIT
 declare -a RESULT_ISSUES
@@ -90,13 +104,12 @@ echo "Output directory: $OUT_DIR"
 for i in "${!CHECK_IDS[@]}"; do
     check_id="${CHECK_IDS[$i]}"
     check_name="${CHECK_NAMES[$i]}"
-    check_cmd="${CHECK_CMDS[$i]}"
     log_file="$OUT_DIR/${check_id}.log"
 
     echo "- $check_name"
 
     set +e
-    eval "$check_cmd" > "$log_file" 2>&1
+    run_check "$check_id" > "$log_file" 2>&1
     exit_code=$?
     set -e
 
@@ -116,7 +129,7 @@ for i in "${!CHECK_IDS[@]}"; do
     RESULT_EXIT[$i]="$exit_code"
     RESULT_ISSUES[$i]="$issues"
     RESULT_SIGNAL[$i]="$signal_line"
-    RESULT_LOG_REL[$i]="reports/premium_readiness/$DATE_TAG/${check_id}.log"
+    RESULT_LOG_REL[$i]="reports/premium_readiness/${DATE_TAG}_${TIME_TAG}/${check_id}.log"
 done
 
 QUALITY_SCORE=$((PASS_COUNT * 100 / ${#CHECK_IDS[@]}))

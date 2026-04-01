@@ -16,7 +16,7 @@ Premium in this plan means:
 - Stable runtime behavior across profiles and mode variants.
 - Product-level finish in UI/UX behavior and performance.
 
-## 2. Verified Baseline (2026-03-31)
+## 2. Verified Initial Baseline (2026-03-31, before quick wins)
 
 Baseline run from repository quality scripts:
 
@@ -28,9 +28,12 @@ Baseline run from repository quality scripts:
 | Includes | Fail | 674 include order issues |
 | Complexity | Fail | 87 issues |
 
-Overall baseline:
+Overall initial baseline:
 - Gates passed: 0/5
 - Gates failed: 5/5
+
+Latest post-quick-win rerun (same date) is tracked in `PREMIUM_READINESS_TRACKER.md` and
+`reports/premium_readiness/2026-03-31/premium_baseline_report.md` (currently 1/5 gates passing).
 
 ## 3. Success Metrics
 

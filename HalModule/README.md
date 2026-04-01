@@ -1,4 +1,4 @@
-# HalModule
+# HalModule Module
 
 ## Purpose
 

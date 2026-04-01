@@ -7,7 +7,7 @@ Provides system-level managers and services that coordinate device runtime behav
 ## Structure
 
 - `System/Include/flx/system/`: public system managers and service APIs.
-- `System/Source/`: system manager, managers, and service implementations.
+- `System/Source/`: system managers and service implementations.
 
 ## Responsibilities
 
