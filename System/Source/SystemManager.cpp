@@ -1,16 +1,19 @@
-#include "Config.hpp"
-#include "esp_err.h"
-#include "esp_vfs_fat.h"
-#include "nvs.h"
-#include "nvs_flash.h"
-#include "sdkconfig.h"
-#include "wear_levelling.h"
+#include <Config.hpp>
+#include <esp_err.h>
+#include <esp_vfs_fat.h>
+#include <nvs.h>
+#include <nvs_flash.h>
+#include <sdkconfig.h>
+#include <wear_levelling.h>
+
 #include <flx/connectivity/ConnectivityManager.hpp>
+#include <flx/core/BootTimeline.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/ResourceMonitorTask.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
+#include <flx/system/SystemDiagnostics.hpp>
 #include <flx/system/SystemManager.hpp>
 #if LV_USE_LOVYAN_GFX
 #include <flx/system/managers/DisplayManager.hpp>
@@ -29,9 +32,8 @@
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #endif
+
 #include <cstring>
-#include <flx/core/BootTimeline.hpp>
-#include <flx/system/SystemDiagnostics.hpp>
 #include <memory>
 #include <string_view>
 #include <sys/stat.h>
