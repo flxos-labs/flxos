@@ -1,11 +1,11 @@
-#include "Config.hpp"
-#include "draw/snapshot/lv_snapshot.h"
-#include "sdkconfig.h"
+#include <Config.hpp>
+#include <draw/snapshot/lv_snapshot.h>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/GuiLock.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
+#include <sdkconfig.h>
 #if FLXOS_SD_CARD_ENABLED
 #include <flx/system/services/SdCardService.hpp>
 #endif
@@ -15,7 +15,7 @@ extern "C" {
 unsigned lodepng_encode24_file(const char* filename, const unsigned char* image, unsigned w, unsigned h);
 const char* lodepng_error_text(unsigned code);
 }
-#include "lvgl.h"
+#include <lvgl.h>
 
 #include <cerrno>
 #include <cstdio>
