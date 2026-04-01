@@ -84,7 +84,7 @@ Delta versus 2026-03-31 sync:
 ### 2026-04-01
 - Synced tracker to latest baseline report in reports/premium_readiness/2026-04-01.
 - Confirmed sustained gains: format gate passing and missing module READMEs at zero.
-- Recorded no-change debt plateau in naming/include/complexity and moved tranche tickets into active execution.
+- Recorded no-change debt plateau in naming/complexity and moved tranche tickets into active execution while include-order tranches were actively reducing debt.
 - Added documentation tranche ticket PRM-P1-03 with measurable reduction target.
 - Completed PRM-P0-04 acceptance by reducing include-order issues from 674 to 464 across three include-only tranches.
 - Captured tranche evidence logs for reproducible before/after validation.
