@@ -21,13 +21,8 @@ WallpaperPreviewCard::WallpaperPreviewCard(
 	lv_obj_set_flex_flow(card, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(card, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-	// Icon based on type
+	// Static-only wallpaper support.
 	const char* icon = LV_SYMBOL_IMAGE;
-	if (preset.type == "dynamic") {
-		icon = LV_SYMBOL_LOOP;
-	} else if (preset.type == "animated" || preset.type == "lottie") {
-		icon = LV_SYMBOL_PLAY;
-	}
 
 	lv_obj_t* iconImg = lv_image_create(card);
 	lv_image_set_src(iconImg, icon);

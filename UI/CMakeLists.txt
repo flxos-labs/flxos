@@ -8,10 +8,6 @@ if("$ENV{FLXOS_HEADLESS_MODE_ENABLED}" STREQUAL "ON")
 else()
     message("UI: GRAPHICAL MODE DETECTED (via ENV)")
     file(GLOB_RECURSE UI_SOURCES "Source/*.cpp")
-    list(APPEND UI_SOURCES
-        "Source/wallpaper/providers/AnimatedGifProvider.cpp"
-        "Source/wallpaper/providers/LottieProvider.cpp"
-    )
     list(APPEND UI_REQUIRES lvgl)
         list(APPEND UI_PRIV_REQUIRES LovyanGFX HalModule Profiles json)
 endif()

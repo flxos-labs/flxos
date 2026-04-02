@@ -87,7 +87,7 @@ void WallpaperManager::onFrame(uint32_t delta_ms) {
 	m_cpu_usage_subject.set(static_cast<int32_t>(std::lround(usage)));
 }
 
-void WallpaperManager::setWallpaper(const std::string& source, const std::string& type) {
+void WallpaperManager::setWallpaper(const std::string& source, const std::string& /*type*/) {
 	// Force static-only wallpapers: ignore requested type and always set to "static".
 	m_wallpaper_type_subject.set("static");
 	m_wallpaper_source_subject.set(source.c_str());

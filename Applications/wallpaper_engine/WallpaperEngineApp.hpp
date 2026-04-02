@@ -20,9 +20,6 @@ namespace System::Apps {
  * Pages:
  *  - Main menu (list of feature sections)
  *  - Presets       — browse and apply built-in presets
- *  - Effects       — blur, brightness, animation speed, quality
- *  - Dynamic       — generative algorithm selection
- *  - Adaptive      — context-aware wallpaper modes
  */
 class WallpaperEngineApp : public flx::apps::App {
 public:
