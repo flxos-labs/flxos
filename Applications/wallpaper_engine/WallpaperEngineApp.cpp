@@ -199,7 +199,7 @@ void WallpaperEngineApp::retryLastWallpaper() {
 		return;
 	}
 
-	flx::system::WallpaperManager::getInstance().setWallpaper(m_lastFailedSource, m_lastFailedType.empty() ? "static" : m_lastFailedType);
+	flx::system::WallpaperManager::getInstance().setWallpaper(m_lastFailedSource);
 	Log::info(TAG_WPE_APP,
 		"Retrying wallpaper apply type=%s source=%s",
 		m_lastFailedType.c_str(),

@@ -163,7 +163,7 @@ bool PresetLibrary::applyPreset(const std::string& id,
 		Log::warn(TAG, "Preset not found: %s", id.c_str());
 		return false;
 	}
-	manager->setWallpaper(preset->source, preset->type);
+	manager->setWallpaper(preset->source);
 	Log::info(TAG, "Applied preset '%s' (type=%s)", id.c_str(), preset->type.c_str());
 	return true;
 }

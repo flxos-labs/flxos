@@ -323,7 +323,7 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 			return;
 		}
 
-		evaluateWallpaperAcceptanceGate(type, source, delta_ms);
+		evaluateWallpaperAcceptanceGate();
 
 		if (m_wallpaperProvider->isReady()) {
 			m_lastWallpaperFailureKey.clear();
@@ -395,13 +395,10 @@ void Desktop::handleWallpaperProviderFailure(const std::string& requestedType, c
 		2);
 
 	auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
-	wallpaperManager.setWallpaper(source, "static");
+	wallpaperManager.setWallpaper(source);
 }
 
-void Desktop::evaluateWallpaperAcceptanceGate(const std::string& type, const std::string& source, uint32_t delta_ms) {
-	(void)type;
-	(void)source;
-	(void)delta_ms;
+void Desktop::evaluateWallpaperAcceptanceGate() {
 	setWallpaperPerfOverlayVisible(false);
 	m_overlayWindowMs = 0;
 	m_overlayFrameCount = 0;
