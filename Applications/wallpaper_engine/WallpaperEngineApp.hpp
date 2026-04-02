@@ -1,9 +1,6 @@
 #pragma once
 
 #include "lvgl.h"
-#include "pages/AdaptivePage.hpp"
-#include "pages/DynamicPage.hpp"
-#include "pages/EffectsPage.hpp"
 #include "pages/PresetsPage.hpp"
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManifest.hpp>
@@ -46,9 +43,6 @@ private:
 
 	void showMainMenu();
 	void showPresetsPage();
-	void showEffectsPage();
-	void showDynamicPage();
-	void showAdaptivePage();
 	void hideAllPages();
 	void ensureFallbackBanner();
 	void handleWallpaperErrorEvent(const flx::core::Bundle& data);
@@ -72,9 +66,6 @@ private:
 	uint32_t m_lastErrorTickMs {0};
 
 	std::unique_ptr<WallpaperEngine::PresetsPage> m_presetsPage;
-	std::unique_ptr<WallpaperEngine::EffectsPage> m_effectsPage;
-	std::unique_ptr<WallpaperEngine::DynamicPage> m_dynamicPage;
-	std::unique_ptr<WallpaperEngine::AdaptivePage> m_adaptivePage;
 };
 
 } // namespace System::Apps
