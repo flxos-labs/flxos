@@ -38,14 +38,14 @@ Supported targets include ESP32, ESP32-S2, ESP32-S3, ESP32-C3, ESP32-C6, ESP32-H
 
 <table>
   <tr>
-    <td align="center"><img src="https://flxos-labs.github.io/flxos_screenshots/scr_20260312_162944_home_screen.png" width="220" alt="Home screen"/><br/><sub>Home screen</sub></td>
-    <td align="center"><img src="https://flxos-labs.github.io/flxos_screenshots/scr_20260312_162354_sleek_app_launcher.png" width="220" alt="App launcher"/><br/><sub>App launcher</sub></td>
-    <td align="center"><img src="https://flxos-labs.github.io/flxos_screenshots/scr_20260312_162819_notification_panel.png" width="220" alt="Notification panel"/><br/><sub>Notification panel</sub></td>
+    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_162944_home_screen.png" width="220" alt="Home screen"/><br/><sub>Home screen</sub></td>
+    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_162354_sleek_app_launcher.png" width="220" alt="App launcher"/><br/><sub>App launcher</sub></td>
+    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_162819_notification_panel.png" width="220" alt="Notification panel"/><br/><sub>Notification panel</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="https://flxos-labs.github.io/flxos_screenshots/scr_20260312_162917_quickaccess_panel.png" width="220" alt="Quick access panel"/><br/><sub>Quick access panel</sub></td>
-    <td align="center"><img src="https://flxos-labs.github.io/flxos_screenshots/scr_20260312_163129_open_image_in_image_viewer_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="220" alt="Image viewer and files"/><br/><sub>Image Viewer + Files</sub></td>
-    <td align="center"><img src="https://flxos-labs.github.io/flxos_screenshots/scr_20260312_163152_open_text_file_in_text_editor_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="220" alt="Text editor and files"/><br/><sub>Text Editor + Files</sub></td>
+    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_162917_quickaccess_panel.png" width="220" alt="Quick access panel"/><br/><sub>Quick access panel</sub></td>
+    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_163129_open_image_in_image_viewer_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="220" alt="Image viewer and files"/><br/><sub>Image Viewer + Files</sub></td>
+    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_163152_open_text_file_in_text_editor_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="220" alt="Text editor and files"/><br/><sub>Text Editor + Files</sub></td>
   </tr>
 </table>
 
