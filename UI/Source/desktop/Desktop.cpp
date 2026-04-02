@@ -21,9 +21,6 @@
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
-#include <flx/ui/wallpaper/providers/AnimatedGifProvider.hpp>
-#include <flx/ui/wallpaper/providers/DynamicProvider.hpp>
-#include <flx/ui/wallpaper/providers/LottieProvider.hpp>
 #include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
 #include <memory>
 #include <string>
@@ -217,6 +214,11 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 	std::string const source = wallpaperManager.getWallpaperSourceObservable().get();
 	int32_t const speed = wallpaperManager.getAnimationSpeedObservable().get();
 
+	// Enforce static-only wallpapers at render host level.
+	// Ignore any requested type and use static provider exclusively.
+	(void)type; // silence unused warning if any
+	type = "static";
+
 	if (!enabled) {
 		if (m_wallpaperProvider) {
 			m_wallpaperProvider->destroy();
@@ -257,20 +259,12 @@ void Desktop::syncWallpaperProvider(uint32_t delta_ms) {
 			m_wallpaperProvider.reset();
 		}
 
-		if (type == "animated" || type == "gif") {
-			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::AnimatedGifProvider>();
-		} else if (type == "lottie") {
-			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::LottieProvider>();
-		} else if (type == "dynamic") {
-			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::DynamicProvider>();
-		} else {
-			type = "static";
-			m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::StaticImageProvider>();
-		}
+		// Only static wallpapers are supported. Always instantiate StaticImageProvider.
+		m_wallpaperProvider = std::make_unique<flx::ui::wallpaper::StaticImageProvider>();
 
 		m_providerBaselineHeapBytes = heap_caps_get_free_size(MALLOC_CAP_8BIT);
 		m_wallpaperProvider->initialize();
-		m_wallpaperProviderType = type;
+		m_wallpaperProviderType = "static";
 		m_wallpaperProviderSource.clear();
 		m_wallpaperProviderSpeed = -1;
 		m_providerPerfWindowMs = 0;
