@@ -66,14 +66,8 @@ void WallpaperEngineApp::createUI(void* parent) {
 		250,
 		this);
 
-	// Lazily create all pages (hidden by default)
+	// Lazily create the Presets page (hidden by default). Non-static pages removed.
 	m_presetsPage = std::make_unique<WallpaperEngine::PresetsPage>(
-		m_container, [this]() { showMainMenu(); });
-	m_effectsPage = std::make_unique<WallpaperEngine::EffectsPage>(
-		m_container, [this]() { showMainMenu(); });
-	m_dynamicPage = std::make_unique<WallpaperEngine::DynamicPage>(
-		m_container, [this]() { showMainMenu(); });
-	m_adaptivePage = std::make_unique<WallpaperEngine::AdaptivePage>(
 		m_container, [this]() { showMainMenu(); });
 
 	showMainMenu();
@@ -91,9 +85,6 @@ void WallpaperEngineApp::onStop() {
 	}
 
 	m_presetsPage.reset();
-	m_effectsPage.reset();
-	m_dynamicPage.reset();
-	m_adaptivePage.reset();
 	m_fallbackBanner = nullptr;
 	m_fallbackLabel = nullptr;
 	m_retryBtn = nullptr;
@@ -247,9 +238,6 @@ void WallpaperEngineApp::hideAllPages() {
 		lv_obj_add_flag(m_mainMenu, LV_OBJ_FLAG_HIDDEN);
 	}
 	if (m_presetsPage) m_presetsPage->hide();
-	if (m_effectsPage) m_effectsPage->hide();
-	if (m_dynamicPage) m_dynamicPage->hide();
-	if (m_adaptivePage) m_adaptivePage->hide();
 }
 
 void WallpaperEngineApp::showMainMenu() {
@@ -270,36 +258,6 @@ void WallpaperEngineApp::showMainMenu() {
 				app->showPresetsPage();
 			},
 			LV_EVENT_CLICKED, this);
-
-		// Effects
-		lv_obj_t* effectsBtn = add_list_btn(m_mainMenu, LV_SYMBOL_SETTINGS, "Effects & Controls");
-		lv_obj_add_event_cb(
-			effectsBtn,
-			[](lv_event_t* e) {
-				auto* app = static_cast<WallpaperEngineApp*>(lv_event_get_user_data(e));
-				app->showEffectsPage();
-			},
-			LV_EVENT_CLICKED, this);
-
-		// Dynamic / Generative
-		lv_obj_t* dynamicBtn = add_list_btn(m_mainMenu, LV_SYMBOL_LOOP, "Dynamic Wallpapers");
-		lv_obj_add_event_cb(
-			dynamicBtn,
-			[](lv_event_t* e) {
-				auto* app = static_cast<WallpaperEngineApp*>(lv_event_get_user_data(e));
-				app->showDynamicPage();
-			},
-			LV_EVENT_CLICKED, this);
-
-		// Adaptive
-		lv_obj_t* adaptiveBtn = add_list_btn(m_mainMenu, LV_SYMBOL_LEFT, "Adaptive Mode");
-		lv_obj_add_event_cb(
-			adaptiveBtn,
-			[](lv_event_t* e) {
-				auto* app = static_cast<WallpaperEngineApp*>(lv_event_get_user_data(e));
-				app->showAdaptivePage();
-			},
-			LV_EVENT_CLICKED, this);
 	} else {
 		lv_obj_remove_flag(m_mainMenu, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -310,19 +268,6 @@ void WallpaperEngineApp::showPresetsPage() {
 	if (m_presetsPage) m_presetsPage->show();
 }
 
-void WallpaperEngineApp::showEffectsPage() {
-	hideAllPages();
-	if (m_effectsPage) m_effectsPage->show();
-}
-
-void WallpaperEngineApp::showDynamicPage() {
-	hideAllPages();
-	if (m_dynamicPage) m_dynamicPage->show();
-}
-
-void WallpaperEngineApp::showAdaptivePage() {
-	hideAllPages();
-	if (m_adaptivePage) m_adaptivePage->show();
-}
+// Effects/Dynamic/Adaptive pages removed; no-op implementations omitted.
 
 } // namespace System::Apps
