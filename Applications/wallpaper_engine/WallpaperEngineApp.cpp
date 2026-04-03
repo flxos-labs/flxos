@@ -50,6 +50,19 @@ void WallpaperEngineApp::createUI(void* parent) {
 	m_container = static_cast<lv_obj_t*>(parent);
 	ensureFallbackBanner();
 
+	m_wallpaperBrowser = std::make_unique<flx::ui::FileBrowser>(
+		m_container,
+		[this]() {
+			if (m_wallpaperBrowser) {
+				m_wallpaperBrowser->hide();
+			}
+			if (m_fallbackBanner != nullptr && !lv_obj_has_flag(m_fallbackBanner, LV_OBJ_FLAG_HIDDEN)) {
+				lv_obj_remove_flag(m_fallbackBanner, LV_OBJ_FLAG_HIDDEN);
+			}
+		});
+	m_wallpaperBrowser->setExtensions({".png", ".jpg", ".jpeg", ".bmp"});
+	m_wallpaperBrowser->setInitialPath("A:/");
+
 	m_wallpaperErrorSubscriptionId = flx::core::EventBus::getInstance().subscribe(
 		"wallpaper.error",
 		[this](const std::string& /*event*/, const flx::core::Bundle& data) {
@@ -86,6 +99,11 @@ void WallpaperEngineApp::onStop() {
 	if (m_bannerPollTimer != nullptr) {
 		lv_timer_delete(m_bannerPollTimer);
 		m_bannerPollTimer = nullptr;
+	}
+
+	if (m_wallpaperBrowser) {
+		m_wallpaperBrowser->destroy();
+		m_wallpaperBrowser.reset();
 	}
 
 	if (m_dynamicPage != nullptr) {
@@ -213,7 +231,24 @@ void WallpaperEngineApp::retryLastWallpaper() {
 }
 
 void WallpaperEngineApp::openSourceSelector() {
-	showDynamicPage();
+	if (m_wallpaperBrowser) {
+		m_wallpaperBrowser->show(
+			false,
+			[this](const std::string& selectedPath) {
+				if (selectedPath.empty()) {
+					return;
+				}
+
+				auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
+				wallpaperManager.getWallpaperEnabledObservable().set(1);
+				wallpaperManager.getWallpaperTypeObservable().set("static");
+				wallpaperManager.setWallpaper(selectedPath);
+
+				if (m_wallpaperBrowser) {
+					m_wallpaperBrowser->hide();
+				}
+			});
+	}
 }
 
 void WallpaperEngineApp::pollBannerDismissState() {

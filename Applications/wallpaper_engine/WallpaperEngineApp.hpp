@@ -4,6 +4,7 @@
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/core/EventBus.hpp>
+#include <flx/ui/components/FileBrowser.hpp>
 #include <memory>
 #include <string>
 
@@ -55,6 +56,7 @@ private:
 	lv_obj_t* m_chooseSourceBtn {nullptr};
 	lv_obj_t* m_dynamicPage {nullptr};
 	lv_timer_t* m_bannerPollTimer {nullptr};
+	std::unique_ptr<flx::ui::FileBrowser> m_wallpaperBrowser;
 	flx::core::EventBus::SubscriptionId m_wallpaperErrorSubscriptionId {0};
 	std::string m_lastFailedType;
 	std::string m_lastFailedSource;
