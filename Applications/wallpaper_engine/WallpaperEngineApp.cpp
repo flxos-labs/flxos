@@ -115,9 +115,9 @@ void WallpaperEngineApp::ensureFallbackBanner() {
 	lv_obj_set_style_border_width(m_fallbackBanner, 0, 0);
 	lv_obj_set_style_bg_color(m_fallbackBanner, lv_palette_main(LV_PALETTE_RED), 0);
 	lv_obj_set_style_bg_opa(m_fallbackBanner, LV_OPA_80, 0);
-	lv_obj_set_style_pad_all(m_fallbackBanner, 8, 0);
-	lv_obj_set_style_pad_column(m_fallbackBanner, 8, 0);
-	lv_obj_set_style_pad_row(m_fallbackBanner, 8, 0);
+	lv_obj_set_style_pad_all(m_fallbackBanner, lv_dpx(8), 0);
+	lv_obj_set_style_pad_column(m_fallbackBanner, lv_dpx(8), 0);
+	lv_obj_set_style_pad_row(m_fallbackBanner, lv_dpx(8), 0);
 	lv_obj_set_flex_flow(m_fallbackBanner, LV_FLEX_FLOW_ROW_WRAP);
 	lv_obj_set_flex_align(m_fallbackBanner, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 	lv_obj_add_flag(m_fallbackBanner, LV_OBJ_FLAG_FLOATING);
@@ -266,8 +266,8 @@ void WallpaperEngineApp::showDynamicPage() {
 		lv_obj_set_size(m_dynamicPage, lv_pct(100), lv_pct(100));
 		lv_obj_set_style_border_width(m_dynamicPage, 0, 0);
 		lv_obj_set_flex_flow(m_dynamicPage, LV_FLEX_FLOW_COLUMN);
-		lv_obj_set_style_pad_all(m_dynamicPage, 16, 0);
-		lv_obj_set_style_pad_row(m_dynamicPage, 8, 0);
+		lv_obj_set_style_pad_all(m_dynamicPage, lv_dpx(16), 0);
+		lv_obj_set_style_pad_row(m_dynamicPage, lv_dpx(8), 0);
 
 		lv_obj_t* title = lv_label_create(m_dynamicPage);
 		lv_label_set_text(title, "Dynamic Wallpapers");
