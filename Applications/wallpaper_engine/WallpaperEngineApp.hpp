@@ -1,7 +1,6 @@
 #pragma once
 
 #include "lvgl.h"
-#include "pages/PresetsPage.hpp"
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManifest.hpp>
 #include <flx/core/EventBus.hpp>
@@ -18,8 +17,7 @@ namespace System::Apps {
  * through WallpaperManager observables and APIs.
  *
  * Pages:
- *  - Main menu (list of feature sections)
- *  - Presets       — browse and apply built-in presets
+ *  - Dynamic       — placeholder dynamic wallpaper entry point
  */
 class WallpaperEngineApp : public flx::apps::App {
 public:
@@ -34,12 +32,13 @@ public:
 	static const flx::apps::AppManifest manifest;
 
 	void createUI(void* parent) override;
+	void onNewIntent(const flx::apps::Intent& intent) override;
 	void onStop() override;
 
 private:
 
-	void showMainMenu();
-	void showPresetsPage();
+	void navigateFromIntent(const flx::apps::Intent& intent);
+	void showDynamicPage();
 	void hideAllPages();
 	void ensureFallbackBanner();
 	void handleWallpaperErrorEvent(const flx::core::Bundle& data);
@@ -50,19 +49,17 @@ private:
 	void pollBannerDismissState();
 
 	lv_obj_t* m_container {nullptr};
-	lv_obj_t* m_mainMenu {nullptr};
 	lv_obj_t* m_fallbackBanner {nullptr};
 	lv_obj_t* m_fallbackLabel {nullptr};
 	lv_obj_t* m_retryBtn {nullptr};
 	lv_obj_t* m_chooseSourceBtn {nullptr};
+	lv_obj_t* m_dynamicPage {nullptr};
 	lv_timer_t* m_bannerPollTimer {nullptr};
 	flx::core::EventBus::SubscriptionId m_wallpaperErrorSubscriptionId {0};
 	std::string m_lastFailedType;
 	std::string m_lastFailedSource;
 	std::string m_lastReasonCode;
 	uint32_t m_lastErrorTickMs {0};
-
-	std::unique_ptr<WallpaperEngine::PresetsPage> m_presetsPage;
 };
 
 } // namespace System::Apps
