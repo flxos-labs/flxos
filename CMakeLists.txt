@@ -57,3 +57,10 @@ message("ROOT: EXCLUDE_COMPONENTS = ${EXCLUDE_COMPONENTS}")
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(FlxOS)
+
+# ── Storage Partition Images ──
+# Generate FAT images for the `system` and `data` partitions from the
+# storage/ directories and include them in the standard `idf.py flash`.
+# Uses wear-levelling (wl_fatfsgen.py) to match CONFIG_WL_SECTOR_SIZE / WL driver expectations.
+fatfs_create_spiflash_image(system "${CMAKE_SOURCE_DIR}/storage/system" FLASH_IN_PROJECT)
+fatfs_create_spiflash_image(data   "${CMAKE_SOURCE_DIR}/storage/data"   FLASH_IN_PROJECT)
