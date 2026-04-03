@@ -27,7 +27,7 @@ const AppManifest WallpaperEngineApp::manifest = {
 	.category = AppCategory::System,
 	.flags = AppFlags::SingleInstance,
 	.location = AppLocation::internal(),
-	.description = "Browse and apply static wallpaper presets",
+	.description = "Dynamic wallpaper controls",
 	.sortPriority = 15,
 	.requiredServices = {},
 	.supportedMimeTypes = {},
@@ -66,11 +66,15 @@ void WallpaperEngineApp::createUI(void* parent) {
 		250,
 		this);
 
-	// Lazily create the Presets page (hidden by default). Non-static pages removed.
-	m_presetsPage = std::make_unique<WallpaperEngine::PresetsPage>(
-		m_container, [this]() { showMainMenu(); });
+	if (getContext() != nullptr) {
+		navigateFromIntent(getContext()->getIntent());
+	} else {
+		showDynamicPage();
+	}
+}
 
-	showMainMenu();
+void WallpaperEngineApp::onNewIntent(const flx::apps::Intent& intent) {
+	navigateFromIntent(intent);
 }
 
 void WallpaperEngineApp::onStop() {
@@ -84,7 +88,10 @@ void WallpaperEngineApp::onStop() {
 		m_bannerPollTimer = nullptr;
 	}
 
-	m_presetsPage.reset();
+	if (m_dynamicPage != nullptr) {
+		lv_obj_del(m_dynamicPage);
+		m_dynamicPage = nullptr;
+	}
 	m_fallbackBanner = nullptr;
 	m_fallbackLabel = nullptr;
 	m_retryBtn = nullptr;
@@ -93,7 +100,6 @@ void WallpaperEngineApp::onStop() {
 	m_lastFailedSource.clear();
 	m_lastReasonCode.clear();
 	m_lastErrorTickMs = 0;
-	m_mainMenu = nullptr;
 	m_container = nullptr;
 }
 
@@ -207,7 +213,7 @@ void WallpaperEngineApp::retryLastWallpaper() {
 }
 
 void WallpaperEngineApp::openSourceSelector() {
-	showPresetsPage();
+	showDynamicPage();
 }
 
 void WallpaperEngineApp::pollBannerDismissState() {
@@ -229,45 +235,69 @@ void WallpaperEngineApp::pollBannerDismissState() {
 	}
 }
 
+void WallpaperEngineApp::navigateFromIntent(const flx::apps::Intent& intent) {
+	std::string const route = intent.extras.getStringOr("route", "");
+	if (route == "dynamic") {
+		showDynamicPage();
+		return;
+	}
+
+	showDynamicPage();
+}
+
 // ---------------------------------------------------------------------------
 // Navigation
 // ---------------------------------------------------------------------------
 
 void WallpaperEngineApp::hideAllPages() {
-	if (m_mainMenu != nullptr) {
-		lv_obj_add_flag(m_mainMenu, LV_OBJ_FLAG_HIDDEN);
+	if (m_dynamicPage != nullptr) {
+		lv_obj_add_flag(m_dynamicPage, LV_OBJ_FLAG_HIDDEN);
 	}
-	if (m_presetsPage) m_presetsPage->hide();
 }
 
-void WallpaperEngineApp::showMainMenu() {
+void WallpaperEngineApp::showDynamicPage() {
 	hideAllPages();
+	if (m_container == nullptr) {
+		return;
+	}
 
-	if (m_mainMenu == nullptr) {
-		// Build main menu list
-		m_mainMenu = lv_list_create(m_container);
-		lv_obj_set_size(m_mainMenu, lv_pct(100), lv_pct(100));
-		lv_obj_set_style_border_width(m_mainMenu, 0, 0);
+	if (m_dynamicPage == nullptr) {
+		m_dynamicPage = lv_obj_create(m_container);
+		lv_obj_set_size(m_dynamicPage, lv_pct(100), lv_pct(100));
+		lv_obj_set_style_border_width(m_dynamicPage, 0, 0);
+		lv_obj_set_flex_flow(m_dynamicPage, LV_FLEX_FLOW_COLUMN);
+		lv_obj_set_style_pad_all(m_dynamicPage, 16, 0);
+		lv_obj_set_style_pad_row(m_dynamicPage, 8, 0);
 
-		// Presets
-		lv_obj_t* presetsBtn = add_list_btn(m_mainMenu, LV_SYMBOL_IMAGE, "Presets");
+		lv_obj_t* title = lv_label_create(m_dynamicPage);
+		lv_label_set_text(title, "Dynamic Wallpapers");
+
+		lv_obj_t* body = lv_label_create(m_dynamicPage);
+		lv_label_set_long_mode(body, LV_LABEL_LONG_WRAP);
+		lv_obj_set_width(body, lv_pct(100));
+		lv_label_set_text(
+			body,
+			"Dynamic wallpapers are not available in this build yet. Use Static to choose a wallpaper image.");
+
+		lv_obj_t* backBtn = lv_button_create(m_dynamicPage);
+		lv_obj_t* backLabel = lv_label_create(backBtn);
+		lv_label_set_text(backLabel, "Close");
 		lv_obj_add_event_cb(
-			presetsBtn,
+			backBtn,
 			[](lv_event_t* e) {
 				auto* app = static_cast<WallpaperEngineApp*>(lv_event_get_user_data(e));
-				app->showPresetsPage();
+				if (app != nullptr) {
+					flx::apps::AppManager::getInstance().finishApp(
+						app->getContext() ? app->getContext()->getLaunchId() : flx::apps::LAUNCH_ID_INVALID);
+				}
 			},
-			LV_EVENT_CLICKED, this);
+			LV_EVENT_CLICKED,
+			this);
 	} else {
-		lv_obj_remove_flag(m_mainMenu, LV_OBJ_FLAG_HIDDEN);
+		lv_obj_remove_flag(m_dynamicPage, LV_OBJ_FLAG_HIDDEN);
 	}
 }
 
-void WallpaperEngineApp::showPresetsPage() {
-	hideAllPages();
-	if (m_presetsPage) m_presetsPage->show();
-}
-
-// Effects/Dynamic/Adaptive pages removed; no-op implementations omitted.
+// Effects/Adaptive pages removed; no-op implementations omitted.
 
 } // namespace System::Apps
