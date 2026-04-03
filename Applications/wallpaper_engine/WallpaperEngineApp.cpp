@@ -27,7 +27,7 @@ const AppManifest WallpaperEngineApp::manifest = {
 	.category = AppCategory::System,
 	.flags = AppFlags::SingleInstance,
 	.location = AppLocation::internal(),
-	.description = "Browse presets, apply effects, and configure generative wallpapers",
+	.description = "Dynamic wallpaper controls",
 	.sortPriority = 15,
 	.requiredServices = {},
 	.supportedMimeTypes = {},
@@ -50,6 +50,19 @@ void WallpaperEngineApp::createUI(void* parent) {
 	m_container = static_cast<lv_obj_t*>(parent);
 	ensureFallbackBanner();
 
+	m_wallpaperBrowser = std::make_unique<flx::ui::FileBrowser>(
+		m_container,
+		[this]() {
+			if (m_wallpaperBrowser) {
+				m_wallpaperBrowser->hide();
+			}
+			if (m_fallbackBanner != nullptr && lv_obj_has_flag(m_fallbackBanner, LV_OBJ_FLAG_HIDDEN)) {
+				lv_obj_remove_flag(m_fallbackBanner, LV_OBJ_FLAG_HIDDEN);
+			}
+		});
+	m_wallpaperBrowser->setExtensions({".png", ".jpg", ".jpeg", ".bmp"});
+	m_wallpaperBrowser->setInitialPath("A:/");
+
 	m_wallpaperErrorSubscriptionId = flx::core::EventBus::getInstance().subscribe(
 		"wallpaper.error",
 		[this](const std::string& /*event*/, const flx::core::Bundle& data) {
@@ -66,17 +79,15 @@ void WallpaperEngineApp::createUI(void* parent) {
 		250,
 		this);
 
-	// Lazily create all pages (hidden by default)
-	m_presetsPage = std::make_unique<WallpaperEngine::PresetsPage>(
-		m_container, [this]() { showMainMenu(); });
-	m_effectsPage = std::make_unique<WallpaperEngine::EffectsPage>(
-		m_container, [this]() { showMainMenu(); });
-	m_dynamicPage = std::make_unique<WallpaperEngine::DynamicPage>(
-		m_container, [this]() { showMainMenu(); });
-	m_adaptivePage = std::make_unique<WallpaperEngine::AdaptivePage>(
-		m_container, [this]() { showMainMenu(); });
+	if (getContext() != nullptr) {
+		navigateFromIntent(getContext()->getIntent());
+	} else {
+		showDynamicPage();
+	}
+}
 
-	showMainMenu();
+void WallpaperEngineApp::onNewIntent(const flx::apps::Intent& intent) {
+	navigateFromIntent(intent);
 }
 
 void WallpaperEngineApp::onStop() {
@@ -90,10 +101,15 @@ void WallpaperEngineApp::onStop() {
 		m_bannerPollTimer = nullptr;
 	}
 
-	m_presetsPage.reset();
-	m_effectsPage.reset();
-	m_dynamicPage.reset();
-	m_adaptivePage.reset();
+	if (m_wallpaperBrowser) {
+		m_wallpaperBrowser->destroy();
+		m_wallpaperBrowser.reset();
+	}
+
+	if (m_dynamicPage != nullptr) {
+		lv_obj_del(m_dynamicPage);
+		m_dynamicPage = nullptr;
+	}
 	m_fallbackBanner = nullptr;
 	m_fallbackLabel = nullptr;
 	m_retryBtn = nullptr;
@@ -102,7 +118,6 @@ void WallpaperEngineApp::onStop() {
 	m_lastFailedSource.clear();
 	m_lastReasonCode.clear();
 	m_lastErrorTickMs = 0;
-	m_mainMenu = nullptr;
 	m_container = nullptr;
 }
 
@@ -118,9 +133,9 @@ void WallpaperEngineApp::ensureFallbackBanner() {
 	lv_obj_set_style_border_width(m_fallbackBanner, 0, 0);
 	lv_obj_set_style_bg_color(m_fallbackBanner, lv_palette_main(LV_PALETTE_RED), 0);
 	lv_obj_set_style_bg_opa(m_fallbackBanner, LV_OPA_80, 0);
-	lv_obj_set_style_pad_all(m_fallbackBanner, 8, 0);
-	lv_obj_set_style_pad_column(m_fallbackBanner, 8, 0);
-	lv_obj_set_style_pad_row(m_fallbackBanner, 8, 0);
+	lv_obj_set_style_pad_all(m_fallbackBanner, lv_dpx(8), 0);
+	lv_obj_set_style_pad_column(m_fallbackBanner, lv_dpx(8), 0);
+	lv_obj_set_style_pad_row(m_fallbackBanner, lv_dpx(8), 0);
 	lv_obj_set_flex_flow(m_fallbackBanner, LV_FLEX_FLOW_ROW_WRAP);
 	lv_obj_set_flex_align(m_fallbackBanner, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 	lv_obj_add_flag(m_fallbackBanner, LV_OBJ_FLAG_FLOATING);
@@ -208,7 +223,7 @@ void WallpaperEngineApp::retryLastWallpaper() {
 		return;
 	}
 
-	flx::system::WallpaperManager::getInstance().setWallpaper(m_lastFailedSource, m_lastFailedType.empty() ? "static" : m_lastFailedType);
+	flx::system::WallpaperManager::getInstance().setWallpaper(m_lastFailedSource);
 	Log::info(TAG_WPE_APP,
 		"Retrying wallpaper apply type=%s source=%s",
 		m_lastFailedType.c_str(),
@@ -216,7 +231,24 @@ void WallpaperEngineApp::retryLastWallpaper() {
 }
 
 void WallpaperEngineApp::openSourceSelector() {
-	showPresetsPage();
+	if (m_wallpaperBrowser) {
+		m_wallpaperBrowser->show(
+			false,
+			[this](const std::string& selectedPath) {
+				if (selectedPath.empty()) {
+					return;
+				}
+
+				auto& wallpaperManager = flx::system::WallpaperManager::getInstance();
+				wallpaperManager.getWallpaperEnabledObservable().set(1);
+				wallpaperManager.getWallpaperTypeObservable().set("static");
+				wallpaperManager.setWallpaper(selectedPath);
+
+				if (m_wallpaperBrowser) {
+					m_wallpaperBrowser->hide();
+				}
+			});
+	}
 }
 
 void WallpaperEngineApp::pollBannerDismissState() {
@@ -238,91 +270,69 @@ void WallpaperEngineApp::pollBannerDismissState() {
 	}
 }
 
+void WallpaperEngineApp::navigateFromIntent(const flx::apps::Intent& intent) {
+	std::string const route = intent.extras.getStringOr("route", "");
+	if (route == "dynamic") {
+		showDynamicPage();
+		return;
+	}
+
+	showDynamicPage();
+}
+
 // ---------------------------------------------------------------------------
 // Navigation
 // ---------------------------------------------------------------------------
 
 void WallpaperEngineApp::hideAllPages() {
-	if (m_mainMenu != nullptr) {
-		lv_obj_add_flag(m_mainMenu, LV_OBJ_FLAG_HIDDEN);
+	if (m_dynamicPage != nullptr) {
+		lv_obj_add_flag(m_dynamicPage, LV_OBJ_FLAG_HIDDEN);
 	}
-	if (m_presetsPage) m_presetsPage->hide();
-	if (m_effectsPage) m_effectsPage->hide();
-	if (m_dynamicPage) m_dynamicPage->hide();
-	if (m_adaptivePage) m_adaptivePage->hide();
-}
-
-void WallpaperEngineApp::showMainMenu() {
-	hideAllPages();
-
-	if (m_mainMenu == nullptr) {
-		// Build main menu list
-		m_mainMenu = lv_list_create(m_container);
-		lv_obj_set_size(m_mainMenu, lv_pct(100), lv_pct(100));
-		lv_obj_set_style_border_width(m_mainMenu, 0, 0);
-
-		// Presets
-		lv_obj_t* presetsBtn = add_list_btn(m_mainMenu, LV_SYMBOL_IMAGE, "Presets");
-		lv_obj_add_event_cb(
-			presetsBtn,
-			[](lv_event_t* e) {
-				auto* app = static_cast<WallpaperEngineApp*>(lv_event_get_user_data(e));
-				app->showPresetsPage();
-			},
-			LV_EVENT_CLICKED, this);
-
-		// Effects
-		lv_obj_t* effectsBtn = add_list_btn(m_mainMenu, LV_SYMBOL_SETTINGS, "Effects & Controls");
-		lv_obj_add_event_cb(
-			effectsBtn,
-			[](lv_event_t* e) {
-				auto* app = static_cast<WallpaperEngineApp*>(lv_event_get_user_data(e));
-				app->showEffectsPage();
-			},
-			LV_EVENT_CLICKED, this);
-
-		// Dynamic / Generative
-		lv_obj_t* dynamicBtn = add_list_btn(m_mainMenu, LV_SYMBOL_LOOP, "Dynamic Wallpapers");
-		lv_obj_add_event_cb(
-			dynamicBtn,
-			[](lv_event_t* e) {
-				auto* app = static_cast<WallpaperEngineApp*>(lv_event_get_user_data(e));
-				app->showDynamicPage();
-			},
-			LV_EVENT_CLICKED, this);
-
-		// Adaptive
-		lv_obj_t* adaptiveBtn = add_list_btn(m_mainMenu, LV_SYMBOL_LEFT, "Adaptive Mode");
-		lv_obj_add_event_cb(
-			adaptiveBtn,
-			[](lv_event_t* e) {
-				auto* app = static_cast<WallpaperEngineApp*>(lv_event_get_user_data(e));
-				app->showAdaptivePage();
-			},
-			LV_EVENT_CLICKED, this);
-	} else {
-		lv_obj_remove_flag(m_mainMenu, LV_OBJ_FLAG_HIDDEN);
-	}
-}
-
-void WallpaperEngineApp::showPresetsPage() {
-	hideAllPages();
-	if (m_presetsPage) m_presetsPage->show();
-}
-
-void WallpaperEngineApp::showEffectsPage() {
-	hideAllPages();
-	if (m_effectsPage) m_effectsPage->show();
 }
 
 void WallpaperEngineApp::showDynamicPage() {
 	hideAllPages();
-	if (m_dynamicPage) m_dynamicPage->show();
+	if (m_container == nullptr) {
+		return;
+	}
+
+	if (m_dynamicPage == nullptr) {
+		m_dynamicPage = lv_obj_create(m_container);
+		lv_obj_set_size(m_dynamicPage, lv_pct(100), lv_pct(100));
+		lv_obj_set_style_border_width(m_dynamicPage, 0, 0);
+		lv_obj_set_flex_flow(m_dynamicPage, LV_FLEX_FLOW_COLUMN);
+		lv_obj_set_style_pad_all(m_dynamicPage, lv_dpx(16), 0);
+		lv_obj_set_style_pad_row(m_dynamicPage, lv_dpx(8), 0);
+
+		lv_obj_t* title = lv_label_create(m_dynamicPage);
+		lv_label_set_text(title, "Dynamic Wallpapers");
+
+		lv_obj_t* body = lv_label_create(m_dynamicPage);
+		lv_label_set_long_mode(body, LV_LABEL_LONG_WRAP);
+		lv_obj_set_width(body, lv_pct(100));
+		lv_label_set_text(
+			body,
+			"Dynamic wallpapers are not available in this build yet. Use Static to choose a wallpaper image.");
+
+		lv_obj_t* backBtn = lv_button_create(m_dynamicPage);
+		lv_obj_t* backLabel = lv_label_create(backBtn);
+		lv_label_set_text(backLabel, "Close");
+		lv_obj_add_event_cb(
+			backBtn,
+			[](lv_event_t* e) {
+				auto* app = static_cast<WallpaperEngineApp*>(lv_event_get_user_data(e));
+				if (app != nullptr) {
+					flx::apps::AppManager::getInstance().finishApp(
+						app->getContext() ? app->getContext()->getLaunchId() : flx::apps::LAUNCH_ID_INVALID);
+				}
+			},
+			LV_EVENT_CLICKED,
+			this);
+	} else {
+		lv_obj_remove_flag(m_dynamicPage, LV_OBJ_FLAG_HIDDEN);
+	}
 }
 
-void WallpaperEngineApp::showAdaptivePage() {
-	hideAllPages();
-	if (m_adaptivePage) m_adaptivePage->show();
-}
+// Effects/Adaptive pages removed; no-op implementations omitted.
 
 } // namespace System::Apps

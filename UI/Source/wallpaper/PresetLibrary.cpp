@@ -163,7 +163,7 @@ bool PresetLibrary::applyPreset(const std::string& id,
 		Log::warn(TAG, "Preset not found: %s", id.c_str());
 		return false;
 	}
-	manager->setWallpaper(preset->source, preset->type);
+	manager->setWallpaper(preset->source);
 	Log::info(TAG, "Applied preset '%s' (type=%s)", id.c_str(), preset->type.c_str());
 	return true;
 }
@@ -236,43 +236,7 @@ void PresetLibrary::registerBuiltinPresets() {
 		return;
 	}
 
-	// --- Dynamic: Plasma ---
-	{
-		WallpaperPreset p;
-		p.id = "plasma";
-		p.name = "Plasma";
-		p.description = "Vibrant sinusoidal colour interference pattern";
-		p.type = "dynamic";
-		p.source = "algo://plasma";
-		p.is_builtin = true;
-		m_presets[p.id] = p;
-		m_order.push_back(p.id);
-	}
-	// --- Dynamic: Gradient Waves ---
-	{
-		WallpaperPreset p;
-		p.id = "gradient";
-		p.name = "Gradient Waves";
-		p.description = "Smooth animated colour gradient waves";
-		p.type = "dynamic";
-		p.source = "algo://gradient";
-		p.is_builtin = true;
-		m_presets[p.id] = p;
-		m_order.push_back(p.id);
-	}
-	// --- Dynamic: Perlin Noise ---
-	{
-		WallpaperPreset p;
-		p.id = "perlin";
-		p.name = "Cloud Noise";
-		p.description = "Smooth organic noise cloud pattern";
-		p.type = "dynamic";
-		p.source = "algo://perlin";
-		p.is_builtin = true;
-		m_presets[p.id] = p;
-		m_order.push_back(p.id);
-	}
-	// --- Static placeholder (user-selected file) ---
+	// Only provide a static placeholder when no configs are present.
 	{
 		WallpaperPreset p;
 		p.id = "custom_static";

@@ -153,7 +153,7 @@ void TextEditorApp::createToolbar(lv_obj_t* parent) {
 	m_toolbar = lv_obj_create(parent);
 	lv_obj_set_size(m_toolbar, LV_PCT(100), LV_SIZE_CONTENT);
 	lv_obj_set_style_pad_all(m_toolbar, 0, 0);
-	lv_obj_set_style_pad_gap(m_toolbar, 8, 0);
+	lv_obj_set_style_pad_gap(m_toolbar, lv_dpx(8), 0);
 	lv_obj_set_style_border_width(m_toolbar, 0, 0);
 	lv_obj_set_style_radius(m_toolbar, 0, 0);
 	lv_obj_set_flex_flow(m_toolbar, LV_FLEX_FLOW_ROW);
@@ -208,7 +208,7 @@ void TextEditorApp::createStatusBar(lv_obj_t* parent) {
 	lv_obj_set_size(m_statusBar, LV_PCT(100), LV_SIZE_CONTENT);
 	lv_obj_set_style_pad_all(m_statusBar, 0, 0);
 	lv_obj_set_style_border_side(m_statusBar, LV_BORDER_SIDE_TOP, 0);
-	lv_obj_set_style_border_width(m_statusBar, 1, 0);
+	lv_obj_set_style_border_width(m_statusBar, lv_dpx(1), 0);
 	lv_obj_set_style_radius(m_statusBar, 0, 0);
 	lv_obj_set_flex_flow(m_statusBar, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(m_statusBar, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);

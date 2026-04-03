@@ -86,7 +86,7 @@ private:
 	void updateWallpaperPerfOverlay(const std::string& type, float fps, float avgFrameMs, uint32_t maxFrameMs, uint32_t extraHeapBytes);
 	void syncWallpaperProvider(uint32_t delta_ms);
 	void handleWallpaperProviderFailure(const std::string& requestedType, const std::string& source, const std::string& error);
-	void evaluateWallpaperAcceptanceGate(const std::string& type, const std::string& source, uint32_t delta_ms);
+	void evaluateWallpaperAcceptanceGate();
 
 	void on_start_click();
 	void on_up_click();

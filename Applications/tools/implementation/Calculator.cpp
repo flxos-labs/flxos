@@ -41,7 +41,7 @@ void Calculator::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	lv_obj_set_style_pad_all(m_calcDisplay, lv_dpx(UiConstants::PAD_LARGE), 0);
 	lv_obj_set_style_text_align(m_calcDisplay, LV_TEXT_ALIGN_RIGHT, 0);
 	lv_obj_set_style_radius(m_calcDisplay, lv_dpx(UiConstants::RADIUS_SMALL), 0);
-	lv_obj_set_style_border_width(m_calcDisplay, 1, 0);
+	lv_obj_set_style_border_width(m_calcDisplay, lv_dpx(1), 0);
 	lv_label_set_text(m_calcDisplay, "0");
 
 	// Button grid

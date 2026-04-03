@@ -285,7 +285,7 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 	auto memStats = flx::services::SystemInfoService::getInstance().getMemoryStats();
 	if (memStats.hasPsram) {
 		lv_obj_t* sep_ram = lv_obj_create(tab);
-		lv_obj_set_size(sep_ram, lv_pct(100), 1);
+		lv_obj_set_size(sep_ram, lv_pct(100), lv_dpx(1));
 		lv_obj_set_style_bg_color(sep_ram, lv_color_hex(0x888888), 0);
 		lv_obj_set_style_bg_opa(sep_ram, LV_OPA_50, 0);
 
@@ -313,7 +313,7 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 
 	// Storage Section
 	lv_obj_t* separator = lv_obj_create(tab);
-	lv_obj_set_size(separator, lv_pct(100), 1);
+	lv_obj_set_size(separator, lv_pct(100), lv_dpx(1));
 	lv_obj_set_style_bg_color(separator, lv_color_hex(0x888888), 0);
 	lv_obj_set_style_bg_opa(separator, LV_OPA_50, 0);
 

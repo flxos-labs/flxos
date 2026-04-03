@@ -21,7 +21,7 @@ public:
 
 	void onFrame(uint32_t delta_ms);
 
-	void setWallpaper(const std::string& source, const std::string& type);
+	void setWallpaper(const std::string& source);
 	void setAnimationSpeed(int32_t speed);
 	void setQualityLevel(int32_t level);
 	void applyEffect(const std::string& key, const std::string& value);

@@ -19,7 +19,7 @@ struct WallpaperPreset {
 	std::string id; ///< Unique preset identifier, e.g. "plasma"
 	std::string name; ///< Human-readable display name
 	std::string description; ///< Short description shown in the preset browser
-	std::string type; ///< Provider type: "static" | "animated" | "lottie" | "dynamic"
+	std::string type; ///< Provider type: "static"
 	std::string source; ///< File path or algorithm URI passed to the provider
 	std::string effects; ///< JSON string of effect configuration (may be empty)
 	std::string thumbnail; ///< Path to preview image (may be empty)
@@ -48,7 +48,7 @@ public:
 	/** Return all loaded presets in insertion order. */
 	std::vector<const WallpaperPreset*> listPresets() const;
 
-	/** Return only presets of a specific type (e.g. "dynamic"). */
+	/** Return only presets of a specific type (e.g. "static"). */
 	std::vector<const WallpaperPreset*> listPresetsByType(const std::string& type) const;
 
 	/**
