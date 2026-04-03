@@ -56,7 +56,7 @@ void WallpaperEngineApp::createUI(void* parent) {
 			if (m_wallpaperBrowser) {
 				m_wallpaperBrowser->hide();
 			}
-			if (m_fallbackBanner != nullptr && !lv_obj_has_flag(m_fallbackBanner, LV_OBJ_FLAG_HIDDEN)) {
+			if (m_fallbackBanner != nullptr && lv_obj_has_flag(m_fallbackBanner, LV_OBJ_FLAG_HIDDEN)) {
 				lv_obj_remove_flag(m_fallbackBanner, LV_OBJ_FLAG_HIDDEN);
 			}
 		});
