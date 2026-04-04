@@ -82,9 +82,9 @@ void Desktop::init() {
 
 		m_wallpaper_perf_overlay = lv_label_create(m_wallpaper);
 		lv_label_set_text(m_wallpaper_perf_overlay, "WP -- fps");
-		lv_obj_set_style_bg_opa(m_wallpaper_perf_overlay, LV_OPA_70, 0);
-		lv_obj_set_style_bg_color(m_wallpaper_perf_overlay, lv_color_hex(0x101820), 0);
-		lv_obj_set_style_text_color(m_wallpaper_perf_overlay, lv_color_hex(0xE8F1FF), 0);
+		lv_obj_set_style_bg_opa(m_wallpaper_perf_overlay, UiConstants::OPA_70, 0);
+		lv_obj_set_style_bg_color(m_wallpaper_perf_overlay, cfg.overlay_bg, 0);
+		lv_obj_set_style_text_color(m_wallpaper_perf_overlay, cfg.overlay_text, 0);
 		lv_obj_set_style_pad_hor(m_wallpaper_perf_overlay, lv_dpx(UiConstants::PAD_SMALL), 0);
 		lv_obj_set_style_pad_ver(m_wallpaper_perf_overlay, lv_dpx(UiConstants::PAD_TINY), 0);
 		lv_obj_set_style_radius(m_wallpaper_perf_overlay, lv_dpx(UiConstants::RADIUS_SMALL), 0);
@@ -103,6 +103,19 @@ void Desktop::init() {
 				}
 			},
 			m_wallpaper, nullptr);
+
+		lv_subject_add_observer_obj(
+			uiTheme.getThemeSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				lv_obj_t* overlay = lv_observer_get_target_obj(observer);
+				if (overlay) {
+					ThemeType theme = (ThemeType)lv_subject_get_int(subject);
+					ThemeConfig cfg = Themes::GetConfig(theme);
+					lv_obj_set_style_bg_color(overlay, cfg.overlay_bg, 0);
+					lv_obj_set_style_text_color(overlay, cfg.overlay_text, 0);
+				}
+			},
+			m_wallpaper_perf_overlay, nullptr);
 	}
 	lv_obj_set_style_bg_opa(m_screen, UiConstants::OPA_COVER, 0);
 
