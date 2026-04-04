@@ -51,7 +51,9 @@ void FocusManager::init(lv_obj_t* window_container, lv_obj_t* screen, lv_obj_t* 
 			}
 
 			// Re-apply styles for active/inactive windows under the new theme.
-			fm->activateWindow(fm->m_activeWindow);
+			auto* active = fm->m_activeWindow;
+			fm->m_activeWindow = nullptr;
+			fm->activateWindow(active);
 		},
 		m_windowContainer, this);
 }
