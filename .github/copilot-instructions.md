@@ -46,6 +46,7 @@
 
 - Always select the intended profile before building; profile selection synchronizes sdkconfig and target state.
 - When switching targets/profiles, expect build and sdkconfig regeneration. Avoid preserving stale generated artifacts.
+- Prefer semantic theme tokens via `Themes::GetConfig(...)` or helpers in `UI/Include/flx/ui/theming/StyleUtils.hpp`; avoid introducing new hardcoded `lv_color_hex(...)` values in app/UI code.
 - New app pattern:
   - Implement app class and manifest getter in a single `.cpp` under `Applications/<app_name>/`
   - Register the app manifest in `Applications/AppRegistration.cpp`

@@ -15,6 +15,7 @@
 #include <flx/system/managers/PowerManager.hpp>
 #include <flx/ui/desktop/modules/status_bar/StatusBar.hpp>
 #include <flx/ui/theming/StyleUtils.hpp>
+#include <flx/ui/theming/UiThemeManager.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
@@ -54,6 +55,7 @@ void StatusBar::create() {
 	lv_obj_set_scroll_dir(m_statusBar, LV_DIR_NONE);
 
 	UI::StyleUtils::apply_glass(m_statusBar, lv_dpx(UiConstants::GLASS_BLUR_DEFAULT));
+	auto& uiTheme = flx::ui::theming::UiThemeManager::getInstance();
 
 	lv_obj_set_flex_flow(m_statusBar, LV_FLEX_FLOW_ROW);
 	lv_obj_set_flex_align(m_statusBar, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -253,39 +255,70 @@ void StatusBar::create() {
 				lv_obj_t* icon = lv_obj_get_child(cont, 0);
 				lv_obj_t* label = lv_obj_get_child(cont, 1);
 				int32_t const level = lv_subject_get_int(subject);
+				ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 
 				lv_label_set_text_fmt(label, "%d%%", (int)level);
 				if (level < 20) {
 					lv_image_set_src(icon, LV_SYMBOL_BATTERY_EMPTY);
-					lv_obj_set_style_text_color(label, Themes::GetConfig(ThemeEngine::get_current_theme()).error, 0);
+					lv_obj_set_style_text_color(label, cfg.error, 0);
 				} else if (level < 50) {
 					lv_image_set_src(icon, LV_SYMBOL_BATTERY_1);
-					lv_obj_set_style_text_color(label, Themes::GetConfig(ThemeEngine::get_current_theme()).secondary, 0);
+					lv_obj_set_style_text_color(label, cfg.warning, 0);
 				} else if (level < 80) {
 					lv_image_set_src(icon, LV_SYMBOL_BATTERY_2);
-					lv_obj_set_style_text_color(label, Themes::GetConfig(ThemeEngine::get_current_theme()).text_primary, 0);
+					lv_obj_set_style_text_color(label, cfg.text_primary, 0);
 				} else {
 					lv_image_set_src(icon, LV_SYMBOL_BATTERY_FULL);
-					lv_obj_set_style_text_color(label, Themes::GetConfig(ThemeEngine::get_current_theme()).text_primary, 0);
+					lv_obj_set_style_text_color(label, cfg.text_primary, 0);
 				}
 
 				// Color based on level
 				if (level <= 15) {
-					ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 					lv_obj_set_style_image_recolor(icon, cfg.error, 0);
 					lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
 				} else {
 					// Fallback to theme primary color via status bar inheritance
-					ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 					lv_obj_set_style_image_recolor(icon, cfg.text_primary, 0);
 					lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
 				}
 			},
 			batt_cont, nullptr);
+
+		lv_subject_add_observer_obj(
+			uiTheme.getThemeSubject(),
+			[](lv_observer_t* observer, lv_subject_t* subject) {
+				LV_UNUSED(subject);
+				auto* instance = (StatusBar*)lv_observer_get_user_data(observer);
+				lv_obj_t* cont = lv_observer_get_target_obj(observer);
+				if (!instance || !cont || !instance->m_batteryLevelBridge) {
+					return;
+				}
+
+				lv_obj_t* icon = lv_obj_get_child(cont, 0);
+				lv_obj_t* label = lv_obj_get_child(cont, 1);
+				int32_t const level = lv_subject_get_int(instance->m_batteryLevelBridge->getSubject());
+				ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+
+				if (level < 20) {
+					lv_obj_set_style_text_color(label, cfg.error, 0);
+				} else if (level < 50) {
+					lv_obj_set_style_text_color(label, cfg.warning, 0);
+				} else {
+					lv_obj_set_style_text_color(label, cfg.text_primary, 0);
+				}
+
+				if (level <= 15) {
+					lv_obj_set_style_image_recolor(icon, cfg.error, 0);
+				} else {
+					lv_obj_set_style_image_recolor(icon, cfg.text_primary, 0);
+				}
+				lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
+			},
+			batt_cont, this);
 	}
 
 	s_overlayLabel = lv_label_create(m_statusBar);
-	lv_obj_set_style_text_color(s_overlayLabel, lv_color_hex(0xFFD700), 0);
+	UI::StyleUtils::applyThemedText(s_overlayLabel, UI::StyleUtils::ThemeColorToken::TextPrimary);
 	lv_obj_add_flag(s_overlayLabel, LV_OBJ_FLAG_HIDDEN);
 
 	m_timeLabel = lv_label_create(m_statusBar);

@@ -96,10 +96,10 @@ hardware:
 | Profile | SoC | Display | Touch | Flash |
 |---|---|---|---|---|
 | esp32s3-ili9341-xpt | ESP32-S3 | ILI9341 (SPI) | XPT2046 | 16 MB |
-| cyd-2432s028r | ESP32 | ILI9341 | Resistive | 4/8 MB |
+| cyd-2432s028r | ESP32 | ILI9341 | Resistive | 4 MB |
 | lilygo-t-hmi | ESP32-S3 | ST7789 | Capacitive | 16 MB |
 | generic-esp32 | ESP32 | Headless | N/A | 4 MB |
-| generic-esp32s3 | ESP32-S3 | Headless | N/A | 8 MB |
+| generic-esp32s3 | ESP32-S3 | Headless | N/A | 4 MB |
 
 ---
 
@@ -171,6 +171,7 @@ Primary entry point: [flxos.py](flxos.py)
 | Settings | System configuration and preferences |
 | System Info | Runtime diagnostics and hardware stats |
 | Tools | Utility suite |
+| Wallpaper Engine | Dynamic wallpaper rendering and lifecycle management |
 
 ---
 
@@ -178,7 +179,7 @@ Primary entry point: [flxos.py](flxos.py)
 
 ### Add A New App
 
-1. Create one app source file: Applications/<app-name>/<AppName>App.cpp.
+1. Create one app source file (single .cpp): Applications/<app-name>/<AppName>App.cpp.
 2. Define your app class and expose one manifest getter function from that file.
 3. Register that manifest in [Applications/AppRegistration.cpp](Applications/AppRegistration.cpp).
 

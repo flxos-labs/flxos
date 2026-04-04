@@ -18,5 +18,5 @@ Contains end-user apps bundled with FlxOS (calendar, settings, tools, wallpaper 
 
 ## Integration Notes
 
-- New apps should follow the existing single-file app-plus-manifest pattern in `Applications/<app_name>/`.
+- New apps should follow the existing single-file (.cpp) app-plus-manifest pattern in `Applications/<app_name>/`.
 - Register each new app in `Applications/AppRegistration.cpp`.

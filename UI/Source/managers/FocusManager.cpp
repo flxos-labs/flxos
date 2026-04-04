@@ -9,6 +9,7 @@
 #include <display/lv_display.h>
 #include <flx/core/Logger.hpp>
 #include <flx/ui/managers/FocusManager.hpp>
+#include <flx/ui/theming/UiThemeManager.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
@@ -38,6 +39,23 @@ void FocusManager::init(lv_obj_t* window_container, lv_obj_t* screen, lv_obj_t* 
 		lv_indev_add_event_cb(indev, on_global_release, LV_EVENT_RELEASED, this);
 		indev = lv_indev_get_next(indev);
 	}
+
+	auto& uiTheme = flx::ui::theming::UiThemeManager::getInstance();
+	lv_subject_add_observer_obj(
+		uiTheme.getThemeSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			LV_UNUSED(subject);
+			auto* fm = (FocusManager*)lv_observer_get_user_data(observer);
+			if (!fm || !fm->m_activeWindow || !lv_obj_is_valid(fm->m_activeWindow)) {
+				return;
+			}
+
+			// Re-apply styles for active/inactive windows under the new theme.
+			auto* active = fm->m_activeWindow;
+			fm->m_activeWindow = nullptr;
+			fm->activateWindow(active);
+		},
+		m_windowContainer, this);
 }
 
 void FocusManager::registerPanel(lv_obj_t* panel) {

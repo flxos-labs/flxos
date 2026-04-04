@@ -126,6 +126,14 @@ else
     echo -e "${YELLOW}  ⊘ Skipped (script not found)${NC}"
 fi
 
+# 8. Literal Color Guardrail
+echo -e "\n${BLUE}═══ 8. Literal Color Guardrail ═══${NC}"
+if [ -f "$SCRIPT_DIR/check_literal_colors.py" ]; then
+    run_check "Literal Color Guardrail" "python3 $SCRIPT_DIR/check_literal_colors.py" "literal_colors"
+else
+    echo -e "${YELLOW}  ⊘ Skipped (script not found)${NC}"
+fi
+
 # Summary
 echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════${NC}"
