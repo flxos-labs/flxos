@@ -6,6 +6,8 @@
 #include <flx/apps/AppManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <string_view>
 
@@ -89,11 +91,12 @@ void ImageViewerApp::createUI(void* parent) {
 	lv_obj_set_flex_align(content, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 	lv_obj_set_scroll_dir(content, LV_DIR_NONE);
 	lv_obj_set_style_clip_corner(content, true, 0);
+	ThemeConfig const theme = Themes::GetConfig(ThemeEngine::get_current_theme());
 
 	if (m_filePath.empty()) {
 		m_errorLabel = lv_label_create(content);
 		lv_label_set_text(m_errorLabel, "No file specified");
-		lv_obj_set_style_text_color(m_errorLabel, lv_color_hex(0xFF5252), 0);
+		lv_obj_set_style_text_color(m_errorLabel, theme.error, 0);
 		return;
 	}
 
@@ -120,7 +123,7 @@ void ImageViewerApp::createUI(void* parent) {
 
 		m_errorLabel = lv_label_create(content);
 		lv_label_set_text(m_errorLabel, "Failed to load image");
-		lv_obj_set_style_text_color(m_errorLabel, lv_color_hex(0xFF5252), 0);
+		lv_obj_set_style_text_color(m_errorLabel, theme.error, 0);
 	}
 }
 
@@ -174,7 +177,8 @@ void ImageViewerApp::onNewIntent(const flx::apps::Intent& intent) {
 
 		m_errorLabel = lv_label_create(content);
 		lv_label_set_text(m_errorLabel, "Failed to load image");
-		lv_obj_set_style_text_color(m_errorLabel, lv_color_hex(0xFF5252), 0);
+		ThemeConfig const theme = Themes::GetConfig(ThemeEngine::get_current_theme());
+		lv_obj_set_style_text_color(m_errorLabel, theme.error, 0);
 	}
 }
 
