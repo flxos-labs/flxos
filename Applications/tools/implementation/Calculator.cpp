@@ -2,8 +2,9 @@
 #include <cmath>
 #include <cstdio>
 #include <flx/ui/common/SettingsCommon.hpp>
-#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
+#include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
 
 using namespace flx::ui::common;
 
@@ -32,7 +33,8 @@ void Calculator::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	m_calcExpressionLabel = lv_label_create(content);
 	lv_obj_set_width(m_calcExpressionLabel, lv_pct(100));
 	lv_obj_set_style_text_align(m_calcExpressionLabel, LV_TEXT_ALIGN_RIGHT, 0);
-	lv_obj_set_style_text_color(m_calcExpressionLabel, lv_color_hex(0xaaaaaa), 0); // Grey color for history
+	const auto& theme = Themes::GetConfig(ThemeEngine::get_current_theme());
+	lv_obj_set_style_text_color(m_calcExpressionLabel, theme.text_secondary, 0);
 	lv_label_set_text(m_calcExpressionLabel, "");
 
 	// Display
@@ -42,6 +44,7 @@ void Calculator::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	lv_obj_set_style_text_align(m_calcDisplay, LV_TEXT_ALIGN_RIGHT, 0);
 	lv_obj_set_style_radius(m_calcDisplay, lv_dpx(UiConstants::RADIUS_SMALL), 0);
 	lv_obj_set_style_border_width(m_calcDisplay, lv_dpx(1), 0);
+	lv_obj_set_style_border_color(m_calcDisplay, theme.secondary, 0);
 	lv_label_set_text(m_calcDisplay, "0");
 
 	// Button grid
@@ -71,9 +74,13 @@ void Calculator::createView(lv_obj_t* parent, std::function<void()> onBack) {
 
 		lv_obj_set_user_data(btn, (void*)buttons[i]);
 
-		// Style operators differently
+		// Style operators, clear, and equals with secondary accent color
 		if (i % 4 == 3 || buttons[i][0] == 'C' || buttons[i][0] == '=') {
-			lv_obj_set_style_bg_color(btn, lv_color_hex(0x4a4e69), 0);
+			lv_obj_set_style_bg_color(btn, theme.secondary, 0);
+			lv_obj_set_style_text_color(label, theme.on_primary, 0);
+		} else {
+			// Digit buttons use primary color
+			lv_obj_set_style_text_color(label, theme.text_primary, 0);
 		}
 
 		lv_obj_add_event_cb(btn, [](lv_event_t* e) {
@@ -89,7 +96,8 @@ void Calculator::createView(lv_obj_t* parent, std::function<void()> onBack) {
                 calc->onCalcEquals();
             } else {
                 calc->onCalcOperator(btnText);
-            } }, LV_EVENT_CLICKED, this);
+            }
+        }, LV_EVENT_CLICKED, this);
 	}
 }
 
