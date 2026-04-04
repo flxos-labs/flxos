@@ -33,10 +33,19 @@ private:
 	lv_obj_t* m_pathDropdown {nullptr};
 	lv_obj_t* m_captureBtn {nullptr};
 
+	enum class StatusTone {
+		Neutral,
+		Success,
+		Error,
+	};
+
+	StatusTone m_statusTone {StatusTone::Neutral};
+
 	void startCapture();
 	std::string getSelectedBasePath();
 
-	void updateStatus(const char* msg, bool isError = false);
+	void updateStatus(const char* msg, bool isError = false, bool isNeutral = false);
+	void applyStatusTheme();
 };
 
 } // namespace System::Apps::Tools
