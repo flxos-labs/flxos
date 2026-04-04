@@ -1,5 +1,8 @@
 #include "Flashlight.hpp"
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/UiThemeManager.hpp>
+#include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
 using namespace flx::ui::common;
@@ -18,31 +21,36 @@ void Flashlight::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	m_flashlightContainer = lv_obj_create(m_view);
 	lv_obj_set_size(m_flashlightContainer, lv_pct(100), lv_pct(100));
 	lv_obj_set_flex_grow(m_flashlightContainer, 1);
-	lv_obj_set_style_bg_color(m_flashlightContainer, lv_color_hex(0x2d2d2d), 0);
 	lv_obj_set_style_border_width(m_flashlightContainer, 0, 0);
 	lv_obj_set_flex_flow(m_flashlightContainer, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(m_flashlightContainer, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-	lv_obj_t* icon = lv_label_create(m_flashlightContainer);
-	lv_label_set_text(icon, LV_SYMBOL_EYE_OPEN);
+	m_flashlightIcon = lv_label_create(m_flashlightContainer);
+	lv_label_set_text(m_flashlightIcon, LV_SYMBOL_EYE_OPEN);
 
-	lv_obj_t* hint = lv_label_create(m_flashlightContainer);
-	lv_label_set_text(hint, "Tap to toggle");
-	lv_obj_set_style_margin_top(hint, lv_dpx(UiConstants::PAD_LARGE), 0);
+	m_flashlightHint = lv_label_create(m_flashlightContainer);
+	lv_label_set_text(m_flashlightHint, "Tap to toggle");
+	lv_obj_set_style_margin_top(m_flashlightHint, lv_dpx(UiConstants::PAD_LARGE), 0);
+
+	applyThemeStyles();
+
+	auto& uiTheme = flx::ui::theming::UiThemeManager::getInstance();
+	lv_subject_add_observer_obj(
+		uiTheme.getThemeSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			LV_UNUSED(subject);
+			auto* app = static_cast<Flashlight*>(lv_observer_get_user_data(observer));
+			if (app) {
+				app->applyThemeStyles();
+			}
+		},
+		m_view, this);
 
 	lv_obj_add_event_cb(m_flashlightContainer, [](lv_event_t* e) {
         auto* app = static_cast<Flashlight*>(lv_event_get_user_data(e));
         app->m_flashlightOn = !app->m_flashlightOn;
-
-        if (app->m_flashlightOn) {
-            lv_obj_set_style_bg_color(app->m_flashlightContainer, lv_color_white(), 0);
-            lv_obj_set_style_text_color(lv_obj_get_child(app->m_flashlightContainer, 0), lv_color_black(), 0);
-            lv_obj_set_style_text_color(lv_obj_get_child(app->m_flashlightContainer, 1), lv_color_black(), 0);
-        } else {
-            lv_obj_set_style_bg_color(app->m_flashlightContainer, lv_color_hex(0x2d2d2d), 0);
-            lv_obj_set_style_text_color(lv_obj_get_child(app->m_flashlightContainer, 0), lv_color_white(), 0);
-            lv_obj_set_style_text_color(lv_obj_get_child(app->m_flashlightContainer, 1), lv_color_white(), 0);
-        } }, LV_EVENT_CLICKED, this);
+		app->applyThemeStyles();
+	}, LV_EVENT_CLICKED, this);
 }
 
 void Flashlight::show() {
@@ -59,7 +67,30 @@ void Flashlight::destroy() {
 		m_view = nullptr;
 	}
 	m_flashlightContainer = nullptr;
+	m_flashlightIcon = nullptr;
+	m_flashlightHint = nullptr;
 	m_flashlightOn = false;
+}
+
+void Flashlight::applyThemeStyles() {
+	if (!m_flashlightContainer || !m_flashlightIcon || !m_flashlightHint) {
+		return;
+	}
+
+	if (m_flashlightOn) {
+		lv_obj_set_style_bg_color(m_flashlightContainer, lv_color_white(), 0);
+		lv_obj_set_style_text_color(m_flashlightIcon, lv_color_black(), 0);
+		lv_obj_set_style_text_color(m_flashlightHint, lv_color_black(), 0);
+		return;
+	}
+
+	ThemeConfig const theme = Themes::GetConfig(ThemeEngine::get_current_theme());
+	// In light themes, surface can be white and visually match the ON state.
+	// Use muted for OFF so toggle state remains obvious.
+	lv_color_t const offBg = theme.dark ? theme.surface : theme.muted;
+	lv_obj_set_style_bg_color(m_flashlightContainer, offBg, 0);
+	lv_obj_set_style_text_color(m_flashlightIcon, theme.text_primary, 0);
+	lv_obj_set_style_text_color(m_flashlightHint, theme.text_primary, 0);
 }
 
 } // namespace System::Apps::Tools
