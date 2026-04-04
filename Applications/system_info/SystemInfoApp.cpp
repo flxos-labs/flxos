@@ -147,9 +147,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		lv_obj_set_style_pad_all(card, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 		lv_obj_set_style_pad_row(card, lv_dpx(UiConstants::PAD_SMALL), 0);
 		lv_obj_set_style_radius(card, UiConstants::RADIUS_DEFAULT, 0);
-		lv_obj_set_style_border_width(card, UiConstants::BORDER_THIN, 0);
-		lv_obj_set_style_border_color(card, lv_color_hex(0x888888), 0);
-		lv_obj_set_style_border_opa(card, LV_OPA_30, 0);
+			UI::StyleUtils::applyThemedBorder(card, UI::StyleUtils::ThemeColorToken::CardBorder, UiConstants::BORDER_THIN, UiConstants::OPA_30);
 
 		UI::StyleUtils::apply_glass(card, UiConstants::GLASS_BLUR_DEFAULT);
 
@@ -157,7 +155,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		lv_obj_t* title_label = lv_label_create(card);
 		lv_label_set_text(title_label, title);
 		lv_obj_set_style_text_font(title_label, &lv_font_montserrat_14, 0);
-		lv_obj_set_style_text_color(title_label, lv_color_hex(0x888888), 0);
+			UI::StyleUtils::applyThemedText(title_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
 		lv_obj_set_style_margin_bottom(title_label, lv_dpx(UiConstants::PAD_SMALL), 0);
 
 		return card;
@@ -190,7 +188,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 			lv_label_set_long_mode(desc_label, LV_LABEL_LONG_WRAP);
 			lv_obj_set_width(desc_label, lv_pct(100));
 			lv_label_set_text_fmt(desc_label, "      %s", profile.description.c_str());
-			lv_obj_set_style_text_color(desc_label, lv_color_hex(0xaaaaaa), 0);
+			UI::StyleUtils::applyThemedText(desc_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
 		}
 
 		lv_obj_t* chip_info_label = lv_label_create(card_hw);
@@ -278,16 +276,14 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 
 	m_internal_heap_percent_label = lv_label_create(tab);
 	lv_label_set_text(m_internal_heap_percent_label, "--% free");
-	lv_obj_set_style_text_color(m_internal_heap_percent_label, lv_color_hex(0x888888), 0);
+	UI::StyleUtils::applyThemedText(m_internal_heap_percent_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
 	lv_obj_set_style_margin_bottom(m_internal_heap_percent_label, lv_dpx(UiConstants::PAD_LARGE), 0);
 
 	// PSRAM Section Header
 	auto memStats = flx::services::SystemInfoService::getInstance().getMemoryStats();
 	if (memStats.hasPsram) {
 		lv_obj_t* sep_ram = lv_obj_create(tab);
-		lv_obj_set_size(sep_ram, lv_pct(100), lv_dpx(1));
-		lv_obj_set_style_bg_color(sep_ram, lv_color_hex(0x888888), 0);
-		lv_obj_set_style_bg_opa(sep_ram, LV_OPA_50, 0);
+		UI::StyleUtils::applyThemedSeparator(sep_ram, UiConstants::OPA_TEXT_DIM);
 
 		lv_obj_t* psram_header = lv_label_create(tab);
 		lv_label_set_text(psram_header, "PSRAM");
@@ -303,7 +299,7 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 
 		m_psram_percent_label = lv_label_create(tab);
 		lv_label_set_text(m_psram_percent_label, "--% free");
-		lv_obj_set_style_text_color(m_psram_percent_label, lv_color_hex(0x888888), 0);
+		UI::StyleUtils::applyThemedText(m_psram_percent_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
 		lv_obj_set_style_margin_bottom(m_psram_percent_label, lv_dpx(UiConstants::PAD_LARGE), 0);
 	} else {
 		m_psram_label = nullptr;
@@ -313,9 +309,7 @@ void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
 
 	// Storage Section
 	lv_obj_t* separator = lv_obj_create(tab);
-	lv_obj_set_size(separator, lv_pct(100), lv_dpx(1));
-	lv_obj_set_style_bg_color(separator, lv_color_hex(0x888888), 0);
-	lv_obj_set_style_bg_opa(separator, LV_OPA_50, 0);
+	UI::StyleUtils::applyThemedSeparator(separator, UiConstants::OPA_TEXT_DIM);
 
 	lv_obj_t* storage_header = lv_label_create(tab);
 	lv_label_set_text(storage_header, "Storage");
