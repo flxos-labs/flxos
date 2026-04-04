@@ -29,6 +29,7 @@ private:
 	lv_obj_t* m_view {nullptr};
 	lv_obj_t* m_calcDisplay {nullptr};
 	lv_obj_t* m_calcExpressionLabel {nullptr};
+	lv_obj_t* m_calcGrid {nullptr};
 
 	std::string m_calcInput {};
 	std::string m_calcExpression {};
@@ -41,6 +42,7 @@ private:
 	void onCalcEquals();
 	void onCalcClear();
 	void updateCalcDisplay();
+	void applyThemeStyles();
 };
 
 } // namespace System::Apps::Tools
