@@ -27,7 +27,11 @@ private:
 	std::function<void()> m_onBack {};
 	lv_obj_t* m_view {nullptr};
 	lv_obj_t* m_flashlightContainer {nullptr};
+	lv_obj_t* m_flashlightIcon {nullptr};
+	lv_obj_t* m_flashlightHint {nullptr};
 	bool m_flashlightOn {false};
+
+	void applyThemeStyles();
 };
 
 } // namespace System::Apps::Tools
