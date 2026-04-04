@@ -3,6 +3,9 @@
 #include <flx/system/services/ScreenshotService.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/UiThemeManager.hpp>
+#include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
 #include <Config.hpp>
@@ -109,12 +112,15 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	m_captureBtn = lv_button_create(content);
 	lv_obj_set_size(m_captureBtn, lv_pct(80), LV_SIZE_CONTENT);
 	lv_obj_set_style_size(m_captureBtn, lv_pct(80), LV_SIZE_CONTENT, 0);
-	lv_obj_set_style_bg_color(m_captureBtn, lv_color_hex(0x4CAF50), 0);
 	lv_obj_set_style_bg_opa(m_captureBtn, LV_OPA_COVER, 0);
 
 	lv_obj_t* btnLabel = lv_label_create(m_captureBtn);
 	lv_label_set_text_fmt(btnLabel, "%s  Capture", LV_SYMBOL_IMAGE);
 	lv_obj_center(btnLabel);
+
+	ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+	lv_obj_set_style_bg_color(m_captureBtn, cfg.success, 0);
+	lv_obj_set_style_text_color(btnLabel, cfg.on_primary, 0);
 
 	lv_obj_add_event_cb(
 		m_captureBtn,
@@ -126,10 +132,27 @@ void Screenshot::createView(lv_obj_t* parent, std::function<void()> onBack) {
 
 	// --- Status label ---
 	m_statusLabel = lv_label_create(content);
-	lv_label_set_text(m_statusLabel, "Ready");
-	lv_obj_set_style_text_color(m_statusLabel, lv_color_hex(0xAAAAAA), 0);
 	lv_label_set_long_mode(m_statusLabel, LV_LABEL_LONG_WRAP);
 	lv_obj_set_width(m_statusLabel, lv_pct(100));
+	updateStatus("Ready", false, true);
+
+	auto& uiTheme = flx::ui::theming::UiThemeManager::getInstance();
+	lv_subject_add_observer_obj(
+		uiTheme.getThemeSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			LV_UNUSED(subject);
+			auto* self = static_cast<Screenshot*>(lv_observer_get_user_data(observer));
+			if (!self) {
+				return;
+			}
+
+			ThemeConfig const theme = Themes::GetConfig(ThemeEngine::get_current_theme());
+			if (self->m_captureBtn) {
+				lv_obj_set_style_bg_color(self->m_captureBtn, theme.success, 0);
+			}
+			self->applyStatusTheme();
+		},
+		m_view, this);
 }
 
 // ──────────────────────────────────────────────────────
@@ -155,7 +178,7 @@ void Screenshot::startCapture() {
 
 	// Update local UI
 	if (delaySec > 0) {
-		updateStatus("Capturing...");
+		updateStatus("Capturing...", false, true);
 	}
 }
 
@@ -177,13 +200,26 @@ std::string Screenshot::getSelectedBasePath() {
 	return "/data";
 }
 
-void Screenshot::updateStatus(const char* msg, bool isError) {
+void Screenshot::updateStatus(const char* msg, bool isError, bool isNeutral) {
 	if (!m_statusLabel) return;
+	m_statusTone = isError ? StatusTone::Error : (isNeutral ? StatusTone::Neutral : StatusTone::Success);
 	lv_label_set_text(m_statusLabel, msg);
-	lv_obj_set_style_text_color(
-		m_statusLabel,
-		isError ? lv_color_hex(0xFF5252) : lv_color_hex(0x4CAF50),
-		0);
+	applyStatusTheme();
+}
+
+void Screenshot::applyStatusTheme() {
+	if (!m_statusLabel) {
+		return;
+	}
+
+	ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+	if (m_statusTone == StatusTone::Error) {
+		lv_obj_set_style_text_color(m_statusLabel, cfg.error, 0);
+	} else if (m_statusTone == StatusTone::Success) {
+		lv_obj_set_style_text_color(m_statusLabel, cfg.success, 0);
+	} else {
+		lv_obj_set_style_text_color(m_statusLabel, cfg.text_secondary, 0);
+	}
 }
 
 // ──────────────────────────────────────────────────────
