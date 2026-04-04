@@ -12,6 +12,14 @@ struct ThemeConfig {
 	lv_color_t text_primary;
 	lv_color_t text_secondary;
 	lv_color_t error;
+	lv_color_t success;
+	lv_color_t warning;
+	lv_color_t info;
+	lv_color_t muted;
+	lv_color_t separator;
+	lv_color_t overlay_bg;
+	lv_color_t overlay_text;
+	lv_color_t card_border;
 	bool dark;
 	lv_theme_apply_cb_t apply_cb;
 };
