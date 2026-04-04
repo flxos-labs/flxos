@@ -3,9 +3,9 @@
 #include <cstdio>
 #include <flx/ui/common/SettingsCommon.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
-#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
+#include <flx/ui/theming/ui_constants/UiConstants.hpp>
 
 using namespace flx::ui::common;
 
@@ -89,8 +89,7 @@ void Calculator::createView(lv_obj_t* parent, std::function<void()> onBack) {
                 calc->onCalcEquals();
             } else {
                 calc->onCalcOperator(btnText);
-            }
-        }, LV_EVENT_CLICKED, this);
+            } }, LV_EVENT_CLICKED, this);
 	}
 
 	applyThemeStyles();

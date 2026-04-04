@@ -14,8 +14,8 @@
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/managers/PowerManager.hpp>
 #include <flx/ui/desktop/modules/status_bar/StatusBar.hpp>
-#include <flx/ui/theming/UiThemeManager.hpp>
 #include <flx/ui/theming/StyleUtils.hpp>
+#include <flx/ui/theming/UiThemeManager.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>

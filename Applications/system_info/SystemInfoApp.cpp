@@ -147,7 +147,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		lv_obj_set_style_pad_all(card, lv_dpx(UiConstants::PAD_DEFAULT), 0);
 		lv_obj_set_style_pad_row(card, lv_dpx(UiConstants::PAD_SMALL), 0);
 		lv_obj_set_style_radius(card, UiConstants::RADIUS_DEFAULT, 0);
-			UI::StyleUtils::applyThemedBorder(card, UI::StyleUtils::ThemeColorToken::CardBorder, UiConstants::BORDER_THIN, UiConstants::OPA_30);
+		UI::StyleUtils::applyThemedBorder(card, UI::StyleUtils::ThemeColorToken::CardBorder, UiConstants::BORDER_THIN, UiConstants::OPA_30);
 
 		UI::StyleUtils::apply_glass(card, UiConstants::GLASS_BLUR_DEFAULT);
 
@@ -155,7 +155,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		lv_obj_t* title_label = lv_label_create(card);
 		lv_label_set_text(title_label, title);
 		lv_obj_set_style_text_font(title_label, &lv_font_montserrat_14, 0);
-			UI::StyleUtils::applyThemedText(title_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
+		UI::StyleUtils::applyThemedText(title_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
 		lv_obj_set_style_margin_bottom(title_label, lv_dpx(UiConstants::PAD_SMALL), 0);
 
 		return card;

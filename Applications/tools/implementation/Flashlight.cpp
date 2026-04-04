@@ -49,8 +49,7 @@ void Flashlight::createView(lv_obj_t* parent, std::function<void()> onBack) {
 	lv_obj_add_event_cb(m_flashlightContainer, [](lv_event_t* e) {
         auto* app = static_cast<Flashlight*>(lv_event_get_user_data(e));
         app->m_flashlightOn = !app->m_flashlightOn;
-		app->applyThemeStyles();
-	}, LV_EVENT_CLICKED, this);
+		app->applyThemeStyles(); }, LV_EVENT_CLICKED, this);
 }
 
 void Flashlight::show() {
