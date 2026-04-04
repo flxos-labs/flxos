@@ -23,6 +23,14 @@ ThemeConfig GetConfig(ThemeType type) {
 			cfg.text_primary = lv_color_white();
 			cfg.text_secondary = lv_palette_lighten(LV_PALETTE_GREY, 2);
 			cfg.error = lv_palette_main(LV_PALETTE_RED);
+				cfg.success = lv_palette_main(LV_PALETTE_GREEN);
+				cfg.warning = lv_palette_main(LV_PALETTE_AMBER);
+				cfg.info = lv_palette_main(LV_PALETTE_BLUE);
+				cfg.muted = lv_palette_main(LV_PALETTE_GREY);
+				cfg.separator = lv_palette_darken(LV_PALETTE_GREY, 2);
+				cfg.overlay_bg = lv_palette_darken(LV_PALETTE_BLUE_GREY, 4);
+				cfg.overlay_text = lv_palette_lighten(LV_PALETTE_BLUE_GREY, 4);
+				cfg.card_border = lv_palette_lighten(LV_PALETTE_GREY, 1);
 			cfg.dark = true;
 			break;
 		case ThemeType::MATERIAL:
@@ -33,6 +41,14 @@ ThemeConfig GetConfig(ThemeType type) {
 			cfg.text_primary = lv_palette_darken(LV_PALETTE_GREY, 4);
 			cfg.text_secondary = lv_palette_main(LV_PALETTE_GREY);
 			cfg.error = lv_palette_main(LV_PALETTE_RED);
+				cfg.success = lv_palette_main(LV_PALETTE_GREEN);
+				cfg.warning = lv_palette_main(LV_PALETTE_AMBER);
+				cfg.info = lv_palette_main(LV_PALETTE_BLUE);
+				cfg.muted = lv_palette_darken(LV_PALETTE_GREY, 1);
+				cfg.separator = lv_palette_lighten(LV_PALETTE_GREY, 2);
+				cfg.overlay_bg = lv_palette_darken(LV_PALETTE_BLUE_GREY, 4);
+				cfg.overlay_text = lv_color_white();
+				cfg.card_border = lv_palette_lighten(LV_PALETTE_GREY, 3);
 			cfg.dark = false;
 			break;
 		default:
@@ -43,6 +59,14 @@ ThemeConfig GetConfig(ThemeType type) {
 			cfg.text_primary = lv_color_white();
 			cfg.text_secondary = lv_palette_lighten(LV_PALETTE_GREY, 2);
 			cfg.error = lv_palette_main(LV_PALETTE_RED);
+				cfg.success = lv_palette_main(LV_PALETTE_GREEN);
+				cfg.warning = lv_palette_main(LV_PALETTE_AMBER);
+				cfg.info = lv_palette_main(LV_PALETTE_BLUE);
+				cfg.muted = lv_palette_main(LV_PALETTE_GREY);
+				cfg.separator = lv_palette_darken(LV_PALETTE_GREY, 2);
+				cfg.overlay_bg = lv_palette_darken(LV_PALETTE_BLUE_GREY, 4);
+				cfg.overlay_text = lv_palette_lighten(LV_PALETTE_BLUE_GREY, 4);
+				cfg.card_border = lv_palette_lighten(LV_PALETTE_GREY, 1);
 			cfg.dark = true;
 			break;
 	}
