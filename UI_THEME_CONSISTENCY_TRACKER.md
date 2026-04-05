@@ -37,18 +37,18 @@ Reference plan: UI_THEME_CONSISTENCY_ULTIMATE_PLAN.md
 ## Phase 5: Guardrails and QA
 - [x] Add script to flag restricted lv_color_hex usage in scripts/
 - [x] Integrate guardrail into scripts/code_quality.sh
-- [ ] Validate runtime theme switch on all migrated screens
+- [x] Validate runtime theme switch on all migrated screens
 - [x] Run formatting and quality checks
 
 ## QA Matrix (mark per screen)
-- [ ] Desktop
-- [ ] Status bar
-- [ ] Quick access panel
-- [ ] Calculator
-- [ ] Screenshot
-- [ ] Flashlight
-- [ ] System info
-- [ ] Image viewer
+- [x] Desktop
+- [x] Status bar
+- [x] Quick access panel
+- [x] Calculator
+- [x] Screenshot
+- [x] Flashlight
+- [x] System info
+- [x] Image viewer
 
 ## Notes
 - Keep PRs phase-scoped and small.
