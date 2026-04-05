@@ -12,6 +12,8 @@
 #include <cstring>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
+#include <font/lv_symbol_def.h>
 #include <string>
 #include <string_view>
 
@@ -306,6 +308,13 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 		}
 		self->m_retry_count = 0;
 		self->setStatus(WiFiStatus::CONNECTED);
+
+		flx::system::NotificationManager::getInstance().addNotification(
+			"WiFi Connected", 
+			"Connected to " + self->m_ssid_subject->get(), 
+			"Connectivity", 
+			LV_SYMBOL_WIFI
+		);
 
 		if (self->m_got_ip_callback) {
 			self->m_got_ip_callback();

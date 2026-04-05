@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
+#include <font/lv_symbol_def.h>
 #include <string_view>
 
 static constexpr std::string_view TAG = "BluetoothManager";
@@ -19,6 +21,13 @@ esp_err_t BluetoothManager::init(flx::Observable<int32_t>* enabled_subject) {
 esp_err_t BluetoothManager::enable(bool enable) {
 	Log::info(TAG, "Bluetooth %s", enable ? "enabling" : "disabling");
 	m_is_enabled = enable;
+
+	flx::system::NotificationManager::getInstance().addNotification(
+		"Bluetooth", 
+		enable ? "Bluetooth enabled" : "Bluetooth disabled", 
+		"Connectivity", 
+		LV_SYMBOL_BLUETOOTH
+	);
 	if (m_enabled_subject) {
 		m_enabled_subject->set(enable ? 1 : 0);
 	}
