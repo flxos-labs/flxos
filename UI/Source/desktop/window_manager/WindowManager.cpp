@@ -7,12 +7,12 @@
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/Intent.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/managers/ThemeManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/desktop/modules/dock/Dock.hpp>
 #include <flx/ui/managers/FocusManager.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
-#include <flx/system/managers/NotificationManager.hpp>
 #include <font/lv_symbol_def.h>
 #include <string_view>
 
@@ -74,12 +74,11 @@ void WindowManager::openApp(const std::string& packageName) {
 	if (!win) {
 		Log::error(TAG, "openApp: Failed to create window (OOM?)");
 		flx::system::NotificationManager::getInstance().addNotification(
-			"Window Error", 
-			"Memory error while opening " + packageName, 
-			"System", 
-			LV_SYMBOL_WARNING, 
-			2
-		);
+			"Window Error",
+			"Memory error while opening " + packageName,
+			"System",
+			LV_SYMBOL_WARNING,
+			2);
 		GuiTask::unlock();
 		return;
 	}

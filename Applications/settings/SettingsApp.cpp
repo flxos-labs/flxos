@@ -1,7 +1,7 @@
 #include "SettingsApp.hpp"
 #include <array>
-#include <utility>
 #include <flx/apps/AppManifest.hpp>
+#include <utility>
 
 using namespace flx::apps;
 using namespace flx::ui::common;

@@ -23,11 +23,10 @@ esp_err_t BluetoothManager::enable(bool enable) {
 	m_is_enabled = enable;
 
 	flx::system::NotificationManager::getInstance().addNotification(
-		"Bluetooth", 
-		enable ? "Bluetooth enabled" : "Bluetooth disabled", 
-		"Connectivity", 
-		LV_SYMBOL_BLUETOOTH
-	);
+		"Bluetooth",
+		enable ? "Bluetooth enabled" : "Bluetooth disabled",
+		"Connectivity",
+		LV_SYMBOL_BLUETOOTH);
 	if (m_enabled_subject) {
 		m_enabled_subject->set(enable ? 1 : 0);
 	}

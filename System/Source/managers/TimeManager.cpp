@@ -35,11 +35,10 @@ static void time_sync_notification_cb(struct timeval* /*tv*/) {
 	char buf[32];
 	strftime(buf, sizeof(buf), "%H:%M", &timeinfo);
 	flx::system::NotificationManager::getInstance().addNotification(
-		"Time Sync", 
-		std::string("Time updated: ") + buf, 
-		"System", 
-		LV_SYMBOL_REFRESH
-	);
+		"Time Sync",
+		std::string("Time updated: ") + buf,
+		"System",
+		LV_SYMBOL_REFRESH);
 }
 
 bool TimeManager::onStart() {

@@ -219,12 +219,11 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 	if (isAppBlocked(manifest.appId)) {
 		Log::error("AppManager", "App '%s' is blocked due to repeated crashes", manifest.appId.c_str());
 		flx::system::NotificationManager::getInstance().addNotification(
-			"App Blocked", 
-			"Repeated crashes detected for " + manifest.appId, 
-			"System", 
-			LV_SYMBOL_CLOSE, 
-			2
-		);
+			"App Blocked",
+			"Repeated crashes detected for " + manifest.appId,
+			"System",
+			LV_SYMBOL_CLOSE,
+			2);
 		return LAUNCH_ID_INVALID;
 	}
 
@@ -243,12 +242,11 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 		if (freeKb < manifest.minHeapKb) {
 			Log::error("AppManager", "Not enough heap for '%s' (need %u KB, have %lu KB)", manifest.appId.c_str(), manifest.minHeapKb, (unsigned long)freeKb);
 			flx::system::NotificationManager::getInstance().addNotification(
-				"Low Memory", 
-				"Could not start " + manifest.appId, 
-				"System", 
-				LV_SYMBOL_WARNING, 
-				2
-			);
+				"Low Memory",
+				"Could not start " + manifest.appId,
+				"System",
+				LV_SYMBOL_WARNING,
+				2);
 			return LAUNCH_ID_INVALID;
 		}
 	}

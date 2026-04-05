@@ -84,12 +84,11 @@ flx::services::HealthStatus HalInitService::onHealthCheck() {
 		for (const auto& dev: report.unhealthyDevices) {
 			flx::Log::warn(TAG, "Device ID %lu is unhealthy", dev.first);
 			flx::system::NotificationManager::getInstance().addNotification(
-				"Hardware Warning", 
-				"Device ID " + std::to_string(dev.first) + " is unhealthy", 
-				"System", 
-				LV_SYMBOL_WARNING, 
-				2
-			);
+				"Hardware Warning",
+				"Device ID " + std::to_string(dev.first) + " is unhealthy",
+				"System",
+				LV_SYMBOL_WARNING,
+				2);
 		}
 		return flx::services::HealthStatus::Degraded;
 	}

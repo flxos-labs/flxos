@@ -163,12 +163,11 @@ void SettingsManager::saveSettings() {
 		} else {
 			Log::error(TAG, "Failed to open settings file for writing");
 			flx::system::NotificationManager::getInstance().addNotification(
-				"Settings Error", 
-				"Failed to save preferences", 
-				"System", 
-				LV_SYMBOL_SAVE, 
-				2
-			);
+				"Settings Error",
+				"Failed to save preferences",
+				"System",
+				LV_SYMBOL_SAVE,
+				2);
 		}
 		free(str);
 	}

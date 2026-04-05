@@ -310,11 +310,10 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 		self->setStatus(WiFiStatus::CONNECTED);
 
 		flx::system::NotificationManager::getInstance().addNotification(
-			"WiFi Connected", 
-			"Connected to " + self->m_ssid_subject->get(), 
-			"Connectivity", 
-			LV_SYMBOL_WIFI
-		);
+			"WiFi Connected",
+			"Connected to " + self->m_ssid_subject->get(),
+			"Connectivity",
+			LV_SYMBOL_WIFI);
 
 		if (self->m_got_ip_callback) {
 			self->m_got_ip_callback();

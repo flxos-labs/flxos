@@ -62,12 +62,11 @@ esp_err_t SystemManager::initHardware() {
 		Log::error(TAG, "Failed to mount /system - active SAFE MODE");
 #if LV_USE_LOVYAN_GFX
 		flx::system::NotificationManager::getInstance().addNotification(
-			"Safe Mode", 
-			"System storage failed to mount", 
-			"System", 
-			LV_SYMBOL_WARNING, 
-			2
-		);
+			"Safe Mode",
+			"System storage failed to mount",
+			"System",
+			LV_SYMBOL_WARNING,
+			2);
 #endif
 		m_isSafeMode = true;
 	} else {
@@ -132,12 +131,11 @@ esp_err_t SystemManager::initServices() {
 		Log::error(TAG, "Some required services failed — safe mode may be needed");
 #if LV_USE_LOVYAN_GFX
 		flx::system::NotificationManager::getInstance().addNotification(
-			"Safe Mode", 
-			"Core services failed to start", 
-			"System", 
-			LV_SYMBOL_WARNING, 
-			2
-		);
+			"Safe Mode",
+			"Core services failed to start",
+			"System",
+			LV_SYMBOL_WARNING,
+			2);
 #endif
 		m_isSafeMode = true;
 	}

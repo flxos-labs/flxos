@@ -241,11 +241,10 @@ void HotspotManager::checkAutoShutdown() {
 		if ((now - m_last_client_time) >= m_auto_shutdown_timeout) {
 			Log::info(TAG, "Auto-shutdown triggered (no clients for %lu seconds)", m_auto_shutdown_timeout);
 			flx::system::NotificationManager::getInstance().addNotification(
-				"Hotspot", 
-				"Auto-shutdown (inactive for " + std::to_string(m_auto_shutdown_timeout) + "s)", 
-				"Connectivity", 
-				LV_SYMBOL_POWER
-			);
+				"Hotspot",
+				"Auto-shutdown (inactive for " + std::to_string(m_auto_shutdown_timeout) + "s)",
+				"Connectivity",
+				LV_SYMBOL_POWER);
 			stop();
 		}
 	}
@@ -418,11 +417,10 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 	if (event_id == WIFI_EVENT_AP_START) {
 		Log::info(TAG, "Hotspot AP started");
 		flx::system::NotificationManager::getInstance().addNotification(
-			"Hotspot", 
-			"Access Point active: " + self->m_current_ssid, 
-			"Connectivity", 
-			LV_SYMBOL_WIFI
-		);
+			"Hotspot",
+			"Access Point active: " + self->m_current_ssid,
+			"Connectivity",
+			LV_SYMBOL_WIFI);
 		self->initApHook();
 
 		if (self->m_nat_enabled) {
@@ -436,11 +434,10 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 	} else if (event_id == WIFI_EVENT_AP_STOP) {
 		Log::info(TAG, "Hotspot AP stopped");
 		flx::system::NotificationManager::getInstance().addNotification(
-			"Hotspot", 
-			"Access Point disabled", 
-			"Connectivity", 
-			LV_SYMBOL_WIFI
-		);
+			"Hotspot",
+			"Access Point disabled",
+			"Connectivity",
+			LV_SYMBOL_WIFI);
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
 			self->m_client_count = 0;
@@ -464,9 +461,9 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 			event->mac[3], event->mac[4], event->mac[5]);
 
 		flx::system::NotificationManager::getInstance().addNotification(
-			"Hotspot client", 
-			std::string("Device connected: ") + mac_str, 
-			"Connectivity", 
+			"Hotspot client",
+			std::string("Device connected: ") + mac_str,
+			"Connectivity",
 			LV_SYMBOL_USB // Or another suitable symbol
 		);
 

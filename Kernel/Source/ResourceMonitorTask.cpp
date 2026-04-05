@@ -39,7 +39,7 @@ void ResourceMonitorTask::run(void* /*data*/) {
 
 		if (m_freeHeap < 32768) {
 			Log::warn(TAG, "LOW HEAP MEMORY: %lu bytes", (unsigned long)m_freeHeap.load());
-			
+
 			flx::core::Bundle data;
 			data.putString("title", "Low Memory");
 			data.putString("message", "System resources are critically low");

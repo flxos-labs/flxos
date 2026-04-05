@@ -6,7 +6,7 @@
 
 namespace System::Apps::Settings {
 
-template <typename TPage>
+template<typename TPage>
 class SettingsPagePluginAdapter : public ISettingsPlugin {
 public:
 

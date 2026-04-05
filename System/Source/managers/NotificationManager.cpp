@@ -1,5 +1,5 @@
-#include <flx/system/managers/NotificationManager.hpp>
 #include <flx/core/EventBus.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
 #include <font/lv_symbol_def.h>
 
 #include "esp_timer.h"
@@ -38,16 +38,21 @@ bool NotificationManager::onStart() {
 		std::string message = data.getStringOr("message", "");
 		std::string appName = data.getStringOr("appName", "System");
 		int priority = data.getInt32Or("priority", 1);
-		
+
 		// Map icon string to LVGL symbol if needed
 		const void* icon = nullptr;
 		std::string iconStr = data.getStringOr("icon", "");
 		if (iconStr == "warning") icon = LV_SYMBOL_WARNING;
-		else if (iconStr == "info") icon = LV_SYMBOL_LIST;
-		else if (iconStr == "error") icon = LV_SYMBOL_CLOSE;
-		else if (iconStr == "save") icon = LV_SYMBOL_SAVE;
-		else if (iconStr == "wifi") icon = LV_SYMBOL_WIFI;
-		else if (iconStr == "battery") icon = LV_SYMBOL_BATTERY_EMPTY;
+		else if (iconStr == "info")
+			icon = LV_SYMBOL_LIST;
+		else if (iconStr == "error")
+			icon = LV_SYMBOL_CLOSE;
+		else if (iconStr == "save")
+			icon = LV_SYMBOL_SAVE;
+		else if (iconStr == "wifi")
+			icon = LV_SYMBOL_WIFI;
+		else if (iconStr == "battery")
+			icon = LV_SYMBOL_BATTERY_EMPTY;
 
 		this->addNotification(title, message, appName, icon, priority);
 	});
