@@ -31,6 +31,7 @@
 #if LV_USE_LOVYAN_GFX
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
+#include <font/lv_symbol_def.h>
 #endif
 
 #include <cstring>
@@ -59,6 +60,15 @@ esp_err_t SystemManager::initHardware() {
 
 	if (m_wl_handle_system == WL_INVALID_HANDLE) {
 		Log::error(TAG, "Failed to mount /system - active SAFE MODE");
+#if LV_USE_LOVYAN_GFX
+		flx::system::NotificationManager::getInstance().addNotification(
+			"Safe Mode", 
+			"System storage failed to mount", 
+			"System", 
+			LV_SYMBOL_WARNING, 
+			2
+		);
+#endif
 		m_isSafeMode = true;
 	} else {
 		Log::info(TAG, "System storage mounted successfully");
@@ -120,6 +130,15 @@ esp_err_t SystemManager::initServices() {
 
 	if (!success) {
 		Log::error(TAG, "Some required services failed — safe mode may be needed");
+#if LV_USE_LOVYAN_GFX
+		flx::system::NotificationManager::getInstance().addNotification(
+			"Safe Mode", 
+			"Core services failed to start", 
+			"System", 
+			LV_SYMBOL_WARNING, 
+			2
+		);
+#endif
 		m_isSafeMode = true;
 	}
 
