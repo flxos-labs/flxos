@@ -141,7 +141,6 @@ protected:
 					wallpaperManager.getWallpaperEnabledObservable().set(0);
 					wallpaperManager.getWallpaperTypeObservable().set("none");
 				} else if (selectedIndex == 2U) {
-				} else if (selectedIndex == 2U) {
 					wallpaperManager.getWallpaperEnabledObservable().set(1);
 					wallpaperManager.getWallpaperTypeObservable().set("static");
 				} else if (selectedIndex == 3U) {
