@@ -134,12 +134,17 @@ protected:
 				uint32_t const selectedIndex = lv_dropdown_get_selected(dropdown);
 				auto& wallpaperManager = WallpaperManager::getInstance();
 
-				if (selectedIndex == 1U) {
+				if (selectedIndex == 0U) {
+					wallpaperManager.getWallpaperEnabledObservable().set(1);
+					wallpaperManager.getWallpaperTypeObservable().set("static");
+				} else if (selectedIndex == 1U) {
 					wallpaperManager.getWallpaperEnabledObservable().set(0);
 					wallpaperManager.getWallpaperTypeObservable().set("none");
 				} else if (selectedIndex == 2U) {
+					wallpaperManager.getWallpaperEnabledObservable().set(1);
 					wallpaperManager.getWallpaperTypeObservable().set("static");
 				} else if (selectedIndex == 3U) {
+					wallpaperManager.getWallpaperEnabledObservable().set(1);
 					wallpaperManager.getWallpaperTypeObservable().set("dynamic");
 				}
 
