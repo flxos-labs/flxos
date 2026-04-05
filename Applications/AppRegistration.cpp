@@ -5,6 +5,7 @@
 #include "files/FilesApp.hpp"
 #include "image_viewer/ImageViewerApp.hpp"
 #include "settings/SettingsApp.hpp"
+#include "settings/plugins/SettingsPluginRegistration.hpp"
 #include "system_info/SystemInfoApp.hpp"
 #include "text_editor/TextEditorApp.hpp"
 #include "tools/ToolsApp.hpp"
@@ -15,6 +16,7 @@ namespace System::Apps {
 void registerBuiltInApps() {
 	auto& appRegistry = flx::apps::AppRegistry::getInstance();
 
+	Settings::registerBuiltInSettingsPlugins();
 	appRegistry.addApp(SettingsApp::manifest);
 	appRegistry.addApp(CalendarApp::manifest);
 	appRegistry.addApp(FilesApp::manifest);

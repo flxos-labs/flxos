@@ -10,6 +10,8 @@
 #include <flx/hal/HardwareCapabilities.hpp>
 #include <flx/kernel/TaskManager.hpp>
 #include <flx/services/ServiceRegistry.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
+#include <font/lv_symbol_def.h>
 #include <freertos/idf_additions.h>
 #include <freertos/projdefs.h>
 #include <freertos/queue.h>
@@ -216,6 +218,13 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 	// Check if app is blocked due to repeated crashes (2.5)
 	if (isAppBlocked(manifest.appId)) {
 		Log::error("AppManager", "App '%s' is blocked due to repeated crashes", manifest.appId.c_str());
+		flx::system::NotificationManager::getInstance().addNotification(
+			"App Blocked", 
+			"Repeated crashes detected for " + manifest.appId, 
+			"System", 
+			LV_SYMBOL_CLOSE, 
+			2
+		);
 		return LAUNCH_ID_INVALID;
 	}
 
@@ -233,6 +242,13 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 		uint32_t freeKb = esp_get_free_heap_size() / 1024;
 		if (freeKb < manifest.minHeapKb) {
 			Log::error("AppManager", "Not enough heap for '%s' (need %u KB, have %lu KB)", manifest.appId.c_str(), manifest.minHeapKb, (unsigned long)freeKb);
+			flx::system::NotificationManager::getInstance().addNotification(
+				"Low Memory", 
+				"Could not start " + manifest.appId, 
+				"System", 
+				LV_SYMBOL_WARNING, 
+				2
+			);
 			return LAUNCH_ID_INVALID;
 		}
 	}
