@@ -11,6 +11,7 @@
   <a href="https://github.com/flxos-labs/flxos/actions/workflows/build.yml"><img src="https://github.com/flxos-labs/flxos/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
   <a href="https://github.com/flxos-labs/flxos/actions/workflows/code-quality.yml"><img src="https://github.com/flxos-labs/flxos/actions/workflows/code-quality.yml/badge.svg" alt="Code Quality" /></a>
   <a href="https://github.com/flxos-labs/flxos/releases"><img src="https://img.shields.io/github/v/release/flxos-labs/flxos?include_prereleases&label=release" alt="Release" /></a>
+  <a href="https://github.com/sponsors/flxos-labs"><img src="https://img.shields.io/badge/Sponsor-flxos--labs-ff424d?logo=githubsponsors&logoColor=white" alt="Sponsor" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/flxos-labs/flxos" alt="License" /></a>
 </p>
 
