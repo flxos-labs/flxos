@@ -1,6 +1,7 @@
 #pragma once
 
 #include "settings/bluetooth/BluetoothSettings.hpp"
+#include "settings/customisation/CustomisationSettings.hpp"
 #include "settings/display/DisplaySettings.hpp"
 #include "settings/hotspot/HotspotSettings.hpp"
 #include "settings/wifi/WiFiSettings.hpp"
@@ -35,6 +36,8 @@ public:
 			m_container, [this]() { showMainSettings(); });
 		m_displaySettings = std::make_unique<Settings::DisplaySettings>(
 			m_container, [this]() { showMainSettings(); });
+		m_customisationSettings = std::make_unique<Settings::CustomisationSettings>(
+			m_container, [this]() { showMainSettings(); });
 		showMainSettings();
 	}
 
@@ -49,10 +52,13 @@ public:
 			m_bluetoothSettings->destroy();
 		if (m_displaySettings)
 			m_displaySettings->destroy();
+		if (m_customisationSettings)
+			m_customisationSettings->destroy();
 		m_wifiSettings.reset();
 		m_hotspotSettings.reset();
 		m_bluetoothSettings.reset();
 		m_displaySettings.reset();
+		m_customisationSettings.reset();
 	}
 
 private:
@@ -63,8 +69,11 @@ private:
 	std::unique_ptr<Settings::HotspotSettings> m_hotspotSettings;
 	std::unique_ptr<Settings::BluetoothSettings> m_bluetoothSettings;
 	std::unique_ptr<Settings::DisplaySettings> m_displaySettings;
+	std::unique_ptr<Settings::CustomisationSettings> m_customisationSettings;
 
 	void showMainSettings() {
+		if (m_customisationSettings)
+			m_customisationSettings->hide();
 		if (m_displaySettings)
 			m_displaySettings->hide();
 		if (m_wifiSettings)
@@ -122,6 +131,16 @@ private:
 					app->showDisplaySettings();
 				},
 				LV_EVENT_CLICKED, this);
+
+			lv_obj_t* customisationBtn =
+				add_list_btn(m_mainList, LV_SYMBOL_EDIT, "Customisation");
+			lv_obj_add_event_cb(
+				customisationBtn,
+				[](lv_event_t* e) {
+					auto* app = (SettingsApp*)lv_event_get_user_data(e);
+					app->showCustomisationSettings();
+				},
+				LV_EVENT_CLICKED, this);
 		} else {
 			lv_obj_remove_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
 		}
@@ -164,6 +183,16 @@ private:
 
 		if (m_displaySettings) {
 			m_displaySettings->show();
+		}
+	}
+
+	void showCustomisationSettings() {
+		if (m_mainList) {
+			lv_obj_add_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
+		}
+
+		if (m_customisationSettings) {
+			m_customisationSettings->show();
 		}
 	}
 };
