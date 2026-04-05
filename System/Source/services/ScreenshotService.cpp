@@ -102,7 +102,7 @@ lv_draw_buf_t* takeSnapshot(lv_obj_t* obj, const char* label) {
 const ServiceManifest ScreenshotService::serviceManifest = {
 	.serviceId = "com.flxos.screenshot",
 	.serviceName = "Screenshot Service",
-	.version = "1.0.0",
+	.version = "0.1.0",
 	.dependencies = {},
 	.priority = 200,
 	.required = false,
