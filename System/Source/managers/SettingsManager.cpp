@@ -5,7 +5,9 @@
 #include <esp_timer.h>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
+#include <font/lv_symbol_def.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -160,6 +162,13 @@ void SettingsManager::saveSettings() {
 			m_json_cache = cJSON_Parse(str);
 		} else {
 			Log::error(TAG, "Failed to open settings file for writing");
+			flx::system::NotificationManager::getInstance().addNotification(
+				"Settings Error", 
+				"Failed to save preferences", 
+				"System", 
+				LV_SYMBOL_SAVE, 
+				2
+			);
 		}
 		free(str);
 	}
