@@ -2,7 +2,9 @@
 #include <flx/core/Logger.hpp>
 #include <flx/hal/DeviceRegistry.hpp>
 #include <flx/services/ServiceRegistry.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/HalInitService.hpp>
+#include <font/lv_symbol_def.h>
 
 #include "Config.hpp"
 
@@ -81,6 +83,13 @@ flx::services::HealthStatus HalInitService::onHealthCheck() {
 		flx::Log::warn(TAG, "Health check found %zu devices in error state.", report.errorDevices);
 		for (const auto& dev: report.unhealthyDevices) {
 			flx::Log::warn(TAG, "Device ID %lu is unhealthy", dev.first);
+			flx::system::NotificationManager::getInstance().addNotification(
+				"Hardware Warning", 
+				"Device ID " + std::to_string(dev.first) + " is unhealthy", 
+				"System", 
+				LV_SYMBOL_WARNING, 
+				2
+			);
 		}
 		return flx::services::HealthStatus::Degraded;
 	}

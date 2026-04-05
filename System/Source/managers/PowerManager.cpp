@@ -1,7 +1,9 @@
 #include <flx/core/Logger.hpp>
 #include <flx/hal/DeviceRegistry.hpp>
 #include <flx/hal/power/IPowerDevice.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/managers/PowerManager.hpp>
+#include <font/lv_symbol_def.h>
 #include <flx/system/services/SystemInfoService.hpp>
 
 static constexpr const char* TAG = "PowerManager";
@@ -38,9 +40,23 @@ bool PowerManager::onStart() {
 				switch (event) {
 					case flx::hal::power::IPowerDevice::PowerEvent::BatteryCritical:
 						Log::warn(TAG, "Battery CRITICAL");
+						flx::system::NotificationManager::getInstance().addNotification(
+							"Battery Critical", 
+							"System will shut down soon!", 
+							"Power", 
+							LV_SYMBOL_BATTERY_EMPTY, 
+							2
+						);
 						break;
 					case flx::hal::power::IPowerDevice::PowerEvent::BatteryLow:
 						Log::warn(TAG, "Battery LOW");
+						flx::system::NotificationManager::getInstance().addNotification(
+							"Battery Low", 
+							"Please connect a charger", 
+							"Power", 
+							LV_SYMBOL_BATTERY_1, 
+							2
+						);
 						break;
 					default:
 						break;

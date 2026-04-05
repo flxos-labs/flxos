@@ -2,6 +2,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/ResourceMonitorTask.hpp>
 #include <string_view>
@@ -38,6 +39,13 @@ void ResourceMonitorTask::run(void* /*data*/) {
 
 		if (m_freeHeap < 32768) {
 			Log::warn(TAG, "LOW HEAP MEMORY: %lu bytes", (unsigned long)m_freeHeap.load());
+			
+			flx::core::Bundle data;
+			data.putString("title", "Low Memory");
+			data.putString("message", "System resources are critically low");
+			data.putString("icon", "warning");
+			data.putInt32("priority", 2);
+			flx::core::EventBus::getInstance().publish("system.notify", data);
 		}
 
 		if (m_uptimeSeconds % 60 == 0) {

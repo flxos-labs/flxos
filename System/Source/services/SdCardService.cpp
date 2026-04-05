@@ -3,8 +3,11 @@
 #include <flx/hal/DeviceRegistry.hpp>
 #include <flx/hal/sdcard/SdmmcSdCardDevice.hpp>
 #include <flx/hal/sdcard/SpiSdCardDevice.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/SdCardService.hpp>
+#include <font/lv_symbol_def.h>
 #include <sdkconfig.h>
+#include <string>
 #include <string_view>
 
 namespace flx::services {
@@ -62,6 +65,12 @@ bool SdCardService::onStart() {
 	const bool mounted = m_device->mount(flx::config::sdcard.mountPoint);
 	if (mounted) {
 		Log::info(TAG, "Mounted SD card via HAL (%s)", bus_type.data());
+		flx::system::NotificationManager::getInstance().addNotification(
+			"Storage", 
+			"SD Card mounted at " + getMountPoint(), 
+			"System", 
+			LV_SYMBOL_SD_CARD
+		);
 		flx::hal::sdcard::ISdCardDevice::CardInfo info;
 		if (m_device->getCardInfo(info)) {
 			Log::info(TAG, "SD Card Info: Size: %llu MB, Free: %llu MB, FS: %s", (unsigned long long)(info.totalBytes / (1024ULL * 1024ULL)), (unsigned long long)(info.freeBytes / (1024ULL * 1024ULL)), info.fsType.c_str());

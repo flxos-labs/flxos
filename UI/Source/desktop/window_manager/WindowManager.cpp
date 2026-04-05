@@ -12,6 +12,8 @@
 #include <flx/ui/desktop/modules/dock/Dock.hpp>
 #include <flx/ui/managers/FocusManager.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
+#include <flx/system/managers/NotificationManager.hpp>
+#include <font/lv_symbol_def.h>
 #include <string_view>
 
 static constexpr std::string_view TAG = "WindowManager";
@@ -71,6 +73,13 @@ void WindowManager::openApp(const std::string& packageName) {
 	lv_obj_t* win = lv_win_create(m_windowContainer);
 	if (!win) {
 		Log::error(TAG, "openApp: Failed to create window (OOM?)");
+		flx::system::NotificationManager::getInstance().addNotification(
+			"Window Error", 
+			"Memory error while opening " + packageName, 
+			"System", 
+			LV_SYMBOL_WARNING, 
+			2
+		);
 		GuiTask::unlock();
 		return;
 	}
