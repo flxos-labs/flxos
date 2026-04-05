@@ -2,9 +2,9 @@
   {
     "profile": "generic-esp32s3",
     "target": "esp32s3",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "name": "FlxOS for Generic ESP32-S3 (Headless)",
-    "manifest": "flxos-generic-esp32s3-v1.0.0-cdn/manifest.json",
+    "manifest": "flxos-generic-esp32s3-v0.1.0-cdn/manifest.json",
     "tags": [
       "headless"
     ],
