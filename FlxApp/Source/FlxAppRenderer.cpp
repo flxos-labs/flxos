@@ -106,7 +106,7 @@ lv_obj_t* FlxAppRenderer::renderNode(lv_obj_t* parent, const cJSON* node) {
         obj = lv_obj_create(parent);
         lv_obj_remove_style_all(obj);
         lv_obj_set_width(obj, lv_pct(100));
-        lv_obj_set_height(obj, 12);
+        lv_obj_set_height(obj, lv_dpx(12));
         return obj;
     }
 
