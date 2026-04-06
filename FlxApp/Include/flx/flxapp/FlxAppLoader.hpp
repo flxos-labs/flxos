@@ -21,7 +21,6 @@ private:
     ~FlxAppLoader() = default;
 
     void scheduleScan();
-    void onBackgroundScanFinished();
     void registerAppFile(const char* path);
 
     bool m_initialized = false;

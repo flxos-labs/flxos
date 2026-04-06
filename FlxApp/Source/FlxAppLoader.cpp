@@ -18,7 +18,7 @@ constexpr const char* TAG = "FlxAppLoader";
 constexpr const char* DATA_APP_ROOT = "/data/apps";
 constexpr const char* SD_APP_ROOT = "/sdcard/apps";
 constexpr const char* SCAN_TASK_NAME = "flxapp_scan";
-// Directory traversal + manifest parsing call chains can be deep on constrained targets.
+// Matches AppExecutor task stack size used for app/runtime call paths in this codebase.
 constexpr uint32_t SCAN_TASK_STACK_WORDS = 8192;
 // Keep this low so UI/system tasks stay responsive.
 constexpr UBaseType_t SCAN_TASK_PRIORITY = tskIDLE_PRIORITY + 1;
@@ -67,10 +67,19 @@ void FlxAppLoader::scheduleScan() {
     BaseType_t created = xTaskCreate(
         [](void* context) {
             auto* loader = static_cast<FlxAppLoader*>(context);
-            while (loader->m_scanPending.exchange(false)) {
-                loader->scanAndRegister();
+            for (;;) {
+                while (loader->m_scanPending.exchange(false)) {
+                    loader->scanAndRegister();
+                }
+                loader->m_scanTaskRunning.store(false);
+                if (!loader->m_scanPending.load()) {
+                    break;
+                }
+                bool expected = false;
+                if (!loader->m_scanTaskRunning.compare_exchange_strong(expected, true)) {
+                    break;
+                }
             }
-            loader->onBackgroundScanFinished();
             vTaskDelete(nullptr);
         },
         SCAN_TASK_NAME,
@@ -83,13 +92,6 @@ void FlxAppLoader::scheduleScan() {
         m_scanTaskRunning.store(false);
         Log::error(TAG, "Failed to start FlxApp scan task");
         scanAndRegister();
-    }
-}
-
-void FlxAppLoader::onBackgroundScanFinished() {
-    m_scanTaskRunning.store(false);
-    if (m_scanPending.exchange(false)) {
-        scheduleScan();
     }
 }
 
