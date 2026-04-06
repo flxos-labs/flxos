@@ -117,9 +117,9 @@ lv_obj_t* FlxAppRenderer::renderNode(lv_obj_t* parent, const cJSON* node) {
 
 void FlxAppRenderer::configureLayout(lv_obj_t* obj, const std::string& type) const {
     lv_obj_set_layout(obj, LV_LAYOUT_FLEX);
-    lv_obj_set_style_pad_all(obj, 8, 0);
-    lv_obj_set_style_pad_row(obj, 8, 0);
-    lv_obj_set_style_pad_column(obj, 8, 0);
+    lv_obj_set_style_pad_all(obj, lv_dpx(8), 0);
+    lv_obj_set_style_pad_row(obj, lv_dpx(8), 0);
+    lv_obj_set_style_pad_column(obj, lv_dpx(8), 0);
     lv_obj_set_style_border_width(obj, 0, 0);
     lv_obj_set_style_bg_opa(obj, LV_OPA_TRANSP, 0);
     lv_obj_set_flex_flow(obj, type == "row" ? LV_FLEX_FLOW_ROW : LV_FLEX_FLOW_COLUMN);

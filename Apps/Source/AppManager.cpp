@@ -842,7 +842,7 @@ void AppManager::update() {
 	}
 }
 
-std::vector<std::shared_ptr<App>> AppManager::getInstalledApps() const {
+std::vector<std::shared_ptr<App>> AppManager::getLiveApps() const {
 	xSemaphoreTake((SemaphoreHandle_t)m_mutex, portMAX_DELAY);
 	auto apps = m_liveApps;
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);

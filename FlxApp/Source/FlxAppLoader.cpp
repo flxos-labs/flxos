@@ -6,6 +6,8 @@
 #include <flx/core/Logger.hpp>
 #include <flx/flxapp/FlxApp.hpp>
 #include <flx/flxapp/FlxAppManifest.hpp>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <sys/stat.h>
 
 namespace flx::flxapp {
@@ -15,6 +17,9 @@ namespace {
 constexpr const char* TAG = "FlxAppLoader";
 constexpr const char* DATA_APP_ROOT = "/data/apps";
 constexpr const char* SD_APP_ROOT = "/sdcard/apps";
+constexpr const char* SCAN_TASK_NAME = "flxapp_scan";
+constexpr uint32_t SCAN_TASK_STACK_WORDS = 8192;
+constexpr UBaseType_t SCAN_TASK_PRIORITY = 4;
 
 bool hasSuffix(const std::string& value, const char* suffix) {
     const std::string ending = suffix;
@@ -38,15 +43,53 @@ void FlxAppLoader::init() {
     }
 
     m_initialized = true;
-    scanAndRegister();
+    scheduleScan();
 
     m_sdMountedSubscription = flx::core::EventBus::getInstance().subscribe(
         flx::core::Events::SDCARD_MOUNTED,
         [this](const std::string& /*event*/, const flx::core::Bundle& /*data*/) {
-            scanAndRegister();
+            scheduleScan();
         });
 
     flx::core::EventBus::getInstance().publish(flx::core::Events::FLXAPP_LOADER_READY, {});
+}
+
+void FlxAppLoader::scheduleScan() {
+    m_scanPending.store(true);
+    bool expected = false;
+    if (!m_scanTaskRunning.compare_exchange_strong(expected, true)) {
+        return;
+    }
+
+    auto* self = this;
+    BaseType_t created = xTaskCreate(
+        [](void* context) {
+            auto* loader = static_cast<FlxAppLoader*>(context);
+            do {
+                loader->m_scanPending.store(false);
+                loader->scanAndRegister();
+            } while (loader->m_scanPending.exchange(false));
+            loader->onBackgroundScanFinished();
+            vTaskDelete(nullptr);
+        },
+        SCAN_TASK_NAME,
+        SCAN_TASK_STACK_WORDS,
+        self,
+        SCAN_TASK_PRIORITY,
+        nullptr);
+
+    if (created != pdPASS) {
+        m_scanTaskRunning.store(false);
+        Log::error(TAG, "Failed to start FlxApp scan task");
+        scanAndRegister();
+    }
+}
+
+void FlxAppLoader::onBackgroundScanFinished() {
+    m_scanTaskRunning.store(false);
+    if (m_scanPending.exchange(false)) {
+        scheduleScan();
+    }
 }
 
 void FlxAppLoader::scanAndRegister() {

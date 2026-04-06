@@ -2,6 +2,7 @@
 
 #include <cJSON.h>
 
+#include <cstdlib>
 #include <cctype>
 #include <utility>
 
