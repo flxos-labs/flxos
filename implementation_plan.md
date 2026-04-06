@@ -1,23 +1,23 @@
-# FlxApp: YAML-Defined Declarative Apps Loaded from Storage
+# FlxApp: JSON-Defined Declarative Apps Loaded from Storage
 
-> **Goal**: Define apps in a YAML-based `.flxapp` format, load them at runtime from SD card or FAT filesystem, parse the YAML, and run them as first-class FlxOS apps — appearing in the launcher, using the full App lifecycle, and rendering LVGL UI from a declarative layout tree.
+> **Goal**: Define apps in a JSON-based `.flxapp` format, load them at runtime from SD card or FAT filesystem, parse the JSON with the already-bundled cJSON library, and run them as first-class FlxOS apps — appearing in the launcher, using the full App lifecycle, and rendering LVGL UI from a declarative layout tree.
 
 ## Background & Design Philosophy
 
-Today, every FlxOS app is a C++ class compiled into the firmware. The `profile.yaml` format already proves YAML is excellent for declarative configuration. This feature extends that idea to **user-space apps** — a `.flxapp` file on the SD card becomes a fully functional app with UI, metadata, lifecycle hooks, and data binding.
+Today, every FlxOS app is a C++ class compiled into the firmware. This feature extends that idea to **user-space apps** — a `.flxapp` file on the SD card becomes a fully functional app with UI, metadata, lifecycle hooks, and data binding. In the current implementation, the on-device `.flxapp` document format is JSON.
 
-This is **not** a scripting engine or ELF loader. It's a **declarative UI framework** — think Android XML layouts or SwiftUI, but YAML. The C++ runtime interprets the YAML and builds real LVGL widgets. User logic is handled through **event → action** bindings (navigate, set variable, publish event, HTTP fetch, etc.).
+This is **not** a scripting engine or ELF loader. It's a **declarative UI framework** — think Android XML layouts or SwiftUI, but backed by JSON on device. The C++ runtime interprets the JSON and builds real LVGL widgets. User logic is handled through **event → action** bindings (navigate, set variable, publish event, HTTP fetch, etc.).
 
 ---
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **YAML vs JSON format**: The `.flxapp` files use YAML syntax (matching `profile.yaml` style you referenced). However, at runtime on ESP32, we need to parse this. Two options:
-> 1. **Ship a minimal YAML parser** (e.g. [fkYAML](https://github.com/fktn-k/fkYAML) — header-only, zero dependencies, ~50KB flash)
-> 2. **Use the already-bundled cJSON** and require `.flxapp` files to be JSON (rename to `.flxapp.json`) — zero new dependencies
+> **Current format guidance**: `.flxapp` files are JSON documents in this implementation, parsed at runtime on ESP32 using the already-bundled cJSON library. The sample `hello.flxapp` follows this JSON format.
+> 
+> Keep the `.flxapp` extension if you want a product-specific app package/manifest suffix, but the document contents should be treated as JSON, not YAML.
 >
-> **Recommendation**: Use **fkYAML** (header-only) since you explicitly want YAML and it matches the existing `profile.yaml` aesthetic. Flash cost is ~50KB which is negligible on your 16MB flash.
+> If YAML authoring is desired later, document it as a future enhancement or add a conversion step/tooling; do not describe YAML as the currently supported on-device format unless the runtime parser is updated accordingly.
 
 ---
 
