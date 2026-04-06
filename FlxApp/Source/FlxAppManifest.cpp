@@ -89,7 +89,7 @@ uint16_t parseFlags(const cJSON* appObject) {
 flx::apps::AppCapability parseCapabilities(const cJSON* appObject) {
     const cJSON* capabilities = cJSON_GetObjectItemCaseSensitive(appObject, "capabilities");
     if (!cJSON_IsArray(capabilities)) {
-        return flx::apps::AppCapability::Storage;
+        return flx::apps::AppCapability::None;
     }
 
     flx::apps::AppCapability parsed = flx::apps::AppCapability::None;
