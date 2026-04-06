@@ -1,3 +1,4 @@
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/hal/DeviceRegistry.hpp>
 #include <flx/hal/power/IPowerDevice.hpp>
@@ -38,9 +39,27 @@ bool PowerManager::onStart() {
 				switch (event) {
 					case flx::hal::power::IPowerDevice::PowerEvent::BatteryCritical:
 						Log::warn(TAG, "Battery CRITICAL");
+						{
+							flx::core::Bundle data;
+							data.putString("title", "Battery Critical");
+							data.putString("message", "System will shut down soon!");
+							data.putString("appName", "Power");
+							data.putString("icon", "battery");
+							data.putInt32("priority", 2);
+							flx::core::EventBus::getInstance().publish("system.notify", data);
+						}
 						break;
 					case flx::hal::power::IPowerDevice::PowerEvent::BatteryLow:
 						Log::warn(TAG, "Battery LOW");
+						{
+							flx::core::Bundle data;
+							data.putString("title", "Battery Low");
+							data.putString("message", "Please connect a charger");
+							data.putString("appName", "Power");
+							data.putString("icon", "battery");
+							data.putInt32("priority", 2);
+							flx::core::EventBus::getInstance().publish("system.notify", data);
+						}
 						break;
 					default:
 						break;

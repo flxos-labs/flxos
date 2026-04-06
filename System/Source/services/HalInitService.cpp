@@ -81,6 +81,13 @@ flx::services::HealthStatus HalInitService::onHealthCheck() {
 		flx::Log::warn(TAG, "Health check found %zu devices in error state.", report.errorDevices);
 		for (const auto& dev: report.unhealthyDevices) {
 			flx::Log::warn(TAG, "Device ID %lu is unhealthy", dev.first);
+			flx::core::Bundle data;
+			data.putString("title", "Hardware Warning");
+			data.putString("message", "Device ID " + std::to_string(dev.first) + " is unhealthy");
+			data.putString("appName", "System");
+			data.putString("icon", "warning");
+			data.putInt32("priority", 2);
+			flx::core::EventBus::getInstance().publish("system.notify", data);
 		}
 		return flx::services::HealthStatus::Degraded;
 	}

@@ -50,7 +50,7 @@ public:
 	virtual std::string getAppName() const = 0;
 	virtual const void* getIcon() const { return nullptr; }
 	virtual void createUI(void* parent) {}
-	virtual std::string getVersion() const { return "1.0.0"; }
+	virtual std::string getVersion() const { return "0.1.0"; }
 
 	bool isActive() const { return m_isActive; }
 	void setActive(bool active) { m_isActive = active; }

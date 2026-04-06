@@ -11,6 +11,7 @@
 #include "flx/connectivity/wifi/WiFiManager.hpp"
 #include <cstdint>
 #include <cstring>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
 #include <string_view>
@@ -238,6 +239,12 @@ void HotspotManager::checkAutoShutdown() {
 	if (m_client_count == 0 && m_last_client_time > 0) {
 		if ((now - m_last_client_time) >= m_auto_shutdown_timeout) {
 			Log::info(TAG, "Auto-shutdown triggered (no clients for %lu seconds)", m_auto_shutdown_timeout);
+			flx::core::Bundle data;
+			data.putString("title", "Hotspot");
+			data.putString("message", "Auto-shutdown (inactive for " + std::to_string(m_auto_shutdown_timeout) + "s)");
+			data.putString("appName", "Connectivity");
+			data.putString("icon", "warning");
+			flx::core::EventBus::getInstance().publish("system.notify", data);
 			stop();
 		}
 	}
@@ -409,6 +416,12 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 
 	if (event_id == WIFI_EVENT_AP_START) {
 		Log::info(TAG, "Hotspot AP started");
+		flx::core::Bundle data;
+		data.putString("title", "Hotspot");
+		data.putString("message", "Access Point active: " + self->m_current_ssid);
+		data.putString("appName", "Connectivity");
+		data.putString("icon", "wifi");
+		flx::core::EventBus::getInstance().publish("system.notify", data);
 		self->initApHook();
 
 		if (self->m_nat_enabled) {
@@ -421,6 +434,12 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 		}
 	} else if (event_id == WIFI_EVENT_AP_STOP) {
 		Log::info(TAG, "Hotspot AP stopped");
+		flx::core::Bundle data;
+		data.putString("title", "Hotspot");
+		data.putString("message", "Access Point disabled");
+		data.putString("appName", "Connectivity");
+		data.putString("icon", "wifi");
+		flx::core::EventBus::getInstance().publish("system.notify", data);
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
 			self->m_client_count = 0;
@@ -437,6 +456,18 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 		auto* event =
 			(wifi_event_ap_staconnected_t*)event_data;
 		Log::info(TAG, "Client connected to Hotspot, AID=%d", event->aid);
+
+		char mac_str[18];
+		snprintf(mac_str, sizeof(mac_str), "%02x:%02x:%02x:%02x:%02x:%02x",
+			event->mac[0], event->mac[1], event->mac[2],
+			event->mac[3], event->mac[4], event->mac[5]);
+
+		flx::core::Bundle data;
+		data.putString("title", "Hotspot client");
+		data.putString("message", std::string("Device connected: ") + mac_str);
+		data.putString("appName", "Connectivity");
+		data.putString("icon", "info");
+		flx::core::EventBus::getInstance().publish("system.notify", data);
 
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);

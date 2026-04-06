@@ -10,6 +10,7 @@
 #include "esp_wifi_types_generic.h"
 #include <cstdint>
 #include <cstring>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
 #include <string>
@@ -306,6 +307,14 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 		}
 		self->m_retry_count = 0;
 		self->setStatus(WiFiStatus::CONNECTED);
+
+		flx::core::Bundle data;
+		data.putString("title", "WiFi Connected");
+		const std::string ssid = self->m_ssid_subject ? self->m_ssid_subject->get() : "Unknown";
+		data.putString("message", "Connected to " + ssid);
+		data.putString("appName", "Connectivity");
+		data.putString("icon", "wifi");
+		flx::core::EventBus::getInstance().publish("system.notify", data);
 
 		if (self->m_got_ip_callback) {
 			self->m_got_ip_callback();

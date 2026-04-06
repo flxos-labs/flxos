@@ -19,5 +19,5 @@ idf_component_register(
     SRCS ${APPS_SRCS}
     INCLUDE_DIRS Include
     REQUIRES Core Kernel Services HalModule
-    PRIV_REQUIRES freertos
+    PRIV_REQUIRES freertos System
 )

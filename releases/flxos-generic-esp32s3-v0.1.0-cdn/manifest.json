@@ -1,6 +1,6 @@
 {
   "name": "FlxOS for Generic ESP32-S3 (Headless)",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "new_install_prompt_erase": "true",
   "builds": [
     {

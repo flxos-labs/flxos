@@ -2,6 +2,7 @@
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include <cstdint>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/TimeManager.hpp>
 #include <string_view>
@@ -29,6 +30,15 @@ static void time_sync_notification_cb(struct timeval* /*tv*/) {
 	struct tm timeinfo = {};
 	time(&now);
 	localtime_r(&now, &timeinfo);
+
+	char buf[32];
+	strftime(buf, sizeof(buf), "%H:%M", &timeinfo);
+	flx::core::Bundle data;
+	data.putString("title", "Time Sync");
+	data.putString("message", std::string("Time updated: ") + buf);
+	data.putString("appName", "System");
+	data.putString("icon", "refresh");
+	flx::core::EventBus::getInstance().publish("system.notify", data);
 }
 
 bool TimeManager::onStart() {

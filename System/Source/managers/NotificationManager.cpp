@@ -1,4 +1,6 @@
+#include <flx/core/EventBus.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
+#include <font/lv_symbol_def.h>
 
 #include "esp_timer.h"
 #include <algorithm>
@@ -29,10 +31,44 @@ NotificationManager::NotificationManager() {
 
 bool NotificationManager::onStart() {
 	Log::info(TAG, "Notification service started");
+
+	// Listen for remote notifications via EventBus (e.g. from Kernel/Core)
+	m_event_sub_id = flx::core::EventBus::getInstance().subscribe("system.notify", [this](const std::string& /*event*/, const flx::core::Bundle& data) {
+		if (!this->isRunning()) return;
+
+		std::string title = data.getStringOr("title", "Alert");
+		std::string message = data.getStringOr("message", "");
+		std::string appName = data.getStringOr("appName", "System");
+		int priority = data.getInt32Or("priority", 1);
+
+		// Map icon string to LVGL symbol if needed
+		const void* icon = nullptr;
+		std::string iconStr = data.getStringOr("icon", "");
+		if (iconStr == "warning") icon = LV_SYMBOL_WARNING;
+		else if (iconStr == "info")
+			icon = LV_SYMBOL_LIST;
+		else if (iconStr == "error")
+			icon = LV_SYMBOL_CLOSE;
+		else if (iconStr == "save")
+			icon = LV_SYMBOL_SAVE;
+		else if (iconStr == "wifi")
+			icon = LV_SYMBOL_WIFI;
+		else if (iconStr == "battery")
+			icon = LV_SYMBOL_BATTERY_EMPTY;
+		else if (iconStr == "refresh")
+			icon = LV_SYMBOL_REFRESH;
+
+		this->addNotification(title, message, appName, icon, priority);
+	});
+
 	return true;
 }
 
 void NotificationManager::onStop() {
+	if (m_event_sub_id != 0) {
+		flx::core::EventBus::getInstance().unsubscribe(m_event_sub_id);
+		m_event_sub_id = 0;
+	}
 	clearAll();
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);

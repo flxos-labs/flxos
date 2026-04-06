@@ -32,7 +32,7 @@
 
 static constexpr std::string_view TAG = "SystemInfo";
 
-static constexpr const char* FLXOS_VERSION = "0.1.0-alpha";
+static constexpr const char* FLXOS_VERSION = "0.1.0";
 
 namespace flx::services {
 

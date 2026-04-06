@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <esp_timer.h>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
@@ -160,6 +161,13 @@ void SettingsManager::saveSettings() {
 			m_json_cache = cJSON_Parse(str);
 		} else {
 			Log::error(TAG, "Failed to open settings file for writing");
+			flx::core::Bundle data;
+			data.putString("title", "Settings Error");
+			data.putString("message", "Failed to save preferences");
+			data.putString("appName", "System");
+			data.putString("icon", "save");
+			data.putInt32("priority", 2);
+			flx::core::EventBus::getInstance().publish("system.notify", data);
 		}
 		free(str);
 	}

@@ -126,7 +126,7 @@ struct ServiceManifest {
 	std::string serviceName;
 
 	/// Service version string (human-readable, e.g. "1.2.3")
-	std::string version = "1.0.0";
+	std::string version = "0.1.0";
 
 	/// Structured API version for compatibility checking (3.3)
 	ApiVersion apiVersion {1, 0, 0};
