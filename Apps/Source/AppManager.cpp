@@ -114,15 +114,9 @@ static void unlockGui() {
 void AppManager::init() {
 	Log::info("AppManager", "Initializing AppManager...");
 
-	// Note: Built-in apps are now registered externally (e.g. in SystemManager or Main)
-
-	// Instantiate apps from registry
-	auto& registry = AppRegistry::getInstance();
-	for (const auto& manifest: registry.getAll()) {
-		if (manifest.createApp) {
-			registerApp(manifest.createApp());
-		}
-	}
+	// App manifests are registered externally (e.g. in Main). App instances are
+	// created lazily on first launch to keep boot-time memory pressure low.
+	Log::info("AppManager", "App catalog ready: %zu manifests registered", AppRegistry::getInstance().count());
 
 	if (!m_executor) {
 		Log::info("AppManager", "Starting AppExecutor task...");
@@ -138,39 +132,44 @@ void AppManager::registerApp(std::shared_ptr<App> app) {
 		return;
 	}
 	xSemaphoreTake((SemaphoreHandle_t)m_mutex, portMAX_DELAY);
-	for (const auto& ex: m_apps)
+	for (const auto& ex: m_liveApps)
 		if (ex->getPackageName() == app->getPackageName()) {
 			xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 			return;
 		}
-	Log::info("AppManager", "Registered app: %s (%s)", app->getAppName().c_str(), app->getPackageName().c_str());
-	m_apps.push_back(app);
+	Log::info("AppManager", "Cached live app: %s (%s)", app->getAppName().c_str(), app->getPackageName().c_str());
+	m_liveApps.push_back(app);
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
+}
+
+std::shared_ptr<App> AppManager::findLiveAppLocked(const std::string& pkg) const {
+	for (const auto& app: m_liveApps) {
+		if (app && app->getPackageName() == pkg) {
+			return app;
+		}
+	}
+
+	return nullptr;
+}
+
+void AppManager::removeLiveAppLocked(const std::string& packageName) {
+	for (auto it = m_liveApps.begin(); it != m_liveApps.end(); ++it) {
+		if (*it && (*it)->getPackageName() == packageName) {
+			m_liveApps.erase(it);
+			return;
+		}
+	}
 }
 
 std::shared_ptr<App> AppManager::getAppByPackageName(const std::string& pkg) {
 	xSemaphoreTake((SemaphoreHandle_t)m_mutex, portMAX_DELAY);
-	std::shared_ptr<App> found = nullptr;
-	for (auto& app: m_apps)
-		if (app->getPackageName() == pkg) {
-			found = app;
-			break;
-		}
+	auto found = findLiveAppLocked(pkg);
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 	return found;
 }
 
 bool AppManager::isAppRegistered(const std::string& packageName) const {
-	xSemaphoreTake((SemaphoreHandle_t)m_mutex, portMAX_DELAY);
-	bool found = false;
-	for (const auto& app: m_apps) {
-		if (app->getPackageName() == packageName) {
-			found = true;
-			break;
-		}
-	}
-	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
-	return found;
+	return AppRegistry::getInstance().hasApp(packageName);
 }
 
 // ============================================================
@@ -291,8 +290,18 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 
 	auto app = getAppByPackageName(manifest.appId);
 	if (!app) {
-		Log::error("AppManager", "App '%s' resolved but not registered", manifest.appId.c_str());
-		return LAUNCH_ID_INVALID;
+		if (!manifest.createApp) {
+			Log::error("AppManager", "App '%s' resolved but has no factory", manifest.appId.c_str());
+			return LAUNCH_ID_INVALID;
+		}
+
+		app = manifest.createApp();
+		if (!app) {
+			Log::error("AppManager", "Failed to instantiate app '%s'", manifest.appId.c_str());
+			return LAUNCH_ID_INVALID;
+		}
+
+		registerApp(app);
 	}
 
 	LaunchId launchId = LAUNCH_ID_INVALID;
@@ -516,6 +525,7 @@ void AppManager::finishAppImpl(LaunchId id, ResultCode resultCode, const flx::co
 	if (app) app->setContext(nullptr);
 
 	m_appStack.erase(it);
+	removeLiveAppLocked(pkg);
 	app.reset();
 
 	// Delivery logic
@@ -534,8 +544,7 @@ void AppManager::finishAppImpl(LaunchId id, ResultCode resultCode, const flx::co
 	if (leakedBytes > 1024) {
 		Log::warn("AppManager", "Possible leak: %s retained %ld bytes after finish", pkg.c_str(), (long)leakedBytes);
 	}
-	const long totalRefs = static_cast<long>(appWeak.use_count());
-	const long externalRefs = std::max(0L, totalRefs - 1L); // Exclude the always-on registered-app reference.
+	const long externalRefs = static_cast<long>(appWeak.use_count());
 	if (externalRefs > 0) {
 		Log::warn("AppManager", "Ref leak: %s still has %ld external refs after finish", pkg.c_str(), externalRefs);
 	}
@@ -637,6 +646,7 @@ bool AppManager::stopAppImpl(const std::string& packageName, bool closeUI) {
 	if (app) app->setContext(nullptr);
 
 	m_appStack.erase(forward_it);
+	removeLiveAppLocked(packageName);
 	app.reset();
 
 	// Resume previous if we removed the top
@@ -652,8 +662,7 @@ bool AppManager::stopAppImpl(const std::string& packageName, bool closeUI) {
 	if (leakedBytes > 1024) {
 		Log::warn("AppManager", "Possible leak: %s retained %ld bytes after stop", packageName.c_str(), (long)leakedBytes);
 	}
-	const long totalRefs = static_cast<long>(appWeak.use_count());
-	const long externalRefs = std::max(0L, totalRefs - 1L); // Exclude the always-on registered-app reference.
+	const long externalRefs = static_cast<long>(appWeak.use_count());
 	if (externalRefs > 0) {
 		Log::warn("AppManager", "Ref leak: %s still has %ld external refs after stop", packageName.c_str(), externalRefs);
 	}
@@ -833,8 +842,11 @@ void AppManager::update() {
 	}
 }
 
-const std::vector<std::shared_ptr<App>>& AppManager::getInstalledApps() const {
-	return m_apps;
+std::vector<std::shared_ptr<App>> AppManager::getInstalledApps() const {
+	xSemaphoreTake((SemaphoreHandle_t)m_mutex, portMAX_DELAY);
+	auto apps = m_liveApps;
+	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
+	return apps;
 }
 
 std::shared_ptr<App> AppManager::getCurrentApp() const {
@@ -932,15 +944,12 @@ void AppManager::markTopAppActive(int64_t nowUs) {
 }
 
 void AppManager::dumpAppStates() const {
+	auto manifests = AppRegistry::getInstance().getAll();
 	xSemaphoreTake((SemaphoreHandle_t)m_mutex, portMAX_DELAY);
 
-	Log::info("AppManager", "=== App States (%zu registered, %zu in stack) ===", m_apps.size(), m_appStack.size());
-	for (const auto& app: m_apps) {
-		if (!app) {
-			continue;
-		}
-
-		const std::string packageName = app->getPackageName();
+	Log::info("AppManager", "=== App States (%zu installed, %zu live, %zu in stack) ===", manifests.size(), m_liveApps.size(), m_appStack.size());
+	for (const auto& manifest: manifests) {
+		const std::string& packageName = manifest.appId;
 		const auto statsIt = m_appStats.find(packageName);
 		const AppLaunchStats stats = (statsIt != m_appStats.end()) ? statsIt->second : AppLaunchStats {};
 
@@ -953,7 +962,7 @@ void AppManager::dumpAppStates() const {
 			break;
 		}
 
-		Log::info("AppManager", "  [%s] %s - %s (launches: %lu, start: %lld ms, heap: %ld B, last active: %lu ms, total active: %lu ms)", state, app->getAppName().c_str(), packageName.c_str(), (unsigned long)stats.launchCount, (long long)(stats.lastStartTimeUs / 1000), (long)stats.heapDeltaBytes, (unsigned long)stats.lastActiveTimeMs, (unsigned long)stats.totalActiveTimeMs);
+		Log::info("AppManager", "  [%s] %s - %s (launches: %lu, start: %lld ms, heap: %ld B, last active: %lu ms, total active: %lu ms)", state, manifest.appName.c_str(), packageName.c_str(), (unsigned long)stats.launchCount, (long long)(stats.lastStartTimeUs / 1000), (long)stats.heapDeltaBytes, (unsigned long)stats.lastActiveTimeMs, (unsigned long)stats.totalActiveTimeMs);
 	}
 	Log::info("AppManager", "==============================================");
 
@@ -965,9 +974,9 @@ void AppManager::performHealthCheck() {
 
 	size_t stackSize = m_appStack.size();
 	std::string topApp = stackSize > 0 ? m_appStack.back().app->getPackageName() : "None";
+	size_t liveAppCount = m_liveApps.size();
 
-	int appCount = (int)m_apps.size();
-	Log::info("AppManager", "Health: %d apps registered, %zu in stack, Top: %s", appCount, stackSize, topApp.c_str());
+	Log::info("AppManager", "Health: %zu installed, %zu live, %zu in stack, Top: %s", AppRegistry::getInstance().count(), liveAppCount, stackSize, topApp.c_str());
 
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
 }

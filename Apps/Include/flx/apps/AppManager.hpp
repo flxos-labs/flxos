@@ -79,7 +79,7 @@ public:
 
 	void init();
 	void registerApp(std::shared_ptr<App> app);
-	const std::vector<std::shared_ptr<App>>& getInstalledApps() const;
+	std::vector<std::shared_ptr<App>> getInstalledApps() const;
 
 	// === UI Integration ===
 	void setGuiCallbacks(GuiLockCallback lock, GuiUnlockCallback unlock);
@@ -178,8 +178,8 @@ private:
 	std::vector<AppStackEntry> m_appStack;
 	LaunchId m_nextLaunchId = 1;
 
-	// === Registered apps ===
-	std::vector<std::shared_ptr<App>> m_apps;
+	// === Live app instances ===
+	std::vector<std::shared_ptr<App>> m_liveApps;
 	std::unordered_map<std::string, AppLaunchStats> m_appStats;
 	std::unordered_map<std::string, AppCrashRecord> m_crashRecords;
 	std::vector<AppStateObserver*> m_observers {};
@@ -193,6 +193,8 @@ private:
 	void processQueuedCommands();
 	void processCommand(AppCommand& cmd);
 	bool isExecutorThread() const;
+	std::shared_ptr<App> findLiveAppLocked(const std::string& packageName) const;
+	void removeLiveAppLocked(const std::string& packageName);
 
 	LaunchId startAppForResultImpl(const Intent& intent, ResultCallback callback);
 	void finishAppImpl(LaunchId id, ResultCode resultCode, const flx::core::Bundle& resultData);

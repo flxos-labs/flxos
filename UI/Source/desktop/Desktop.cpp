@@ -47,6 +47,16 @@ Desktop::Desktop()
 	  m_swipeManagerModule(nullptr) {}
 
 Desktop::~Desktop() {
+	auto& eventBus = flx::core::EventBus::getInstance();
+	if (m_appInstalledSubscription != 0) {
+		eventBus.unsubscribe(m_appInstalledSubscription);
+		m_appInstalledSubscription = 0;
+	}
+	if (m_appUninstalledSubscription != 0) {
+		eventBus.unsubscribe(m_appUninstalledSubscription);
+		m_appUninstalledSubscription = 0;
+	}
+
 	if (m_wallpaperProvider) {
 		m_wallpaperProvider->destroy();
 		m_wallpaperProvider.reset();
@@ -147,6 +157,30 @@ void Desktop::init() {
 
 		m_launcherModule.reset(new UI::Modules::Launcher(m_screen, m_dock, on_app_click, this));
 		m_launcher = m_launcherModule->getObj();
+
+		auto& eventBus = flx::core::EventBus::getInstance();
+		if (m_appInstalledSubscription == 0) {
+			m_appInstalledSubscription = eventBus.subscribe(
+				flx::core::Events::APP_INSTALLED,
+				[this](const std::string& /*event*/, const flx::core::Bundle& /*data*/) {
+					flx::ui::GuiTask::perform([this]() {
+						if (m_launcherModule) {
+							m_launcherModule->rebuild();
+						}
+					});
+				});
+		}
+		if (m_appUninstalledSubscription == 0) {
+			m_appUninstalledSubscription = eventBus.subscribe(
+				flx::core::Events::APP_UNINSTALLED,
+				[this](const std::string& /*event*/, const flx::core::Bundle& /*data*/) {
+					flx::ui::GuiTask::perform([this]() {
+						if (m_launcherModule) {
+							m_launcherModule->rebuild();
+						}
+					});
+				});
+		}
 
 		m_quickAccessPanelModule.reset(new UI::Modules::QuickAccessPanel(m_screen, m_dock));
 		m_quick_access_panel = m_quickAccessPanelModule->getObj();
@@ -466,16 +500,14 @@ void Desktop::on_up_click() {
 void Desktop::on_app_click(lv_event_t* e) {
 	lv_obj_t* btn = lv_event_get_target_obj(e);
 
-	auto* appPtr = (flx::apps::App*)lv_obj_get_user_data(btn);
-	if (!appPtr) {
+	auto* packageName = static_cast<std::string*>(lv_obj_get_user_data(btn));
+	if (!packageName) {
 		return;
 	}
 
-	std::string packageName = appPtr->getPackageName();
-
 	flx::ui::FocusManager::getInstance().dismissAllPanels();
 	flx::apps::AppManager::getInstance().startApp(
-		flx::apps::Intent::forApp(packageName));
+		flx::apps::Intent::forApp(*packageName));
 }
 
 void Desktop::openApp(const std::string& packageName) {

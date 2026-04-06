@@ -1,5 +1,6 @@
 #pragma once
 
+#include <flx/core/EventBus.hpp>
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <flx/ui/desktop/modules/dock/Dock.hpp>
 #include <flx/ui/desktop/modules/floating_notifications/FloatingNotifications.hpp>
@@ -78,6 +79,8 @@ private:
 	uint64_t m_overlayTotalFrameMs {0};
 	uint32_t m_overlayMaxFrameMs {0};
 	bool m_lastBenchmarkEnabled {false};
+	flx::core::EventBus::SubscriptionId m_appInstalledSubscription {0};
+	flx::core::EventBus::SubscriptionId m_appUninstalledSubscription {0};
 
 	void update_notification_list();
 	void realign_panels();

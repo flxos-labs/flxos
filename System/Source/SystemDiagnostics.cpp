@@ -7,6 +7,7 @@
 #include "freertos/task.h"
 
 #include <flx/apps/AppManager.hpp>
+#include <flx/apps/AppRegistry.hpp>
 #include <flx/core/BootTimeline.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/services/ServiceRegistry.hpp>
@@ -42,18 +43,20 @@ SystemDiagnostics getSystemDiagnostics() {
 	}
 
 	// ── Apps ──
+	auto& appRegistry = flx::apps::AppRegistry::getInstance();
 	auto& appMgr = flx::apps::AppManager::getInstance();
-	const auto& installedApps = appMgr.getInstalledApps();
+	const auto installedApps = appRegistry.getAll();
+	auto currentApp = appMgr.getCurrentApp();
+	const std::string activeAppId = currentApp ? currentApp->getPackageName() : std::string {};
+
 	diag.appCount = installedApps.size();
 	diag.activeAppCount = 0;
 
 	for (const auto& app: installedApps) {
-		if (!app) continue;
-
 		SystemDiagnostics::AppInfo info;
-		info.packageName = app->getPackageName();
-		info.appName = app->getAppName();
-		info.isActive = app->isActive();
+		info.packageName = app.appId;
+		info.appName = app.appName;
+		info.isActive = app.appId == activeAppId;
 		info.stats = appMgr.getAppStats(info.packageName);
 		info.isBlocked = appMgr.isAppBlocked(info.packageName);
 		info.crashCount = 0; // crash count is internal to AppCrashRecord

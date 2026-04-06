@@ -1,5 +1,6 @@
 #pragma once
 #include "lvgl.h"
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,7 @@ public:
 	~Launcher() = default;
 
 	lv_obj_t* getObj() const { return m_panel; }
+	void rebuild();
 
 private:
 
@@ -23,6 +25,7 @@ private:
 	void* m_userData;
 	lv_obj_t* m_panel = nullptr;
 	lv_obj_t* m_list = nullptr;
+	std::vector<std::unique_ptr<std::string>> m_buttonAppIds {};
 };
 
 } // namespace UI::Modules

@@ -2,9 +2,8 @@
 #include <core/lv_obj_pos.h>
 #include <core/lv_obj_style.h>
 #include <core/lv_obj_style_gen.h>
+#include <core/lv_obj_tree.h>
 #include <display/lv_display.h>
-#include <flx/apps/AppManager.hpp>
-#include <flx/apps/AppManifest.hpp>
 #include <flx/apps/AppRegistry.hpp>
 #include <flx/ui/desktop/modules/launcher/Launcher.hpp>
 #include <flx/ui/theming/StyleUtils.hpp>
@@ -51,14 +50,21 @@ void Launcher::create() {
 	lv_obj_set_flex_flow(m_list, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_style_pad_all(m_list, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_style_pad_row(m_list, lv_dpx(UiConstants::PAD_TINY), 0);
+	rebuild();
+}
 
-	auto apps = flx::apps::AppManager::getInstance().getInstalledApps();
-	for (auto& app: apps) {
-		// Skip hidden apps (e.g. Image Viewer — launched via intent only)
-		auto manifest = flx::apps::AppRegistry::getInstance().findById(app->getPackageName());
-		if (manifest && (manifest->flags & flx::apps::AppFlags::Hidden)) {
-			continue;
-		}
+void Launcher::rebuild() {
+	if (!m_list) {
+		return;
+	}
+
+	lv_obj_clean(m_list);
+	m_buttonAppIds.clear();
+
+	auto apps = flx::apps::AppRegistry::getInstance().getVisible();
+	m_buttonAppIds.reserve(apps.size());
+
+	for (const auto& app: apps) {
 		lv_obj_t* btn = lv_button_create(m_list);
 		lv_obj_set_width(btn, lv_pct(100));
 		lv_obj_set_style_border_width(btn, 0, 0);
@@ -68,14 +74,18 @@ void Launcher::create() {
 		lv_obj_set_flex_align(btn, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
 		lv_obj_t* icon = lv_label_create(btn);
-		lv_label_set_text(icon, (const char*)app->getIcon());
+		lv_label_set_text(icon, app.appIcon ? app.appIcon : "");
 		lv_obj_set_style_margin_right(icon, lv_dpx(UiConstants::PAD_SMALL), 0);
 
 		lv_obj_t* name = lv_label_create(btn);
-		lv_label_set_text(name, app->getAppName().c_str());
+		lv_label_set_text(name, app.appName.c_str());
 
-		lv_obj_set_user_data(btn, app.get());
-		lv_obj_add_event_cb(btn, m_appClickCb, LV_EVENT_CLICKED, m_userData);
+		auto appId = std::make_unique<std::string>(app.appId);
+		lv_obj_set_user_data(btn, appId.get());
+		if (m_appClickCb) {
+			lv_obj_add_event_cb(btn, m_appClickCb, LV_EVENT_CLICKED, m_userData);
+		}
+		m_buttonAppIds.push_back(std::move(appId));
 	}
 }
 
