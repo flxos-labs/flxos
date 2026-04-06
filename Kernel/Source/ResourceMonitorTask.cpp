@@ -46,7 +46,7 @@ void ResourceMonitorTask::run(void* /*data*/) {
 
 			bool const shouldNotify =
 				!wasLowMemory ||
-				(m_uptimeSeconds.load() >= lastLowMemoryNotifyAt + LOW_MEMORY_NOTIFY_COOLDOWN_SECONDS);
+				(m_uptimeSeconds.load() - lastLowMemoryNotifyAt >= LOW_MEMORY_NOTIFY_COOLDOWN_SECONDS);
 			if (shouldNotify) {
 				flx::core::Bundle data;
 				data.putString("title", "Low Memory");
