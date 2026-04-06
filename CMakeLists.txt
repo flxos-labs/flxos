@@ -43,6 +43,7 @@ else()
     list(APPEND EXTRA_COMPONENT_DIRS 
         "${CMAKE_SOURCE_DIR}/UI"
         "${CMAKE_SOURCE_DIR}/Applications"
+        "${CMAKE_SOURCE_DIR}/FlxApp"
         "${CMAKE_SOURCE_DIR}/Libraries"
     )
     
