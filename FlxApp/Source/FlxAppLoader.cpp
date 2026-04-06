@@ -18,8 +18,10 @@ constexpr const char* TAG = "FlxAppLoader";
 constexpr const char* DATA_APP_ROOT = "/data/apps";
 constexpr const char* SD_APP_ROOT = "/sdcard/apps";
 constexpr const char* SCAN_TASK_NAME = "flxapp_scan";
+// Directory traversal + manifest parsing call chains can be deep on constrained targets.
 constexpr uint32_t SCAN_TASK_STACK_WORDS = 8192;
-constexpr UBaseType_t SCAN_TASK_PRIORITY = 4;
+// Keep this low so UI/system tasks stay responsive.
+constexpr UBaseType_t SCAN_TASK_PRIORITY = tskIDLE_PRIORITY + 1;
 
 bool hasSuffix(const std::string& value, const char* suffix) {
     const std::string ending = suffix;
@@ -65,10 +67,9 @@ void FlxAppLoader::scheduleScan() {
     BaseType_t created = xTaskCreate(
         [](void* context) {
             auto* loader = static_cast<FlxAppLoader*>(context);
-            do {
-                loader->m_scanPending.store(false);
+            while (loader->m_scanPending.exchange(false)) {
                 loader->scanAndRegister();
-            } while (loader->m_scanPending.exchange(false));
+            }
             loader->onBackgroundScanFinished();
             vTaskDelete(nullptr);
         },
