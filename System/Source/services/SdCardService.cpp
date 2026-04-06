@@ -92,8 +92,11 @@ void SdCardService::onGuiInit() {
 
 void SdCardService::onStop() {
 	if (m_device) {
-		flx::core::EventBus::getInstance().publish(flx::core::Events::SDCARD_UNMOUNTED, {});
+		const bool wasMounted = m_device->isMounted();
 		m_device->unmount();
+		if (wasMounted) {
+			flx::core::EventBus::getInstance().publish(flx::core::Events::SDCARD_UNMOUNTED, {});
+		}
 		flx::hal::DeviceRegistry::getInstance().deregisterDevice(m_device->getId());
 		m_device->stop();
 		m_device.reset();
