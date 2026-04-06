@@ -37,7 +37,7 @@ static void time_sync_notification_cb(struct timeval* /*tv*/) {
 	data.putString("title", "Time Sync");
 	data.putString("message", std::string("Time updated: ") + buf);
 	data.putString("appName", "System");
-	data.putString("icon", "info");
+	data.putString("icon", "refresh");
 	flx::core::EventBus::getInstance().publish("system.notify", data);
 }
 

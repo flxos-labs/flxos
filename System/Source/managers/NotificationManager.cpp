@@ -34,6 +34,8 @@ bool NotificationManager::onStart() {
 
 	// Listen for remote notifications via EventBus (e.g. from Kernel/Core)
 	m_event_sub_id = flx::core::EventBus::getInstance().subscribe("system.notify", [this](const std::string& /*event*/, const flx::core::Bundle& data) {
+		if (!this->isRunning()) return;
+
 		std::string title = data.getStringOr("title", "Alert");
 		std::string message = data.getStringOr("message", "");
 		std::string appName = data.getStringOr("appName", "System");
@@ -53,6 +55,8 @@ bool NotificationManager::onStart() {
 			icon = LV_SYMBOL_WIFI;
 		else if (iconStr == "battery")
 			icon = LV_SYMBOL_BATTERY_EMPTY;
+		else if (iconStr == "refresh")
+			icon = LV_SYMBOL_REFRESH;
 
 		this->addNotification(title, message, appName, icon, priority);
 	});
