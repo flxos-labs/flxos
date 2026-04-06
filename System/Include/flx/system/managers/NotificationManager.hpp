@@ -1,5 +1,6 @@
 #pragma once
 
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
 #include <flx/services/IService.hpp>
@@ -62,7 +63,7 @@ private:
 	Notification m_latest_notification {};
 	int32_t m_latest_notification_serial {0};
 	mutable std::mutex m_mutex {};
-	int m_event_sub_id {-1};
+	flx::core::EventBus::SubscriptionId m_event_sub_id {0};
 	flx::Observable<int32_t> m_unread_count_subject {0};
 	flx::Observable<int32_t> m_update_subject {0};
 	flx::Observable<int32_t> m_latest_notification_subject {0};

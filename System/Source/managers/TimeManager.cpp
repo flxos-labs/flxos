@@ -2,10 +2,9 @@
 #include "freertos/idf_additions.h"
 #include "freertos/projdefs.h"
 #include <cstdint>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
-#include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/managers/TimeManager.hpp>
-#include <font/lv_symbol_def.h>
 #include <string_view>
 
 static constexpr std::string_view TAG = "TimeManager";
@@ -34,11 +33,12 @@ static void time_sync_notification_cb(struct timeval* /*tv*/) {
 
 	char buf[32];
 	strftime(buf, sizeof(buf), "%H:%M", &timeinfo);
-	flx::system::NotificationManager::getInstance().addNotification(
-		"Time Sync",
-		std::string("Time updated: ") + buf,
-		"System",
-		LV_SYMBOL_REFRESH);
+	flx::core::Bundle data;
+	data.putString("title", "Time Sync");
+	data.putString("message", std::string("Time updated: ") + buf);
+	data.putString("appName", "System");
+	data.putString("icon", "info");
+	flx::core::EventBus::getInstance().publish("system.notify", data);
 }
 
 bool TimeManager::onStart() {

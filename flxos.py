@@ -1790,11 +1790,11 @@ def main():
 
     # release
     p_release = sub.add_parser("release", help="Package release binaries and symbols")
-    p_release.add_argument("version", help="Release version (e.g. 0.1.0 or v0.1.0)")
+    p_release.add_argument("version", help="Release version (e.g. 1.2.3 or v1.2.3)")
 
     # cdn
     p_cdn = sub.add_parser("cdn", help="Generate ESP Web Tools CDN manifests")
-    p_cdn.add_argument("version", help="Release version (e.g. 0.1.0 or v0.1.0)")
+    p_cdn.add_argument("version", help="Release version (e.g. 1.2.3 or v1.2.3)")
 
     # doctor
     sub.add_parser("doctor", help="Check build environment")

@@ -26,6 +26,10 @@ void ResourceMonitorTask::run(void* /*data*/) {
 
 	setWatchdogTimeout(15000);
 
+	bool wasLowMemory = false;
+	uint32_t lastLowMemoryNotifyAt = 0;
+	static constexpr uint32_t LOW_MEMORY_NOTIFY_COOLDOWN_SECONDS = 300;
+
 	while (true) {
 		heartbeat();
 
@@ -40,12 +44,21 @@ void ResourceMonitorTask::run(void* /*data*/) {
 		if (m_freeHeap < 32768) {
 			Log::warn(TAG, "LOW HEAP MEMORY: %lu bytes", (unsigned long)m_freeHeap.load());
 
-			flx::core::Bundle data;
-			data.putString("title", "Low Memory");
-			data.putString("message", "System resources are critically low");
-			data.putString("icon", "warning");
-			data.putInt32("priority", 2);
-			flx::core::EventBus::getInstance().publish("system.notify", data);
+			bool const shouldNotify =
+				!wasLowMemory ||
+				(m_uptimeSeconds.load() >= lastLowMemoryNotifyAt + LOW_MEMORY_NOTIFY_COOLDOWN_SECONDS);
+			if (shouldNotify) {
+				flx::core::Bundle data;
+				data.putString("title", "Low Memory");
+				data.putString("message", "System resources are critically low");
+				data.putString("icon", "warning");
+				data.putInt32("priority", 2);
+				flx::core::EventBus::getInstance().publish("system.notify", data);
+				lastLowMemoryNotifyAt = m_uptimeSeconds.load();
+			}
+			wasLowMemory = true;
+		} else {
+			wasLowMemory = false;
 		}
 
 		if (m_uptimeSeconds % 60 == 0) {

@@ -10,10 +10,9 @@
 #include "esp_wifi_types_generic.h"
 #include <cstdint>
 #include <cstring>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
-#include <flx/system/managers/NotificationManager.hpp>
-#include <font/lv_symbol_def.h>
 #include <string>
 #include <string_view>
 
@@ -309,11 +308,12 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 		self->m_retry_count = 0;
 		self->setStatus(WiFiStatus::CONNECTED);
 
-		flx::system::NotificationManager::getInstance().addNotification(
-			"WiFi Connected",
-			"Connected to " + self->m_ssid_subject->get(),
-			"Connectivity",
-			LV_SYMBOL_WIFI);
+		flx::core::Bundle data;
+		data.putString("title", "WiFi Connected");
+		data.putString("message", "Connected to " + self->m_ssid_subject->get());
+		data.putString("appName", "Connectivity");
+		data.putString("icon", "wifi");
+		flx::core::EventBus::getInstance().publish("system.notify", data);
 
 		if (self->m_got_ip_callback) {
 			self->m_got_ip_callback();

@@ -61,9 +61,9 @@ bool NotificationManager::onStart() {
 }
 
 void NotificationManager::onStop() {
-	if (m_event_sub_id >= 0) {
-		flx::core::EventBus::getInstance().unsubscribe((flx::core::EventBus::SubscriptionId)m_event_sub_id);
-		m_event_sub_id = -1;
+	if (m_event_sub_id != 0) {
+		flx::core::EventBus::getInstance().unsubscribe(m_event_sub_id);
+		m_event_sub_id = 0;
 	}
 	clearAll();
 	{
