@@ -68,6 +68,10 @@ bool SdCardService::onStart() {
 		if (m_device->getCardInfo(info)) {
 			Log::info(TAG, "SD Card Info: Size: %llu MB, Free: %llu MB, FS: %s", (unsigned long long)(info.totalBytes / (1024ULL * 1024ULL)), (unsigned long long)(info.freeBytes / (1024ULL * 1024ULL)), info.fsType.c_str());
 		}
+
+		flx::core::Bundle mountedData;
+		mountedData.putString("path", getMountPoint());
+		flx::core::EventBus::getInstance().publish(flx::core::Events::SDCARD_MOUNTED, mountedData);
 	} else {
 		Log::warn(TAG, "Failed to mount SD card via HAL (%s)", bus_type.data());
 	}
@@ -88,6 +92,7 @@ void SdCardService::onGuiInit() {
 
 void SdCardService::onStop() {
 	if (m_device) {
+		flx::core::EventBus::getInstance().publish(flx::core::Events::SDCARD_UNMOUNTED, {});
 		m_device->unmount();
 		flx::hal::DeviceRegistry::getInstance().deregisterDevice(m_device->getId());
 		m_device->stop();
