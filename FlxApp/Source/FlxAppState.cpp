@@ -19,8 +19,25 @@ void FlxAppState::loadFromJson(const cJSON* variables) {
         if (item->string == nullptr) {
             continue;
         }
-        setFromJson(item->string, item);
+
+        Value value {};
+        if (cJSON_IsString(item) && item->valuestring != nullptr) {
+            value.type = Value::Type::String;
+            value.stringValue = item->valuestring;
+        } else if (cJSON_IsBool(item)) {
+            value.type = Value::Type::Boolean;
+            value.boolValue = cJSON_IsTrue(item);
+        } else if (cJSON_IsNumber(item)) {
+            value.type = Value::Type::Integer;
+            value.intValue = item->valueint;
+        } else {
+            continue;
+        }
+
+        m_values[item->string] = std::move(value);
     }
+
+    notifyChanged();
 }
 
 std::string FlxAppState::resolve(const std::string& text) const {
