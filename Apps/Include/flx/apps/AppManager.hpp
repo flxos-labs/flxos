@@ -79,8 +79,25 @@ public:
 
 	void init();
 	void registerApp(std::shared_ptr<App> app);
-	std::vector<std::shared_ptr<App>> getInstalledApps() const;
 
+	/**
+	 * @brief Returns the current live app instances managed by AppManager.
+	 *
+	 * This reflects running/cached app objects, not the manifest-level installed
+	 * application catalog.
+	 */
+	std::vector<std::shared_ptr<App>> getLiveApps() const;
+
+	/**
+	 * @brief Deprecated compatibility wrapper for getLiveApps().
+	 *
+	 * Despite the legacy name, this returns live app instances rather than the
+	 * installed manifest catalog.
+	 */
+	[[deprecated("Use getLiveApps(); getInstalledApps() returns live app instances, not the installed app catalog.")]]
+	std::vector<std::shared_ptr<App>> getInstalledApps() const {
+		return getLiveApps();
+	}
 	// === UI Integration ===
 	void setGuiCallbacks(GuiLockCallback lock, GuiUnlockCallback unlock);
 	void setWindowCallbacks(WindowOpenCallback open, WindowCloseCallback close);
