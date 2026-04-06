@@ -310,7 +310,8 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 
 		flx::core::Bundle data;
 		data.putString("title", "WiFi Connected");
-		data.putString("message", "Connected to " + self->m_ssid_subject->get());
+		const std::string ssid = self->m_ssid_subject ? self->m_ssid_subject->get() : "Unknown";
+		data.putString("message", "Connected to " + ssid);
 		data.putString("appName", "Connectivity");
 		data.putString("icon", "wifi");
 		flx::core::EventBus::getInstance().publish("system.notify", data);
