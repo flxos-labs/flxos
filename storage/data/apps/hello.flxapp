@@ -1,0 +1,43 @@
+{
+  "app": {
+    "id": "com.flxos.flxapp.hello",
+    "name": "Hello FlxApp",
+    "version": "0.1.0",
+    "description": "Sample declarative FlxApp loaded from storage",
+    "icon": "list",
+    "sort_priority": 180,
+    "capabilities": ["storage"]
+  },
+  "variables": {
+    "counter": 0,
+    "title": "Hello from storage"
+  },
+  "ui": {
+    "type": "column",
+    "children": [
+      {
+        "type": "label",
+        "text": "{{title}}"
+      },
+      {
+        "type": "label",
+        "text": "Counter: {{counter}}"
+      },
+      {
+        "type": "button",
+        "text": "Increment",
+        "on_click": [
+          {
+            "type": "increment",
+            "key": "counter",
+            "amount": 1
+          },
+          {
+            "type": "log",
+            "message": "Counter is now {{counter}}"
+          }
+        ]
+      }
+    ]
+  }
+}
