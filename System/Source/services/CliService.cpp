@@ -665,6 +665,7 @@ static int cmdDisplayTest(int argc, char** argv) {
 
 	return 0;
 }
+
 #endif
 
 // Command: time - Display/Set time
@@ -860,7 +861,7 @@ void CliService::registerCommands() {
 	REGISTER_CLI_CMD("top", "Show task list", &cmdTasks); // Alias
 	REGISTER_CLI_CMD("hal", "HAL diagnostics (devices, health, i2c scan)", &cmdHal);
 
-	Log::info(TAG, "Registered CLI commands: sysinfo, heap, uptime, reboot, tasks, storage, psram, version, chip, wifi, hotspot, ls, cd, pwd, mkdir, rm, cat, df, brightness, time, loglevel, clear, echo, free, top");
+	Log::info(TAG, "Registered CLI commands: sysinfo, heap, uptime, reboot, tasks, storage, psram, version, chip, wifi, hotspot, ls, cd, pwd, mkdir, rm, cat, df, brightness, display_test, time, loglevel, clear, echo, free, top");
 }
 
 bool CliService::onStart() {
