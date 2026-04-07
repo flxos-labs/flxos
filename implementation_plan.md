@@ -1,33 +1,31 @@
 # FlxApp: JSON-Defined Declarative Apps Loaded from Storage
 
-> **Goal**: Define apps in a JSON-based `.flxapp` format, load them at runtime from SD card or FAT filesystem, parse the JSON with the already-bundled cJSON library, and run them as first-class FlxOS apps — appearing in the launcher, using the full App lifecycle, and rendering LVGL UI from a declarative layout tree.
+> **Goal**: Define apps in a declarative `.flxapp` format, load them at runtime from SD card or FAT filesystem, parse JSON with cJSON and YAML with RapidYAML, and run them as first-class FlxOS apps — appearing in the launcher, using the full App lifecycle, and rendering LVGL UI from a declarative layout tree.
 
 ## Background & Design Philosophy
 
-Today, every FlxOS app is a C++ class compiled into the firmware. This feature extends that idea to **user-space apps** — a `.flxapp` file on the SD card becomes a fully functional app with UI, metadata, lifecycle hooks, and data binding. In the current implementation, the on-device `.flxapp` document format is JSON.
+Today, every FlxOS app is a C++ class compiled into the firmware. This feature extends that idea to **user-space apps** — a `.flxapp` file on the SD card becomes a fully functional app with UI, metadata, lifecycle hooks, and data binding. In the current implementation, on-device `.flxapp` documents can be JSON or YAML.
 
-This is **not** a scripting engine or ELF loader. It's a **declarative UI framework** — think Android XML layouts or SwiftUI, but backed by JSON on device. The C++ runtime interprets the JSON and builds real LVGL widgets. User logic is handled through **event → action** bindings (navigate, set variable, publish event, HTTP fetch, etc.).
+This is **not** a scripting engine or ELF loader. It's a **declarative UI framework** — think Android XML layouts or SwiftUI, but backed by JSON or YAML on device. The C++ runtime interprets the document and builds real LVGL widgets. User logic is handled through **event → action** bindings (navigate, set variable, publish event, HTTP fetch, etc.).
 
 ---
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Current format guidance**: `.flxapp` files are JSON documents in this implementation, parsed at runtime on ESP32 using the already-bundled cJSON library. The sample `hello.flxapp` follows this JSON format.
-> 
-> Keep the `.flxapp` extension if you want a product-specific app package/manifest suffix, but the document contents should be treated as JSON, not YAML.
+> **Current format guidance**: `.flxapp` files may now be JSON or YAML documents in this implementation. JSON is parsed with cJSON, and YAML is parsed with RapidYAML before being bridged into the existing cJSON-based runtime.
 >
-> If YAML authoring is desired later, document it as a future enhancement or add a conversion step/tooling; do not describe YAML as the currently supported on-device format unless the runtime parser is updated accordingly.
+> Keep the `.flxapp` extension for product-facing packaging if desired, and use `.flxapp.json`, `.flxapp.yaml`, or `app.flxapp` / `app.flxapp.json` / `app.flxapp.yaml` on storage according to the loader conventions.
 
 ---
 
 ## Phase 1: Pre-requisite Refactoring
 
-- [ ] **Issue 1**: Implement `Launcher::rebuild()` and EventBus refresh in `Desktop.cpp`
-- [ ] **Issue 2**: Implement lazy instantiation in `AppManager::startAppForResultImpl()`
-- [ ] **Issue 3**: Fix `AppManager::getInstalledApps()` thread safety (return by value + mutex)
-- [ ] **Issue 4**: Deduplicate indexing between `AppRegistry` and `AppManager`
-- [ ] **Issue 5**: Remove legacy `m_eventCallback` from `ServiceRegistry`
+- [x] **Issue 1**: Implement `Launcher::rebuild()` and EventBus refresh in `Desktop.cpp`
+- [x] **Issue 2**: Implement lazy instantiation in `AppManager::startAppForResultImpl()`
+- [x] **Issue 3**: Fix `AppManager::getInstalledApps()` thread safety (return by value + mutex)
+- [x] **Issue 4**: Deduplicate indexing between `AppRegistry` and `AppManager`
+- [x] **Issue 5**: Remove legacy `m_eventCallback` from `ServiceRegistry`
 
 ### Details: Issue 1: Launcher Never Refreshes (BLOCKER)
 
@@ -80,12 +78,12 @@ This is **not** a scripting engine or ELF loader. It's a **declarative UI framew
 
 ## Phase 2: Core Infrastructure & YAML Integration
 
-- [ ] **fkYAML Integration**: Add `Libraries/fkyaml` as a header-only library
-- [ ] **Constants & Events**: Define `FLXAPP_LOADER_READY`, `FLXAPP_LOADED` in `EventBus.hpp`
-- [ ] **Manifest & Location**: Verify `AppLocation` compatibility with runtime-parsed paths
+- [x] **RapidYAML Integration**: Add `Libraries/rapidyaml` as a single-header library component
+- [x] **Constants & Events**: Define `FLXAPP_LOADER_READY`, `FLXAPP_LOADED` in `EventBus.hpp`
+- [x] **Manifest & Location**: Verify `AppLocation` compatibility with runtime-parsed paths
 
-#### [NEW] Libraries/fkyaml (git submodule or vendored header)
-- Add [fkYAML](https://github.com/fktn-k/fkYAML) single-header include (~50KB flash).
+#### [NEW] Libraries/rapidyaml (git submodule or vendored header)
+- Add [RapidYAML](https://github.com/biojppm/rapidyaml) single-header include (~50KB flash).
 
 #### [MODIFY] [EventBus.hpp](file:///home/akash/flxos-labs/flxos/Core/Include/flx/core/EventBus.hpp)
 - Add event constants for FlxApp lifecycle.
@@ -94,12 +92,12 @@ This is **not** a scripting engine or ELF loader. It's a **declarative UI framew
 
 ## Phase 3: FlxApp Runtime Engine
 
-- [ ] **FlxAppManifest**: Metadata parsing (id, name, version, icon, etc.)
-- [ ] **FlxAppState**: Reactive variable store with `{{template}}` resolution
-- [ ] **FlxAppRenderer**: YAML → LVGL bridge
-- [ ] **FlxAppActionRunner**: Event → Action binder
-- [ ] **FlxApp Base Class**: Concrete implementation of `flx::apps::App`
-- [ ] **FlxAppLoader**: Recursive scanner for SD and Internal storage
+- [x] **FlxAppManifest**: Metadata parsing (id, name, version, icon, etc.)
+- [x] **FlxAppState**: Reactive variable store with `{{template}}` resolution
+- [x] **FlxAppRenderer**: YAML → LVGL bridge
+- [x] **FlxAppActionRunner**: Event → Action binder
+- [x] **FlxApp Base Class**: Concrete implementation of `flx::apps::App`
+- [x] **FlxAppLoader**: Recursive scanner for SD and Internal storage
 
 ### Core Component Breakdown:
 
@@ -144,9 +142,9 @@ idf_component_register(
 
 ## Phase 5: System Integration & Hot-Loading
 
-- [ ] **Boot Scanning**: Initialize `FlxAppLoader` in `SystemManager.cpp` after storage is ready
-- [ ] **Hot-Loading**: Subscribe to `sdcard.mounted` to trigger re-scan
-- [ ] **Hot-Unloading**: Handle `sdcard.unmounted` to gracefully remove apps
+- [x] **Boot Scanning**: Initialize `FlxAppLoader` in `SystemManager.cpp` after storage is ready
+- [x] **Hot-Loading**: Subscribe to `sdcard.mounted` to trigger re-scan
+- [x] **Hot-Unloading**: Handle `sdcard.unmounted` to gracefully remove apps
 
 #### [MODIFY] [SystemManager.cpp](file:///home/akash/flxos-labs/flxos/System/Source/SystemManager.cpp)
 - Call `FlxAppLoader::getInstance().scanAndRegister()` during boot.
@@ -156,7 +154,7 @@ idf_component_register(
 
 ## Phase 6: Verification & Examples
 
-- [ ] **Hello World**: Deploy `hello.flxapp` to `/data/apps/`
+- [x] **Hello World**: Deploy `hello.flxapp` to `/data/apps/`
 - [ ] **System Monitor**: Deploy `sysmon.flxapp` to `/sdcard/apps/`
 - [ ] **Stress Test**: Verify memory behavior with multiple FlxApps loaded
 - [ ] **Build Check**: Ensure `idf.py build` succeeds
@@ -180,7 +178,6 @@ System monitor showing heap, uptime, and WiFi info via reactive bindings.
 
 | File | Status | Purpose |
 |------|--------|---------|
-| `Libraries/fkyaml/` | NEW | Header-only YAML parser |
 | `FlxApp/Include/flx/flxapp/FlxApp.hpp` | NEW | Runtime app class |
 | `FlxApp/Include/flx/flxapp/FlxAppLoader.hpp` | NEW | Scanner + registration |
 | `FlxApp/Include/flx/flxapp/FlxAppManifest.hpp` | NEW | YAML metadata |
@@ -220,8 +217,8 @@ graph TD
 
 ## Verification Plan
 
-### Automated Tests
-1. `idf.py build` — confirm zero errors.
+### NO Automated Tests, User will do this manually
+1. By user `idf.py build` — confirm zero errors.
 2. Verify app appears in Launcher on SD mount.
 3. Verify variable binding in `hello.flxapp`.
 
