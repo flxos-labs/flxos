@@ -1,6 +1,5 @@
 #include <flx/flxapp/FlxAppActionRunner.hpp>
 
-#include <cJSON.h>
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/Intent.hpp>
 #include <flx/core/Bundle.hpp>
@@ -17,32 +16,6 @@ namespace {
 
 constexpr const char* TAG = "FlxAppActionRunner";
 
-std::string jsonString(const cJSON* object, const char* key) {
-    if (!cJSON_IsObject(object)) {
-        return {};
-    }
-
-    const cJSON* item = cJSON_GetObjectItemCaseSensitive(object, key);
-    if (cJSON_IsString(item) && item->valuestring != nullptr) {
-        return item->valuestring;
-    }
-
-    return {};
-}
-
-int jsonInt(const cJSON* object, const char* key, int fallback = 0) {
-    if (!cJSON_IsObject(object)) {
-        return fallback;
-    }
-
-    const cJSON* item = cJSON_GetObjectItemCaseSensitive(object, key);
-    if (cJSON_IsNumber(item)) {
-        return item->valueint;
-    }
-
-    return fallback;
-}
-
 } // namespace
 
 FlxAppActionRunner::FlxAppActionRunner(FlxApp& app, FlxAppState& state)
@@ -52,50 +25,48 @@ void FlxAppActionRunner::setRefreshCallback(std::function<void()> callback) {
     m_refreshCallback = std::move(callback);
 }
 
-void FlxAppActionRunner::run(const cJSON* actions) {
-    if (actions == nullptr) {
+void FlxAppActionRunner::run(const flx::core::FlxValueView& actions) {
+    if (!actions.valid()) {
         return;
     }
 
-    if (cJSON_IsArray(actions)) {
-        const cJSON* action = nullptr;
-        cJSON_ArrayForEach(action, actions) {
+    if (actions.isSeq()) {
+        actions.forEachChild([this](const flx::core::FlxValueView& action) {
             runSingle(action);
-        }
+        });
         return;
     }
 
     runSingle(actions);
 }
 
-void FlxAppActionRunner::runSingle(const cJSON* action) {
-    if (!cJSON_IsObject(action)) {
+void FlxAppActionRunner::runSingle(const flx::core::FlxValueView& action) {
+    if (!action.valid() || !action.isMap()) {
         return;
     }
 
-    const std::string type = jsonString(action, "type");
-    const std::string key = jsonString(action, "key");
+    const std::string type = action.child("type").asString();
+    const std::string key = action.child("key").asString();
 
     if (type == "increment") {
-        m_state.increment(key, jsonInt(action, "amount", 1));
+        m_state.increment(key, static_cast<int32_t>(action.child("amount").asInt64(1)));
     } else if (type == "decrement") {
-        m_state.increment(key, -jsonInt(action, "amount", 1));
+        m_state.increment(key, -static_cast<int32_t>(action.child("amount").asInt64(1)));
     } else if (type == "toggle") {
         m_state.toggle(key);
     } else if (type == "set") {
-        const cJSON* value = cJSON_GetObjectItemCaseSensitive(action, "value");
-        m_state.setFromJson(key, value);
+        m_state.setFromValue(key, action.child("value"));
     } else if (type == "log") {
-        Log::info(TAG, "%s", resolveString(cJSON_GetObjectItemCaseSensitive(action, "message")).c_str());
+        Log::info(TAG, "%s", resolveString(action.child("message")).c_str());
     } else if (type == "event_publish") {
-        const std::string eventName = resolveString(cJSON_GetObjectItemCaseSensitive(action, "event"));
+        const std::string eventName = resolveString(action.child("event"));
         if (!eventName.empty()) {
             flx::core::Bundle data;
             data.putString("appId", m_app.getPackageName());
             flx::core::EventBus::getInstance().publish(eventName, data);
         }
     } else if (type == "navigate") {
-        const std::string target = resolveString(cJSON_GetObjectItemCaseSensitive(action, "target"));
+        const std::string target = resolveString(action.child("target"));
         if (!target.empty()) {
             flx::apps::AppManager::getInstance().startApp(flx::apps::Intent::forApp(target));
         }
@@ -103,10 +74,10 @@ void FlxAppActionRunner::runSingle(const cJSON* action) {
         flx::apps::AppManager::getInstance().stopApp(m_app.getPackageName());
     } else if (type == "notify") {
         flx::core::Bundle data;
-        data.putString("title", resolveString(cJSON_GetObjectItemCaseSensitive(action, "title")));
-        data.putString("message", resolveString(cJSON_GetObjectItemCaseSensitive(action, "message")));
+        data.putString("title", resolveString(action.child("title")));
+        data.putString("message", resolveString(action.child("message")));
         data.putString("appName", m_app.getAppName());
-        data.putString("icon", resolveString(cJSON_GetObjectItemCaseSensitive(action, "icon")));
+        data.putString("icon", resolveString(action.child("icon")));
         flx::core::EventBus::getInstance().publish("system.notify", data);
     }
 
@@ -119,17 +90,20 @@ void FlxAppActionRunner::notifyRefreshed() {
     }
 }
 
-std::string FlxAppActionRunner::resolveString(const cJSON* value) const {
-    if (cJSON_IsString(value) && value->valuestring != nullptr) {
-        return m_state.resolve(value->valuestring);
+std::string FlxAppActionRunner::resolveString(const flx::core::FlxValueView& value) const {
+    if (!value.valid() || !value.hasValue() || value.isNull()) {
+        return {};
     }
-    if (cJSON_IsNumber(value)) {
-        return std::to_string(value->valueint);
+
+    if (value.isBoolScalar()) {
+        return value.asBool() ? "true" : "false";
     }
-    if (cJSON_IsBool(value)) {
-        return cJSON_IsTrue(value) ? "true" : "false";
+
+    if (value.isIntScalar()) {
+        return std::to_string(value.asInt64());
     }
-    return {};
+
+    return m_state.resolve(value.asString());
 }
 
 } // namespace flx::flxapp
