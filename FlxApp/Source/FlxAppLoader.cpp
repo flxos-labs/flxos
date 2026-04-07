@@ -1,6 +1,7 @@
 #include <flx/flxapp/FlxAppLoader.hpp>
 
 #include <dirent.h>
+#include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppRegistry.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
@@ -9,6 +10,8 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <sys/stat.h>
+
+#include <vector>
 
 namespace flx::flxapp {
 
@@ -32,9 +35,21 @@ bool hasSuffix(const std::string& value, const char* suffix) {
     return value.compare(value.size() - ending.size(), ending.size(), ending) == 0;
 }
 
+bool isFlxAppFile(const std::string& path) {
+    return hasSuffix(path, ".flxapp") ||
+           hasSuffix(path, ".flxapp.json") ||
+           hasSuffix(path, ".flxapp.yaml") ||
+           hasSuffix(path, ".flxapp.yml");
+}
+
 bool isDirectory(const std::string& path) {
     struct stat st {};
     return ::stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+bool pathStartsWith(const std::string& path, const char* root) {
+    const std::string prefix = root;
+    return path.compare(0, prefix.size(), prefix) == 0;
 }
 
 } // namespace
@@ -51,6 +66,12 @@ void FlxAppLoader::init() {
         flx::core::Events::SDCARD_MOUNTED,
         [this](const std::string& /*event*/, const flx::core::Bundle& /*data*/) {
             scheduleScan();
+        });
+
+    m_sdUnmountedSubscription = flx::core::EventBus::getInstance().subscribe(
+        flx::core::Events::SDCARD_UNMOUNTED,
+        [this](const std::string& /*event*/, const flx::core::Bundle& /*data*/) {
+            unregisterAppsUnderRoot(SD_APP_ROOT);
         });
 
     flx::core::EventBus::getInstance().publish(flx::core::Events::FLXAPP_LOADER_READY, {});
@@ -111,7 +132,7 @@ void FlxAppLoader::scanAndRegister() {
             }
 
             const std::string fullPath = std::string(root) + "/" + name;
-            if (hasSuffix(name, ".flxapp") || hasSuffix(name, ".flxapp.json")) {
+            if (isFlxAppFile(name)) {
                 registerAppFile(fullPath.c_str());
                 continue;
             }
@@ -119,6 +140,8 @@ void FlxAppLoader::scanAndRegister() {
             if (isDirectory(fullPath)) {
                 registerAppFile((fullPath + "/app.flxapp").c_str());
                 registerAppFile((fullPath + "/app.flxapp.json").c_str());
+                registerAppFile((fullPath + "/app.flxapp.yaml").c_str());
+                registerAppFile((fullPath + "/app.flxapp.yml").c_str());
             }
         }
 
@@ -147,7 +170,8 @@ void FlxAppLoader::registerAppFile(const char* path) {
     }
 
     if (flx::apps::AppRegistry::getInstance().hasApp(manifest->appId)) {
-        m_registeredPaths.insert(sourcePath);
+        Log::warn(TAG, "Skipping FlxApp with duplicate appId '%s' from %s",
+                  manifest->appId.c_str(), sourcePath.c_str());
         return;
     }
 
@@ -156,6 +180,7 @@ void FlxAppLoader::registerAppFile(const char* path) {
     };
 
     flx::apps::AppRegistry::getInstance().addApp(*manifest);
+    m_registeredAppsByPath[sourcePath] = manifest->appId;
     m_registeredPaths.insert(sourcePath);
 
     flx::core::Bundle data;
@@ -163,6 +188,31 @@ void FlxAppLoader::registerAppFile(const char* path) {
     data.putString("path", sourcePath);
     flx::core::EventBus::getInstance().publish(flx::core::Events::FLXAPP_LOADED, data);
     Log::info(TAG, "Loaded FlxApp: %s from %s", manifest->appId.c_str(), sourcePath.c_str());
+}
+
+void FlxAppLoader::unregisterAppsUnderRoot(const char* rootPath) {
+    if (rootPath == nullptr) {
+        return;
+    }
+
+    std::vector<std::string> pathsToRemove {};
+    pathsToRemove.reserve(m_registeredAppsByPath.size());
+
+    for (const auto& [path, appId]: m_registeredAppsByPath) {
+        if (!pathStartsWith(path, rootPath)) {
+            continue;
+        }
+
+        flx::apps::AppManager::getInstance().stopApp(appId, true);
+        flx::apps::AppRegistry::getInstance().removeApp(appId);
+        pathsToRemove.push_back(path);
+        Log::info(TAG, "Unloaded FlxApp: %s from %s", appId.c_str(), path.c_str());
+    }
+
+    for (const auto& path: pathsToRemove) {
+        m_registeredAppsByPath.erase(path);
+        m_registeredPaths.erase(path);
+    }
 }
 
 } // namespace flx::flxapp

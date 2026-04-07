@@ -1,7 +1,7 @@
 #include <flx/flxapp/FlxApp.hpp>
 
-#include <cJSON.h>
 #include <flx/core/Logger.hpp>
+#include <flx/core/Value.hpp>
 #include <flx/flxapp/FlxAppActionRunner.hpp>
 #include <flx/flxapp/FlxAppManifest.hpp>
 #include <flx/flxapp/FlxAppRenderer.hpp>
@@ -22,7 +22,6 @@ std::string readFile(const std::string& path) {
     if (!input.is_open()) {
         return {};
     }
-
     std::ostringstream buffer;
     buffer << input.rdbuf();
     return buffer.str();
@@ -44,12 +43,6 @@ FlxApp::FlxApp(std::string sourcePath)
 
 FlxApp::~FlxApp() = default;
 
-void FlxApp::JsonDeleter::operator()(cJSON* json) const {
-    if (json != nullptr) {
-        cJSON_Delete(json);
-    }
-}
-
 bool FlxApp::onStart() {
     return loadDocument();
 }
@@ -58,15 +51,14 @@ void FlxApp::onStop() {
     m_renderer.reset();
     m_actionRunner.reset();
     m_state.reset();
-    m_uiRoot = nullptr;
+    m_uiRoot = {};
     m_document.reset();
 }
 
 void FlxApp::createUI(void* parent) {
-    if (m_renderer == nullptr || m_uiRoot == nullptr) {
+    if (m_renderer == nullptr || !m_uiRoot.valid()) {
         return;
     }
-
     m_renderer->render(parent, m_uiRoot);
 }
 
@@ -93,22 +85,25 @@ bool FlxApp::loadDocument() {
         return false;
     }
 
-    m_document.reset(cJSON_Parse(raw.c_str()));
-    if (!m_document) {
-        Log::error(TAG, "Failed to parse app source as JSON: %s", m_sourcePath.c_str());
+    auto document = flx::core::FlxValueDocument::parseAuto(std::move(raw));
+    if (!document) {
+        Log::error(TAG, "Failed to parse app source: %s", m_sourcePath.c_str());
         return false;
     }
 
-    const cJSON* variables = cJSON_GetObjectItemCaseSensitive(m_document.get(), "variables");
-    m_uiRoot = cJSON_GetObjectItemCaseSensitive(m_document.get(), "ui");
-    if (m_uiRoot == nullptr) {
-        Log::error(TAG, "FlxApp is missing 'ui': %s", m_sourcePath.c_str());
+    m_document = std::move(document);
+
+    const flx::core::FlxValueView root = m_document->root();
+    const flx::core::FlxValueView variables = root.child("variables");
+    m_uiRoot = root.child("ui");
+    if (!m_uiRoot.valid()) {
+        Log::error(TAG, "FlxApp is missing 'ui' section: %s", m_sourcePath.c_str());
         return false;
     }
 
-    m_state = std::make_unique<FlxAppState>();
+    m_state        = std::make_unique<FlxAppState>();
     m_actionRunner = std::make_unique<FlxAppActionRunner>(*this, *m_state);
-    m_renderer = std::make_unique<FlxAppRenderer>(*m_state, *m_actionRunner);
+    m_renderer     = std::make_unique<FlxAppRenderer>(*m_state, *m_actionRunner);
 
     m_state->setChangeCallback([this]() {
         if (m_renderer) {
@@ -120,7 +115,7 @@ bool FlxApp::loadDocument() {
             m_renderer->refreshBindings();
         }
     });
-    m_state->loadFromJson(variables);
+    m_state->loadFromValue(variables);
 
     return true;
 }
