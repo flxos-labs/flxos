@@ -1,9 +1,9 @@
 #include <flx/ui/wallpaper/PresetLibrary.hpp>
 
 #include <algorithm>
-#include <cJSON.h>
 #include <cstdio>
 #include <dirent.h>
+#include <flx/core/Value.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
 #include <string>
@@ -50,18 +50,6 @@ std::string readFileText(const std::string& path) {
 	std::fclose(f);
 	return text;
 }
-
-std::string jsonStringOr(cJSON* obj, const char* key, const char* fallback = "") {
-	if (obj == nullptr || key == nullptr) {
-		return fallback;
-	}
-	cJSON* item = cJSON_GetObjectItem(obj, key);
-	if (item != nullptr && cJSON_IsString(item) && item->valuestring != nullptr) {
-		return item->valuestring;
-	}
-	return fallback;
-}
-
 bool loadPresetConfig(const std::string& configPath, WallpaperPreset& outPreset) {
 	if (!fileExists(configPath)) {
 		return false;
@@ -72,33 +60,29 @@ bool loadPresetConfig(const std::string& configPath, WallpaperPreset& outPreset)
 		return false;
 	}
 
-	cJSON* root = cJSON_Parse(raw.c_str());
-	if (root == nullptr) {
+	auto document = flx::core::FlxValueDocument::parseAuto(std::move(raw));
+	if (!document) {
 		return false;
 	}
 
-	outPreset.id = jsonStringOr(root, "id");
-	outPreset.name = jsonStringOr(root, "name");
-	outPreset.description = jsonStringOr(root, "description");
-	outPreset.type = jsonStringOr(root, "type", "static");
-	outPreset.source = jsonStringOr(root, "source");
+	const flx::core::FlxValueView root = document->root();
+
+	outPreset.id = root.child("id").asString();
+	outPreset.name = root.child("name").asString();
+	outPreset.description = root.child("description").asString();
+	outPreset.type = root.child("type").asString("static");
+	outPreset.source = root.child("source").asString();
 	outPreset.is_builtin = true;
 
-	cJSON* effects = cJSON_GetObjectItem(root, "effects");
-	if (effects != nullptr) {
-		char* effectsText = cJSON_PrintUnformatted(effects);
-		if (effectsText != nullptr) {
-			outPreset.effects = effectsText;
-			cJSON_free(effectsText);
-		}
+	const flx::core::FlxValueView effects = root.child("effects");
+	if (effects.valid()) {
+		outPreset.effects = effects.toJsonString();
 	}
 
-	cJSON* metadata = cJSON_GetObjectItem(root, "metadata");
-	if (metadata != nullptr && cJSON_IsObject(metadata)) {
-		outPreset.thumbnail = jsonStringOr(metadata, "thumbnail");
+	const flx::core::FlxValueView metadata = root.child("metadata");
+	if (metadata.valid()) {
+		outPreset.thumbnail = metadata.child("thumbnail").asString();
 	}
-
-	cJSON_Delete(root);
 
 	if (outPreset.id.empty() || outPreset.type.empty()) {
 		return false;
