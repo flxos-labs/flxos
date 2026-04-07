@@ -2,10 +2,11 @@
 
 #include <flx/apps/App.hpp>
 #include <flx/apps/AppManifest.hpp>
+#include <flx/core/Value.hpp>
+
+#include <optional>
 #include <memory>
 #include <string>
-
-struct cJSON;
 
 namespace flx::flxapp {
 
@@ -32,14 +33,10 @@ public:
 
 private:
 
-    struct JsonDeleter {
-        void operator()(cJSON* json) const;
-    };
-
     std::string m_sourcePath {};
     flx::apps::AppManifest m_manifest {};
-    std::unique_ptr<cJSON, JsonDeleter> m_document {};
-    const cJSON* m_uiRoot = nullptr;
+    std::optional<flx::core::FlxValueDocument> m_document {};
+    flx::core::FlxValueView m_uiRoot {};
     std::unique_ptr<FlxAppState> m_state;
     std::unique_ptr<FlxAppActionRunner> m_actionRunner;
     std::unique_ptr<FlxAppRenderer> m_renderer;
