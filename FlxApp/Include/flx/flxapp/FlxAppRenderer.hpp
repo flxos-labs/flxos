@@ -1,11 +1,11 @@
 #pragma once
 
+#include <flx/core/Value.hpp>
+
 #include <lvgl.h>
 #include <memory>
 #include <string>
 #include <vector>
-
-struct cJSON;
 
 namespace flx::flxapp {
 
@@ -17,7 +17,7 @@ public:
 
     FlxAppRenderer(FlxAppState& state, FlxAppActionRunner& actionRunner);
 
-    void render(void* parent, const cJSON* ui);
+    void render(void* parent, const flx::core::FlxValueView& ui);
     void refreshBindings();
 
 private:
@@ -29,7 +29,7 @@ private:
 
     struct ButtonBinding {
         FlxAppActionRunner* actionRunner = nullptr;
-        const cJSON* actions = nullptr;
+        flx::core::FlxValueView actions {};
     };
 
     FlxAppState& m_state;
@@ -37,7 +37,7 @@ private:
     std::vector<TextBinding> m_textBindings {};
     std::vector<std::unique_ptr<ButtonBinding>> m_buttonBindings {};
 
-    lv_obj_t* renderNode(lv_obj_t* parent, const cJSON* node);
+    lv_obj_t* renderNode(lv_obj_t* parent, const flx::core::FlxValueView& node);
     void configureLayout(lv_obj_t* obj, const std::string& type) const;
     void bindText(lv_obj_t* label, const std::string& textTemplate);
     static void onButtonClicked(lv_event_t* event);
