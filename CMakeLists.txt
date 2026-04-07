@@ -25,6 +25,7 @@ set(EXTRA_COMPONENT_DIRS
     "${CMAKE_SOURCE_DIR}/Connectivity"
     "${CMAKE_SOURCE_DIR}/System"
     "${CMAKE_SOURCE_DIR}/Profiles"
+    "${CMAKE_SOURCE_DIR}/Libraries"
 )
 
 # ── Restricted Pull-based Component Model ──
@@ -39,12 +40,11 @@ else()
     message("ROOT: Graphical mode active")
     add_compile_definitions(LV_USE_LOVYAN_GFX=1)
     
-    # Add graphical folders and libraries to discovery path
+    # Add graphical folders to discovery path
     list(APPEND EXTRA_COMPONENT_DIRS 
         "${CMAKE_SOURCE_DIR}/UI"
         "${CMAKE_SOURCE_DIR}/Applications"
         "${CMAKE_SOURCE_DIR}/FlxApp"
-        "${CMAKE_SOURCE_DIR}/Libraries"
     )
     
     # Explicitly pull them in as roots
