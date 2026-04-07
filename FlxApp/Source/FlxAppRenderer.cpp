@@ -1,6 +1,5 @@
 #include <flx/flxapp/FlxAppRenderer.hpp>
 
-#include <cJSON.h>
 #include <flx/flxapp/FlxAppActionRunner.hpp>
 #include <flx/flxapp/FlxAppState.hpp>
 #include <lvgl.h>
@@ -9,17 +8,11 @@ namespace flx::flxapp {
 
 namespace {
 
-std::string jsonString(const cJSON* object, const char* key, const char* fallback = "") {
-    if (!cJSON_IsObject(object)) {
+std::string valueString(const flx::core::FlxValueView& object, const char* key, const char* fallback = "") {
+    if (key == nullptr) {
         return fallback;
     }
-
-    const cJSON* item = cJSON_GetObjectItemCaseSensitive(object, key);
-    if (cJSON_IsString(item) && item->valuestring != nullptr) {
-        return item->valuestring;
-    }
-
-    return fallback;
+    return object.child(key).asString(fallback);
 }
 
 } // namespace
@@ -27,12 +20,12 @@ std::string jsonString(const cJSON* object, const char* key, const char* fallbac
 FlxAppRenderer::FlxAppRenderer(FlxAppState& state, FlxAppActionRunner& actionRunner)
     : m_state(state), m_actionRunner(actionRunner) {}
 
-void FlxAppRenderer::render(void* parent, const cJSON* ui) {
+void FlxAppRenderer::render(void* parent, const flx::core::FlxValueView& ui) {
     m_textBindings.clear();
     m_buttonBindings.clear();
 
     auto* root = static_cast<lv_obj_t*>(parent);
-    if (root == nullptr || ui == nullptr) {
+    if (root == nullptr || !ui.valid()) {
         return;
     }
 
@@ -53,12 +46,12 @@ void FlxAppRenderer::refreshBindings() {
     }
 }
 
-lv_obj_t* FlxAppRenderer::renderNode(lv_obj_t* parent, const cJSON* node) {
-    if (!cJSON_IsObject(node)) {
+lv_obj_t* FlxAppRenderer::renderNode(lv_obj_t* parent, const flx::core::FlxValueView& node) {
+    if (!node.valid() || !node.isMap()) {
         return nullptr;
     }
 
-    const std::string type = jsonString(node, "type", "column");
+    const std::string type = valueString(node, "type", "column");
     lv_obj_t* obj = nullptr;
 
     if (type == "column" || type == "row") {
@@ -67,19 +60,18 @@ lv_obj_t* FlxAppRenderer::renderNode(lv_obj_t* parent, const cJSON* node) {
         lv_obj_remove_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
         configureLayout(obj, type);
 
-        const cJSON* children = cJSON_GetObjectItemCaseSensitive(node, "children");
-        if (cJSON_IsArray(children)) {
-            const cJSON* child = nullptr;
-            cJSON_ArrayForEach(child, children) {
+        const flx::core::FlxValueView children = node.child("children");
+        if (children.valid()) {
+            children.forEachChild([this, obj](const flx::core::FlxValueView& child) {
                 renderNode(obj, child);
-            }
+            });
         }
         return obj;
     }
 
     if (type == "label") {
         obj = lv_label_create(parent);
-        bindText(obj, jsonString(node, "text"));
+        bindText(obj, valueString(node, "text"));
         return obj;
     }
 
@@ -88,11 +80,11 @@ lv_obj_t* FlxAppRenderer::renderNode(lv_obj_t* parent, const cJSON* node) {
         lv_obj_set_width(obj, lv_pct(100));
 
         lv_obj_t* label = lv_label_create(obj);
-        bindText(label, jsonString(node, "text", "Button"));
+        bindText(label, valueString(node, "text", "Button"));
         lv_obj_center(label);
 
-        const cJSON* onClick = cJSON_GetObjectItemCaseSensitive(node, "on_click");
-        if (onClick != nullptr) {
+        const flx::core::FlxValueView onClick = node.child("on_click");
+        if (onClick.valid()) {
             auto binding = std::make_unique<ButtonBinding>();
             binding->actionRunner = &m_actionRunner;
             binding->actions = onClick;

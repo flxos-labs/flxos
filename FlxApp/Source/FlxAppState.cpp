@@ -1,42 +1,37 @@
 #include <flx/flxapp/FlxAppState.hpp>
 
-#include <cJSON.h>
-
 #include <cstdlib>
 #include <cctype>
 #include <utility>
 
 namespace flx::flxapp {
 
-void FlxAppState::loadFromJson(const cJSON* variables) {
+void FlxAppState::loadFromValue(const flx::core::FlxValueView& variables) {
     m_values.clear();
-    if (!cJSON_IsObject(variables)) {
+    if (!variables.valid() || !variables.isMap()) {
         notifyChanged();
         return;
     }
 
-    const cJSON* item = nullptr;
-    cJSON_ArrayForEach(item, variables) {
-        if (item->string == nullptr) {
-            continue;
-        }
+	variables.forEachNamedChild([this](std::string_view key, const flx::core::FlxValueView& item) {
+		if (!item.valid() || !item.hasValue() || item.isNull()) {
+			return;
+		}
 
-        Value value {};
-        if (cJSON_IsString(item) && item->valuestring != nullptr) {
-            value.type = Value::Type::String;
-            value.stringValue = item->valuestring;
-        } else if (cJSON_IsBool(item)) {
-            value.type = Value::Type::Boolean;
-            value.boolValue = cJSON_IsTrue(item);
-        } else if (cJSON_IsNumber(item)) {
-            value.type = Value::Type::Integer;
-            value.intValue = item->valueint;
-        } else {
-            continue;
-        }
+		Value value {};
+		if (item.isBoolScalar()) {
+			value.type = Value::Type::Boolean;
+			value.boolValue = item.asBool();
+		} else if (item.isIntScalar()) {
+			value.type = Value::Type::Integer;
+			value.intValue = static_cast<int32_t>(item.asInt64());
+		} else {
+			value.type = Value::Type::String;
+			value.stringValue = item.asString();
+		}
 
-        m_values[item->string] = std::move(value);
-    }
+		m_values[std::string(key)] = std::move(value);
+	});
 
     notifyChanged();
 }
@@ -148,28 +143,20 @@ void FlxAppState::setInt(const std::string& key, int32_t value) {
     notifyChanged();
 }
 
-void FlxAppState::setFromJson(const std::string& key, const cJSON* value) {
-    if (cJSON_IsBool(value)) {
-        Value item;
+void FlxAppState::setFromValue(const std::string& key, const flx::core::FlxValueView& value) {
+    Value item;
+    if (value.valid() && value.hasValue() && !value.isNull() && value.isBoolScalar()) {
         item.type = Value::Type::Boolean;
-        item.boolValue = cJSON_IsTrue(value);
-        m_values[key] = item;
-    } else if (cJSON_IsNumber(value)) {
-        Value item;
+        item.boolValue = value.asBool();
+    } else if (value.valid() && value.hasValue() && !value.isNull() && value.isIntScalar()) {
         item.type = Value::Type::Integer;
-        item.intValue = value->valueint;
-        m_values[key] = item;
-    } else if (cJSON_IsString(value) && value->valuestring != nullptr) {
-        Value item;
-        item.type = Value::Type::String;
-        item.stringValue = value->valuestring;
-        m_values[key] = item;
+        item.intValue = static_cast<int32_t>(value.asInt64());
     } else {
-        Value item;
         item.type = Value::Type::String;
-        item.stringValue.clear();
-        m_values[key] = item;
+        item.stringValue = value.asString();
     }
+
+    m_values[key] = std::move(item);
 
     notifyChanged();
 }
