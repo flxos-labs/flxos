@@ -11,6 +11,7 @@ else()
         "Source/FlxAppRenderer.cpp"
         "Source/FlxAppActionRunner.cpp"
         "Source/FlxAppLoader.cpp"
+        "Source/FlxAppBenchmark.cpp"
     )
 endif()
 
@@ -18,5 +19,5 @@ idf_component_register(
     SRCS ${FLXAPP_SRCS}
     INCLUDE_DIRS Include
     REQUIRES Core Apps Services
-    PRIV_REQUIRES json lvgl
+    PRIV_REQUIRES json lvgl esp_timer
 )
