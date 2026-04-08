@@ -63,12 +63,12 @@ void FlxAppBenchmark::logResult(const Result& result) {
 
     if (result.yamlSuccess && it > 0) {
         const uint64_t yamlAvg = result.yamlTotalUs / it;
-        Log::info(TAG, "  [YAML/ryml]   total=%llu us  avg=%llu us  (%lu iters)",
+        Log::info(TAG, "  [YAML/fkyaml] total=%llu us  avg=%llu us  (%lu iters)",
                   (unsigned long long)result.yamlTotalUs,
                   (unsigned long long)yamlAvg,
                   (unsigned long)it);
     } else {
-        Log::warn(TAG, "  [YAML/ryml]   FAILED or skipped");
+        Log::warn(TAG, "  [YAML/fkyaml] FAILED or skipped");
     }
 
     if (result.jsonSuccess && result.yamlSuccess && result.jsonTotalUs > 0) {
@@ -77,7 +77,7 @@ void FlxAppBenchmark::logResult(const Result& result) {
                             static_cast<float>(result.jsonTotalUs);
         Log::info(TAG, "  Overhead ratio: YAML/JSON = %.2fx", ratio);
         if (ratio < 1.0f) {
-            Log::info(TAG, "  Winner: ryml  (%.2fx faster)", 1.0f / ratio);
+            Log::info(TAG, "  Winner: fkyaml  (%.2fx faster)", 1.0f / ratio);
         } else {
             Log::info(TAG, "  Winner: cJSON  (%.2fx faster)", ratio);
         }
