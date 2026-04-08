@@ -1,6 +1,6 @@
 # FlxApp: JSON-Defined Declarative Apps Loaded from Storage
 
-> **Goal**: Define apps in a declarative `.flxapp` format, load them at runtime from SD card or FAT filesystem, parse JSON with cJSON and YAML with RapidYAML, and run them as first-class FlxOS apps — appearing in the launcher, using the full App lifecycle, and rendering LVGL UI from a declarative layout tree.
+> **Goal**: Define apps in a declarative `.flxapp` format, load them at runtime from SD card or FAT filesystem, parse JSON with cJSON and YAML with fkYAML, and run them as first-class FlxOS apps — appearing in the launcher, using the full App lifecycle, and rendering LVGL UI from a declarative layout tree.
 
 ## Background & Design Philosophy
 
@@ -13,7 +13,7 @@ This is **not** a scripting engine or ELF loader. It's a **declarative UI framew
 ## User Review Required
 
 > [!IMPORTANT]
-> **Current format guidance**: `.flxapp` files may now be JSON or YAML documents in this implementation. JSON is parsed with cJSON, and YAML is parsed with RapidYAML before being bridged into the existing cJSON-based runtime.
+> **Current format guidance**: `.flxapp` files may now be JSON or YAML documents in this implementation. JSON is parsed with cJSON, and YAML is parsed with fkYAML.
 >
 > Keep the `.flxapp` extension for product-facing packaging if desired, and use `.flxapp.json`, `.flxapp.yaml`, or `app.flxapp` / `app.flxapp.json` / `app.flxapp.yaml` on storage according to the loader conventions.
 
@@ -78,12 +78,12 @@ This is **not** a scripting engine or ELF loader. It's a **declarative UI framew
 
 ## Phase 2: Core Infrastructure & YAML Integration
 
-- [x] **RapidYAML Integration**: Add `Libraries/rapidyaml` as a single-header library component
+- [x] **fkYAML Integration**: Add `Libraries/fkyaml` as a single-header library component
 - [x] **Constants & Events**: Define `FLXAPP_LOADER_READY`, `FLXAPP_LOADED` in `EventBus.hpp`
 - [x] **Manifest & Location**: Verify `AppLocation` compatibility with runtime-parsed paths
 
-#### [NEW] Libraries/rapidyaml (git submodule or vendored header)
-- Add [RapidYAML](https://github.com/biojppm/rapidyaml) single-header include (~50KB flash).
+#### [NEW] Libraries/fkyaml (git submodule or vendored header)
+- Add [fkYAML](https://github.com/fktn-k/fkYAML) single-header include.
 
 #### [MODIFY] [EventBus.hpp](file:///home/akash/flxos-labs/flxos/Core/Include/flx/core/EventBus.hpp)
 - Add event constants for FlxApp lifecycle.
