@@ -1,13 +1,16 @@
 #pragma once
 
-#include <csetjmp>
+#include <cctype>
 #include <cstdint>
+#include <limits>
+#include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <utility>
 
-#include <rapidyaml.hpp>
+#include <fkYAML/node.hpp>
 
 namespace flx::core {
 
@@ -15,64 +18,68 @@ class FlxValueView {
 public:
 
 	FlxValueView() = default;
-	explicit FlxValueView(const c4::yml::ConstNodeRef& node)
-	    : m_node(node) {
-	}
 
-	bool valid() const { return !m_node.invalid(); }
-	bool readable() const { return m_node.readable(); }
-	bool hasChildren() const { return readable() && m_node.has_children(); }
-	bool isMap() const { return readable() && m_node.is_map(); }
-	bool isSeq() const { return readable() && m_node.is_seq(); }
-	bool hasValue() const { return readable() && m_node.has_val(); }
-	bool isNull() const { return readable() && m_node.val_is_null(); }
-	bool isQuoted() const { return readable() && m_node.is_val_quoted(); }
-	bool isBoolScalar() const {
-		if (!hasValue() || isNull() || isQuoted()) {
-			return false;
-		}
-		const c4::csubstr value = m_node.val();
-		return value == "true" || value == "True" || value == "TRUE" ||
-		       value == "false" || value == "False" || value == "FALSE";
+	bool valid() const { return m_node != nullptr; }
+	bool readable() const { return valid(); }
+	bool hasChildren() const {
+		return readable() && (m_node->is_mapping() || m_node->is_sequence()) && !m_node->empty();
 	}
-	bool isIntScalar() const {
-		if (!hasValue() || isNull() || isQuoted()) {
-			return false;
-		}
-		const c4::csubstr value = m_node.val();
-		int64_t parsed = 0;
-		return c4::from_chars(value, &parsed);
-	}
+	bool isMap() const { return readable() && m_node->is_mapping(); }
+	bool isSeq() const { return readable() && m_node->is_sequence(); }
+	bool hasValue() const { return readable() && m_node->is_scalar(); }
+	bool isNull() const { return readable() && m_node->is_null(); }
+	bool isQuoted() const { return readable() && m_node->is_string(); }
+	bool isBoolScalar() const { return readable() && m_node->is_boolean(); }
+	bool isIntScalar() const { return readable() && m_node->is_integer(); }
 
 	FlxValueView child(std::string_view key) const {
-		if (!readable()) {
+		if (!isMap()) {
 			return {};
 		}
-		return FlxValueView(m_node.find_child(c4::to_csubstr(key)));
+
+		const std::string keyString(key);
+		if (!m_node->contains(keyString)) {
+			return {};
+		}
+
+		try {
+			const auto& childNode = m_node->at(keyString);
+			return FlxValueView(m_owner, &childNode);
+		} catch (...) {
+			return {};
+		}
 	}
 
 	bool hasChild(std::string_view key) const {
-		return readable() && m_node.has_child(c4::to_csubstr(key));
+		if (!isMap()) {
+			return false;
+		}
+		const std::string keyString(key);
+		return m_node->contains(keyString);
 	}
 
 	std::string asString(const std::string& fallback = {}) const {
 		if (!hasValue() || isNull()) {
 			return fallback;
 		}
-		const c4::csubstr value = m_node.val();
-		return std::string(value.str, value.len);
+
+		try {
+			return scalarToString(*m_node);
+		} catch (...) {
+			return fallback;
+		}
 	}
 
 	int64_t asInt64(int64_t fallback = 0) const {
 		if (!isIntScalar()) {
 			return fallback;
 		}
-		const c4::csubstr value = m_node.val();
-		int64_t parsed = fallback;
-		if (c4::from_chars(value, &parsed)) {
-			return parsed;
+
+		try {
+			return m_node->template get_value<int64_t>();
+		} catch (...) {
+			return fallback;
 		}
-		return fallback;
 	}
 
 	bool asBool(bool fallback = false) const {
@@ -80,14 +87,11 @@ public:
 			return fallback;
 		}
 
-		const c4::csubstr value = m_node.val();
-		if (value == "true" || value == "True" || value == "TRUE" || value == "1") {
-			return true;
+		try {
+			return m_node->template get_value<bool>();
+		} catch (...) {
+			return fallback;
 		}
-		if (value == "false" || value == "False" || value == "FALSE" || value == "0") {
-			return false;
-		}
-		return fallback;
 	}
 
 	std::string toJsonString() const {
@@ -95,18 +99,13 @@ public:
 			return {};
 		}
 
-		std::string output(128, '\0');
-		while (true) {
-			c4::substr buffer(output.data(), output.size());
-			c4::substr emitted = c4::yml::emit_json(m_node, buffer, false);
-			if (emitted.str != nullptr) {
-				output.resize(emitted.len);
-				return output;
-			}
-			if (emitted.len == 0) {
-				return {};
-			}
-			output.resize(emitted.len);
+		try {
+			std::string output;
+			output.reserve(128);
+			appendJson(*m_node, output);
+			return output;
+		} catch (...) {
+			return {};
 		}
 	}
 
@@ -115,29 +114,184 @@ public:
 		if (!readable()) {
 			return;
 		}
-		for (const auto& child: m_node.children()) {
-			fn(FlxValueView(child));
+
+		if (m_node->is_sequence()) {
+			const auto& seq = m_node->template get_value_ref<const fkyaml::node::sequence_type&>();
+			for (const auto& childNode: seq) {
+				fn(FlxValueView(m_owner, &childNode));
+			}
+			return;
+		}
+
+		if (m_node->is_mapping()) {
+			for (auto it = m_node->begin(); it != m_node->end(); ++it) {
+				fn(FlxValueView(m_owner, &it.value()));
+			}
 		}
 	}
 
 	template<typename Fn>
 	void forEachNamedChild(Fn&& fn) const {
-		if (!readable()) {
+		if (!isMap()) {
 			return;
 		}
-		for (const auto& child: m_node.children()) {
-			if (!child.has_key()) {
+
+		for (auto it = m_node->begin(); it != m_node->end(); ++it) {
+			const auto& keyNode = it.key();
+			if (keyNode.is_string()) {
+				const auto& key = keyNode.template get_value_ref<const fkyaml::node::string_type&>();
+				fn(std::string_view(key.data(), key.size()), FlxValueView(m_owner, &it.value()));
 				continue;
 			}
-			fn(std::string_view(child.key().str, child.key().len), FlxValueView(child));
+
+			const std::string key = scalarToString(keyNode);
+			fn(std::string_view(key), FlxValueView(m_owner, &it.value()));
 		}
 	}
 
-	const c4::yml::ConstNodeRef& node() const { return m_node; }
+	const fkyaml::node* node() const { return m_node; }
 
 private:
 
-	c4::yml::ConstNodeRef m_node {};
+	friend class FlxValueDocument;
+
+	FlxValueView(std::shared_ptr<const fkyaml::node> owner, const fkyaml::node* node)
+	    : m_owner(std::move(owner))
+	    , m_node(node) {
+	}
+
+	static std::string scalarToString(const fkyaml::node& node) {
+		if (node.is_string()) {
+			return node.template get_value<std::string>();
+		}
+
+		if (node.is_boolean()) {
+			return node.template get_value<bool>() ? "true" : "false";
+		}
+
+		if (node.is_integer()) {
+			return std::to_string(node.template get_value<int64_t>());
+		}
+
+		if (node.is_float_number()) {
+			std::ostringstream stream;
+			stream.precision(std::numeric_limits<double>::max_digits10);
+			stream << node.template get_value<double>();
+			return stream.str();
+		}
+
+		if (node.is_null()) {
+			return "";
+		}
+
+		return {};
+	}
+
+	static void appendEscapedJsonString(std::string_view input, std::string& output) {
+		static constexpr char kHex[] = "0123456789abcdef";
+
+		for (const char ch: input) {
+			switch (ch) {
+				case '"':
+					output += "\\\"";
+					break;
+				case '\\':
+					output += "\\\\";
+					break;
+				case '\b':
+					output += "\\b";
+					break;
+				case '\f':
+					output += "\\f";
+					break;
+				case '\n':
+					output += "\\n";
+					break;
+				case '\r':
+					output += "\\r";
+					break;
+				case '\t':
+					output += "\\t";
+					break;
+				default: {
+					const unsigned char byte = static_cast<unsigned char>(ch);
+					if (byte < 0x20u) {
+						output += "\\u00";
+						output.push_back(kHex[(byte >> 4u) & 0x0Fu]);
+						output.push_back(kHex[byte & 0x0Fu]);
+					} else {
+						output.push_back(ch);
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	static void appendJson(const fkyaml::node& node, std::string& output) {
+		if (node.is_mapping()) {
+			output.push_back('{');
+			bool first = true;
+			for (auto it = node.begin(); it != node.end(); ++it) {
+				if (!first) {
+					output.push_back(',');
+				}
+				first = false;
+
+				output.push_back('"');
+				appendEscapedJsonString(scalarToString(it.key()), output);
+				output += "\":";
+				appendJson(it.value(), output);
+			}
+			output.push_back('}');
+			return;
+		}
+
+		if (node.is_sequence()) {
+			output.push_back('[');
+			bool first = true;
+			const auto& seq = node.template get_value_ref<const fkyaml::node::sequence_type&>();
+			for (const auto& childNode: seq) {
+				if (!first) {
+					output.push_back(',');
+				}
+				first = false;
+				appendJson(childNode, output);
+			}
+			output.push_back(']');
+			return;
+		}
+
+		if (node.is_null()) {
+			output += "null";
+			return;
+		}
+
+		if (node.is_boolean()) {
+			output += node.template get_value<bool>() ? "true" : "false";
+			return;
+		}
+
+		if (node.is_integer()) {
+			output += std::to_string(node.template get_value<int64_t>());
+			return;
+		}
+
+		if (node.is_float_number()) {
+			std::ostringstream stream;
+			stream.precision(std::numeric_limits<double>::max_digits10);
+			stream << node.template get_value<double>();
+			output += stream.str();
+			return;
+		}
+
+		output.push_back('"');
+		appendEscapedJsonString(node.template get_value<std::string>(), output);
+		output.push_back('"');
+	}
+
+	std::shared_ptr<const fkyaml::node> m_owner {};
+	const fkyaml::node* m_node {nullptr};
 };
 
 class FlxValueDocument {
@@ -175,30 +329,16 @@ public:
 	}
 
 	FlxValueView root() const {
-		if (m_tree.empty()) {
+		if (!m_root) {
 			return {};
 		}
-		return FlxValueView(m_tree.crootref());
+		return FlxValueView(m_root, m_root.get());
 	}
 
 	const std::string& source() const { return m_source; }
-	const c4::yml::Tree& tree() const { return m_tree; }
+	const fkyaml::node& tree() const { return *m_root; }
 
 private:
-
-	struct ParseGuard {
-		jmp_buf jump {};
-	};
-
-	static void onParseError(c4::csubstr /*msg*/, const c4::yml::ErrorDataParse& /*errdata*/, void* userData) noexcept {
-		auto* guard = static_cast<ParseGuard*>(userData);
-		longjmp(guard->jump, 1);
-	}
-
-	static void onBasicError(c4::csubstr /*msg*/, const c4::yml::ErrorDataBasic& /*errdata*/, void* userData) noexcept {
-		auto* guard = static_cast<ParseGuard*>(userData);
-		longjmp(guard->jump, 1);
-	}
 
 	static bool looksLikeJson(std::string_view source) {
 		size_t index = 0;
@@ -210,8 +350,8 @@ private:
 		}
 
 		for (; index < source.size(); ++index) {
-			const char ch = source[index];
-			if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\f' || ch == '\v') {
+			const unsigned char ch = static_cast<unsigned char>(source[index]);
+			if (std::isspace(ch)) {
 				continue;
 			}
 			return ch == '{' || ch == '[';
@@ -220,40 +360,25 @@ private:
 		return false;
 	}
 
-	static std::optional<c4::yml::Tree> parseTree(c4::csubstr input, Format format) {
-		ParseGuard guard {};
-		c4::yml::Callbacks callbacks;
-		callbacks.set_user_data(&guard);
-		callbacks.set_error_basic(&onBasicError);
-		callbacks.set_error_parse(&onParseError);
-
-		auto* eventHandler = new c4::yml::Parser::handler_type(callbacks);
-		auto* parser = new c4::yml::Parser(eventHandler, c4::yml::ParserOptions{});
-		auto* tree = new c4::yml::Tree(callbacks);
-
-		if (setjmp(guard.jump) != 0) {
-			delete tree;
-			delete parser;
-			delete eventHandler;
+	static std::optional<fkyaml::node> parseTree(std::string_view input, Format format) {
+		if (input.empty()) {
 			return std::nullopt;
 		}
 
-		if (format == Format::Json) {
-			c4::yml::parse_json_in_arena(parser, input, tree);
-		} else {
-			c4::yml::parse_in_arena(parser, input, tree);
+		if (format == Format::Json && !looksLikeJson(input)) {
+			return std::nullopt;
 		}
 
-		std::optional<c4::yml::Tree> parsed {std::in_place, std::move(*tree)};
-		delete tree;
-		delete parser;
-		delete eventHandler;
-		return parsed;
+		try {
+			return fkyaml::node::deserialize(input);
+		} catch (...) {
+			return std::nullopt;
+		}
 	}
 
-	FlxValueDocument(std::string source, c4::yml::Tree tree)
+	FlxValueDocument(std::string source, std::shared_ptr<const fkyaml::node> root)
 	    : m_source(std::move(source))
-	    , m_tree(std::move(tree)) {
+	    , m_root(std::move(root)) {
 	}
 
 	static std::optional<FlxValueDocument> parse(std::string source, Format format) {
@@ -261,17 +386,17 @@ private:
 			return std::nullopt;
 		}
 
-		const c4::csubstr input = c4::to_csubstr(source);
-		auto tree = parseTree(input, format);
-		if (!tree) {
+		auto parsed = parseTree(source, format);
+		if (!parsed) {
 			return std::nullopt;
 		}
 
-		return FlxValueDocument(std::move(source), std::move(*tree));
+		auto root = std::make_shared<fkyaml::node>(std::move(*parsed));
+		return FlxValueDocument(std::move(source), std::move(root));
 	}
 
 	std::string m_source {};
-	c4::yml::Tree m_tree {};
+	std::shared_ptr<const fkyaml::node> m_root {};
 };
 
 } // namespace flx::core
