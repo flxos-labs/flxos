@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <cstdio>
 #include <dirent.h>
-#include <flx/core/Value.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/core/Value.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
 #include <string>
 #include <sys/stat.h>

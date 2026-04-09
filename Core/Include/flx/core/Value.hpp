@@ -156,8 +156,7 @@ private:
 	friend class FlxValueDocument;
 
 	FlxValueView(std::shared_ptr<const fkyaml::node> owner, const fkyaml::node* node)
-	    : m_owner(std::move(owner))
-	    , m_node(node) {
+		: m_owner(std::move(owner)), m_node(node) {
 	}
 
 	static std::string scalarToString(const fkyaml::node& node) {
@@ -343,9 +342,9 @@ private:
 	static bool looksLikeJson(std::string_view source) {
 		size_t index = 0;
 		if (source.size() >= 3 &&
-		    static_cast<unsigned char>(source[0]) == 0xEF &&
-		    static_cast<unsigned char>(source[1]) == 0xBB &&
-		    static_cast<unsigned char>(source[2]) == 0xBF) {
+			static_cast<unsigned char>(source[0]) == 0xEF &&
+			static_cast<unsigned char>(source[1]) == 0xBB &&
+			static_cast<unsigned char>(source[2]) == 0xBF) {
 			index = 3;
 		}
 
@@ -377,8 +376,7 @@ private:
 	}
 
 	FlxValueDocument(std::string source, std::shared_ptr<const fkyaml::node> root)
-	    : m_source(std::move(source))
-	    , m_root(std::move(root)) {
+		: m_source(std::move(source)), m_root(std::move(root)) {
 	}
 
 	static std::optional<FlxValueDocument> parse(std::string source, Format format) {
