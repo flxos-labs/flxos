@@ -11,6 +11,7 @@
 #include <freertos/task.h>
 #include <sys/stat.h>
 
+#include <mutex>
 #include <vector>
 
 namespace flx::flxapp {
@@ -160,8 +161,11 @@ void FlxAppLoader::registerAppFile(const char* path) {
     }
 
     const std::string sourcePath = path;
-    if (m_registeredPaths.find(sourcePath) != m_registeredPaths.end()) {
-        return;
+    {
+        std::lock_guard<std::mutex> lock(m_registryMutex);
+        if (m_registeredPaths.find(sourcePath) != m_registeredPaths.end()) {
+            return;
+        }
     }
 
     auto manifest = FlxAppManifest::loadFromFile(sourcePath);
@@ -180,8 +184,11 @@ void FlxAppLoader::registerAppFile(const char* path) {
     };
 
     flx::apps::AppRegistry::getInstance().addApp(*manifest);
-    m_registeredAppsByPath[sourcePath] = manifest->appId;
-    m_registeredPaths.insert(sourcePath);
+    {
+        std::lock_guard<std::mutex> lock(m_registryMutex);
+        m_registeredAppsByPath[sourcePath] = manifest->appId;
+        m_registeredPaths.insert(sourcePath);
+    }
 
     flx::core::Bundle data;
     data.putString("appId", manifest->appId);
@@ -195,23 +202,32 @@ void FlxAppLoader::unregisterAppsUnderRoot(const char* rootPath) {
         return;
     }
 
-    std::vector<std::string> pathsToRemove {};
-    pathsToRemove.reserve(m_registeredAppsByPath.size());
-
-    for (const auto& [path, appId]: m_registeredAppsByPath) {
-        if (!pathStartsWith(path, rootPath)) {
-            continue;
+    std::vector<std::pair<std::string, std::string>> appsToRemove {};
+    {
+        std::lock_guard<std::mutex> lock(m_registryMutex);
+        appsToRemove.reserve(m_registeredAppsByPath.size());
+        for (const auto& [path, appId]: m_registeredAppsByPath) {
+            if (pathStartsWith(path, rootPath)) {
+                appsToRemove.emplace_back(path, appId);
+            }
         }
+    }
 
+    for (const auto& [path, appId]: appsToRemove) {
         flx::apps::AppManager::getInstance().stopApp(appId, true);
         flx::apps::AppRegistry::getInstance().removeApp(appId);
-        pathsToRemove.push_back(path);
         Log::info(TAG, "Unloaded FlxApp: %s from %s", appId.c_str(), path.c_str());
     }
 
-    for (const auto& path: pathsToRemove) {
-        m_registeredAppsByPath.erase(path);
-        m_registeredPaths.erase(path);
+    {
+        std::lock_guard<std::mutex> lock(m_registryMutex);
+        for (const auto& [path, appId]: appsToRemove) {
+            auto it = m_registeredAppsByPath.find(path);
+            if (it != m_registeredAppsByPath.end() && it->second == appId) {
+                m_registeredAppsByPath.erase(it);
+                m_registeredPaths.erase(path);
+            }
+        }
     }
 }
 

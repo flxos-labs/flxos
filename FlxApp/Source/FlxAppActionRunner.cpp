@@ -8,6 +8,7 @@
 #include <flx/flxapp/FlxApp.hpp>
 #include <flx/flxapp/FlxAppState.hpp>
 
+#include <limits>
 #include <utility>
 
 namespace flx::flxapp {
@@ -15,6 +16,18 @@ namespace flx::flxapp {
 namespace {
 
 constexpr const char* TAG = "FlxAppActionRunner";
+
+int32_t toInt32Checked(int64_t value) {
+    if (value > std::numeric_limits<int32_t>::max()) {
+        Log::warn(TAG, "FlxApp action integer overflow, clamping to INT32_MAX");
+        return std::numeric_limits<int32_t>::max();
+    }
+    if (value < std::numeric_limits<int32_t>::min()) {
+        Log::warn(TAG, "FlxApp action integer underflow, clamping to INT32_MIN");
+        return std::numeric_limits<int32_t>::min();
+    }
+    return static_cast<int32_t>(value);
+}
 
 } // namespace
 
@@ -47,15 +60,24 @@ void FlxAppActionRunner::runSingle(const flx::core::FlxValueView& action) {
 
     const std::string type = action.child("type").asString();
     const std::string key = action.child("key").asString();
+    bool refreshViaState = false;
 
     if (type == "increment") {
-        m_state.increment(key, static_cast<int32_t>(action.child("amount").asInt64(1)));
+        m_state.increment(key, toInt32Checked(action.child("amount").asInt64(1)));
+        refreshViaState = true;
     } else if (type == "decrement") {
-        m_state.increment(key, -static_cast<int32_t>(action.child("amount").asInt64(1)));
+        const int64_t amount = action.child("amount").asInt64(1);
+        const int64_t delta = (amount == std::numeric_limits<int64_t>::min())
+                                  ? std::numeric_limits<int64_t>::max()
+                                  : -amount;
+        m_state.increment(key, toInt32Checked(delta));
+        refreshViaState = true;
     } else if (type == "toggle") {
         m_state.toggle(key);
+        refreshViaState = true;
     } else if (type == "set") {
         m_state.setFromValue(key, action.child("value"));
+        refreshViaState = true;
     } else if (type == "log") {
         Log::info(TAG, "%s", resolveString(action.child("message")).c_str());
     } else if (type == "event_publish") {
@@ -72,6 +94,7 @@ void FlxAppActionRunner::runSingle(const flx::core::FlxValueView& action) {
         }
     } else if (type == "close") {
         flx::apps::AppManager::getInstance().stopApp(m_app.getPackageName());
+        return;
     } else if (type == "notify") {
         flx::core::Bundle data;
         data.putString("title", resolveString(action.child("title")));
@@ -81,7 +104,9 @@ void FlxAppActionRunner::runSingle(const flx::core::FlxValueView& action) {
         flx::core::EventBus::getInstance().publish("system.notify", data);
     }
 
-    notifyRefreshed();
+    if (!refreshViaState) {
+        notifyRefreshed();
+    }
 }
 
 void FlxAppActionRunner::notifyRefreshed() {

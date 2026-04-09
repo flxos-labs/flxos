@@ -3,6 +3,7 @@
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Singleton.hpp>
 #include <atomic>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -31,6 +32,7 @@ private:
     flx::core::EventBus::SubscriptionId m_sdUnmountedSubscription = 0;
     std::unordered_map<std::string, std::string> m_registeredAppsByPath {};
     std::unordered_set<std::string> m_registeredPaths {};
+    std::mutex m_registryMutex {};
     std::atomic<bool> m_scanTaskRunning {false};
     std::atomic<bool> m_scanPending {false};
 };

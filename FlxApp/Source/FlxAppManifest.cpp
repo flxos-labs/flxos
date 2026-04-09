@@ -45,6 +45,9 @@ void appendStringArray(const flx::core::FlxValueView& object, const char* key,
         return;
     }
     const flx::core::FlxValueView array = object.child(key);
+    if (!array.valid() || !array.isSeq()) {
+        return;
+    }
     array.forEachChild([&out](const flx::core::FlxValueView& item) {
         if (item.hasValue() && !item.isNull()) {
             out.emplace_back(item.asString());
@@ -65,7 +68,7 @@ uint16_t parseFlags(const flx::core::FlxValueView& appObject) {
 
 flx::apps::AppCapability parseCapabilities(const flx::core::FlxValueView& appObject) {
     const flx::core::FlxValueView capabilities = appObject.child("capabilities");
-    if (!capabilities.valid()) {
+    if (!capabilities.valid() || !capabilities.isSeq()) {
         return flx::apps::AppCapability::None;
     }
     flx::apps::AppCapability parsed = flx::apps::AppCapability::None;

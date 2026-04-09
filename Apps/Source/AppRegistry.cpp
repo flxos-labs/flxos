@@ -13,6 +13,7 @@ AppRegistry& AppRegistry::getInstance() {
 }
 
 void AppRegistry::addApp(const AppManifest& manifest) {
+	std::lock_guard<std::recursive_mutex> eventLock(m_eventOrderMutex);
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 
@@ -32,6 +33,7 @@ void AppRegistry::addApp(const AppManifest& manifest) {
 }
 
 bool AppRegistry::removeApp(const std::string& appId) {
+	std::lock_guard<std::recursive_mutex> eventLock(m_eventOrderMutex);
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 

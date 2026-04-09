@@ -110,6 +110,7 @@ uint64_t FlxAppBenchmark::benchmarkJson(const std::string& path,
 
         if (root == nullptr) {
             Log::error(TAG, "JSON benchmark: cJSON_Parse failed on iteration %lu", (unsigned long)i);
+            success = false;
             break;
         }
 
@@ -141,6 +142,7 @@ uint64_t FlxAppBenchmark::benchmarkYaml(const std::string& path,
 
         if (!document) {
             Log::error(TAG, "YAML benchmark: parse failed on iteration %lu", (unsigned long)i);
+            success = false;
             break;
         }
 

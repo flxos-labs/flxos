@@ -2,9 +2,24 @@
 
 #include <cstdlib>
 #include <cctype>
+#include <limits>
 #include <utility>
 
 namespace flx::flxapp {
+
+namespace {
+
+int32_t toInt32Checked(int64_t value) {
+    if (value > std::numeric_limits<int32_t>::max()) {
+        return std::numeric_limits<int32_t>::max();
+    }
+    if (value < std::numeric_limits<int32_t>::min()) {
+        return std::numeric_limits<int32_t>::min();
+    }
+    return static_cast<int32_t>(value);
+}
+
+} // namespace
 
 void FlxAppState::loadFromValue(const flx::core::FlxValueView& variables) {
     m_values.clear();
@@ -22,9 +37,9 @@ void FlxAppState::loadFromValue(const flx::core::FlxValueView& variables) {
 		if (item.isBoolScalar()) {
 			value.type = Value::Type::Boolean;
 			value.boolValue = item.asBool();
-		} else if (item.isIntScalar()) {
-			value.type = Value::Type::Integer;
-			value.intValue = static_cast<int32_t>(item.asInt64());
+        } else if (item.isIntScalar()) {
+            value.type = Value::Type::Integer;
+            value.intValue = toInt32Checked(item.asInt64());
 		} else {
 			value.type = Value::Type::String;
 			value.stringValue = item.asString();
@@ -150,7 +165,7 @@ void FlxAppState::setFromValue(const std::string& key, const flx::core::FlxValue
         item.boolValue = value.asBool();
     } else if (value.valid() && value.hasValue() && !value.isNull() && value.isIntScalar()) {
         item.type = Value::Type::Integer;
-        item.intValue = static_cast<int32_t>(value.asInt64());
+        item.intValue = toInt32Checked(value.asInt64());
     } else {
         item.type = Value::Type::String;
         item.stringValue = value.asString();
