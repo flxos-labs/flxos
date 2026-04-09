@@ -15,4 +15,13 @@ inline int32_t clampInt64ToInt32(int64_t value) {
     return static_cast<int32_t>(value);
 }
 
+inline int64_t normalizeDecrementAmount(int64_t amount) {
+    if (amount >= 0) {
+        return amount;
+    }
+    return (amount == std::numeric_limits<int64_t>::min())
+               ? std::numeric_limits<int64_t>::max()
+               : -amount;
+}
+
 } // namespace flx::flxapp::detail

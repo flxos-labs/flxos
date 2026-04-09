@@ -9,7 +9,6 @@
 #include <flx/flxapp/NumberUtils.hpp>
 #include <flx/flxapp/FlxAppState.hpp>
 
-#include <limits>
 #include <utility>
 
 namespace flx::flxapp {
@@ -56,13 +55,11 @@ void FlxAppActionRunner::runSingle(const flx::core::FlxValueView& action) {
         m_state.increment(key, flx::flxapp::detail::clampInt64ToInt32(amount));
         refreshViaState = true;
     } else if (type == "decrement") {
-        int64_t amount = action.child("amount").asInt64(1);
-        if (amount < 0) {
+        const int64_t rawAmount = action.child("amount").asInt64(1);
+        if (rawAmount < 0) {
             Log::warn(TAG, "FlxApp decrement amount is negative; using absolute value");
-            amount = (amount == std::numeric_limits<int64_t>::min())
-                         ? std::numeric_limits<int64_t>::max()
-                         : -amount;
         }
+        const int64_t amount = flx::flxapp::detail::normalizeDecrementAmount(rawAmount);
         const int32_t decrementBy = flx::flxapp::detail::clampInt64ToInt32(amount);
         m_state.increment(key, -decrementBy);
         refreshViaState = true;
