@@ -223,6 +223,7 @@ void FlxAppLoader::unregisterAppsUnderRoot(const char* rootPath) {
         std::lock_guard<std::mutex> lock(m_registryMutex);
         for (const auto& [path, appId]: appsToRemove) {
             auto it = m_registeredAppsByPath.find(path);
+            // Path may have been re-registered by a newer scan between snapshot and erase.
             if (it != m_registeredAppsByPath.end() && it->second == appId) {
                 m_registeredAppsByPath.erase(it);
                 m_registeredPaths.erase(path);

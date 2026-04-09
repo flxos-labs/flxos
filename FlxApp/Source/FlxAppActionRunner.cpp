@@ -6,6 +6,7 @@
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/flxapp/FlxApp.hpp>
+#include <flx/flxapp/NumberUtils.hpp>
 #include <flx/flxapp/FlxAppState.hpp>
 
 #include <limits>
@@ -16,18 +17,6 @@ namespace flx::flxapp {
 namespace {
 
 constexpr const char* TAG = "FlxAppActionRunner";
-
-int32_t toInt32Checked(int64_t value) {
-    if (value > std::numeric_limits<int32_t>::max()) {
-        Log::warn(TAG, "FlxApp action integer overflow, clamping to INT32_MAX");
-        return std::numeric_limits<int32_t>::max();
-    }
-    if (value < std::numeric_limits<int32_t>::min()) {
-        Log::warn(TAG, "FlxApp action integer underflow, clamping to INT32_MIN");
-        return std::numeric_limits<int32_t>::min();
-    }
-    return static_cast<int32_t>(value);
-}
 
 } // namespace
 
@@ -63,14 +52,19 @@ void FlxAppActionRunner::runSingle(const flx::core::FlxValueView& action) {
     bool refreshViaState = false;
 
     if (type == "increment") {
-        m_state.increment(key, toInt32Checked(action.child("amount").asInt64(1)));
+        const int64_t amount = action.child("amount").asInt64(1);
+        m_state.increment(key, flx::flxapp::detail::clampInt64ToInt32(amount));
         refreshViaState = true;
     } else if (type == "decrement") {
-        const int64_t amount = action.child("amount").asInt64(1);
-        const int64_t delta = (amount == std::numeric_limits<int64_t>::min())
-                                  ? std::numeric_limits<int64_t>::max()
-                                  : -amount;
-        m_state.increment(key, toInt32Checked(delta));
+        int64_t amount = action.child("amount").asInt64(1);
+        if (amount < 0) {
+            Log::warn(TAG, "FlxApp decrement amount is negative; using absolute value");
+            amount = (amount == std::numeric_limits<int64_t>::min())
+                         ? std::numeric_limits<int64_t>::max()
+                         : -amount;
+        }
+        const int32_t decrementBy = flx::flxapp::detail::clampInt64ToInt32(amount);
+        m_state.increment(key, -decrementBy);
         refreshViaState = true;
     } else if (type == "toggle") {
         m_state.toggle(key);
