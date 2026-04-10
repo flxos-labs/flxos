@@ -359,13 +359,315 @@ private:
 		return false;
 	}
 
+	static bool isValidJson(std::string_view input) {
+		struct JsonValidator {
+			explicit JsonValidator(std::string_view source) : m_source(source) {
+				if (m_source.size() >= 3 &&
+					static_cast<unsigned char>(m_source[0]) == 0xEF &&
+					static_cast<unsigned char>(m_source[1]) == 0xBB &&
+					static_cast<unsigned char>(m_source[2]) == 0xBF) {
+					m_index = 3;
+				}
+			}
+
+			bool parseDocument() {
+				skipWhitespace();
+				if (!parseValue()) {
+					return false;
+				}
+				skipWhitespace();
+				return m_index == m_source.size();
+			}
+
+		private:
+
+			void skipWhitespace() {
+				while (m_index < m_source.size()) {
+					const unsigned char ch = static_cast<unsigned char>(m_source[m_index]);
+					if (!std::isspace(ch)) {
+						break;
+					}
+					++m_index;
+				}
+			}
+
+			bool parseValue() {
+				skipWhitespace();
+				if (m_index >= m_source.size()) {
+					return false;
+				}
+
+				const char ch = m_source[m_index];
+				if (ch == '{') {
+					return parseObject();
+				}
+				if (ch == '[') {
+					return parseArray();
+				}
+				if (ch == '"') {
+					return parseString();
+				}
+				if (ch == '-' || (ch >= '0' && ch <= '9')) {
+					return parseNumber();
+				}
+				if (consumeLiteral("true")) {
+					return true;
+				}
+				if (consumeLiteral("false")) {
+					return true;
+				}
+				if (consumeLiteral("null")) {
+					return true;
+				}
+
+				return false;
+			}
+
+			bool parseObject() {
+				if (!consume('{')) {
+					return false;
+				}
+
+				skipWhitespace();
+				if (consume('}')) {
+					return true;
+				}
+
+				while (true) {
+					if (!parseString()) {
+						return false;
+					}
+
+					skipWhitespace();
+					if (!consume(':')) {
+						return false;
+					}
+
+					if (!parseValue()) {
+						return false;
+					}
+
+					skipWhitespace();
+					if (consume('}')) {
+						return true;
+					}
+					if (!consume(',')) {
+						return false;
+					}
+				}
+			}
+
+			bool parseArray() {
+				if (!consume('[')) {
+					return false;
+				}
+
+				skipWhitespace();
+				if (consume(']')) {
+					return true;
+				}
+
+				while (true) {
+					if (!parseValue()) {
+						return false;
+					}
+
+					skipWhitespace();
+					if (consume(']')) {
+						return true;
+					}
+					if (!consume(',')) {
+						return false;
+					}
+				}
+			}
+
+			bool parseString() {
+				if (!consume('"')) {
+					return false;
+				}
+
+				while (m_index < m_source.size()) {
+					const unsigned char ch = static_cast<unsigned char>(m_source[m_index++]);
+
+					if (ch == '"') {
+						return true;
+					}
+
+					if (ch == '\\') {
+						if (m_index >= m_source.size()) {
+							return false;
+						}
+
+						const char escaped = m_source[m_index++];
+						switch (escaped) {
+							case '"':
+							case '\\':
+							case '/':
+							case 'b':
+							case 'f':
+							case 'n':
+							case 'r':
+							case 't':
+								break;
+							case 'u':
+								if (!consumeHex4()) {
+									return false;
+								}
+								break;
+							default:
+								return false;
+						}
+						continue;
+					}
+
+					if (ch < 0x20u) {
+						return false;
+					}
+				}
+
+				return false;
+			}
+
+			bool parseNumber() {
+				if (consume('-')) {
+					if (m_index >= m_source.size()) {
+						return false;
+					}
+				}
+
+				if (!parseIntegerPart()) {
+					return false;
+				}
+
+				if (consume('.')) {
+					if (!consumeDigit()) {
+						return false;
+					}
+					while (consumeDigit()) {
+					}
+				}
+
+				if (peek('e') || peek('E')) {
+					++m_index;
+					if (peek('+') || peek('-')) {
+						++m_index;
+					}
+					if (!consumeDigit()) {
+						return false;
+					}
+					while (consumeDigit()) {
+					}
+				}
+
+				return true;
+			}
+
+			bool parseIntegerPart() {
+				if (consume('0')) {
+					return !(peekDigit());
+				}
+
+				if (!consumeOneOf('1', '9')) {
+					return false;
+				}
+
+				while (consumeDigit()) {
+				}
+				return true;
+			}
+
+			bool consume(char expected) {
+				if (m_index >= m_source.size() || m_source[m_index] != expected) {
+					return false;
+				}
+				++m_index;
+				return true;
+			}
+
+			bool consumeLiteral(std::string_view literal) {
+				if (m_index + literal.size() > m_source.size()) {
+					return false;
+				}
+				if (m_source.substr(m_index, literal.size()) != literal) {
+					return false;
+				}
+				m_index += literal.size();
+				return true;
+			}
+
+			bool consumeHex4() {
+				if (m_index + 4 > m_source.size()) {
+					return false;
+				}
+
+				for (int i = 0; i < 4; ++i) {
+					if (!isHexDigit(m_source[m_index + i])) {
+						return false;
+					}
+				}
+				m_index += 4;
+				return true;
+			}
+
+			bool isHexDigit(char ch) const {
+				return (ch >= '0' && ch <= '9') ||
+					(ch >= 'a' && ch <= 'f') ||
+					(ch >= 'A' && ch <= 'F');
+			}
+
+			bool consumeDigit() {
+				if (!peekDigit()) {
+					return false;
+				}
+				++m_index;
+				return true;
+			}
+
+			bool peekDigit() const {
+				if (m_index >= m_source.size()) {
+					return false;
+				}
+				const char ch = m_source[m_index];
+				return ch >= '0' && ch <= '9';
+			}
+
+			bool consumeOneOf(char first, char last) {
+				if (m_index >= m_source.size()) {
+					return false;
+				}
+				const char ch = m_source[m_index];
+				if (ch < first || ch > last) {
+					return false;
+				}
+				++m_index;
+				return true;
+			}
+
+			bool peek(char ch) const {
+				return m_index < m_source.size() && m_source[m_index] == ch;
+			}
+
+			std::string_view m_source;
+			size_t m_index {0};
+		};
+
+		return JsonValidator(input).parseDocument();
+	}
+
 	static std::optional<fkyaml::node> parseTree(std::string_view input, Format format) {
 		if (input.empty()) {
 			return std::nullopt;
 		}
 
-		if (format == Format::Json && !looksLikeJson(input)) {
-			return std::nullopt;
+		if (format == Format::Json) {
+			if (!looksLikeJson(input)) {
+				return std::nullopt;
+			}
+			// Enforce strict JSON syntax: reject YAML-only features
+			if (!isValidJson(input)) {
+				return std::nullopt;
+			}
 		}
 
 		try {
