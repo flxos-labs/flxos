@@ -675,15 +675,9 @@ void ServiceRegistry::dumpServiceStates() const {
 }
 
 void ServiceRegistry::publishServiceEvent(const char* event, const std::string& serviceId) {
-	// Direct EventBus integration (2.7) — always publish to EventBus
 	flx::core::Bundle data;
 	data.putString("serviceId", serviceId);
 	flx::core::EventBus::getInstance().publish(event, data);
-
-	// Also notify via legacy callback if set
-	if (m_eventCallback) {
-		m_eventCallback(event, serviceId);
-	}
 }
 
 } // namespace flx::services

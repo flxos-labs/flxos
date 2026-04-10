@@ -51,6 +51,7 @@ private:
 	std::vector<AppManifest> m_manifests;
 	std::unordered_map<std::string, size_t> m_idIndex; // appId → index in m_manifests
 	mutable std::mutex m_mutex;
+	mutable std::recursive_mutex m_eventOrderMutex;
 
 	// Insert sorted by sortPriority
 	void insertSorted(const AppManifest& manifest);

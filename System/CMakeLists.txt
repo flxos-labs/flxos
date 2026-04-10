@@ -16,7 +16,7 @@ set(SYSTEM_SRCS
 
 if(NOT "$ENV{FLXOS_HEADLESS_MODE_ENABLED}" STREQUAL "ON")
     message("SYSTEM: GRAPHICAL MODE DETECTED (via ENV)")
-    list(APPEND SYSTEM_REQUIRES lvgl)
+    list(APPEND SYSTEM_REQUIRES lvgl FlxApp)
     list(APPEND SYSTEM_SRCS
         "Source/managers/DisplayManager.cpp"
         "Source/managers/ThemeManager.cpp"

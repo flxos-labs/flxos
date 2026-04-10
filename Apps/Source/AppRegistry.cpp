@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <flx/apps/AppRegistry.hpp>
+#include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 
 static const char* TAG = "AppRegistry";
@@ -12,36 +13,50 @@ AppRegistry& AppRegistry::getInstance() {
 }
 
 void AppRegistry::addApp(const AppManifest& manifest) {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::recursive_mutex> eventLock(m_eventOrderMutex);
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
 
-	// O(1) duplicate check via index
-	if (m_idIndex.count(manifest.appId)) {
-		Log::warn(TAG, "App already registered: %s", manifest.appId.c_str());
-		return;
+		// O(1) duplicate check via index
+		if (m_idIndex.count(manifest.appId)) {
+			Log::warn(TAG, "App already registered: %s", manifest.appId.c_str());
+			return;
+		}
+
+		insertSorted(manifest);
+		Log::info(TAG, "Registered app: %s (%s) [priority=%d]", manifest.appName.c_str(), manifest.appId.c_str(), manifest.sortPriority);
 	}
 
-	insertSorted(manifest);
-	Log::info(TAG, "Registered app: %s (%s) [priority=%d]", manifest.appName.c_str(), manifest.appId.c_str(), manifest.sortPriority);
+	flx::core::Bundle data;
+	data.putString("appId", manifest.appId);
+	flx::core::EventBus::getInstance().publish(flx::core::Events::APP_INSTALLED, data);
 }
 
 bool AppRegistry::removeApp(const std::string& appId) {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::recursive_mutex> eventLock(m_eventOrderMutex);
+	{
+		std::lock_guard<std::mutex> lock(m_mutex);
 
-	auto idxIt = m_idIndex.find(appId);
-	if (idxIt == m_idIndex.end()) {
-		Log::warn(TAG, "App not found for removal: %s", appId.c_str());
-		return false;
+		auto idxIt = m_idIndex.find(appId);
+		if (idxIt == m_idIndex.end()) {
+			Log::warn(TAG, "App not found for removal: %s", appId.c_str());
+			return false;
+		}
+
+		m_manifests.erase(m_manifests.begin() + idxIt->second);
+
+		// Rebuild index (indices shifted after erase)
+		m_idIndex.clear();
+		for (size_t i = 0; i < m_manifests.size(); i++) {
+			m_idIndex[m_manifests[i].appId] = i;
+		}
+
+		Log::info(TAG, "Removed app: %s", appId.c_str());
 	}
 
-	m_manifests.erase(m_manifests.begin() + idxIt->second);
-
-	// Rebuild index (indices shifted after erase)
-	m_idIndex.clear();
-	for (size_t i = 0; i < m_manifests.size(); i++) {
-		m_idIndex[m_manifests[i].appId] = i;
-	}
-
-	Log::info(TAG, "Removed app: %s", appId.c_str());
+	flx::core::Bundle data;
+	data.putString("appId", appId);
+	flx::core::EventBus::getInstance().publish(flx::core::Events::APP_UNINSTALLED, data);
 	return true;
 }
 

@@ -1,0 +1,29 @@
+app:
+  id: com.flxos.flxapp.hello.yaml
+  name: Hello FlxApp YAML
+  version: 0.1.0
+  description: Sample declarative FlxApp loaded from storage (YAML Version)
+  icon: list
+  sort_priority: 181
+  capabilities:
+    - storage
+
+variables:
+  counter: 0
+  title: Hello from YAML storage
+
+ui:
+  type: column
+  children:
+    - type: label
+      text: "{{title}}"
+    - type: label
+      text: "Counter: {{counter}}"
+    - type: button
+      text: Increment
+      on_click:
+        - type: increment
+          key: counter
+          amount: 1
+        - type: log
+          message: "Counter is now {{counter}}"

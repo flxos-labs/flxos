@@ -24,6 +24,8 @@ namespace flx::core {
  * - "sdcard.unmounted"  — Bundle: {}
  * - "app.installed"     — Bundle: { "appId": string }
  * - "app.uninstalled"   — Bundle: { "appId": string }
+ * - "flxapp.loader.ready" — Bundle: {}
+ * - "flxapp.loaded"     — Bundle: { "appId": string, "path": string }
  *
  * Thread-safe: all methods can be called from any task/thread.
  */
@@ -92,6 +94,8 @@ constexpr const char* APP_CRASHED = "app.crashed";
 constexpr const char* APP_BLOCKED = "app.blocked";
 constexpr const char* APP_RESUMED = "app.resumed";
 constexpr const char* APP_PAUSED = "app.paused";
+constexpr const char* FLXAPP_LOADER_READY = "flxapp.loader.ready";
+constexpr const char* FLXAPP_LOADED = "flxapp.loaded";
 
 // Service lifecycle events
 constexpr const char* SERVICE_STARTED = "service.started";

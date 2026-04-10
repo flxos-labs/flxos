@@ -16,6 +16,7 @@
 #include <flx/system/SystemDiagnostics.hpp>
 #include <flx/system/SystemManager.hpp>
 #if LV_USE_LOVYAN_GFX
+#include <flx/flxapp/FlxAppLoader.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
 #include <flx/system/managers/ThemeManager.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
@@ -141,6 +142,12 @@ esp_err_t SystemManager::initServices() {
 	}
 
 	registry.dumpServiceStates();
+
+	if (!m_isSafeMode) {
+#if LV_USE_LOVYAN_GFX
+		flx::flxapp::FlxAppLoader::getInstance().init();
+#endif
+	}
 
 	// Dump boot timeline (3.1)
 	flx::core::BootTimeline::getInstance().dump();
