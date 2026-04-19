@@ -1,10 +1,10 @@
 #include <algorithm>
-#include <cJSON.h>
 #include <cerrno>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <flx/core/Logger.hpp>
+#include <flx/core/Value.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
 
@@ -14,29 +14,39 @@ namespace flx::system {
 
 namespace {
 
-cJSON* parseJsonValue(const std::string& value) {
-	if (value == "true") {
-		return cJSON_CreateBool(1);
+std::string jsonEscapeString(const std::string& str) {
+	std::string result;
+	for (char c : str) {
+		if (c == '\\') result += "\\\\";
+		else if (c == '\"') result += "\\\"";
+		else if (c == '\n') result += "\\n";
+		else if (c == '\r') result += "\\r";
+		else if (c == '\t') result += "\\t";
+		else result += c;
 	}
-	if (value == "false") {
-		return cJSON_CreateBool(0);
+	return result;
+}
+
+std::string valueToJsonValue(const std::string& value) {
+	if (value == "true" || value == "false") {
+		return value;
 	}
 
 	char* end_ptr = nullptr;
 	errno = 0;
 	long const maybe_int = std::strtol(value.c_str(), &end_ptr, 10);
 	if (errno == 0 && end_ptr != value.c_str() && *end_ptr == '\0') {
-		return cJSON_CreateNumber(static_cast<double>(maybe_int));
+		return std::to_string(maybe_int);
 	}
 
 	end_ptr = nullptr;
 	errno = 0;
 	double const maybe_double = std::strtod(value.c_str(), &end_ptr);
 	if (errno == 0 && end_ptr != value.c_str() && *end_ptr == '\0') {
-		return cJSON_CreateNumber(maybe_double);
+		return std::to_string(static_cast<long long>(maybe_double));
 	}
 
-	return cJSON_CreateString(value.c_str());
+	return "\"" + jsonEscapeString(value) + "\"";
 }
 
 } // namespace
@@ -109,28 +119,40 @@ void WallpaperManager::applyEffect(const std::string& key, const std::string& va
 		return;
 	}
 
-	std::string const current = m_wallpaper_effects_subject.get();
-	cJSON* root = cJSON_Parse(current.c_str());
-	if (root == nullptr || !cJSON_IsObject(root)) {
-		if (root != nullptr) {
-			cJSON_Delete(root);
-		}
-		root = cJSON_CreateObject();
+	std::string current = m_wallpaper_effects_subject.get();
+	if (current.empty()) {
+		current = "{}";
 	}
 
-	cJSON* item = parseJsonValue(value);
-	if (item != nullptr) {
-		cJSON_DeleteItemFromObject(root, key.c_str());
-		cJSON_AddItemToObject(root, key.c_str(), item);
+	// Parse current effects JSON
+	auto doc = flx::core::FlxValueDocument::parseJson(current);
+	if (!doc || !doc->root().isMap()) {
+		// If parse failed or root is not a map, start fresh
+		current = "{}";
 	}
 
-	char* out = cJSON_PrintUnformatted(root);
-	if (out != nullptr) {
-		m_wallpaper_effects_subject.set(out);
-		cJSON_free(out);
+	// Rebuild JSON with the new/updated effect
+	std::string result = "{";
+	bool first = true;
+
+	// Copy existing effects except the one being updated
+	if (doc) {
+		doc->root().forEachNamedChild([&](std::string_view itemKey, const flx::core::FlxValueView& itemValue) {
+			if (itemKey != key) {
+				if (!first) result += ",";
+				first = false;
+				result += "\"" + std::string(itemKey) + "\":";
+				result += itemValue.toJsonString();
+			}
+		});
 	}
 
-	cJSON_Delete(root);
+	// Add the new effect
+	if (!first) result += ",";
+	result += "\"" + key + "\":" + valueToJsonValue(value);
+	result += "}";
+
+		m_wallpaper_effects_subject.set(result.c_str());
 }
 
 void WallpaperManager::removeEffect(const std::string& key) {
@@ -138,24 +160,32 @@ void WallpaperManager::removeEffect(const std::string& key) {
 		return;
 	}
 
-	std::string const current = m_wallpaper_effects_subject.get();
-	cJSON* root = cJSON_Parse(current.c_str());
-	if (root == nullptr || !cJSON_IsObject(root)) {
-		if (root != nullptr) {
-			cJSON_Delete(root);
+	std::string current = m_wallpaper_effects_subject.get();
+	if (current.empty()) {
+		return;
+	}
+
+	// Parse current effects JSON
+	auto doc = flx::core::FlxValueDocument::parseJson(current);
+	if (!doc || !doc->root().isMap()) {
+		return;
+	}
+
+	// Rebuild JSON without the effect being removed
+	std::string result = "{";
+	bool first = true;
+
+	doc->root().forEachNamedChild([&](std::string_view itemKey, const flx::core::FlxValueView& itemValue) {
+		if (itemKey != key) {
+			if (!first) result += ",";
+			first = false;
+			result += "\"" + std::string(itemKey) + "\":";
+			result += itemValue.toJsonString();
 		}
-		root = cJSON_CreateObject();
-	}
+	});
 
-	cJSON_DeleteItemFromObject(root, key.c_str());
-
-	char* out = cJSON_PrintUnformatted(root);
-	if (out != nullptr) {
-		m_wallpaper_effects_subject.set(out);
-		cJSON_free(out);
-	}
-
-	cJSON_Delete(root);
+	result += "}";
+		m_wallpaper_effects_subject.set(result.c_str());
 }
 
 flx::Observable<int32_t>& WallpaperManager::getWallpaperEnabledObservable() {
