@@ -1,4 +1,3 @@
-#include <cJSON.h>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -6,6 +5,7 @@
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
+#include <flx/core/Value.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -55,10 +55,7 @@ void SettingsManager::onStop() {
 		esp_timer_delete(m_save_timer);
 		m_save_timer = nullptr;
 	}
-	if (m_json_cache) {
-		cJSON_Delete((cJSON*)m_json_cache);
-		m_json_cache = nullptr;
-	}
+	m_cachedSettings.reset();
 	Log::info(TAG, "Settings service stopped");
 }
 
@@ -70,11 +67,11 @@ void SettingsManager::registerSetting(const std::string& key, flx::Observable<in
 		this->triggerSave();
 	});
 
-	// If we have cached JSON, apply the value now
-	if (m_json_cache) {
-		cJSON* item = cJSON_GetObjectItem((cJSON*)m_json_cache, key.c_str());
-		if (item && cJSON_IsNumber(item)) {
-			observable.set(item->valueint);
+	// If we have cached settings, apply the value now
+	if (m_cachedSettings) {
+		const flx::core::FlxValueView valueNode = m_cachedSettings->root().child(key);
+		if (valueNode.valid() && valueNode.isIntScalar()) {
+			observable.set(static_cast<int32_t>(valueNode.asInt64()));
 		}
 	}
 }
@@ -87,11 +84,12 @@ void SettingsManager::registerSetting(const std::string& key, flx::StringObserva
 		this->triggerSave();
 	});
 
-	// If we have cached JSON, apply the value now
-	if (m_json_cache) {
-		cJSON* item = cJSON_GetObjectItem((cJSON*)m_json_cache, key.c_str());
-		if (item && cJSON_IsString(item)) {
-			observable.set(item->valuestring);
+	// If we have cached settings, apply the value now
+	if (m_cachedSettings) {
+		const flx::core::FlxValueView valueNode = m_cachedSettings->root().child(key);
+		if (valueNode.valid() && valueNode.hasValue()) {
+			const std::string value = valueNode.asString();
+			observable.set(value.c_str());
 		}
 	}
 }
@@ -119,8 +117,7 @@ void SettingsManager::loadSettings() {
 		if (buf) {
 			if (fread(buf, 1, len, f) == (size_t)len) {
 				buf[len] = 0;
-				if (m_json_cache) cJSON_Delete((cJSON*)m_json_cache);
-				m_json_cache = cJSON_Parse(buf);
+				m_cachedSettings = flx::core::FlxValueDocument::parseJson(std::string(buf));
 			}
 			free(buf);
 		}
@@ -130,48 +127,62 @@ void SettingsManager::loadSettings() {
 }
 
 void SettingsManager::saveSettings() {
-	cJSON* json = cJSON_CreateObject();
+	// Build JSON string manually
+	std::string jsonStr = "{";
+	bool first = true;
 
 	for (auto const& [key, setting]: m_registeredSettings) {
+		if (!first) {
+			jsonStr += ",";
+		}
+		first = false;
+
+		// Add escaped key
+		jsonStr += "\"" + key + "\":";
+
 		if (setting.type == Setting::Type::INT) {
 			auto* obs = (flx::Observable<int32_t>*)setting.observable;
-			cJSON_AddNumberToObject(json, key.c_str(), obs->get());
+			jsonStr += std::to_string(obs->get());
 		} else {
 			auto* obs = (flx::StringObservable*)setting.observable;
 			std::string val = obs->get();
-			cJSON_AddStringToObject(json, key.c_str(), val.c_str());
-		}
-	}
-
-	char* str = cJSON_Print(json);
-	if (str) {
-		FILE* f = fopen(SETTINGS_TMP_PATH, "w");
-		if (f) {
-			fprintf(f, "%s", str);
-			fsync(fileno(f));
-			fclose(f);
-			unlink(SETTINGS_PATH);
-			rename(SETTINGS_TMP_PATH, SETTINGS_PATH);
-			Log::info(TAG, "Settings saved successfully");
-
-			// Also update cache
-			if (m_json_cache) {
-				cJSON_Delete((cJSON*)m_json_cache);
+			// Escape string for JSON
+			jsonStr += "\"";
+			for (char c : val) {
+				if (c == '\\') jsonStr += "\\\\";
+				else if (c == '\"') jsonStr += "\\\"";
+				else if (c == '\n') jsonStr += "\\n";
+				else if (c == '\r') jsonStr += "\\r";
+				else if (c == '\t') jsonStr += "\\t";
+				else jsonStr += c;
 			}
-			m_json_cache = cJSON_Parse(str);
-		} else {
-			Log::error(TAG, "Failed to open settings file for writing");
-			flx::core::Bundle data;
-			data.putString("title", "Settings Error");
-			data.putString("message", "Failed to save preferences");
-			data.putString("appName", "System");
-			data.putString("icon", "save");
-			data.putInt32("priority", 2);
-			flx::core::EventBus::getInstance().publish("system.notify", data);
+			jsonStr += "\"";
 		}
-		free(str);
 	}
-	cJSON_Delete(json);
+
+	jsonStr += "}";
+
+	FILE* f = fopen(SETTINGS_TMP_PATH, "w");
+	if (f) {
+		fprintf(f, "%s", jsonStr.c_str());
+		fsync(fileno(f));
+		fclose(f);
+		unlink(SETTINGS_PATH);
+		rename(SETTINGS_TMP_PATH, SETTINGS_PATH);
+		Log::info(TAG, "Settings saved successfully");
+
+		// Also update cache
+		m_cachedSettings = flx::core::FlxValueDocument::parseJson(jsonStr);
+	} else {
+		Log::error(TAG, "Failed to open settings file for writing");
+		flx::core::Bundle data;
+		data.putString("title", "Settings Error");
+		data.putString("message", "Failed to save preferences");
+		data.putString("appName", "System");
+		data.putString("icon", "save");
+		data.putInt32("priority", 2);
+		flx::core::EventBus::getInstance().publish("system.notify", data);
+	}
 }
 
 } // namespace flx::system
