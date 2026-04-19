@@ -19,5 +19,5 @@ idf_component_register(
     SRCS ${FLXAPP_SRCS}
     INCLUDE_DIRS Include
     REQUIRES Core Apps Services
-    PRIV_REQUIRES json lvgl esp_timer
+    PRIV_REQUIRES lvgl esp_timer esp_http_client
 )
