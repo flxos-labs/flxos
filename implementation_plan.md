@@ -1,19 +1,19 @@
 # FlxApp: JSON-Defined Declarative Apps Loaded from Storage
 
-> **Goal**: Define apps in a declarative `.flxapp` format, load them at runtime from SD card or FAT filesystem, parse JSON with cJSON and YAML with fkYAML, and run them as first-class FlxOS apps — appearing in the launcher, using the full App lifecycle, and rendering LVGL UI from a declarative layout tree.
+> **Goal**: Define apps in a declarative `.flxapp` format, load them at runtime from SD card or FAT filesystem, parse JSON and YAML with fkYAML, and run them as first-class FlxOS apps — appearing in the launcher, using the full App lifecycle, and rendering LVGL UI from a declarative layout tree.
 
 ## Background & Design Philosophy
 
 Today, every FlxOS app is a C++ class compiled into the firmware. This feature extends that idea to **user-space apps** — a `.flxapp` file on the SD card becomes a fully functional app with UI, metadata, lifecycle hooks, and data binding. In the current implementation, on-device `.flxapp` documents can be JSON or YAML.
 
-This is **not** a scripting engine or ELF loader. It's a **declarative UI framework** — think Android XML layouts or SwiftUI, but backed by JSON or YAML on device. The C++ runtime interprets the document and builds real LVGL widgets. User logic is handled through **event → action** bindings (navigate, set variable, publish event, HTTP fetch, etc.).
+This is **not** a scripting engine or ELF loader. It's a **declarative UI framework** — think Android XML layouts or SwiftUI, but backed by JSON or YAML on device. The C++ runtime interprets the document and builds real LVGL widgets. User logic is handled through **event → action** bindings (navigate, set variable, publish event, etc.).
 
 ---
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **Current format guidance**: `.flxapp` files may now be JSON or YAML documents in this implementation. JSON is parsed with cJSON, and YAML is parsed with fkYAML.
+> **Current format guidance**: `.flxapp` files may now be JSON or YAML documents in this implementation. JSON and YAML are both parsed with fkYAML.
 >
 > Keep the `.flxapp` extension for product-facing packaging if desired, and use `.flxapp.json`, `.flxapp.yaml`, or `app.flxapp` / `app.flxapp.json` / `app.flxapp.yaml` on storage according to the loader conventions.
 
@@ -133,10 +133,10 @@ idf_component_register(
 
 ## Phase 4: Widget & Action Implementation
 
-- [ ] **Basic Widgets**: Column, Row, Label, Button, Spacer
-- [ ] **Input Widgets**: Text Input, Switch, Slider, Checkbox, Dropdown
-- [ ] **Display Widgets**: Image, List, Bar
-- [ ] **Core Actions**: Increment, Decrement, Set, Toggle, Log, Notify, Event Publish, Navigate, Close, HTTP Get
+- [x] **Basic Widgets**: Column, Row, Label, Button, Spacer
+- [x] **Input Widgets**: Text Input, Switch, Slider, Checkbox, Dropdown
+- [x] **Display Widgets**: Image, List, Bar
+- [x] **Core Actions**: Increment, Decrement, Set, Toggle, Log, Notify, Event Publish, Navigate, Close
 
 ---
 
@@ -155,9 +155,9 @@ idf_component_register(
 ## Phase 6: Verification & Examples
 
 - [x] **Hello World**: Deploy `hello.flxapp` to `/data/apps/`
-- [ ] **System Monitor**: Deploy `sysmon.flxapp` to `/sdcard/apps/`
+- [ ] **System Monitor**: Deploy `sysmon.flxapp` to `/sdcard/apps/` (sample added at `storage/data/apps/sysmon.flxapp`)
 - [ ] **Stress Test**: Verify memory behavior with multiple FlxApps loaded
-- [ ] **Build Check**: Ensure `idf.py build` succeeds
+- [x] **Build Check**: Ensure `idf.py build` succeeds
 
 #### [NEW] storage/data/apps/hello.flxapp
 Basic greeting app with counter and text input.
