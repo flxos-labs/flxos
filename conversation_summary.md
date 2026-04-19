@@ -32,7 +32,7 @@ This file summarizes the full conversation, including requests, actions, and mea
 - Libraries/LovyanGFX: 76 (4.9%)
 
 ### Repo-local components observed in current build
-- Applications, Apps, Connectivity, Core, Firmware, FlxApp, HalModule, Kernel, LovyanGFX, Profiles, Services, System, UI, dhcpserver, espressif__cjson, fkyaml, lvgl
+- Applications, Apps, Connectivity, Core, Firmware, FlxApp, HalModule, Kernel, LovyanGFX, Profiles, Services, System, UI, dhcpserver, fkyaml, lvgl
 
 ## 2. Continue request
 
@@ -117,10 +117,10 @@ This file summarizes the full conversation, including requests, actions, and mea
 - Current app image does not fit 2M slot.
 - system/data overflows are expected when comparing current 16MB-generated FAT images to smaller 4MB partitions; they would be regenerated if built with 4MB table.
 
-## 5. "Still same size after removing rapidyaml" discussion
+## 5. Parser-removal size discussion
 
 ### User observation
-- Reported image size remained ~2,326,123 bytes even after removing rapidyaml.
+- Reported image size remained ~2,326,123 bytes even after parser dependency removal.
 
 ### Actions performed
 - Verified active component graph and compile inputs.
@@ -128,9 +128,9 @@ This file summarizes the full conversation, including requests, actions, and mea
 - Checked map and symbol tables for YAML parser symbols.
 
 ### Core findings
-- RapidYAML was not found as active build component.
+- Legacy YAML parser component was not found as active build component.
 - fkyaml is still in active build metadata.
-- RapidYAML mention remained in a comment in `FlxApp/Include/flx/flxapp/FlxAppBenchmark.hpp`.
+- A legacy parser mention remained in a comment in `FlxApp/Include/flx/flxapp/FlxAppBenchmark.hpp`.
 - fkyaml symbols are present in `build/FlxOS.map` and ELF symbols.
 
 ### Confirmed image summary
@@ -147,7 +147,7 @@ This file summarizes the full conversation, including requests, actions, and mea
 
 ### YAML footprint estimate shared
 - Estimated fkyaml-linked symbol footprint: 62,902 bytes (~2.70% of image).
-- rapidyaml-linked footprint in current build: effectively 0 from component/symbol checks.
+- Legacy parser-linked footprint in current build: effectively 0 from component/symbol checks.
 
 ### 4MB app-slot gap restated
 - Needed reduction to fit 2MB app slot: 228,971 bytes.
