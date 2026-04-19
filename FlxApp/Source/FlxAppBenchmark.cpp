@@ -1,6 +1,5 @@
 #include <flx/flxapp/FlxAppBenchmark.hpp>
 
-#include <cJSON.h>
 #include <esp_timer.h>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Value.hpp>
@@ -53,12 +52,12 @@ void FlxAppBenchmark::logResult(const Result& result) {
 
     if (result.jsonSuccess && it > 0) {
         const uint64_t jsonAvg = result.jsonTotalUs / it;
-        Log::info(TAG, "  [JSON/cJSON]  total=%llu us  avg=%llu us  (%lu iters)",
+        Log::info(TAG, "  [JSON/fkyaml]  total=%llu us  avg=%llu us  (%lu iters)",
                   (unsigned long long)result.jsonTotalUs,
                   (unsigned long long)jsonAvg,
                   (unsigned long)it);
     } else {
-        Log::warn(TAG, "  [JSON/cJSON]  FAILED or skipped");
+        Log::warn(TAG, "  [JSON/fkyaml]  FAILED or skipped");
     }
 
     if (result.yamlSuccess && it > 0) {
@@ -77,9 +76,9 @@ void FlxAppBenchmark::logResult(const Result& result) {
                             static_cast<float>(result.jsonTotalUs);
         Log::info(TAG, "  Overhead ratio: YAML/JSON = %.2fx", ratio);
         if (ratio < 1.0f) {
-            Log::info(TAG, "  Winner: fkyaml  (%.2fx faster)", 1.0f / ratio);
+            Log::info(TAG, "  Winner: fkyaml YAML (%.2fx faster)", 1.0f / ratio);
         } else {
-            Log::info(TAG, "  Winner: cJSON  (%.2fx faster)", ratio);
+            Log::info(TAG, "  Winner: fkyaml JSON (%.2fx faster)", ratio);
         }
     }
 
@@ -105,16 +104,15 @@ uint64_t FlxAppBenchmark::benchmarkJson(const std::string& path,
 
     for (uint32_t i = 0; i < iterations; ++i) {
         const int64_t t0 = esp_timer_get_time();
-        cJSON* root = cJSON_Parse(raw.c_str());
+        auto document = flx::core::FlxValueDocument::parseJson(raw);
         const int64_t t1 = esp_timer_get_time();
 
-        if (root == nullptr) {
-            Log::error(TAG, "JSON benchmark: cJSON_Parse failed on iteration %lu", (unsigned long)i);
+        if (!document) {
+            Log::error(TAG, "JSON benchmark: parse failed on iteration %lu", (unsigned long)i);
             success = false;
             break;
         }
 
-        cJSON_Delete(root);
         total += static_cast<uint64_t>(t1 - t0);
         success = true;
     }
