@@ -7,6 +7,8 @@
 #include <flx/core/Bundle.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/hal/DeviceRegistry.hpp>
+#include <flx/hal/display/IDisplayDevice.hpp>
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/DisplayManager.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
@@ -65,7 +67,32 @@ Desktop::~Desktop() {
 
 void Desktop::init() {
 	Log::info(TAG, "Initializing Desktop Environment...");
+
+	lv_display_t* defaultDisplay = lv_display_get_default();
+	if (defaultDisplay == nullptr) {
+		auto displayDevice =
+			flx::hal::DeviceRegistry::getInstance().findFirst<flx::hal::display::IDisplayDevice>(
+				flx::hal::IDevice::Type::Display);
+		if (displayDevice) {
+			auto* recoveredDisplay = displayDevice->getLvglDisplay();
+			if (recoveredDisplay != nullptr) {
+				lv_display_set_default(recoveredDisplay);
+				defaultDisplay = lv_display_get_default();
+				Log::warn(TAG, "Recovered missing LVGL default display from HAL device");
+			}
+		}
+	}
+
+	if (defaultDisplay == nullptr) {
+		Log::error(TAG, "Desktop initialization aborted: LVGL display not ready");
+		return;
+	}
+
 	m_screen = lv_obj_create(NULL);
+	if (m_screen == nullptr) {
+		Log::error(TAG, "Desktop initialization aborted: failed to create root screen");
+		return;
+	}
 	lv_obj_remove_style_all(m_screen);
 	lv_obj_set_flex_flow(m_screen, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_flex_align(m_screen, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
