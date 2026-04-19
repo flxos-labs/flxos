@@ -2,11 +2,13 @@
 
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
+#include <flx/core/Value.hpp>
 #include <flx/services/IService.hpp>
 #include <flx/services/ServiceManifest.hpp>
 #include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "esp_timer.h"
@@ -46,7 +48,7 @@ private:
 	};
 
 	std::map<std::string, Setting> m_registeredSettings {};
-	void* m_json_cache = nullptr; // cJSON*
+	std::optional<flx::core::FlxValueDocument> m_cachedSettings {};
 
 	esp_timer_handle_t m_save_timer = nullptr;
 };
