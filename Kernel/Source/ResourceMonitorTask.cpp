@@ -2,12 +2,29 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <flx/core/Bundle.hpp>
 #include <flx/core/EventBus.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/kernel/ResourceMonitorTask.hpp>
 #include <string_view>
 
 static constexpr std::string_view TAG = "ResourceMonitor";
+
+namespace {
+
+const flx::core::Bundle& lowMemoryNotificationTemplate() {
+	static const flx::core::Bundle kTemplate = [] {
+		flx::core::Bundle data;
+		data.putString("title", "Low Memory");
+		data.putString("message", "System resources are critically low");
+		data.putString("icon", "warning");
+		data.putInt32("priority", 2);
+		return data;
+	}();
+	return kTemplate;
+}
+
+} // namespace
 
 namespace flx::kernel {
 ResourceMonitorTask& ResourceMonitorTask::getInstance() {
@@ -16,7 +33,7 @@ ResourceMonitorTask& ResourceMonitorTask::getInstance() {
 }
 
 ResourceMonitorTask::ResourceMonitorTask()
-	: Task("res_monitor", 4096, 2, tskNO_AFFINITY) {}
+	: Task("res_monitor", 6144, 2, tskNO_AFFINITY) {}
 
 ResourceMonitorTask::Stats ResourceMonitorTask::getLatestStats() const {
 	return {m_freeHeap.load(), m_minFreeHeap.load(), m_freePsram.load(), m_uptimeSeconds.load()};
@@ -48,12 +65,7 @@ void ResourceMonitorTask::run(void* /*data*/) {
 				!wasLowMemory ||
 				(m_uptimeSeconds.load() - lastLowMemoryNotifyAt >= LOW_MEMORY_NOTIFY_COOLDOWN_SECONDS);
 			if (shouldNotify) {
-				flx::core::Bundle data;
-				data.putString("title", "Low Memory");
-				data.putString("message", "System resources are critically low");
-				data.putString("icon", "warning");
-				data.putInt32("priority", 2);
-				flx::core::EventBus::getInstance().publish("system.notify", data);
+				flx::core::EventBus::getInstance().publish("system.notify", lowMemoryNotificationTemplate());
 				lastLowMemoryNotifyAt = m_uptimeSeconds.load();
 			}
 			wasLowMemory = true;
