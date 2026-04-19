@@ -845,6 +845,8 @@ function(_flx_generate_sdkconfig_frag PREFIX OUTPUT_FILE)
 
     # LVGL settings (only for non-headless)
     if("${_headless}" STREQUAL "false")
+        string(APPEND _frag "# Runtime Mode\n")
+        string(APPEND _frag "CONFIG_FLXOS_HEADLESS_MODE=n\n")
         string(APPEND _frag "# LVGL Configuration\n")
         string(APPEND _frag "CONFIG_LV_CACHE_DEF_SIZE=512000\n")
         string(APPEND _frag "CONFIG_LV_IMAGE_HEADER_CACHE_DEF_CNT=50\n")
@@ -941,6 +943,7 @@ function(_flx_generate_sdkconfig_frag PREFIX OUTPUT_FILE)
     if("${_headless}" STREQUAL "true")
         string(APPEND _frag "\n# Headless Mode\n")
         string(APPEND _frag "CONFIG_FLXOS_HEADLESS_MODE=y\n")
+        string(APPEND _frag "CONFIG_LV_USE_LOVYAN_GFX=n\n")
     endif()
 
     # CLI
