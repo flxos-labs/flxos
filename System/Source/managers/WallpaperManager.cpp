@@ -16,13 +16,18 @@ namespace {
 
 std::string jsonEscapeString(const std::string& str) {
 	std::string result;
-	for (char c : str) {
+	for (char c: str) {
 		if (c == '\\') result += "\\\\";
-		else if (c == '\"') result += "\\\"";
-		else if (c == '\n') result += "\\n";
-		else if (c == '\r') result += "\\r";
-		else if (c == '\t') result += "\\t";
-		else result += c;
+		else if (c == '\"')
+			result += "\\\"";
+		else if (c == '\n')
+			result += "\\n";
+		else if (c == '\r')
+			result += "\\r";
+		else if (c == '\t')
+			result += "\\t";
+		else
+			result += c;
 	}
 	return result;
 }
@@ -152,7 +157,7 @@ void WallpaperManager::applyEffect(const std::string& key, const std::string& va
 	result += "\"" + key + "\":" + valueToJsonValue(value);
 	result += "}";
 
-		m_wallpaper_effects_subject.set(result.c_str());
+	m_wallpaper_effects_subject.set(result.c_str());
 }
 
 void WallpaperManager::removeEffect(const std::string& key) {
@@ -185,7 +190,7 @@ void WallpaperManager::removeEffect(const std::string& key) {
 	});
 
 	result += "}";
-		m_wallpaper_effects_subject.set(result.c_str());
+	m_wallpaper_effects_subject.set(result.c_str());
 }
 
 flx::Observable<int32_t>& WallpaperManager::getWallpaperEnabledObservable() {

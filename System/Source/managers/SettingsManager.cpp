@@ -148,13 +148,18 @@ void SettingsManager::saveSettings() {
 			std::string val = obs->get();
 			// Escape string for JSON
 			jsonStr += "\"";
-			for (char c : val) {
+			for (char c: val) {
 				if (c == '\\') jsonStr += "\\\\";
-				else if (c == '\"') jsonStr += "\\\"";
-				else if (c == '\n') jsonStr += "\\n";
-				else if (c == '\r') jsonStr += "\\r";
-				else if (c == '\t') jsonStr += "\\t";
-				else jsonStr += c;
+				else if (c == '\"')
+					jsonStr += "\\\"";
+				else if (c == '\n')
+					jsonStr += "\\n";
+				else if (c == '\r')
+					jsonStr += "\\r";
+				else if (c == '\t')
+					jsonStr += "\\t";
+				else
+					jsonStr += c;
 			}
 			jsonStr += "\"";
 		}
