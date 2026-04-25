@@ -73,6 +73,13 @@ void SettingsApp::onStop() {
 	m_pluginRefreshPending.store(false);
 }
 
+void SettingsApp::onPause() {
+	if (!m_activePluginId.empty()) {
+		deactivatePlugin(m_activePluginId);
+	}
+	m_pluginRefreshPending.store(false);
+}
+
 void SettingsApp::update() {
 	if (!m_pluginRefreshPending.exchange(false) || m_container == nullptr) {
 		return;

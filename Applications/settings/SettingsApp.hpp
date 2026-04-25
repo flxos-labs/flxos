@@ -25,6 +25,7 @@ public:
 	static const AppManifest manifest;
 
 	void createUI(void* parent) override;
+	void onPause() override;
 	void onStop() override;
 	void update() override;
 
