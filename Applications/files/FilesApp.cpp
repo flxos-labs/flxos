@@ -219,6 +219,12 @@ void FilesApp::onStop() {
 	m_progressMbox = m_progressBar = m_progressLabel = nullptr;
 }
 
+void FilesApp::onPause() {
+	cancelActiveOp();
+	++m_listReqVersion;
+	closeProgressDialog();
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Watchdog
 // ─────────────────────────────────────────────────────────────────────────────
