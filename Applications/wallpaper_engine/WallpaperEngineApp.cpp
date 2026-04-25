@@ -90,6 +90,22 @@ void WallpaperEngineApp::onNewIntent(const flx::apps::Intent& intent) {
 	navigateFromIntent(intent);
 }
 
+bool WallpaperEngineApp::onResume() {
+	if (m_bannerPollTimer != nullptr) {
+		lv_timer_resume(m_bannerPollTimer);
+	}
+	return true;
+}
+
+void WallpaperEngineApp::onPause() {
+	if (m_bannerPollTimer != nullptr) {
+		lv_timer_pause(m_bannerPollTimer);
+	}
+	if (m_wallpaperBrowser) {
+		m_wallpaperBrowser->hide();
+	}
+}
+
 void WallpaperEngineApp::onStop() {
 	if (m_wallpaperErrorSubscriptionId != 0) {
 		flx::core::EventBus::getInstance().unsubscribe(m_wallpaperErrorSubscriptionId);
