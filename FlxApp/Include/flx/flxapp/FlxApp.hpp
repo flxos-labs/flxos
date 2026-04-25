@@ -4,6 +4,7 @@
 #include <flx/apps/AppManifest.hpp>
 #include <flx/core/Value.hpp>
 
+#include <cstdint>
 #include <optional>
 #include <memory>
 #include <string>
@@ -30,6 +31,14 @@ public:
     std::string getVersion() const override;
 
     const std::string& getSourcePath() const { return m_sourcePath; }
+	void applyHttpGetResult(
+		const std::string& responseKey,
+		const std::string& statusKey,
+		const std::string& errorKey,
+		int32_t statusCode,
+		bool success,
+		const std::string& body,
+		const std::string& errorMessage);
 
 private:
 

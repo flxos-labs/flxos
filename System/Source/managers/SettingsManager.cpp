@@ -16,6 +16,49 @@ static constexpr const char* SETTINGS_TMP_PATH = "/system/settings.tmp";
 
 namespace flx::system {
 
+namespace {
+
+void appendEscapedJsonString(const std::string& input, std::string& output) {
+	static constexpr char kHexDigits[] = "0123456789abcdef";
+
+	for (const unsigned char c: input) {
+		switch (c) {
+			case '\\':
+				output += "\\\\";
+				break;
+			case '\"':
+				output += "\\\"";
+				break;
+			case '\b':
+				output += "\\b";
+				break;
+			case '\f':
+				output += "\\f";
+				break;
+			case '\n':
+				output += "\\n";
+				break;
+			case '\r':
+				output += "\\r";
+				break;
+			case '\t':
+				output += "\\t";
+				break;
+			default:
+				if (c < 0x20) {
+					output += "\\u00";
+					output += kHexDigits[(c >> 4) & 0x0F];
+					output += kHexDigits[c & 0x0F];
+				} else {
+					output += static_cast<char>(c);
+				}
+				break;
+		}
+	}
+}
+
+} // namespace
+
 const flx::services::ServiceManifest SettingsManager::serviceManifest = {
 	.serviceId = "com.flxos.settings",
 	.serviceName = "Settings",
@@ -138,7 +181,9 @@ void SettingsManager::saveSettings() {
 		first = false;
 
 		// Add escaped key
-		jsonStr += "\"" + key + "\":";
+		jsonStr += "\"";
+		appendEscapedJsonString(key, jsonStr);
+		jsonStr += "\":";
 
 		if (setting.type == Setting::Type::INT) {
 			auto* obs = (flx::Observable<int32_t>*)setting.observable;
@@ -148,19 +193,7 @@ void SettingsManager::saveSettings() {
 			std::string val = obs->get();
 			// Escape string for JSON
 			jsonStr += "\"";
-			for (char c: val) {
-				if (c == '\\') jsonStr += "\\\\";
-				else if (c == '\"')
-					jsonStr += "\\\"";
-				else if (c == '\n')
-					jsonStr += "\\n";
-				else if (c == '\r')
-					jsonStr += "\\r";
-				else if (c == '\t')
-					jsonStr += "\\t";
-				else
-					jsonStr += c;
-			}
+			appendEscapedJsonString(val, jsonStr);
 			jsonStr += "\"";
 		}
 	}

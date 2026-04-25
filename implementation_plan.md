@@ -136,7 +136,7 @@ idf_component_register(
 - [x] **Basic Widgets**: Column, Row, Label, Button, Spacer
 - [x] **Input Widgets**: Text Input, Switch, Slider, Checkbox, Dropdown
 - [x] **Display Widgets**: Image, List, Bar
-- [x] **Core Actions**: Increment, Decrement, Set, Toggle, Log, Notify, Event Publish, Navigate, Close
+- [x] **Core Actions**: Increment, Decrement, Set, Toggle, Log, Notify, Event Publish, Navigate, Close, HTTP GET
 
 ---
 

@@ -11,8 +11,12 @@
 
 #include <esp_err.h>
 #include <esp_http_client.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <lvgl.h>
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 
 namespace flx::flxapp {
@@ -25,6 +29,24 @@ struct HttpBodyAccumulator {
 	std::string body {};
 	size_t limit = 2048;
 };
+
+struct HttpGetAsyncContext {
+	std::string appId {};
+	std::string url {};
+	std::string responseKey {};
+	std::string statusKey {};
+	std::string errorKey {};
+	int32_t timeoutMs = 5000;
+	int32_t maxBodyBytes = 2048;
+	int32_t statusCode = -1;
+	bool success = false;
+	std::string responseBody {};
+	std::string errorMessage {};
+};
+
+constexpr const char* HTTP_GET_TASK_NAME = "flxapp_http_get";
+constexpr uint32_t HTTP_GET_TASK_STACK_WORDS = 6 * 1024;
+constexpr UBaseType_t HTTP_GET_TASK_PRIORITY = 4;
 
 esp_err_t onHttpEvent(esp_http_client_event_t* event) {
 	if (event == nullptr || event->user_data == nullptr) {
@@ -44,6 +66,86 @@ esp_err_t onHttpEvent(esp_http_client_event_t* event) {
 	const size_t copyLen = std::min(remaining, static_cast<size_t>(event->data_len));
 	accumulator->body.append(static_cast<const char*>(event->data), copyLen);
 	return ESP_OK;
+}
+
+void runHttpGetRequest(HttpGetAsyncContext& context) {
+	HttpBodyAccumulator accumulator {};
+	accumulator.limit = static_cast<size_t>(context.maxBodyBytes);
+
+	esp_http_client_config_t config = {};
+	config.url = context.url.c_str();
+	config.method = HTTP_METHOD_GET;
+	config.timeout_ms = context.timeoutMs;
+	config.event_handler = onHttpEvent;
+	config.user_data = &accumulator;
+
+	esp_http_client_handle_t client = esp_http_client_init(&config);
+	if (client == nullptr) {
+		context.success = false;
+		context.errorMessage = "ESP_ERR_NO_MEM";
+		return;
+	}
+
+	const esp_err_t result = esp_http_client_perform(client);
+	context.statusCode = esp_http_client_get_status_code(client);
+	esp_http_client_cleanup(client);
+
+	context.success = (result == ESP_OK);
+	if (context.success) {
+		context.responseBody = std::move(accumulator.body);
+		return;
+	}
+
+	context.errorMessage = esp_err_to_name(result);
+	Log::warn(
+		TAG,
+		"FlxApp http_get request failed for %s: %s",
+		context.url.c_str(),
+		context.errorMessage.c_str());
+}
+
+void applyHttpGetResultAsync(void* userData) {
+	std::unique_ptr<HttpGetAsyncContext> context(static_cast<HttpGetAsyncContext*>(userData));
+	if (!context) {
+		return;
+	}
+
+	std::shared_ptr<flx::apps::App> app = flx::apps::AppManager::getInstance().getAppByPackageName(context->appId);
+	if (!app) {
+		return;
+	}
+
+	std::shared_ptr<flx::flxapp::FlxApp> flxApp = std::dynamic_pointer_cast<flx::flxapp::FlxApp>(app);
+	if (!flxApp) {
+		return;
+	}
+
+	flxApp->applyHttpGetResult(
+		context->responseKey,
+		context->statusKey,
+		context->errorKey,
+		context->statusCode,
+		context->success,
+		context->responseBody,
+		context->errorMessage);
+}
+
+void runHttpGetTask(void* taskArg) {
+	std::unique_ptr<HttpGetAsyncContext> context(static_cast<HttpGetAsyncContext*>(taskArg));
+	if (!context) {
+		vTaskDelete(nullptr);
+		return;
+	}
+
+	runHttpGetRequest(*context);
+
+	HttpGetAsyncContext* rawContext = context.release();
+	if (lv_async_call(applyHttpGetResultAsync, rawContext) != LV_RESULT_OK) {
+		delete rawContext;
+		Log::warn(TAG, "Failed to schedule FlxApp http_get completion callback");
+	}
+
+	vTaskDelete(nullptr);
 }
 
 } // namespace
@@ -148,55 +250,43 @@ bool FlxAppActionRunner::runHttpGet(const flx::core::FlxValueView& action, const
 		maxBodyBytes = 0;
 	}
 
-	HttpBodyAccumulator accumulator {};
-	accumulator.limit = static_cast<size_t>(maxBodyBytes);
-
-	esp_http_client_config_t config = {};
-	config.url = url.c_str();
-	config.method = HTTP_METHOD_GET;
-	config.timeout_ms = timeoutMs;
-	config.event_handler = onHttpEvent;
-	config.user_data = &accumulator;
-
-	esp_http_client_handle_t client = esp_http_client_init(&config);
-	if (client == nullptr) {
-		Log::error(TAG, "FlxApp http_get failed to initialize client");
-		return false;
-	}
-
-	const esp_err_t result = esp_http_client_perform(client);
-	const int statusCode = esp_http_client_get_status_code(client);
-	esp_http_client_cleanup(client);
-
 	const std::string responseKey = action.child("response_key").asString(fallbackResponseKey);
 	const std::string statusKey = action.child("status_key").asString();
 	const std::string errorKey = action.child("error_key").asString();
-	bool stateUpdated = false;
 
-	if (!statusKey.empty()) {
-		m_state.setInt(statusKey, statusCode);
-		stateUpdated = true;
+	auto context = std::make_unique<HttpGetAsyncContext>();
+	context->appId = m_app.getPackageName();
+	context->url = url;
+	context->responseKey = responseKey;
+	context->statusKey = statusKey;
+	context->errorKey = errorKey;
+	context->timeoutMs = timeoutMs;
+	context->maxBodyBytes = maxBodyBytes;
+
+	if (xTaskCreate(
+			runHttpGetTask,
+			HTTP_GET_TASK_NAME,
+			HTTP_GET_TASK_STACK_WORDS,
+			context.get(),
+			HTTP_GET_TASK_PRIORITY,
+			nullptr) != pdPASS) {
+		Log::warn(TAG, "FlxApp http_get failed to start async task; running synchronously");
+		runHttpGetRequest(*context);
+		m_app.applyHttpGetResult(
+			context->responseKey,
+			context->statusKey,
+			context->errorKey,
+			context->statusCode,
+			context->success,
+			context->responseBody,
+			context->errorMessage);
+		return !context->statusKey.empty() ||
+			(context->success && !context->responseKey.empty()) ||
+			(!context->success && !context->errorKey.empty());
 	}
 
-	if (result == ESP_OK) {
-		if (!responseKey.empty()) {
-			m_state.setString(responseKey, accumulator.body);
-			stateUpdated = true;
-		}
-		return stateUpdated;
-	}
-
-	Log::warn(TAG,
-		"FlxApp http_get request failed for %s: %s",
-		url.c_str(),
-		esp_err_to_name(result));
-
-	if (!errorKey.empty()) {
-		m_state.setString(errorKey, esp_err_to_name(result));
-		stateUpdated = true;
-	}
-
-	return stateUpdated;
+	context.release();
+	return false;
 }
 
 void FlxAppActionRunner::notifyRefreshed() {

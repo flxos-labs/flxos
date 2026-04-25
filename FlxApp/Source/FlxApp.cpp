@@ -78,6 +78,34 @@ std::string FlxApp::getVersion() const {
     return m_manifest.appVersionName;
 }
 
+void FlxApp::applyHttpGetResult(
+	const std::string& responseKey,
+	const std::string& statusKey,
+	const std::string& errorKey,
+	int32_t statusCode,
+	bool success,
+	const std::string& body,
+	const std::string& errorMessage) {
+	if (!m_state) {
+		return;
+	}
+
+	if (!statusKey.empty()) {
+		m_state->setInt(statusKey, statusCode);
+	}
+
+	if (success) {
+		if (!responseKey.empty()) {
+			m_state->setString(responseKey, body);
+		}
+		return;
+	}
+
+	if (!errorKey.empty()) {
+		m_state->setString(errorKey, errorMessage);
+	}
+}
+
 bool FlxApp::loadDocument() {
     const std::string raw = readFile(m_sourcePath);
     if (raw.empty()) {

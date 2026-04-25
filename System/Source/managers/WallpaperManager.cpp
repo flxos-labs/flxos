@@ -7,6 +7,8 @@
 #include <flx/core/Value.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
+#include <limits>
+#include <sstream>
 
 static constexpr const char* TAG = "WallpaperManager";
 
@@ -15,19 +17,43 @@ namespace flx::system {
 namespace {
 
 std::string jsonEscapeString(const std::string& str) {
+	static constexpr char kHexDigits[] = "0123456789abcdef";
+
 	std::string result;
-	for (char c: str) {
-		if (c == '\\') result += "\\\\";
-		else if (c == '\"')
-			result += "\\\"";
-		else if (c == '\n')
-			result += "\\n";
-		else if (c == '\r')
-			result += "\\r";
-		else if (c == '\t')
-			result += "\\t";
-		else
-			result += c;
+	result.reserve(str.size());
+	for (const unsigned char c: str) {
+		switch (c) {
+			case '\\':
+				result += "\\\\";
+				break;
+			case '\"':
+				result += "\\\"";
+				break;
+			case '\b':
+				result += "\\b";
+				break;
+			case '\f':
+				result += "\\f";
+				break;
+			case '\n':
+				result += "\\n";
+				break;
+			case '\r':
+				result += "\\r";
+				break;
+			case '\t':
+				result += "\\t";
+				break;
+			default:
+				if (c < 0x20) {
+					result += "\\u00";
+					result += kHexDigits[(c >> 4) & 0x0F];
+					result += kHexDigits[c & 0x0F];
+				} else {
+					result += static_cast<char>(c);
+				}
+				break;
+		}
 	}
 	return result;
 }
@@ -48,7 +74,10 @@ std::string valueToJsonValue(const std::string& value) {
 	errno = 0;
 	double const maybe_double = std::strtod(value.c_str(), &end_ptr);
 	if (errno == 0 && end_ptr != value.c_str() && *end_ptr == '\0') {
-		return std::to_string(static_cast<long long>(maybe_double));
+		std::ostringstream stream;
+		stream.precision(std::numeric_limits<double>::max_digits10);
+		stream << maybe_double;
+		return stream.str();
 	}
 
 	return "\"" + jsonEscapeString(value) + "\"";
@@ -146,7 +175,7 @@ void WallpaperManager::applyEffect(const std::string& key, const std::string& va
 			if (itemKey != key) {
 				if (!first) result += ",";
 				first = false;
-				result += "\"" + std::string(itemKey) + "\":";
+				result += "\"" + jsonEscapeString(std::string(itemKey)) + "\":";
 				result += itemValue.toJsonString();
 			}
 		});
@@ -154,7 +183,7 @@ void WallpaperManager::applyEffect(const std::string& key, const std::string& va
 
 	// Add the new effect
 	if (!first) result += ",";
-	result += "\"" + key + "\":" + valueToJsonValue(value);
+	result += "\"" + jsonEscapeString(key) + "\":" + valueToJsonValue(value);
 	result += "}";
 
 	m_wallpaper_effects_subject.set(result.c_str());
@@ -184,7 +213,7 @@ void WallpaperManager::removeEffect(const std::string& key) {
 		if (itemKey != key) {
 			if (!first) result += ",";
 			first = false;
-			result += "\"" + std::string(itemKey) + "\":";
+			result += "\"" + jsonEscapeString(std::string(itemKey)) + "\":";
 			result += itemValue.toJsonString();
 		}
 	});
