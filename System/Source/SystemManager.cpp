@@ -1,5 +1,6 @@
 #include <Config.hpp>
 #include <esp_err.h>
+#include <esp_heap_caps.h>
 #include <esp_vfs_fat.h>
 #include <nvs.h>
 #include <nvs_flash.h>
@@ -44,6 +45,14 @@
 static constexpr std::string_view TAG = "SystemManager";
 
 namespace flx::system {
+
+namespace {
+
+bool hasPsram() {
+	return heap_caps_get_total_size(MALLOC_CAP_SPIRAM) > 0;
+}
+
+} // namespace
 
 esp_err_t SystemManager::initHardware() {
 	Log::info(TAG, "Starting hardware initialization...");
@@ -99,7 +108,11 @@ void SystemManager::registerServices() {
 	registry.addService(std::shared_ptr<flx::services::IService>(&ThemeManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&WallpaperManager::getInstance(), noDelete));
 #endif
-	registry.addService(std::shared_ptr<flx::services::IService>(&flx::connectivity::ConnectivityManager::getInstance(), noDelete));
+	if (hasPsram()) {
+		registry.addService(std::shared_ptr<flx::services::IService>(&flx::connectivity::ConnectivityManager::getInstance(), noDelete));
+	} else {
+		Log::warn(TAG, "Skipping Connectivity service at boot (no PSRAM; lazy networking disabled for low-memory test)");
+	}
 
 	registry.addService(std::shared_ptr<flx::services::IService>(&PowerManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&TimeManager::getInstance(), noDelete));
@@ -110,8 +123,12 @@ void SystemManager::registerServices() {
 #endif
 
 #if LV_USE_LOVYAN_GFX
-	registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
-	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
+	if (hasPsram()) {
+		registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
+		registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
+	} else {
+		Log::warn(TAG, "Skipping Notifications and Screenshot services at boot (no PSRAM; low-memory test mode)");
+	}
 #endif
 }
 
