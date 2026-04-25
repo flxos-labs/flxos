@@ -45,7 +45,8 @@ struct HttpGetAsyncContext {
 };
 
 constexpr const char* HTTP_GET_TASK_NAME = "flxapp_http_get";
-constexpr uint32_t HTTP_GET_TASK_STACK_WORDS = 6 * 1024;
+// HTTP client + response buffering requires a larger stack than lightweight UI actions.
+constexpr uint32_t HTTP_GET_TASK_STACK_BYTES = 6 * 1024;
 constexpr UBaseType_t HTTP_GET_TASK_PRIORITY = 4;
 
 esp_err_t onHttpEvent(esp_http_client_event_t* event) {
@@ -105,10 +106,11 @@ void runHttpGetRequest(HttpGetAsyncContext& context) {
 }
 
 void applyHttpGetResultAsync(void* userData) {
-	std::unique_ptr<HttpGetAsyncContext> context(static_cast<HttpGetAsyncContext*>(userData));
-	if (!context) {
+	if (userData == nullptr) {
 		return;
 	}
+
+	std::unique_ptr<HttpGetAsyncContext> context(static_cast<HttpGetAsyncContext*>(userData));
 
 	std::shared_ptr<flx::apps::App> app = flx::apps::AppManager::getInstance().getAppByPackageName(context->appId);
 	if (!app) {
@@ -131,11 +133,12 @@ void applyHttpGetResultAsync(void* userData) {
 }
 
 void runHttpGetTask(void* taskArg) {
-	std::unique_ptr<HttpGetAsyncContext> context(static_cast<HttpGetAsyncContext*>(taskArg));
-	if (!context) {
+	if (taskArg == nullptr) {
 		vTaskDelete(nullptr);
 		return;
 	}
+
+	std::unique_ptr<HttpGetAsyncContext> context(static_cast<HttpGetAsyncContext*>(taskArg));
 
 	runHttpGetRequest(*context);
 
@@ -266,7 +269,7 @@ bool FlxAppActionRunner::runHttpGet(const flx::core::FlxValueView& action, const
 	if (xTaskCreate(
 			runHttpGetTask,
 			HTTP_GET_TASK_NAME,
-			HTTP_GET_TASK_STACK_WORDS,
+			HTTP_GET_TASK_STACK_BYTES / sizeof(StackType_t),
 			context.get(),
 			HTTP_GET_TASK_PRIORITY,
 			nullptr) != pdPASS) {
@@ -286,7 +289,7 @@ bool FlxAppActionRunner::runHttpGet(const flx::core::FlxValueView& action, const
 	}
 
 	context.release();
-	return false;
+	return true;
 }
 
 void FlxAppActionRunner::notifyRefreshed() {
