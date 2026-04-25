@@ -182,6 +182,12 @@ void ImageViewerApp::onNewIntent(const flx::apps::Intent& intent) {
 	}
 }
 
+void ImageViewerApp::onPause() {
+	if (!m_lvglPath.empty() && lv_image_cache_is_enabled()) {
+		lv_image_cache_drop(m_lvglPath.c_str());
+	}
+}
+
 void ImageViewerApp::onStop() {
 	// Drop cached image data on close
 	if (!m_lvglPath.empty() && lv_image_cache_is_enabled()) {
