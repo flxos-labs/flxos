@@ -2,6 +2,7 @@
 #include <flx/system/managers/NotificationManager.hpp>
 #include <font/lv_symbol_def.h>
 
+#include "esp_heap_caps.h"
 #include "esp_timer.h"
 #include <algorithm>
 #include <cstddef>
@@ -90,6 +91,11 @@ std::string NotificationManager::generateId() {
 }
 
 void NotificationManager::addNotification(const std::string& title, const std::string& message, const std::string& appName, const void* icon, int priority) {
+	if (!isRunning() && heap_caps_get_total_size(MALLOC_CAP_SPIRAM) == 0) {
+		Log::warn(TAG, "Dropping notification while service is stopped in no-PSRAM mode: %s", title.c_str());
+		return;
+	}
+
 	Notification notif;
 	int32_t latestSerial = 0;
 	{ // Add scope block
