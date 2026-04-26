@@ -72,6 +72,13 @@ void ResourceMonitorTask::run(void* /*data*/) {
 				(unsigned long)m_freeHeap.load(),
 				(unsigned long)largestBlock);
 			flx::core::EventBus::getInstance().publish("system.memory.critical");
+			bool const shouldNotify =
+				!wasLowMemory ||
+				(m_uptimeSeconds.load() - lastLowMemoryNotifyAt >= LOW_MEMORY_NOTIFY_COOLDOWN_SECONDS);
+			if (shouldNotify) {
+				flx::core::EventBus::getInstance().publish("system.notify", lowMemoryNotificationTemplate());
+				lastLowMemoryNotifyAt = m_uptimeSeconds.load();
+			}
 			wasLowMemory = true;
 		} else if (m_freeHeap < warnThreshold || largestBlock < WARN_LARGEST_BLOCK_BYTES) {
 			Log::warn(TAG,
