@@ -15,7 +15,7 @@ hardware:
   init:
     enabled: true
   spiram:
-    enabled: false   # TEMP: disabled for no-PSRAM memory testing
+    enabled: true
     speed: 80M
     xip_from_psram: false
     ecc_enable: false
