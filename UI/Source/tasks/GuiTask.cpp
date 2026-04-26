@@ -120,7 +120,7 @@ void GuiTask::display_init() {
 		lvDisplay = displayDevice->getLvglDisplay();
 	}
 
-	if (lvDisplay == nullptr) {
+	if (lvDisplay == nullptr && kHeadlessMode == 0) {
 		Log::error(TAG,
 			"Display started but LVGL display handle is null (device='%s', CONFIG_FLXOS_HEADLESS_MODE=%d)",
 			std::string(displayDevice->getName()).c_str(),
