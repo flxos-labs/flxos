@@ -2,12 +2,13 @@
 #include <flx/system/managers/NotificationManager.hpp>
 #include <font/lv_symbol_def.h>
 
+#include "esp_heap_caps.h"
 #include "esp_timer.h"
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <flx/core/Logger.hpp>
-#include <sstream>
 #include <string_view>
 
 static constexpr std::string_view TAG = "Notification";
@@ -80,12 +81,21 @@ void NotificationManager::onStop() {
 
 std::string NotificationManager::generateId() {
 	static int counter = 0;
-	std::stringstream ss;
-	ss << "notif_" << esp_timer_get_time() << "_" << counter++;
-	return ss.str();
+	char id[48] = {0};
+	std::snprintf(id,
+		sizeof(id),
+		"notif_%llu_%d",
+		static_cast<unsigned long long>(esp_timer_get_time()),
+		counter++);
+	return std::string(id);
 }
 
 void NotificationManager::addNotification(const std::string& title, const std::string& message, const std::string& appName, const void* icon, int priority) {
+	if (!isRunning() && heap_caps_get_total_size(MALLOC_CAP_SPIRAM) == 0) {
+		Log::warn(TAG, "Dropping notification while service is stopped in no-PSRAM mode: %s", title.c_str());
+		return;
+	}
+
 	Notification notif;
 	int32_t latestSerial = 0;
 	{ // Add scope block

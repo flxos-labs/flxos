@@ -25,6 +25,7 @@
 #include <misc/lv_types.h>
 #include <portmacro.h>
 #include <sdkconfig.h>
+#include <string>
 #include <string_view>
 #include <tick/lv_tick.h>
 
@@ -40,11 +41,17 @@ static constexpr std::string_view TAG = "GuiTask";
 
 namespace flx::ui {
 
+#if defined(CONFIG_FLXOS_HEADLESS_MODE) && CONFIG_FLXOS_HEADLESS_MODE
+static constexpr int kHeadlessMode = 1;
+#else
+static constexpr int kHeadlessMode = 0;
+#endif
+
 bool GuiTask::m_paused = false;
 bool GuiTask::m_resume_on_touch = false;
 GuiTask::PerfStats GuiTask::m_perfStats {};
 
-GuiTask::GuiTask() : flx::kernel::Task("gui_task", 32 * 1024, 5, 1) {
+GuiTask::GuiTask() : flx::kernel::Task("gui_task", 16 * 1024, 5, 1) {
 }
 
 void GuiTask::display_init() {
@@ -55,6 +62,22 @@ void GuiTask::display_init() {
 	auto& registry = flx::hal::DeviceRegistry::getInstance();
 
 	auto displayDevice = registry.findFirst<flx::hal::display::IDisplayDevice>(flx::hal::IDevice::Type::Display);
+
+	auto isDisplayRegistered = [](lv_display_t* candidate) {
+		if (candidate == nullptr) {
+			return false;
+		}
+
+		for (lv_display_t* current = lv_display_get_next(nullptr);
+			 current != nullptr;
+			 current = lv_display_get_next(current)) {
+			if (current == candidate) {
+				return true;
+			}
+		}
+
+		return false;
+	};
 
 	// Fall back to the legacy GUI bootstrap only when profile HWD init did not
 	// already register the root display.
@@ -76,6 +99,39 @@ void GuiTask::display_init() {
 			vTaskDelete(nullptr);
 			return;
 		}
+	}
+
+	lv_display_t* lvDisplay = displayDevice->getLvglDisplay();
+	if (!isDisplayRegistered(lvDisplay)) {
+		if (lvDisplay != nullptr) {
+			Log::warn(TAG, "Display handle is stale after lv_init; restarting display device");
+		}
+
+		if (displayDevice->getState() == flx::hal::IDevice::State::Ready) {
+			displayDevice->stop();
+		}
+
+		if (!displayDevice->start()) {
+			Log::error(TAG, "Failed to restart display device after LVGL init");
+			vTaskDelete(nullptr);
+			return;
+		}
+
+		lvDisplay = displayDevice->getLvglDisplay();
+	}
+
+	if (lvDisplay == nullptr && kHeadlessMode == 0) {
+		Log::error(TAG,
+			"Display started but LVGL display handle is null (device='%s', CONFIG_FLXOS_HEADLESS_MODE=%d)",
+			std::string(displayDevice->getName()).c_str(),
+			kHeadlessMode);
+		vTaskDelete(nullptr);
+		return;
+	}
+
+	if (lv_display_get_default() == nullptr) {
+		lv_display_set_default(lvDisplay);
+		Log::warn(TAG, "LVGL default display was unset; repaired from HAL device");
 	}
 
 	lv_group_t* g = lv_group_create();

@@ -13,20 +13,21 @@ class FlxAppState;
 class FlxAppActionRunner {
 public:
 
-    FlxAppActionRunner(FlxApp& app, FlxAppState& state);
+	FlxAppActionRunner(FlxApp& app, FlxAppState& state);
 
-    void setRefreshCallback(std::function<void()> callback);
-    void run(const flx::core::FlxValueView& actions);
+	void setRefreshCallback(std::function<void()> callback);
+	void run(const flx::core::FlxValueView& actions);
 
 private:
 
-    FlxApp& m_app;
-    FlxAppState& m_state;
-    std::function<void()> m_refreshCallback {};
+	FlxApp& m_app;
+	FlxAppState& m_state;
+	std::function<void()> m_refreshCallback {};
 
-    void runSingle(const flx::core::FlxValueView& action);
-    void notifyRefreshed();
-    std::string resolveString(const flx::core::FlxValueView& value) const;
+	void runSingle(const flx::core::FlxValueView& action);
+	bool runHttpGet(const flx::core::FlxValueView& action, const std::string& fallbackResponseKey);
+	void notifyRefreshed();
+	std::string resolveString(const flx::core::FlxValueView& value) const;
 };
 
 } // namespace flx::flxapp

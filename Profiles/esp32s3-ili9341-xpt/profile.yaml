@@ -11,7 +11,7 @@ inherits: _bases/base-esp32-spi
 
 hardware:
   spiram:
-    enabled: true
+    enabled: false   # TEMP: disabled for no-PSRAM memory testing
     speed: 80M                # 80M | 120M (120M requires flash_freq to also be 120M)
     xip_from_psram: true
     ecc_enable: true

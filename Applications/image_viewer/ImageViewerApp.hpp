@@ -17,6 +17,7 @@ public:
 	static const flx::apps::AppManifest manifest;
 
 	void createUI(void* parent) override;
+	void onPause() override;
 	void onStop() override;
 	void onNewIntent(const flx::apps::Intent& intent) override;
 

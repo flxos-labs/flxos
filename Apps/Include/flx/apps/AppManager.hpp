@@ -204,6 +204,7 @@ private:
 	void* m_mutex = nullptr;
 	void* m_executor = nullptr;
 	void* m_dispatcherQueue = nullptr;
+	uint32_t m_memoryCriticalSubscription = 0;
 
 	// Internal helpers
 	bool dispatchAndWait(AppCommand& cmd);
@@ -224,6 +225,7 @@ private:
 	void recordLaunchMetrics(const std::string& packageName, int64_t startTimeUs, int32_t heapDeltaBytes);
 	void recordActiveTime(AppStackEntry& entry, int64_t nowUs);
 	void markTopAppActive(int64_t nowUs);
+	bool evictOldestPausedApp(const char* reason);
 
 	// Legacy method removed, but internal logic moved to startAppForResult
 	// bool startApp(std::shared_ptr<App> app);

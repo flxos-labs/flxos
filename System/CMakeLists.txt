@@ -32,5 +32,5 @@ idf_component_register(
     SRCS ${SYSTEM_SRCS}
     INCLUDE_DIRS Include
     REQUIRES ${SYSTEM_REQUIRES}
-    PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console esp_driver_i2c esp_adc json
+    PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console esp_driver_i2c esp_adc
 )

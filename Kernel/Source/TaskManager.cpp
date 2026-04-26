@@ -180,7 +180,16 @@ void TaskManager::printTasks() {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	for (auto* t: m_tasks) {
 		uint32_t hwm = t->getStackHighWaterMark();
-		Log::debug(TM_TAG, "Task: %s, Stack HWM: %u", t->getName().c_str(), (unsigned int)hwm);
+		uint32_t size = t->getStackSize();
+		uint32_t used = size > hwm ? size - hwm : 0;
+		uint32_t usedPct = size > 0 ? (used * 100U) / size : 0;
+		Log::info(TM_TAG,
+			"Task: %s, stack=%luB, hwm=%luB, used=%lu%%, %s",
+			t->getName().c_str(),
+			(unsigned long)size,
+			(unsigned long)hwm,
+			(unsigned long)usedPct,
+			usedPct > 80U ? "NEAR OVERFLOW" : "OK");
 	}
 }
 

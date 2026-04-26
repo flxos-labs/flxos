@@ -10,18 +10,18 @@ EventBus& EventBus::getInstance() {
 	return instance;
 }
 
-EventBus::SubscriptionId EventBus::subscribe(const std::string& event, Callback callback) {
+EventBus::SubscriptionId EventBus::subscribe(const char* event, Callback callback) {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	SubscriptionId id = m_nextId++;
 	m_subscriptions.push_back({id, event, std::move(callback)});
-	Log::info(TAG, "Subscribed to '%s' (id=%lu)", event.c_str(), (unsigned long)id);
+	Log::info(TAG, "Subscribed to '%s' (id=%lu)", event ? event : "*", (unsigned long)id);
 	return id;
 }
 
 EventBus::SubscriptionId EventBus::subscribeAll(Callback callback) {
 	std::lock_guard<std::mutex> lock(m_mutex);
 	SubscriptionId id = m_nextId++;
-	m_subscriptions.push_back({id, "", std::move(callback)});
+	m_subscriptions.push_back({id, nullptr, std::move(callback)});
 	Log::info(TAG, "Subscribed to all events (id=%lu)", (unsigned long)id);
 	return id;
 }
@@ -43,7 +43,7 @@ void EventBus::publish(const std::string& event, const Bundle& data) {
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		for (const auto& sub: m_subscriptions) {
-			if (sub.event.empty() || sub.event == event) {
+			if (sub.event == nullptr || event == sub.event) {
 				toNotify.push_back(sub.callback);
 			}
 		}

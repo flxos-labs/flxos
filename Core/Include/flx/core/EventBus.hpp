@@ -43,7 +43,7 @@ public:
 	 * @param callback Function called when the event is published
 	 * @return Subscription ID for later unsubscription
 	 */
-	SubscriptionId subscribe(const std::string& event, Callback callback);
+	SubscriptionId subscribe(const char* event, Callback callback);
 
 	/**
 	 * Subscribe to all events (wildcard listener).
@@ -73,7 +73,7 @@ private:
 
 	struct Subscription {
 		SubscriptionId id;
-		std::string event; // Empty = wildcard (all events)
+		const char* event; // nullptr = wildcard (all events)
 		Callback callback;
 	};
 

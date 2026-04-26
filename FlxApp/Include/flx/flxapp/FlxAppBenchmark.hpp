@@ -6,7 +6,7 @@
 namespace flx::flxapp {
 
 /**
- * @brief Benchmarks the JSON (cJSON) vs YAML (RapidYAML) parsers at runtime.
+ * @brief Benchmarks JSON vs YAML parsing using fkyaml at runtime.
  *
  * Runs each parser N times against a given file path, measures wall-clock
  * time via esp_timer_get_time(), and logs a structured result table.

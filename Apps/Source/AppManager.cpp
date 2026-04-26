@@ -1,4 +1,5 @@
 #include <algorithm> // Explicitly include for std::find_if
+#include <esp_heap_caps.h>
 #include <esp_system.h>
 #include <esp_timer.h>
 #include <flx/apps/AppManager.hpp>
@@ -21,6 +22,30 @@
 namespace flx::apps {
 
 namespace {
+
+static constexpr uint32_t kEvictThresholdBytes = 64 * 1024;
+static constexpr uint32_t kLargestBlockEvictThresholdBytes = 32 * 1024;
+static constexpr size_t kMaxConcurrentAppsWithPsram = 3;
+static constexpr size_t kMaxConcurrentAppsNoPsram = 2;
+
+struct HeapSnapshot {
+	uint32_t freeBytes = 0;
+	uint32_t largestBlockBytes = 0;
+
+	uint32_t freeKb() const { return freeBytes / 1024; }
+	uint32_t largestBlockKb() const { return largestBlockBytes / 1024; }
+};
+
+HeapSnapshot readHeapSnapshot() {
+	return {
+		.freeBytes = esp_get_free_heap_size(),
+		.largestBlockBytes = heap_caps_get_largest_free_block(MALLOC_CAP_8BIT),
+	};
+}
+
+bool hasPsram() {
+	return heap_caps_get_total_size(MALLOC_CAP_SPIRAM) > 0;
+}
 
 uint32_t durationUsToMs(int64_t durationUs) {
 	if (durationUs <= 0) {
@@ -122,6 +147,14 @@ void AppManager::init() {
 		Log::info("AppManager", "Starting AppExecutor task...");
 		m_executor = new AppExecutor();
 		static_cast<AppExecutor*>(m_executor)->start();
+	}
+
+	if (m_memoryCriticalSubscription == 0) {
+		m_memoryCriticalSubscription = flx::core::EventBus::getInstance().subscribe(
+			"system.memory.critical",
+			[](const std::string& /*event*/, const flx::core::Bundle& /*data*/) {
+				AppManager::getInstance().evictOldestPausedApp("critical heap");
+			});
 	}
 
 	Log::info("AppManager", "App stack initialized.");
@@ -235,6 +268,33 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 	}
 
 	// Check minimum heap requirement
+	bool const alreadyInStack = isAppInStack(manifest.appId);
+	if (!alreadyInStack) {
+		size_t const maxConcurrentApps = hasPsram() ? kMaxConcurrentAppsWithPsram : kMaxConcurrentAppsNoPsram;
+		while (true) {
+			HeapSnapshot const heap = readHeapSnapshot();
+			bool const stackPressure = getStackDepth() >= maxConcurrentApps;
+			bool const freeHeapPressure = heap.freeBytes < kEvictThresholdBytes;
+			bool const blockPressure = heap.largestBlockBytes < kLargestBlockEvictThresholdBytes;
+			if (!stackPressure && !freeHeapPressure && !blockPressure) {
+				break;
+			}
+
+			const char* reason = "pre-launch memory pressure";
+			if (stackPressure) {
+				reason = "app stack limit";
+			} else if (blockPressure) {
+				reason = "pre-launch largest block";
+			} else if (freeHeapPressure) {
+				reason = "pre-launch low heap";
+			}
+
+			if (!evictOldestPausedApp(reason)) {
+				break;
+			}
+		}
+	}
+
 	if (manifest.minHeapKb > 0) {
 		uint32_t freeKb = esp_get_free_heap_size() / 1024;
 		if (freeKb < manifest.minHeapKb) {
@@ -638,9 +698,9 @@ bool AppManager::stopAppImpl(const std::string& packageName, bool closeUI) {
 		}
 
 		app->onPause();
-		app->onStop();
-		app->setActive(false);
 	}
+	app->onStop();
+	app->setActive(false);
 	unlockGui();
 
 	if (app) app->setContext(nullptr);
@@ -941,6 +1001,47 @@ void AppManager::markTopAppActive(int64_t nowUs) {
 		m_appStack.back().activeSinceUs = nowUs;
 	}
 	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
+}
+
+bool AppManager::evictOldestPausedApp(const char* reason) {
+	std::string packageName;
+
+	xSemaphoreTake((SemaphoreHandle_t)m_mutex, portMAX_DELAY);
+	if (m_appStack.size() > 1) {
+		for (auto it = m_appStack.begin(); it != m_appStack.end() - 1; ++it) {
+			if (it->app) {
+				packageName = it->app->getPackageName();
+				break;
+			}
+		}
+	}
+	xSemaphoreGive((SemaphoreHandle_t)m_mutex);
+
+	if (packageName.empty()) {
+		return false;
+	}
+
+	HeapSnapshot const before = readHeapSnapshot();
+
+	Log::warn("AppManager",
+		"%s: heap free=%lu KB largest=%lu KB, evicting paused app '%s'",
+		reason ? reason : "memory pressure",
+		(unsigned long)before.freeKb(),
+		(unsigned long)before.largestBlockKb(),
+		packageName.c_str());
+
+	bool const stopped = stopApp(packageName, true);
+	HeapSnapshot const after = readHeapSnapshot();
+	Log::warn("AppManager",
+		"%s: eviction %s for '%s' (free %lu->%lu KB, largest %lu->%lu KB)",
+		reason ? reason : "memory pressure",
+		stopped ? "completed" : "failed",
+		packageName.c_str(),
+		(unsigned long)before.freeKb(),
+		(unsigned long)after.freeKb(),
+		(unsigned long)before.largestBlockKb(),
+		(unsigned long)after.largestBlockKb());
+	return stopped;
 }
 
 void AppManager::dumpAppStates() const {
