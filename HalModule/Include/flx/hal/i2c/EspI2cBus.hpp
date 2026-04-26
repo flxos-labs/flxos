@@ -1,8 +1,10 @@
 #pragma once
 
+#include <driver/i2c_master.h>
 #include <flx/hal/DeviceBase.hpp>
 #include <flx/hal/i2c/II2cBus.hpp>
 #include <string_view>
+#include <unordered_map>
 
 namespace flx::hal::i2c {
 
@@ -35,10 +37,15 @@ public:
 
 private:
 
+	i2c_master_dev_handle_t getOrCreateDeviceHandle(uint8_t addr);
+	void clearDeviceHandles();
+
 	int m_port;
 	int m_sdaPin;
 	int m_sclPin;
 	uint32_t m_freqHz;
+	i2c_master_bus_handle_t m_busHandle = nullptr;
+	std::unordered_map<uint8_t, i2c_master_dev_handle_t> m_deviceHandles;
 	std::recursive_mutex m_lock;
 	bool m_initialized = false;
 };
