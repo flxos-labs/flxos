@@ -449,7 +449,7 @@ const char* event;  // Points to string literal — no heap allocation
 | 1 | ✅ Done | **P1-A** LVGL cache 512 KB → 8 KB | Prevents boot OOM |
 | 2 | ✅ Done | **P1-C** GuiTask stack 32 → 16 KB | +16 KB free |
 | 3 | ✅ Done | **P1-D** Main task 16 → 8 KB | +8 KB free |
-| 4 | ✅ Done | **P2-B** ResMonitor 6 → 4 KB | +2 KB free |
+| 4 | ✅ Done, adjusted | **P2-B** ResMonitor 6 → 8 KB | Diagnostic stability (no RAM savings) |
 | 5 | ✅ Done | **P2-C** Draw thread 8 → 4 KB | +4 KB free |
 | 6 | ✅ Done | **P3-A** Draw layer buf 24 → 8 KB | +16 KB free |
 | 7 | ✅ Done | **P2-D** App eviction | Prevents runtime OOM |
