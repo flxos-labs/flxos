@@ -446,6 +446,15 @@ python flxos.py build --profile lilygo-t-hmi
 
 ---
 
+## Latest Progress (2026-04-26)
+
+- ✅ P4 complete: `HalModule/Source/i2c/EspI2cBus.cpp` migrated from legacy `driver/i2c.h` command-link API to `driver/i2c_master.h` bus/device API.
+- ✅ P6 complete: custom DHCP wrapper is link-compatible with IDF v6; helper symbols that collided with lwIP (`node_remove_from_list`, `dhcps_pbuf_alloc`) are now file-local (`static`).
+- ✅ P10 partial: full `esp32s3-ili9341-xpt` build now completes and generates `build/FlxOS.bin` on ESP-IDF v6.0.0.
+- ℹ️ Toolchain strictness note: GCC 15/C++23 literal-operator deprecation from fkYAML is suppressed in `Libraries/fkyaml/fkYAML/node.hpp` for successful `-Werror` builds.
+
+---
+
 ## Tracking Checklist
 
 | # | Task | Priority | Effort | Status |
@@ -454,13 +463,13 @@ python flxos.py build --profile lilygo-t-hmi
 | P1 | CMake Version Bump | 🟢 Easy | 5 min | ⬜ |
 | P2 | sdkconfig Audit | 🟡 Medium | 30 min | ⬜ |
 | P3 | Compiler Warnings Fix | 🟡 Medium | 1–3 hr | ⬜ |
-| P4 | I2C Driver Rewrite | 🔴 Critical | 2–3 hr | ⬜ |
+| P4 | I2C Driver Rewrite | 🔴 Critical | 2–3 hr | ✅ |
 | P5 | LovyanGFX Update | 🔴 Critical | 30–60 min | ⬜ |
-| P6 | DHCP Server Compat | 🟡 Medium | 15–30 min | ⬜ |
+| P6 | DHCP Server Compat | 🟡 Medium | 15–30 min | ✅ |
 | P7 | cJSON / Component Registry | 🟢 Low | 15–30 min | ⬜ |
 | P8 | Picolibc Validation | 🟢 Low | 15 min | ⬜ |
 | P9 | WiFi API Audit | 🟢 Low | 20 min | ⬜ |
-| P10 | Full Build + Smoke Test | 🔴 Critical | 1–2 hr | ⬜ |
+| P10 | Full Build + Smoke Test | 🔴 Critical | 1–2 hr | 🟨 (build done, smoke test pending) |
 
 **Total estimated effort: 6–10 hours**
 
@@ -483,7 +492,7 @@ The following areas were audited and found to require **no changes**:
 | **cJSON** | No direct usage |
 | **wifi_provisioning** | Not used |
 | **esp-mqtt** | Not used |
-| **fkYAML** | External library, IDF-agnostic |
+| **fkYAML** | Mostly IDF-agnostic; GCC 15/C++23 warning handling needed under `-Werror` |
 | **Profile Engine** (`profile.cmake`) | Pure CMake, no IDF API dependency |
 
 ---

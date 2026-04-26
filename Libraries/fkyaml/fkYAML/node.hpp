@@ -14564,6 +14564,9 @@ inline namespace yaml_literals {
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-literal-operator"
 #endif
 
 /// @brief The user-defined string literal which deserializes a `char` array into a `node` object.
@@ -14604,6 +14607,8 @@ inline fkyaml::node operator"" _yaml(const char8_t* s, std::size_t n) {
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
 
 #endif
