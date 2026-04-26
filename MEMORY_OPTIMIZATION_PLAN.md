@@ -457,7 +457,7 @@ const char* event;  // Points to string literal — no heap allocation
 | 9 | ✅ Done, adjusted | **P3-C** Disable unused widgets | ~20 KB flash |
 | 10 | ✅ Done | **P2-F** Skip heavy optional services | +50 KB+ idle heap in no-PSRAM testing |
 
-**Expected total free heap gain on ESP32 CYD:** ~+46 KB of internal SRAM (stack reductions) +
+**Expected total free heap gain on ESP32 CYD:** ~+42 KB of internal SRAM (stack and buffer reductions) +
 **~504 KB of heap pressure relief** (LVGL cache reduction).
 
 ### For ESP32-S3 (esp32s3-ili9341-xpt, lilygo-t-hmi) — OOM risk is MODERATE
