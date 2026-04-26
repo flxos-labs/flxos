@@ -108,11 +108,7 @@ void SystemManager::registerServices() {
 	registry.addService(std::shared_ptr<flx::services::IService>(&ThemeManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&WallpaperManager::getInstance(), noDelete));
 #endif
-	if (hasPsram()) {
-		registry.addService(std::shared_ptr<flx::services::IService>(&flx::connectivity::ConnectivityManager::getInstance(), noDelete));
-	} else {
-		Log::warn(TAG, "Skipping Connectivity service at boot (no PSRAM; lazy networking disabled for low-memory test)");
-	}
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::connectivity::ConnectivityManager::getInstance(), noDelete));
 
 	registry.addService(std::shared_ptr<flx::services::IService>(&PowerManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&TimeManager::getInstance(), noDelete));
