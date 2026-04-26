@@ -74,10 +74,12 @@ std::string valueToJsonValue(const std::string& value) {
 	errno = 0;
 	double const maybe_double = std::strtod(value.c_str(), &end_ptr);
 	if (errno == 0 && end_ptr != value.c_str() && *end_ptr == '\0') {
-		std::ostringstream stream;
-		stream.precision(std::numeric_limits<double>::max_digits10);
-		stream << maybe_double;
-		return stream.str();
+		if (std::isfinite(maybe_double)) {
+			std::ostringstream stream;
+			stream.precision(std::numeric_limits<double>::max_digits10);
+			stream << maybe_double;
+			return stream.str();
+		}
 	}
 
 	return "\"" + jsonEscapeString(value) + "\"";
