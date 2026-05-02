@@ -458,7 +458,7 @@ python flxos.py build --profile lilygo-t-hmi
 - ✅ P7 complete: cJSON not used directly in FlxOS; IDF v6 component manager resolves transitive deps automatically. Build confirms no `cJSON.h: No such file` errors.
 - ✅ P8 complete: Picolibc transition transparent — serial console, ESP_LOG* formatting, and memory stats all correct. Binary size reduced slightly vs Newlib baseline.
 - ✅ P9 complete: WiFi API audit passed — `esp_wifi_types_generic.h` still present, no usage of removed macros (`ESP_IF_WIFI_STA`/`AP`, `WIFI_AUTH_WPA3_EXT_PSK`).
-- ⏳ P10 build complete: Full `esp32s3-ili9341-xpt` build completes and generates `build/FlxOS.bin` on ESP-IDF v6.0.0. Hardware smoke-test checklist (above) is pending on-device validation.
+- ⏳ P10 build complete: Full `esp32s3-ili9341-xpt` build completes and generates `build/FlxOS.bin` on ESP-IDF v6.0.0. Hardware smoke-test checklist (above) is pending on-device validation. CI remains on `espressif/idf:v5.5.4` until `espressif/idf:v6.0.0` Docker image is published to Docker Hub.
 
 ---
 
