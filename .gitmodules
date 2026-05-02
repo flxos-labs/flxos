@@ -3,7 +3,7 @@
 	url = https://github.com/lvgl/lvgl.git
 [submodule "Libraries/LovyanGFX"]
 	path = Libraries/LovyanGFX
-	url = https://github.com/lovyan03/LovyanGFX.git
+	url = https://github.com/Itsmeakash248/LovyanGFX.git
 [submodule "Libraries/fkyaml"]
 	path = Libraries/fkyaml
 	url = https://github.com/fktn-k/fkYAML.git

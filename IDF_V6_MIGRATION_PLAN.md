@@ -1,9 +1,9 @@
-# FlxOS — ESP-IDF v5.4.4 → v6.0.0 Migration Plan
+# FlxOS — ESP-IDF v5.5.4 → v6.0.0 Migration Plan
 
 > **Target:** ESP-IDF v6.0.0 (GCC 15.1.0 toolchain)
-> **Source:** ESP-IDF v5.4.4
+> **Source:** ESP-IDF v5.5.4
 > **Date:** 2026-04-26
-> **Status:** ✅ Complete (2026-05-02)
+> **Status:** 🔨 Build Complete — Hardware Smoke Test Pending
 
 > [!IMPORTANT]
 > The `dependencies.lock` already references `version: 6.0.0`, meaning `idf.py` may have been partially switched. A **full clean build** from scratch is mandatory before starting.
@@ -453,12 +453,12 @@ python flxos.py build --profile lilygo-t-hmi
 - ✅ P2 complete: sdkconfig audited — all keys (`CONFIG_SPIRAM_*`, `CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID`, `CONFIG_FREERTOS_USE_APPLICATION_TASK_TAG`, `CONFIG_IDF_EXPERIMENTAL_FEATURES`) accepted by IDF v6.0 without obsolete-key warnings. No changes required.
 - ✅ P3 complete: GCC 15/C++23 literal-operator deprecation from fkYAML suppressed in `Libraries/fkyaml/fkYAML/node.hpp`. Build passes `-Werror` cleanly.
 - ✅ P4 complete: `HalModule/Source/i2c/EspI2cBus.cpp` migrated from legacy `driver/i2c.h` command-link API to `driver/i2c_master.h` bus/device API.
-- ✅ P5 complete: LovyanGFX submodule updated to `81df0e1` on `Itsmeakash248/LovyanGFX:develop` — includes IDF v6 parallel/SPI/I2C bus fixes and removal of GCC 15 noreturn macro patch. Core `common.cpp` already guards `driver/i2c.h` with `__has_include(<driver/i2c_master.h>)`.
+- ✅ P5 complete: LovyanGFX submodule updated to `81df0e1` on `Itsmeakash248/LovyanGFX:develop` — includes IDF v6 parallel/SPI/I2C bus fixes and removal of GCC 15 noreturn macro patch. Core `common.cpp` already guards `driver/i2c.h` with `__has_include(<driver/i2c_master.h>)`. `.gitmodules` updated to point to `https://github.com/Itsmeakash248/LovyanGFX.git`.
 - ✅ P6 complete: custom DHCP wrapper is link-compatible with IDF v6; helper symbols that collided with lwIP (`node_remove_from_list`, `dhcps_pbuf_alloc`) are now file-local (`static`).
 - ✅ P7 complete: cJSON not used directly in FlxOS; IDF v6 component manager resolves transitive deps automatically. Build confirms no `cJSON.h: No such file` errors.
 - ✅ P8 complete: Picolibc transition transparent — serial console, ESP_LOG* formatting, and memory stats all correct. Binary size reduced slightly vs Newlib baseline.
 - ✅ P9 complete: WiFi API audit passed — `esp_wifi_types_generic.h` still present, no usage of removed macros (`ESP_IF_WIFI_STA`/`AP`, `WIFI_AUTH_WPA3_EXT_PSK`).
-- ✅ P10 complete: Full `esp32s3-ili9341-xpt` build completes and generates `build/FlxOS.bin` on ESP-IDF v6.0.0.
+- ⏳ P10 build complete: Full `esp32s3-ili9341-xpt` build completes and generates `build/FlxOS.bin` on ESP-IDF v6.0.0. Hardware smoke-test checklist (above) is pending on-device validation.
 
 ---
 
@@ -476,7 +476,7 @@ python flxos.py build --profile lilygo-t-hmi
 | P7 | cJSON / Component Registry | 🟢 Low | 15–30 min | ✅ |
 | P8 | Picolibc Validation | 🟢 Low | 15 min | ✅ |
 | P9 | WiFi API Audit | 🟢 Low | 20 min | ✅ |
-| P10 | Full Build + Smoke Test | 🔴 Critical | 1–2 hr | ✅ |
+| P10 | Full Build + Smoke Test | 🔴 Critical | 1–2 hr | 🔨 Build ✅ / HW Pending |
 
 **Total estimated effort: 6–10 hours**
 
