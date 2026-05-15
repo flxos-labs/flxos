@@ -110,9 +110,9 @@ hardware:
 
 | Requirement | Version |
 |---|---|
-| [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/) | 5.5.4 |
+| [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/) | 6.0.0 |
 | Python | 3.10+ |
-| CMake | 3.16+ |
+| CMake | 3.22.1+ |
 | clang-format | 18.x (for scripts/check_format.sh and scripts/code_format.sh parity with CI) |
 
 ```bash
