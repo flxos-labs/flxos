@@ -4,32 +4,44 @@
 
 #include <Config.hpp>
 #include <LovyanGFX.hpp>
+#include <cstdint>
 #include <limits>
 #include <type_traits>
 
 namespace flx::hal::detail {
 
-template <typename T, typename U>
+template<typename T, bool IsEnum = std::is_enum_v<T>>
+struct IntegralLike {
+	using type = T;
+};
+
+template<typename T>
+struct IntegralLike<T, true> {
+	using type = std::underlying_type_t<T>;
+};
+
+template<typename T, typename U>
 constexpr T clampCast(U value) {
 	using Target = std::remove_cv_t<std::remove_reference_t<T>>;
 	using Source = std::remove_cv_t<std::remove_reference_t<U>>;
-	using SourceInt = std::conditional_t<std::is_enum_v<Source>, std::underlying_type_t<Source>, Source>;
+	using TargetInt = typename IntegralLike<Target>::type;
+	using SourceInt = typename IntegralLike<Source>::type;
 
-	static_assert(std::is_integral_v<Target>, "clampCast target must be integral");
+	static_assert(std::is_integral_v<TargetInt>, "clampCast target must be integral or enum");
 	static_assert(std::is_integral_v<SourceInt>, "clampCast source must be integral");
 	static_assert(sizeof(SourceInt) <= sizeof(std::intmax_t), "clampCast source width unsupported");
 
 	const auto source = static_cast<std::intmax_t>(static_cast<SourceInt>(value));
-	constexpr auto minValue = static_cast<std::intmax_t>(std::numeric_limits<Target>::min());
-	constexpr auto maxValue = static_cast<std::intmax_t>(std::numeric_limits<Target>::max());
+	constexpr auto minValue = static_cast<std::intmax_t>(std::numeric_limits<TargetInt>::min());
+	constexpr auto maxValue = static_cast<std::intmax_t>(std::numeric_limits<TargetInt>::max());
 
 	if (source < minValue) {
-		return static_cast<Target>(minValue);
+		return static_cast<Target>(static_cast<TargetInt>(minValue));
 	}
 	if (source > maxValue) {
-		return static_cast<Target>(maxValue);
+		return static_cast<Target>(static_cast<TargetInt>(maxValue));
 	}
-	return static_cast<Target>(source);
+	return static_cast<Target>(static_cast<TargetInt>(source));
 }
 
 } // namespace flx::hal::detail
@@ -206,7 +218,7 @@ public:
 			cfg.use_lock = true;
 			cfg.dma_channel = flx::hal::detail::clampCast<decltype(cfg.dma_channel)>(
 				(flx::config::display.spi.dmaChannel == 0) ? SPI_DMA_CH_AUTO : (flx::config::display.spi.dmaChannel == 1) ? 1
-				: (flx::config::display.spi.dmaChannel == 2)															  ? 2
+					: (flx::config::display.spi.dmaChannel == 2)														  ? 2
 																														  : SPI_DMA_CH_AUTO);
 			cfg.pin_sclk = flx::config::display.pins.sclk;
 			cfg.pin_mosi = flx::config::display.pins.mosi;
