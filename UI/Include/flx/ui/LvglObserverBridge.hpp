@@ -25,7 +25,7 @@ public:
 		lv_subject_init_int(&m_subject, static_cast<int32_t>(m_pending_val));
 
 		// Subscribe to flx::Observable changes and update LVGL subject asynchronously
-		observable.subscribe([this](const T& value) {
+		m_observerIndex = observable.subscribe([this](const T& value) {
 			if (!m_updating) {
 				m_pending_val = value;
 				lv_async_call(async_cb, this);
@@ -41,6 +41,11 @@ public:
 				self->m_observable.set(static_cast<T>(lv_subject_get_int(s)));
 				self->m_updating = false;
 			} }, this);
+	}
+
+	~LvglObserverBridge() {
+		// Unsubscribe from the observable so no callbacks fire into freed memory
+		m_observable.unsubscribe(m_observerIndex);
 	}
 
 	lv_subject_t* getSubject() { return &m_subject; }
@@ -61,6 +66,7 @@ private:
 	lv_subject_t m_subject {};
 	bool m_updating = false;
 	T m_pending_val {}; // Accessed by both threads, assumed atomic for word-sized types
+	size_t m_observerIndex = 0;
 };
 
 /**
@@ -75,7 +81,7 @@ public:
 		lv_subject_init_pointer(&m_subject, (void*)m_buffer.c_str());
 
 		// Subscribe to flx::Observable changes
-		observable.subscribe([this](const std::string& value) {
+		m_observerIndex = observable.subscribe([this](const std::string& value) {
 			if (!m_updating) {
 				// Allocate data for async transfer
 				auto* data = new AsyncUpdateData {this, value};
@@ -92,6 +98,11 @@ public:
 				self->m_observable.set(val ? val : "");
 				self->m_updating = false;
 			} }, this);
+	}
+
+	~LvglStringObserverBridge() {
+		// Unsubscribe from the observable so no callbacks fire into freed memory
+		m_observable.unsubscribe(m_observerIndex);
 	}
 
 	lv_subject_t* getSubject() { return &m_subject; }
@@ -120,6 +131,7 @@ private:
 	lv_subject_t m_subject {};
 	std::string m_buffer {}; // Keep string alive for LVGL
 	bool m_updating = false; // Prevent infinite update loops
+	size_t m_observerIndex = 0;
 };
 
 } // namespace flx::ui

@@ -270,6 +270,9 @@ void SettingsApp::syncPluginsFromRegistry() {
 		rebuildMainList();
 		if (activePluginRemoved) {
 			lv_obj_remove_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
+			if (m_searchTa) {
+				lv_obj_remove_flag(m_searchTa, LV_OBJ_FLAG_HIDDEN);
+			}
 		}
 	}
 }

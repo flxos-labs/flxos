@@ -79,7 +79,7 @@ protected:
 		lv_obj_add_event_cb(
 			viewSystemInfoBtn,
 			[](lv_event_t* /*e*/) {
-				flx::apps::Intent intent = flx::apps::Intent::forApp("com.flxos.system_info");
+				flx::apps::Intent intent = flx::apps::Intent::forApp("com.flxos.systeminfo");
 				flx::apps::AppManager::getInstance().startApp(intent);
 			},
 			LV_EVENT_CLICKED, nullptr);
