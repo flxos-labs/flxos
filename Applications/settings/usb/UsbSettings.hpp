@@ -166,7 +166,7 @@ private:
 			}
 		}
 		if (m_applyBtn && usb->isSupported()) {
-			if (needsReboot) {
+			if (canRebootIntoMode) {
 				lv_obj_add_state(m_applyBtn, LV_STATE_DISABLED);
 			} else {
 				lv_obj_remove_state(m_applyBtn, LV_STATE_DISABLED);
