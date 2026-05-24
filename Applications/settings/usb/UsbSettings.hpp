@@ -144,19 +144,22 @@ private:
 		if (!usb || !m_modeDropdown) {
 			return;
 		}
-		uint32_t sel = lv_dropdown_get_selected(m_modeDropdown);
-		auto mode = indexToMode(sel);
-		bool needsReboot = usb->isSupported() && usb->canReboot(mode);
+		uint32_t const sel = lv_dropdown_get_selected(m_modeDropdown);
+		auto const mode = indexToMode(sel);
+		bool const canRebootIntoMode = usb->isSupported() && usb->canReboot(mode);
 
 		if (m_rebootNotice) {
-			if (needsReboot) {
+			if (canRebootIntoMode) {
+				if (auto* label = lv_obj_get_child(m_rebootNotice, 1)) {
+					lv_label_set_text(label, "Reboot option available for this mode");
+				}
 				lv_obj_remove_flag(m_rebootNotice, LV_OBJ_FLAG_HIDDEN);
 			} else {
 				lv_obj_add_flag(m_rebootNotice, LV_OBJ_FLAG_HIDDEN);
 			}
 		}
 		if (m_rebootBtn) {
-			if (needsReboot) {
+			if (canRebootIntoMode) {
 				lv_obj_remove_flag(m_rebootBtn, LV_OBJ_FLAG_HIDDEN);
 			} else {
 				lv_obj_add_flag(m_rebootBtn, LV_OBJ_FLAG_HIDDEN);
