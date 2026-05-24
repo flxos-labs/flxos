@@ -196,6 +196,9 @@ private:
 		}
 
 		switch (mode) {
+			case flx::hal::usb::IUsbDevice::UsbMode::Default:
+				// Default mode selection is profile/boot-dependent; use the reboot option if available.
+				break;
 			case flx::hal::usb::IUsbDevice::UsbMode::None:
 				usb->stopMode();
 				break;
