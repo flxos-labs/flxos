@@ -52,10 +52,6 @@ protected:
 private:
 
 	void buildUi() {
-		// ── Device list section ──
-		lv_list_add_text(m_list, "Registered Input Devices");
-		m_devicesSection = m_list; // Devices will be added here
-
 		refreshDeviceList();
 	}
 
