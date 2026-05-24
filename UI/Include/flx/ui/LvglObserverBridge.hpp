@@ -45,6 +45,7 @@ public:
 
 	~LvglObserverBridge() {
 		// Unsubscribe from the observable so no callbacks fire into freed memory
+		lv_async_call_cancel(async_cb, this);
 		m_observable.unsubscribe(m_observerIndex);
 	}
 
