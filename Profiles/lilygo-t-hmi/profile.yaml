@@ -103,7 +103,7 @@ hardware:
   sdcard:
     enabled: true
     bus: sdmmc
-    mount_point: /sd
+    mount_point: /sdcard
     pins:
       clk: 12
       cmd: 11
