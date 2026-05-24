@@ -43,13 +43,21 @@ protected:
 			syncNowBtn,
 			[](lv_event_t* e) {
 				auto* instance = (TimeSettings*)lv_event_get_user_data(e);
+				if (!instance) {
+					return;
+				}
 				TimeManager::getInstance().syncTime();
 				// Refresh status after a short delay
-				lv_timer_create(
+				if (instance->m_syncTimer) {
+					lv_timer_delete(instance->m_syncTimer);
+					instance->m_syncTimer = nullptr;
+				}
+				instance->m_syncTimer = lv_timer_create(
 					[](lv_timer_t* t) {
 						auto* inst = (TimeSettings*)lv_timer_get_user_data(t);
 						if (inst) {
 							inst->updateSyncStatus();
+							inst->m_syncTimer = nullptr;
 						}
 						lv_timer_delete(t);
 					},
@@ -138,6 +146,10 @@ protected:
 	}
 
 	void onDestroy() override {
+		if (m_syncTimer) {
+			lv_timer_delete(m_syncTimer);
+			m_syncTimer = nullptr;
+		}
 		m_syncStatusLabel = nullptr;
 		m_tzDropdown = nullptr;
 		m_tzTextArea = nullptr;
@@ -156,6 +168,7 @@ private:
 	lv_obj_t* m_syncStatusLabel = nullptr;
 	lv_obj_t* m_tzDropdown = nullptr;
 	lv_obj_t* m_tzTextArea = nullptr;
+	lv_timer_t* m_syncTimer = nullptr;
 };
 
 } // namespace System::Apps::Settings

@@ -57,22 +57,6 @@ private:
 		m_devicesSection = m_list; // Devices will be added here
 
 		refreshDeviceList();
-
-		// ── Input Test Panel ──
-		lv_list_add_text(m_list, "Key Test Panel");
-
-		lv_obj_t* testInfoBtn = add_list_btn(m_list, LV_SYMBOL_KEYBOARD, "Last Key Event");
-		lv_obj_set_flex_grow(lv_obj_get_child(testInfoBtn, 1), 1);
-		m_keyEventLabel = lv_label_create(testInfoBtn);
-		lv_label_set_text(m_keyEventLabel, "Press a key...");
-
-		lv_obj_t* keyCodeBtn = add_list_btn(m_list, LV_SYMBOL_OK, "Key Code");
-		lv_obj_set_flex_grow(lv_obj_get_child(keyCodeBtn, 1), 1);
-		m_keyCodeLabel = lv_label_create(keyCodeBtn);
-		lv_label_set_text(m_keyCodeLabel, "--");
-
-		// Subscribe to raw key events from all registered keyboards/encoders
-		subscribeKeyEvents();
 	}
 
 	void refreshDeviceList() {
@@ -130,7 +114,6 @@ private:
 
 	void addDeviceEntry(const std::shared_ptr<flx::hal::input::IInputDevice>& dev, const char* typeLabel) {
 		std::string name(dev->getName());
-		std::string desc(dev->getDescription());
 		auto state = dev->getState();
 
 		lv_obj_t* btn = add_list_btn(m_list, LV_SYMBOL_KEYBOARD, name.c_str());

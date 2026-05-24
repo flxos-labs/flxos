@@ -44,7 +44,7 @@ FlxOS is a production-focused operating system architecture for ESP32-class devi
 ## ⚡ Quick Start
 
 ### Prerequisites
-- **ESP-IDF v6.0.0** (installed and sourced: `source $IDF_PATH/export.sh`)
+- **ESP-IDF v6.0.1** (installed and sourced: `source $IDF_PATH/export.sh`)
 - Python 3.10+ and Git
 
 ### 1. Clone the Repository
@@ -86,9 +86,14 @@ The [`flxos.py`](flxos.py) script is the main entry point for managing the works
 |---|---|
 | `list [--json]` | List all available hardware profiles |
 | `select <id>` | Select a profile and configure build targets |
-| `build [--dev]` | Build active profile (`--dev` disables slow optimizations) |
+| `build [--all] [--dev]` | Build current/all profiles (`--dev` disables slow optimizations) |
 | `flash [--port]` | Flash active build to device |
 | `doctor` | Verify environment configuration and dependencies |
+| `info <id>` | Show profile details |
+| `diff <a> <b> [--json]` | Compare two profiles |
+| `hwgen [id] [--all]` | Generate HWD init scaffold from profile.yaml |
+| `release <version>` | Package release artifacts |
+| `cdn <version>` | Generate ESP Web Tools manifests |
 | `new <id>` | Scaffold a new hardware profile |
 | `validate [id]` | Validate profile YAML against schema |
 

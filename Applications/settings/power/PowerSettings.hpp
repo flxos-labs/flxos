@@ -99,25 +99,6 @@ protected:
 			},
 			m_chargingLabel, this);
 
-		// ── Power device status notice ──
-		lv_subject_add_observer_obj(
-			m_configuredBridge->getSubject(),
-			[](lv_observer_t* observer, lv_subject_t* subject) {
-				auto* noticeLabel = lv_observer_get_target_obj(observer);
-				if (!noticeLabel) {
-					return;
-				}
-				bool const configured = lv_subject_get_int(subject) != 0;
-				if (configured) {
-					lv_obj_add_flag(noticeLabel, LV_OBJ_FLAG_HIDDEN);
-				} else {
-					lv_obj_remove_flag(noticeLabel, LV_OBJ_FLAG_HIDDEN);
-				}
-			},
-			// We create the notice label below so use a forward reference trick
-			// by declaring and wiring it after
-			nullptr, this);
-
 		// Add status notice label (shown when no power device is configured)
 		lv_list_add_text(m_list, "Power Device");
 		lv_obj_t* noticeCont = lv_list_add_button(m_list, LV_SYMBOL_WARNING, "No power device configured");

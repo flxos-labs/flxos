@@ -71,6 +71,7 @@ private:
 		m_modeDropdown = lv_dropdown_create(modeBtn);
 		lv_dropdown_set_options(
 			m_modeDropdown,
+			"Default (Profile)\n"
 			"None (Disabled)\n"
 			"Mass Storage — SD Card\n"
 			"Mass Storage — Flash\n"
@@ -126,6 +127,8 @@ private:
 			if (m_modeDropdown) lv_obj_add_state(m_modeDropdown, LV_STATE_DISABLED);
 			if (m_applyBtn) lv_obj_add_state(m_applyBtn, LV_STATE_DISABLED);
 		}
+
+		onModeSelectionChanged();
 	}
 
 	void refresh() {
@@ -161,6 +164,13 @@ private:
 				lv_obj_add_flag(m_rebootBtn, LV_OBJ_FLAG_HIDDEN);
 			}
 		}
+		if (m_applyBtn && usb->isSupported()) {
+			if (needsReboot) {
+				lv_obj_add_state(m_applyBtn, LV_STATE_DISABLED);
+			} else {
+				lv_obj_remove_state(m_applyBtn, LV_STATE_DISABLED);
+			}
+		}
 	}
 
 	void applyMode(bool reboot) {
@@ -171,6 +181,13 @@ private:
 
 		uint32_t const sel = lv_dropdown_get_selected(m_modeDropdown);
 		auto const mode = indexToMode(sel);
+
+		if (mode == flx::hal::usb::IUsbDevice::UsbMode::Default) {
+			if (reboot) {
+				usb->rebootInto(mode);
+			}
+			return;
+		}
 
 		if (reboot) {
 			usb->rebootInto(mode);
@@ -220,14 +237,16 @@ private:
 	static uint32_t modeToIndex(flx::hal::usb::IUsbDevice::UsbMode mode) {
 		using UsbMode = flx::hal::usb::IUsbDevice::UsbMode;
 		switch (mode) {
-			case UsbMode::None:
+			case UsbMode::Default:
 				return 0;
-			case UsbMode::MassStorageSdCard:
+			case UsbMode::None:
 				return 1;
-			case UsbMode::MassStorageFlash:
+			case UsbMode::MassStorageSdCard:
 				return 2;
-			case UsbMode::CdcSerial:
+			case UsbMode::MassStorageFlash:
 				return 3;
+			case UsbMode::CdcSerial:
+				return 4;
 			default:
 				return 0;
 		}
@@ -237,15 +256,17 @@ private:
 		using UsbMode = flx::hal::usb::IUsbDevice::UsbMode;
 		switch (index) {
 			case 0:
-				return UsbMode::None;
+				return UsbMode::Default;
 			case 1:
-				return UsbMode::MassStorageSdCard;
+				return UsbMode::None;
 			case 2:
-				return UsbMode::MassStorageFlash;
+				return UsbMode::MassStorageSdCard;
 			case 3:
+				return UsbMode::MassStorageFlash;
+			case 4:
 				return UsbMode::CdcSerial;
 			default:
-				return UsbMode::None;
+				return UsbMode::Default;
 		}
 	}
 

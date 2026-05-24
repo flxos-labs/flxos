@@ -187,6 +187,10 @@ private:
 				if (m_freeLabel) {
 					lv_label_set_text(m_freeLabel, formatBytes(info.freeBytes).c_str());
 				}
+			} else {
+				if (m_fsTypeLabel) lv_label_set_text(m_fsTypeLabel, "--");
+				if (m_totalLabel) lv_label_set_text(m_totalLabel, "--");
+				if (m_freeLabel) lv_label_set_text(m_freeLabel, "--");
 			}
 		} else {
 			if (m_fsTypeLabel) lv_label_set_text(m_fsTypeLabel, "--");
