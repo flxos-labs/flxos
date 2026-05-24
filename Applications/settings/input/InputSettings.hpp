@@ -1,10 +1,10 @@
 #pragma once
 
+#include <cstdint>
 #include <flx/hal/DeviceRegistry.hpp>
 #include <flx/hal/IDevice.hpp>
 #include <flx/hal/input/IInputDevice.hpp>
 #include <lvgl.h>
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -79,13 +79,13 @@ private:
 		bool hasDevices = false;
 
 		// Show keyboards
-		for (const auto& dev : keyboards) {
+		for (const auto& dev: keyboards) {
 			addDeviceEntry(dev, "Keyboard");
 			hasDevices = true;
 		}
 
 		// Show encoders
-		for (const auto& dev : encoders) {
+		for (const auto& dev: encoders) {
 			addDeviceEntry(dev, "Encoder");
 			hasDevices = true;
 		}
@@ -137,7 +137,7 @@ private:
 		auto allDevices = keyboards;
 		allDevices.insert(allDevices.end(), encoders.begin(), encoders.end());
 
-		for (const auto& dev : allDevices) {
+		for (const auto& dev: allDevices) {
 			int id = dev->subscribeKeyEvents([this](const flx::hal::input::IInputDevice::KeyEvent& ev) {
 				// Post to GUI thread
 				if (!m_keyEventLabel || !m_keyCodeLabel) {
@@ -154,7 +154,7 @@ private:
 	}
 
 	void unsubscribeKeyEvents() {
-		for (auto& [dev, id] : m_keySubscriptions) {
+		for (auto& [dev, id]: m_keySubscriptions) {
 			if (dev) {
 				dev->unsubscribeKeyEvents(id);
 			}

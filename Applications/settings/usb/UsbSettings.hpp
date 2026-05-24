@@ -136,9 +136,7 @@ private:
 		if (!usb || !m_currentModeLabel) {
 			return;
 		}
-		lv_label_set_text(m_currentModeLabel, usb->isSupported()
-			? modeToString(usb->getCurrentMode())
-			: "Not Supported");
+		lv_label_set_text(m_currentModeLabel, usb->isSupported() ? modeToString(usb->getCurrentMode()) : "Not Supported");
 	}
 
 	void onModeSelectionChanged() {

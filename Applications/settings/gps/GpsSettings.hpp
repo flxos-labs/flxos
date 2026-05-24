@@ -126,7 +126,7 @@ private:
 				auto* sw = lv_event_get_target_obj(e);
 				bool const sleeping = lv_obj_has_state(sw, LV_STATE_CHECKED);
 				auto gpsDevice = flx::hal::DeviceRegistry::getInstance()
-					.findFirst<flx::hal::gps::IGpsDevice>(flx::hal::IDevice::Type::Gps);
+									 .findFirst<flx::hal::gps::IGpsDevice>(flx::hal::IDevice::Type::Gps);
 				if (gpsDevice) {
 					gpsDevice->requestSleep(sleeping);
 				}
@@ -139,7 +139,7 @@ private:
 			coldStartBtn,
 			[](lv_event_t* /*e*/) {
 				auto gpsDevice = flx::hal::DeviceRegistry::getInstance()
-					.findFirst<flx::hal::gps::IGpsDevice>(flx::hal::IDevice::Type::Gps);
+									 .findFirst<flx::hal::gps::IGpsDevice>(flx::hal::IDevice::Type::Gps);
 				if (gpsDevice) {
 					gpsDevice->requestColdStart();
 				}

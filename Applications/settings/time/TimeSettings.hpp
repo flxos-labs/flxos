@@ -1,9 +1,9 @@
 #pragma once
 
-#include <flx/system/managers/TimeManager.hpp>
-#include <lvgl.h>
 #include <array>
 #include <cstring>
+#include <flx/system/managers/TimeManager.hpp>
+#include <lvgl.h>
 #include <string>
 
 #include "settings/SettingsPageBase.hpp"
@@ -96,16 +96,16 @@ protected:
 				uint32_t const sel = lv_dropdown_get_selected(dd);
 				// POSIX TZ strings for each preset
 				static const char* kTzStrings[] = {
-					"UTC0",                // UTC/GMT
-					"IST-5:30",            // India Standard Time
+					"UTC0", // UTC/GMT
+					"IST-5:30", // India Standard Time
 					"EST5EDT,M3.2.0,M11.1.0", // US Eastern
 					"PST8PDT,M3.2.0,M11.1.0", // US Pacific
 					"CET-1CEST,M3.5.0,M10.5.0/3", // Central Europe
-					"JST-9",               // Japan
-					"CST-8",               // China
+					"JST-9", // Japan
+					"CST-8", // China
 					"AEST-10AEDT,M10.1.0,M4.1.0/3", // Australia East
-					"MSK-3",               // Moscow
-					"<-03>3",              // Brazil
+					"MSK-3", // Moscow
+					"<-03>3", // Brazil
 				};
 				if (sel < 10) {
 					TimeManager::setTimeZone(kTzStrings[sel]);

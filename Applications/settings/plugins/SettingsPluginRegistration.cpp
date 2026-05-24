@@ -1,16 +1,19 @@
 #include "settings/plugins/SettingsPluginRegistration.hpp"
 #include "settings/bluetooth/BluetoothSettings.hpp"
 #include "settings/customisation/CustomisationSettings.hpp"
+#include "settings/developer/DeveloperSettings.hpp"
 #include "settings/display/DisplaySettings.hpp"
 #include "settings/gps/GpsSettings.hpp"
 #include "settings/hotspot/HotspotSettings.hpp"
 #include "settings/input/InputSettings.hpp"
+#include "settings/locale/LocaleSettings.hpp"
 #include "settings/plugins/SettingsPagePluginAdapter.hpp"
 #include "settings/plugins/SettingsPluginRegistry.hpp"
 #include "settings/power/PowerSettings.hpp"
 #include "settings/storage/StorageSettings.hpp"
 #include "settings/time/TimeSettings.hpp"
 #include "settings/usb/UsbSettings.hpp"
+#include "settings/webserver/WebServerSettings.hpp"
 #include "settings/wifi/WiFiSettings.hpp"
 #include <memory>
 
@@ -125,6 +128,19 @@ void registerBuiltInSettingsPlugins() {
 
 	registry.registerPlugin(
 		{
+			.id = "locale",
+			.displayName = "Language & Region",
+			.icon = LV_SYMBOL_AUDIO,
+			.category = SettingsPluginCategory::System,
+			.sortPriority = 60,
+			.requiredCapabilities = flx::apps::AppCapability::None,
+		},
+		[]() -> std::unique_ptr<ISettingsPlugin> {
+			return std::make_unique<SettingsPagePluginAdapter<LocaleSettings>>();
+		});
+
+	registry.registerPlugin(
+		{
 			.id = "input",
 			.displayName = "Input Devices",
 			.icon = LV_SYMBOL_KEYBOARD,
@@ -134,6 +150,19 @@ void registerBuiltInSettingsPlugins() {
 		},
 		[]() -> std::unique_ptr<ISettingsPlugin> {
 			return std::make_unique<SettingsPagePluginAdapter<InputSettings>>();
+		});
+
+	registry.registerPlugin(
+		{
+			.id = "developer",
+			.displayName = "Developer Options",
+			.icon = LV_SYMBOL_LIST,
+			.category = SettingsPluginCategory::Developer,
+			.sortPriority = 10,
+			.requiredCapabilities = flx::apps::AppCapability::None,
+		},
+		[]() -> std::unique_ptr<ISettingsPlugin> {
+			return std::make_unique<SettingsPagePluginAdapter<DeveloperSettings>>();
 		});
 
 	registry.registerPlugin(
@@ -160,6 +189,19 @@ void registerBuiltInSettingsPlugins() {
 		},
 		[]() -> std::unique_ptr<ISettingsPlugin> {
 			return std::make_unique<SettingsPagePluginAdapter<UsbSettings>>();
+		});
+
+	registry.registerPlugin(
+		{
+			.id = "webserver",
+			.displayName = "Web Server",
+			.icon = LV_SYMBOL_SETTINGS,
+			.category = SettingsPluginCategory::Hardware,
+			.sortPriority = 30,
+			.requiredCapabilities = flx::apps::AppCapability::None,
+		},
+		[]() -> std::unique_ptr<ISettingsPlugin> {
+			return std::make_unique<SettingsPagePluginAdapter<WebServerSettings>>();
 		});
 }
 

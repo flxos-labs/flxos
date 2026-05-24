@@ -139,7 +139,7 @@ private:
 
 	void refresh() {
 		auto sdCard = flx::hal::DeviceRegistry::getInstance()
-			.findFirst<flx::hal::sdcard::ISdCardDevice>(flx::hal::IDevice::Type::SdCard);
+						  .findFirst<flx::hal::sdcard::ISdCardDevice>(flx::hal::IDevice::Type::SdCard);
 
 		if (!sdCard) {
 			if (m_mountStateLabel) lv_label_set_text(m_mountStateLabel, "No SD card device");
@@ -201,7 +201,7 @@ private:
 
 	void mountCard() {
 		auto sdCard = flx::hal::DeviceRegistry::getInstance()
-			.findFirst<flx::hal::sdcard::ISdCardDevice>(flx::hal::IDevice::Type::SdCard);
+						  .findFirst<flx::hal::sdcard::ISdCardDevice>(flx::hal::IDevice::Type::SdCard);
 		if (!sdCard) {
 			return;
 		}
@@ -211,7 +211,7 @@ private:
 
 	void unmountCard() {
 		auto sdCard = flx::hal::DeviceRegistry::getInstance()
-			.findFirst<flx::hal::sdcard::ISdCardDevice>(flx::hal::IDevice::Type::SdCard);
+						  .findFirst<flx::hal::sdcard::ISdCardDevice>(flx::hal::IDevice::Type::SdCard);
 		if (!sdCard) {
 			return;
 		}

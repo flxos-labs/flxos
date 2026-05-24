@@ -43,6 +43,8 @@ private:
 
 	lv_obj_t* m_container = nullptr;
 	lv_obj_t* m_mainList = nullptr;
+	lv_obj_t* m_searchTa = nullptr;
+	std::string m_searchQuery;
 	std::string m_activePluginId;
 	std::unordered_map<std::string, RuntimePlugin> m_plugins;
 	std::vector<std::string> m_pluginOrder;
