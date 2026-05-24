@@ -111,8 +111,8 @@ private:
 			},
 			LV_EVENT_CLICKED, this);
 
-		// Reboot & apply button (initially hidden)
-		m_rebootBtn = lv_list_add_button(m_list, LV_SYMBOL_POWER, "Reboot & Apply Mode");
+		// Reboot button (initially hidden)
+		m_rebootBtn = lv_list_add_button(m_list, LV_SYMBOL_POWER, "Reboot");
 		lv_obj_add_flag(m_rebootBtn, LV_OBJ_FLAG_HIDDEN);
 		lv_obj_add_event_cb(
 			m_rebootBtn,
