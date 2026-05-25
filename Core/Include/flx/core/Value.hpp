@@ -665,6 +665,7 @@ private:
 		const auto* end = p + s.size();
 		while (p < end) {
 			const uint8_t b = *p;
+			const size_t remaining = static_cast<size_t>(end - p);
 			if (b < 0x80u) {
 				// 1-byte: U+0000..U+007F
 				++p;
@@ -677,7 +678,7 @@ private:
 				if (b < 0xC2u) {
 					return false;
 				}
-				if (p + 2 > end || (p[1] & 0xC0u) != 0x80u) {
+				if (remaining < 2 || (p[1] & 0xC0u) != 0x80u) {
 					return false;
 				}
 				p += 2;
@@ -686,7 +687,7 @@ private:
 
 			if ((b & 0xF0u) == 0xE0u) {
 				// 3-byte: U+0800..U+FFFF
-				if (p + 3 > end || (p[1] & 0xC0u) != 0x80u || (p[2] & 0xC0u) != 0x80u) {
+				if (remaining < 3 || (p[1] & 0xC0u) != 0x80u || (p[2] & 0xC0u) != 0x80u) {
 					return false;
 				}
 				// Reject overlong (0xE0 with second byte < 0xA0)
@@ -707,7 +708,7 @@ private:
 				if (b > 0xF4u) {
 					return false;
 				}
-				if (p + 4 > end || (p[1] & 0xC0u) != 0x80u ||
+				if (remaining < 4 || (p[1] & 0xC0u) != 0x80u ||
 				    (p[2] & 0xC0u) != 0x80u || (p[3] & 0xC0u) != 0x80u) {
 					return false;
 				}
