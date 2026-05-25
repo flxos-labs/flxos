@@ -3,6 +3,7 @@
 #include <esp_err.h>
 #include <esp_event.h>
 #include <flx/connectivity/hotspot/HotspotManager.hpp>
+#include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
@@ -39,6 +40,15 @@ public:
 	esp_err_t scanWiFi(WiFiManager::ScanCallback callback);
 	esp_err_t setWiFiEnabled(bool enabled);
 	bool isWiFiEnabled();
+
+	// Multi-network credential store (new in Phase 1)
+	esp_err_t saveWiFiNetwork(const WiFiCredential& cred);
+	bool loadWiFiNetwork(const std::string& ssid, WiFiCredential& out) const;
+	esp_err_t removeWiFiNetwork(const std::string& ssid);
+	std::vector<WiFiCredential> getSavedNetworks() const;
+	esp_err_t connectBestKnownNetwork();
+
+	// Legacy single-network helpers (delegates to credential store; kept for backwards compat)
 	void saveWiFiCredentials(const char* ssid, const char* password);
 	void clearSavedWiFiCredentials();
 	bool hasSavedWiFiCredentials() const;

@@ -7,6 +7,7 @@
 #include "esp_wifi_types_generic.h"
 #include "flx/connectivity/bluetooth/BluetoothManager.hpp"
 #include "flx/connectivity/hotspot/HotspotManager.hpp"
+#include "flx/connectivity/wifi/WiFiCredentialStore.hpp"
 #include "flx/connectivity/wifi/WiFiManager.hpp"
 #include <cstdint>
 #include <flx/core/Logger.hpp>
@@ -58,17 +59,29 @@ bool ConnectivityManager::onStart() {
 	ESP_ERROR_CHECK(setWifiMode(WIFI_MODE_NULL));
 	Log::info(TAG, "Connectivity service started");
 
-	// Auto-start WiFi and connect to saved network if enabled
+	// ── Migration: move old flat wifi_ssid/wifi_pass into the credential store ──
+	{
+		std::string old_ssid = m_saved_wifi_ssid_subject.get();
+		std::string old_pass = m_saved_wifi_password_subject.get();
+		if (!old_ssid.empty() && !WiFiCredentialStore::getInstance().contains(old_ssid)) {
+			Log::info(TAG, "Migrating legacy saved network '%s' into credential store", old_ssid.c_str());
+			WiFiCredential cred;
+			cred.ssid = old_ssid;
+			cred.password = old_pass;
+			cred.autoConnect = true;
+			cred.priority = 0;
+			WiFiCredentialStore::getInstance().save(cred);
+			// Clear legacy keys so they don't re-migrate on next boot
+			m_saved_wifi_ssid_subject.set("");
+			m_saved_wifi_password_subject.set("");
+		}
+	}
+
+	// Auto-start WiFi and connect to best known network if enabled
 	if (m_wifi_autostart_subject.get() != 0) {
 		Log::info(TAG, "Auto-starting WiFi...");
 		setWiFiEnabled(true);
-
-		if (hasSavedWiFiCredentials()) {
-			std::string saved_ssid = m_saved_wifi_ssid_subject.get();
-			std::string saved_pass = m_saved_wifi_password_subject.get();
-			Log::info(TAG, "Auto-connecting to saved network: %s", saved_ssid.c_str());
-			WiFiManager::getInstance().connect(saved_ssid.c_str(), saved_pass.c_str());
-		}
+		WiFiManager::getInstance().connectBestKnownNetwork();
 	}
 
 	// Start hotspot usage timer
@@ -121,7 +134,14 @@ esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode, bool auto_start) {
 
 esp_err_t ConnectivityManager::connectWiFi(const char* ssid, const char* password, bool remember) {
 	esp_err_t err = WiFiManager::getInstance().connect(ssid, password);
-	if (err == ESP_OK && remember) {
+	if (err == ESP_OK && remember && ssid) {
+		// Save to multi-network credential store
+		WiFiCredential cred;
+		cred.ssid = ssid;
+		cred.password = password ? password : "";
+		cred.autoConnect = true;
+		WiFiCredentialStore::getInstance().save(cred);
+		// Also update legacy flat strings for UI backward compat
 		saveWiFiCredentials(ssid, password);
 	}
 	return err;
@@ -180,8 +200,40 @@ void ConnectivityManager::clearSavedWiFiCredentials() {
 }
 
 bool ConnectivityManager::hasSavedWiFiCredentials() const {
+	// Check credential store first (preferred), fall back to legacy flat string
+	if (WiFiCredentialStore::getInstance().count() > 0) {
+		return true;
+	}
 	std::string ssid = m_saved_wifi_ssid_subject.get();
 	return !ssid.empty();
+}
+
+// ──── Multi-network credential store delegation ────
+
+esp_err_t ConnectivityManager::saveWiFiNetwork(const WiFiCredential& cred) {
+	return WiFiCredentialStore::getInstance().save(cred);
+}
+
+bool ConnectivityManager::loadWiFiNetwork(const std::string& ssid, WiFiCredential& out) const {
+	return WiFiCredentialStore::getInstance().load(ssid, out);
+}
+
+esp_err_t ConnectivityManager::removeWiFiNetwork(const std::string& ssid) {
+	esp_err_t err = WiFiCredentialStore::getInstance().remove(ssid);
+	// If this was also the legacy saved SSID, clear it too
+	if (m_saved_wifi_ssid_subject.get() == ssid) {
+		m_saved_wifi_ssid_subject.set("");
+		m_saved_wifi_password_subject.set("");
+	}
+	return err;
+}
+
+std::vector<WiFiCredential> ConnectivityManager::getSavedNetworks() const {
+	return WiFiCredentialStore::getInstance().loadAll();
+}
+
+esp_err_t ConnectivityManager::connectBestKnownNetwork() {
+	return WiFiManager::getInstance().connectBestKnownNetwork();
 }
 
 } // namespace flx::connectivity

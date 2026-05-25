@@ -4,6 +4,7 @@
 #include "esp_event.h"
 #include "esp_wifi.h"
 #include <atomic>
+#include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
 #include <functional>
@@ -12,13 +13,15 @@
 namespace flx::connectivity {
 
 enum class WiFiStatus {
-	DISABLED,
-	DISCONNECTED,
-	SCANNING,
-	CONNECTING,
-	CONNECTED,
-	AUTH_FAILED,
-	NOT_FOUND
+	RADIO_OFF,          ///< Radio fully disabled
+	RADIO_ON_PENDING,   ///< Enabling in progress
+	DISABLED,           ///< Alias for RADIO_OFF (legacy compat)
+	DISCONNECTED,       ///< Radio on, not connected
+	SCANNING,           ///< Active scan running
+	CONNECTING,         ///< Association in progress
+	CONNECTED,          ///< Got IP
+	AUTH_FAILED,        ///< Wrong password
+	NOT_FOUND,          ///< SSID not visible after retries
 };
 
 class WiFiManager : public flx::Singleton<WiFiManager> {
@@ -44,6 +47,10 @@ public:
 		m_got_ip_callback = callback;
 	}
 
+	/// Scan for visible networks and connect to the highest-priority known network.
+	/// Used for smart auto-connect after boot and after disconnections.
+	esp_err_t connectBestKnownNetwork();
+
 private:
 
 	WiFiManager() = default;
@@ -68,8 +75,13 @@ private:
 	bool m_is_enabled = false;
 	std::atomic<bool> m_is_scanning {false};
 	bool m_should_reconnect = false;
+	bool m_manual_disconnect = false; ///< Set on explicit user disconnect; suppresses auto-reconnect
 	int m_retry_count = 0;
 	static constexpr int MAX_RETRIES = 5;
+
+	// Credential carried across the event-handler boundary for best-known connect
+	std::string m_pending_ssid;
+	std::string m_pending_password;
 
 	ScanCallback m_scan_callback = nullptr;
 	GotIPCallback m_got_ip_callback = nullptr;
