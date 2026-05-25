@@ -661,7 +661,7 @@ private:
 	/// __wrap___cxa_allocate_exception -> abort().  Pre-scanning lets us reject
 	/// corrupt/binary files gracefully before the fkyaml hot path is entered.
 	static bool isValidUtf8(std::string_view s) noexcept {
-		const auto* p   = reinterpret_cast<const uint8_t*>(s.data());
+		const auto* p = reinterpret_cast<const uint8_t*>(s.data());
 		const auto* end = p + s.size();
 		while (p < end) {
 			const uint8_t b = *p;
@@ -709,7 +709,7 @@ private:
 					return false;
 				}
 				if (remaining < 4 || (p[1] & 0xC0u) != 0x80u ||
-				    (p[2] & 0xC0u) != 0x80u || (p[3] & 0xC0u) != 0x80u) {
+					(p[2] & 0xC0u) != 0x80u || (p[3] & 0xC0u) != 0x80u) {
 					return false;
 				}
 				// Reject overlong (0xF0 with second byte < 0x90)

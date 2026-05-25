@@ -220,7 +220,7 @@ std::string ConnectivityManager::getSavedWiFiSsid() const {
 		return legacy;
 	}
 	const auto all = WiFiCredentialStore::getInstance().loadAll();
-	for (const auto& cred : all) {
+	for (const auto& cred: all) {
 		if (cred.autoConnect) {
 			return cred.ssid;
 		}
@@ -234,7 +234,7 @@ std::string ConnectivityManager::getSavedWiFiPassword() const {
 		return m_saved_wifi_password_subject.get();
 	}
 	const auto all = WiFiCredentialStore::getInstance().loadAll();
-	for (const auto& cred : all) {
+	for (const auto& cred: all) {
 		if (cred.autoConnect) {
 			return cred.password;
 		}

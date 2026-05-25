@@ -16,6 +16,7 @@
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/desktop/Desktop.hpp>
 #include <flx/ui/desktop/window_manager/WindowManager.hpp>
+#include <flx/ui/keyboard/VirtualKeyboard.hpp>
 #include <flx/ui/managers/FocusManager.hpp>
 #include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
@@ -24,7 +25,6 @@
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
-#include <flx/ui/keyboard/VirtualKeyboard.hpp>
 #include <memory>
 #include <string>
 #include <string_view>

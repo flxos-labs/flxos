@@ -52,7 +52,7 @@ public:
 	void saveWiFiCredentials(const char* ssid, const char* password);
 	void clearSavedWiFiCredentials();
 	bool hasSavedWiFiCredentials() const;
-	std::string getSavedWiFiSsid() const;    ///< Falls back to credential store after migration
+	std::string getSavedWiFiSsid() const; ///< Falls back to credential store after migration
 	std::string getSavedWiFiPassword() const; ///< Falls back to credential store after migration
 
 	// WiFi Hotspot (SoftAP)

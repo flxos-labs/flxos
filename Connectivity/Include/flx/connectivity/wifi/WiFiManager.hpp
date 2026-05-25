@@ -14,7 +14,7 @@ namespace flx::connectivity {
 
 enum class WiFiStatus {
 	RADIO_OFF = 0, ///< Radio fully disabled
-	DISABLED  = 0, ///< Alias for RADIO_OFF (legacy compat) — must stay == RADIO_OFF
+	DISABLED = 0, ///< Alias for RADIO_OFF (legacy compat) — must stay == RADIO_OFF
 	RADIO_ON_PENDING, ///< Enabling in progress
 	DISCONNECTED, ///< Radio on, not connected
 	SCANNING, ///< Active scan running
