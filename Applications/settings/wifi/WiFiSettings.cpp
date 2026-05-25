@@ -575,7 +575,7 @@ void WiFiSettings::onDestroy() {
 	m_statusPrefixLabel = nullptr;
 	m_saveSwitch = nullptr;
 	m_scanSliderRow = nullptr;
-	m_statusObserver = nullptr;    // Auto-cleaned when m_container is deleted
+	m_statusObserver = nullptr; // Auto-cleaned when m_container is deleted
 	m_scanIntervalObserver = nullptr; // Auto-cleaned when m_container is deleted
 }
 
@@ -621,7 +621,7 @@ void WiFiSettings::refreshSavedNetworksList() {
 		return;
 	}
 
-	for (const auto& net : networks) {
+	for (const auto& net: networks) {
 		// Row: SSID label + priority badge
 		lv_obj_t* btn = lv_list_add_button(m_savedNetList, LV_SYMBOL_WIFI, net.ssid.c_str());
 

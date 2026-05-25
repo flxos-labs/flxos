@@ -1,7 +1,7 @@
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lvgl.h"
-#include "esp_timer.h"
 #include <string.h>
 
 #define globals LV_GLOBAL_DEFAULT()

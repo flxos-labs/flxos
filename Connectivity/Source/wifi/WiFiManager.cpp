@@ -369,9 +369,9 @@ esp_err_t WiFiManager::connectBestKnownNetwork() {
 		const WiFiCredential* best_cred = nullptr;
 		int8_t best_rssi = -128;
 
-		for (const auto& cred : saved) {
+		for (const auto& cred: saved) {
 			if (!cred.autoConnect) continue;
-			for (const auto& ap : visible) {
+			for (const auto& ap: visible) {
 				std::string ap_ssid(reinterpret_cast<const char*>(ap.ssid), strnlen(reinterpret_cast<const char*>(ap.ssid), 32));
 				if (ap_ssid == cred.ssid && ap.rssi > best_rssi) {
 					best_cred = &cred;

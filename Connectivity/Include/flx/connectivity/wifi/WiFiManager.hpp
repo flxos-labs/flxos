@@ -13,15 +13,15 @@
 namespace flx::connectivity {
 
 enum class WiFiStatus {
-	RADIO_OFF,          ///< Radio fully disabled
-	RADIO_ON_PENDING,   ///< Enabling in progress
-	DISABLED,           ///< Alias for RADIO_OFF (legacy compat)
-	DISCONNECTED,       ///< Radio on, not connected
-	SCANNING,           ///< Active scan running
-	CONNECTING,         ///< Association in progress
-	CONNECTED,          ///< Got IP
-	AUTH_FAILED,        ///< Wrong password
-	NOT_FOUND,          ///< SSID not visible after retries
+	RADIO_OFF, ///< Radio fully disabled
+	RADIO_ON_PENDING, ///< Enabling in progress
+	DISABLED, ///< Alias for RADIO_OFF (legacy compat)
+	DISCONNECTED, ///< Radio on, not connected
+	SCANNING, ///< Active scan running
+	CONNECTING, ///< Association in progress
+	CONNECTED, ///< Got IP
+	AUTH_FAILED, ///< Wrong password
+	NOT_FOUND, ///< SSID not visible after retries
 };
 
 class WiFiManager : public flx::Singleton<WiFiManager> {
