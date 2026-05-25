@@ -16,13 +16,31 @@ namespace {
 constexpr const char* TAG = "FlxAppManifest";
 
 std::string readFile(const std::string& path) {
-    std::ifstream input(path);
-    if (!input.is_open()) {
+    FILE* f = std::fopen(path.c_str(), "rb");
+    if (f == nullptr) {
         return {};
     }
-    std::ostringstream buffer;
-    buffer << input.rdbuf();
-    return buffer.str();
+    if (std::fseek(f, 0, SEEK_END) != 0) {
+        std::fclose(f);
+        return {};
+    }
+    long const len = std::ftell(f);
+    if (len <= 0) {
+        std::fclose(f);
+        return {};
+    }
+    if (std::fseek(f, 0, SEEK_SET) != 0) {
+        std::fclose(f);
+        return {};
+    }
+
+    std::string text(static_cast<size_t>(len), '\0');
+    if (std::fread(&text[0], 1, static_cast<size_t>(len), f) != static_cast<size_t>(len)) {
+        std::fclose(f);
+        return {};
+    }
+    std::fclose(f);
+    return text;
 }
 
 std::string stringOr(const flx::core::FlxValueView& object, const char* key, const char* fallback = "") {
