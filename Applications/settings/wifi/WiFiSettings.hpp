@@ -4,6 +4,7 @@
 #include "lvgl.h"
 #include "settings/SettingsPageBase.hpp"
 #include <cstring>
+#include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <memory>
 #include <string>
@@ -50,6 +51,13 @@ private:
 	lv_observer_t* m_scanIntervalObserver = nullptr;
 	esp_timer_handle_t m_scanTimer = nullptr;
 	std::vector<wifi_ap_record_t> m_scanResults;
+
+	// Saved-networks sub-page
+	lv_obj_t* m_savedNetContainer = nullptr;
+	lv_obj_t* m_savedNetList = nullptr;
+	void showSavedNetworks();
+	void hideSavedNetworks();
+	void refreshSavedNetworksList();
 
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiEnabledBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiStatusBridge;
