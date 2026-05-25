@@ -106,8 +106,10 @@ esp_err_t WiFiManager::disconnect() {
 	Log::info(TAG, "Disconnecting WiFi (manual)...");
 	m_should_reconnect = false;
 	m_manual_disconnect = true; // Suppress auto-reconnect until next explicit connect
+	// Do NOT publish WiFiEvent::Disconnected here — the STA_DISCONNECTED event
+	// handler will fire and emit it via the m_manual_disconnect branch, avoiding
+	// a double-publish.
 	setStatus(WiFiStatus::DISCONNECTED);
-	WiFiEvents::publish(WiFiEvent::Disconnected);
 	return esp_wifi_disconnect();
 }
 
@@ -134,11 +136,16 @@ esp_err_t WiFiManager::setEnabled(bool enabled) {
 			ap_enabled ? WIFI_MODE_AP : WIFI_MODE_NULL);
 	} else {
 		setStatus(WiFiStatus::RADIO_ON_PENDING);
-		WiFiEvents::publish(WiFiEvent::RadioEnabled);
 		esp_err_t err = ConnectivityManager::getInstance().setWifiMode(
 			ap_enabled ? WIFI_MODE_APSTA : WIFI_MODE_STA);
 		if (err == ESP_OK) {
+			// Only publish RadioEnabled after the mode change succeeds, so
+			// consumers never observe a false "radio enabled" event on failure.
+			WiFiEvents::publish(WiFiEvent::RadioEnabled);
 			setStatus(WiFiStatus::DISCONNECTED);
+		} else {
+			m_is_enabled = false;
+			setStatus(WiFiStatus::RADIO_OFF);
 		}
 		return err;
 	}

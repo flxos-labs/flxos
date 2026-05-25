@@ -655,6 +655,80 @@ private:
 		return JsonValidator(input).parseDocument();
 	}
 
+	/// @brief Validates that a string_view contains only well-formed UTF-8 sequences.
+	/// fkyaml throws fkyaml::invalid_encoding on bad bytes, but C++ exceptions are
+	/// disabled (CONFIG_COMPILER_CXX_EXCEPTIONS=n), so a throw routes through
+	/// __wrap___cxa_allocate_exception -> abort().  Pre-scanning lets us reject
+	/// corrupt/binary files gracefully before the fkyaml hot path is entered.
+	static bool isValidUtf8(std::string_view s) noexcept {
+		const auto* p   = reinterpret_cast<const uint8_t*>(s.data());
+		const auto* end = p + s.size();
+		while (p < end) {
+			const uint8_t b = *p;
+			if (b < 0x80u) {
+				// 1-byte: U+0000..U+007F
+				++p;
+				continue;
+			}
+
+			if ((b & 0xE0u) == 0xC0u) {
+				// 2-byte: U+0080..U+07FF
+				// Reject overlong: lead bytes 0xC0, 0xC1 encode < U+0080
+				if (b < 0xC2u) {
+					return false;
+				}
+				if (p + 2 > end || (p[1] & 0xC0u) != 0x80u) {
+					return false;
+				}
+				p += 2;
+				continue;
+			}
+
+			if ((b & 0xF0u) == 0xE0u) {
+				// 3-byte: U+0800..U+FFFF
+				if (p + 3 > end || (p[1] & 0xC0u) != 0x80u || (p[2] & 0xC0u) != 0x80u) {
+					return false;
+				}
+				// Reject overlong (0xE0 with second byte < 0xA0)
+				if (b == 0xE0u && p[1] < 0xA0u) {
+					return false;
+				}
+				// Reject surrogate halves U+D800..U+DFFF (0xED with second byte >= 0xA0)
+				if (b == 0xEDu && p[1] >= 0xA0u) {
+					return false;
+				}
+				p += 3;
+				continue;
+			}
+
+			if ((b & 0xF8u) == 0xF0u) {
+				// 4-byte: U+10000..U+10FFFF
+				// Reject 0xF5..0xF7 (would encode > U+10FFFF)
+				if (b > 0xF4u) {
+					return false;
+				}
+				if (p + 4 > end || (p[1] & 0xC0u) != 0x80u ||
+				    (p[2] & 0xC0u) != 0x80u || (p[3] & 0xC0u) != 0x80u) {
+					return false;
+				}
+				// Reject overlong (0xF0 with second byte < 0x90)
+				if (b == 0xF0u && p[1] < 0x90u) {
+					return false;
+				}
+				// Reject > U+10FFFF (0xF4 with second byte > 0x8F)
+				if (b == 0xF4u && p[1] > 0x8Fu) {
+					return false;
+				}
+				p += 4;
+				continue;
+			}
+
+			// 0x80-0xBF (continuation without lead) or 0xF8-0xFF: invalid
+			return false;
+		}
+		return true;
+	}
+
 	static std::optional<fkyaml::node> parseTree(std::string_view input, Format format) {
 		if (input.empty()) {
 			return std::nullopt;
@@ -668,6 +742,16 @@ private:
 			if (!isValidJson(input)) {
 				return std::nullopt;
 			}
+		}
+
+		// Guard against invalid UTF-8 bytes before entering fkyaml.
+		// fkyaml::detail::utf8::get_num_bytes() throws fkyaml::invalid_encoding on
+		// a bad lead byte (node.hpp:1929).  With CONFIG_COMPILER_CXX_EXCEPTIONS=n
+		// that throw becomes __wrap___cxa_allocate_exception -> abort().
+		// The try-catch below is a no-op in that configuration, so we must
+		// prevent the throw from happening in the first place.
+		if (!isValidUtf8(input)) {
+			return std::nullopt;
 		}
 
 		try {

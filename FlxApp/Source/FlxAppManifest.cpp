@@ -165,7 +165,7 @@ std::optional<flx::apps::AppManifest> FlxAppManifest::loadFromFile(const std::st
 
     auto document = flx::core::FlxValueDocument::parseAuto(std::move(raw));
     if (!document) {
-        Log::error(TAG, "Failed to parse FlxApp manifest: %s", path.c_str());
+        Log::error(TAG, "Failed to parse FlxApp manifest (invalid or corrupt file): %s", path.c_str());
         return std::nullopt;
     }
 

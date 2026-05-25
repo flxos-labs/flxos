@@ -24,6 +24,7 @@
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <flx/ui/wallpaper/providers/StaticImageProvider.hpp>
+#include <flx/ui/keyboard/VirtualKeyboard.hpp>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -174,6 +175,14 @@ void Desktop::init() {
 	m_app_container = m_dockModule->getAppContainer();
 
 	flx::ui::window_manager::WindowManager::getInstance().init(m_window_container, m_app_container, m_screen, m_status_bar, m_dock);
+
+	// Eagerly initialize the VirtualKeyboard here, while the LVGL theme stack
+	// is stable and we are NOT inside a theme apply_cb. Lazy init (from inside
+	// ApplyGlobal → register_input_area) triggers lv_keyboard_create re-entrantly
+	// inside the theme callback, which can call back into ApplyGlobal again and,
+	// combined with the theme cleanup ordering bug, land on a freed apply_cb
+	// function pointer → InstrFetchProhibited / Guru Meditation.
+	VirtualKeyboard::getInstance().init();
 
 	if (!flx::system::SystemManager::getInstance().isSafeMode()) {
 		if (m_wallpaper) {

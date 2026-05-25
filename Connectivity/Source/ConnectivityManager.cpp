@@ -70,10 +70,15 @@ bool ConnectivityManager::onStart() {
 			cred.password = old_pass;
 			cred.autoConnect = true;
 			cred.priority = 0;
-			WiFiCredentialStore::getInstance().save(cred);
-			// Clear legacy keys so they don't re-migrate on next boot
-			m_saved_wifi_ssid_subject.set("");
-			m_saved_wifi_password_subject.set("");
+			esp_err_t const save_err = WiFiCredentialStore::getInstance().save(cred);
+			if (save_err == ESP_OK) {
+				// Only erase legacy keys once we know the store accepted them;
+				// a transient storage failure must not destroy the user's credentials.
+				m_saved_wifi_ssid_subject.set("");
+				m_saved_wifi_password_subject.set("");
+			} else {
+				Log::warn(TAG, "Migration save failed (%d) — legacy keys preserved", save_err);
+			}
 		}
 	}
 
@@ -206,6 +211,35 @@ bool ConnectivityManager::hasSavedWiFiCredentials() const {
 	}
 	std::string ssid = m_saved_wifi_ssid_subject.get();
 	return !ssid.empty();
+}
+
+std::string ConnectivityManager::getSavedWiFiSsid() const {
+	// After migration the legacy subject is empty; serve from the store instead.
+	const std::string legacy = m_saved_wifi_ssid_subject.get();
+	if (!legacy.empty()) {
+		return legacy;
+	}
+	const auto all = WiFiCredentialStore::getInstance().loadAll();
+	for (const auto& cred : all) {
+		if (cred.autoConnect) {
+			return cred.ssid;
+		}
+	}
+	return {};
+}
+
+std::string ConnectivityManager::getSavedWiFiPassword() const {
+	const std::string legacy_ssid = m_saved_wifi_ssid_subject.get();
+	if (!legacy_ssid.empty()) {
+		return m_saved_wifi_password_subject.get();
+	}
+	const auto all = WiFiCredentialStore::getInstance().loadAll();
+	for (const auto& cred : all) {
+		if (cred.autoConnect) {
+			return cred.password;
+		}
+	}
+	return {};
 }
 
 // ──── Multi-network credential store delegation ────

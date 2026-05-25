@@ -425,7 +425,6 @@ void WiFiSettings::updateStatus() {
 
 	switch (status) {
 		case flx::connectivity::WiFiStatus::RADIO_OFF:
-		case flx::connectivity::WiFiStatus::DISABLED:
 			lv_label_set_text(m_statusLabel, "Disabled");
 			break;
 		case flx::connectivity::WiFiStatus::RADIO_ON_PENDING:
@@ -637,8 +636,9 @@ void WiFiSettings::refreshSavedNetworksList() {
 		if (net.autoConnect) {
 			lv_obj_add_state(acSwitch, LV_STATE_CHECKED);
 		}
-		// Capture ssid by value for the lambda
+		// Capture ssid by value; heap-allocate for LVGL user data lifetime
 		std::string ssid_copy = net.ssid;
+		auto* ssid_ud = new std::string(ssid_copy);
 		lv_obj_add_event_cb(
 			acSwitch,
 			[](lv_event_t* e) {
@@ -651,7 +651,15 @@ void WiFiSettings::refreshSavedNetworksList() {
 					flx::connectivity::WiFiCredentialStore::getInstance().save(cred);
 				}
 			},
-			LV_EVENT_VALUE_CHANGED, new std::string(ssid_copy)); // heap-alloc lives with switch
+			LV_EVENT_VALUE_CHANGED, ssid_ud);
+
+		// Free the heap-allocated SSID string when the switch is destroyed
+		lv_obj_add_event_cb(
+			acSwitch,
+			[](lv_event_t* e) {
+				delete static_cast<std::string*>(lv_event_get_user_data(e));
+			},
+			LV_EVENT_DELETE, ssid_ud);
 
 		// Forget button
 		lv_obj_t* forgetBtn = lv_button_create(btn);
