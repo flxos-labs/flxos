@@ -126,3 +126,6 @@ distribution:
     - spi
     - ili9341
     - dev-board
+
+sdkconfig:
+  CONFIG_LV_CACHE_DEF_SIZE: 524288

@@ -12,6 +12,7 @@
 #include <esp_wifi.h>
 #include <esp_wifi_types_generic.h>
 #include <flx/connectivity/ConnectivityManager.hpp>
+#include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
@@ -255,6 +256,16 @@ void WiFiSettings::showConfig() {
 		"Auto-start on Boot",
 		m_wifiAutostartBridge->getSubject());
 
+	// Saved Networks button
+	lv_obj_t* savedBtn = lv_list_add_button(list, LV_SYMBOL_LIST, "Saved Networks");
+	lv_obj_add_event_cb(
+		savedBtn,
+		[](lv_event_t* e) {
+			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+			instance->showSavedNetworks();
+		},
+		LV_EVENT_CLICKED, this);
+
 	// Auto scan switch
 	lv_obj_t* toggleBtn = lv_list_add_button(list, nullptr, "Auto Scan");
 	lv_obj_t* sw = lv_switch_create(toggleBtn);
@@ -413,13 +424,17 @@ void WiFiSettings::updateStatus() {
 		m_wifiStatusBridge->getSubject()));
 
 	switch (status) {
-		case flx::connectivity::WiFiStatus::DISABLED:
+		case flx::connectivity::WiFiStatus::RADIO_OFF:
 			lv_label_set_text(m_statusLabel, "Disabled");
+			break;
+		case flx::connectivity::WiFiStatus::RADIO_ON_PENDING:
+			lv_label_set_text(m_statusLabel, "Enabling...");
 			break;
 		case flx::connectivity::WiFiStatus::DISCONNECTED:
 			lv_label_set_text(m_statusLabel, "Disconnected");
 			break;
 		case flx::connectivity::WiFiStatus::SCANNING:
+			lv_label_set_text(m_statusLabel, "Scanning...");
 			break;
 		case flx::connectivity::WiFiStatus::CONNECTING:
 			lv_label_set_text(m_statusLabel, "Connecting...");
@@ -546,6 +561,11 @@ void WiFiSettings::onDestroy() {
 		lv_obj_delete(m_connectContainer);
 		m_connectContainer = nullptr;
 	}
+	if (m_savedNetContainer) {
+		lv_obj_delete(m_savedNetContainer);
+		m_savedNetContainer = nullptr;
+		m_savedNetList = nullptr;
+	}
 	hideConfig();
 	// m_container is deleted by base class
 	m_list = nullptr;
@@ -556,6 +576,110 @@ void WiFiSettings::onDestroy() {
 	m_scanSliderRow = nullptr;
 	m_statusObserver = nullptr; // Auto-cleaned when m_container is deleted
 	m_scanIntervalObserver = nullptr; // Auto-cleaned when m_container is deleted
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Saved Networks sub-page
+// ──────────────────────────────────────────────────────────────────────
+
+void WiFiSettings::showSavedNetworks() {
+	if (m_savedNetContainer) return;
+
+	m_savedNetContainer = create_page_container(m_parent);
+	lv_obj_t* backBtn = nullptr;
+	create_header(m_savedNetContainer, "Saved Networks", &backBtn);
+
+	lv_obj_add_event_cb(
+		backBtn,
+		[](lv_event_t* e) {
+			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+			instance->hideSavedNetworks();
+		},
+		LV_EVENT_CLICKED, this);
+
+	m_savedNetList = create_settings_list(m_savedNetContainer);
+	refreshSavedNetworksList();
+}
+
+void WiFiSettings::hideSavedNetworks() {
+	if (m_savedNetContainer) {
+		lv_obj_delete(m_savedNetContainer);
+		m_savedNetContainer = nullptr;
+		m_savedNetList = nullptr;
+	}
+}
+
+void WiFiSettings::refreshSavedNetworksList() {
+	if (!m_savedNetList) return;
+	lv_obj_clean(m_savedNetList);
+
+	auto networks = flx::connectivity::ConnectivityManager::getInstance().getSavedNetworks();
+
+	if (networks.empty()) {
+		lv_list_add_text(m_savedNetList, "No saved networks");
+		return;
+	}
+
+	for (const auto& net: networks) {
+		// Row: SSID label + priority badge
+		lv_obj_t* btn = lv_list_add_button(m_savedNetList, LV_SYMBOL_WIFI, net.ssid.c_str());
+
+		// Priority badge
+		lv_obj_t* priBadge = lv_label_create(btn);
+		char priBuf[16];
+		snprintf(priBuf, sizeof(priBuf), "P%d", net.priority);
+		lv_label_set_text(priBadge, priBuf);
+		lv_obj_set_style_text_opa(priBadge, LV_OPA_60, 0);
+
+		// Auto-connect toggle
+		lv_obj_t* acSwitch = lv_switch_create(btn);
+		if (net.autoConnect) {
+			lv_obj_add_state(acSwitch, LV_STATE_CHECKED);
+		}
+		// Capture ssid by value; heap-allocate for LVGL user data lifetime
+		std::string ssid_copy = net.ssid;
+		auto* ssid_ud = new std::string(ssid_copy);
+		lv_obj_add_event_cb(
+			acSwitch,
+			[](lv_event_t* e) {
+				auto* sw = lv_event_get_target_obj(e);
+				auto* ssid_ptr = static_cast<std::string*>(lv_event_get_user_data(e));
+				bool ac = lv_obj_has_state(sw, LV_STATE_CHECKED);
+				flx::connectivity::WiFiCredential cred;
+				if (flx::connectivity::WiFiCredentialStore::getInstance().load(*ssid_ptr, cred)) {
+					cred.autoConnect = ac;
+					flx::connectivity::WiFiCredentialStore::getInstance().save(cred);
+				}
+			},
+			LV_EVENT_VALUE_CHANGED, ssid_ud);
+
+		// Free the heap-allocated SSID string when the switch is destroyed
+		lv_obj_add_event_cb(
+			acSwitch,
+			[](lv_event_t* e) {
+				delete static_cast<std::string*>(lv_event_get_user_data(e));
+			},
+			LV_EVENT_DELETE, ssid_ud);
+
+		// Forget button
+		lv_obj_t* forgetBtn = lv_button_create(btn);
+		lv_obj_set_size(forgetBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+		lv_obj_t* forgetLabel = lv_label_create(forgetBtn);
+		lv_label_set_text(forgetLabel, LV_SYMBOL_TRASH);
+
+		lv_obj_add_event_cb(
+			forgetBtn,
+			[](lv_event_t* e) {
+				auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+				auto* btn_obj = lv_obj_get_parent(lv_event_get_target_obj(e));
+				const char* ssid = lv_list_get_button_text(instance->m_savedNetList, btn_obj);
+				if (ssid) {
+					flx::connectivity::ConnectivityManager::getInstance().removeWiFiNetwork(std::string(ssid));
+					instance->refreshSavedNetworksList();
+				}
+			},
+			LV_EVENT_CLICKED, this);
+	}
 }
 
 } // namespace System::Apps::Settings

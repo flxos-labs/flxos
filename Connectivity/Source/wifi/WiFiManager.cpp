@@ -8,9 +8,11 @@
 #include "esp_netif_types.h"
 #include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <flx/core/EventBus.hpp>
+#include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
+#include <flx/connectivity/wifi/WiFiEvents.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/core/Observable.hpp>
 #include <string>
@@ -54,8 +56,12 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 
 	Log::info(TAG, "Connecting to SSID: %s", ssid);
 	m_should_reconnect = true;
+	m_manual_disconnect = false; // Clear manual-disconnect flag on explicit connect
 	m_retry_count = 0;
+	m_pending_ssid = ssid ? ssid : "";
+	m_pending_password = password ? password : "";
 	setStatus(WiFiStatus::CONNECTING);
+	WiFiEvents::publish(WiFiEvent::Connecting, m_pending_ssid);
 
 	std::lock_guard<std::recursive_mutex> wifi_lock(
 		ConnectivityManager::getInstance().getWifiMutex());
@@ -97,8 +103,12 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 }
 
 esp_err_t WiFiManager::disconnect() {
-	Log::info(TAG, "Disconnecting WiFi...");
+	Log::info(TAG, "Disconnecting WiFi (manual)...");
 	m_should_reconnect = false;
+	m_manual_disconnect = true; // Suppress auto-reconnect until next explicit connect
+	// Do NOT publish WiFiEvent::Disconnected here — the STA_DISCONNECTED event
+	// handler will fire and emit it via the m_manual_disconnect branch, avoiding
+	// a double-publish.
 	setStatus(WiFiStatus::DISCONNECTED);
 	return esp_wifi_disconnect();
 }
@@ -120,13 +130,24 @@ esp_err_t WiFiManager::setEnabled(bool enabled) {
 	if (!enabled) {
 		m_should_reconnect = false;
 		esp_wifi_disconnect();
-		setStatus(WiFiStatus::DISABLED);
+		setStatus(WiFiStatus::RADIO_OFF);
+		WiFiEvents::publish(WiFiEvent::RadioDisabled);
 		return ConnectivityManager::getInstance().setWifiMode(
 			ap_enabled ? WIFI_MODE_AP : WIFI_MODE_NULL);
 	} else {
-		setStatus(WiFiStatus::DISCONNECTED);
-		return ConnectivityManager::getInstance().setWifiMode(
+		setStatus(WiFiStatus::RADIO_ON_PENDING);
+		esp_err_t err = ConnectivityManager::getInstance().setWifiMode(
 			ap_enabled ? WIFI_MODE_APSTA : WIFI_MODE_STA);
+		if (err == ESP_OK) {
+			// Only publish RadioEnabled after the mode change succeeds, so
+			// consumers never observe a false "radio enabled" event on failure.
+			WiFiEvents::publish(WiFiEvent::RadioEnabled);
+			setStatus(WiFiStatus::DISCONNECTED);
+		} else {
+			m_is_enabled = false;
+			setStatus(WiFiStatus::RADIO_OFF);
+		}
+		return err;
 	}
 }
 
@@ -142,16 +163,16 @@ esp_err_t WiFiManager::scan(ScanCallback callback) {
 		ConnectivityManager::getInstance().getWifiMutex());
 
 	Log::info(TAG, "Scanning for WiFi networks...");
-	// Atomically set scanning flag to prevent concurrent scans
 	bool expected = false;
 	if (!m_is_scanning.compare_exchange_strong(expected, true)) {
-		return ESP_ERR_INVALID_STATE; // Already scanning
+		return ESP_ERR_INVALID_STATE;
 	}
 	m_scan_callback = callback;
 	wifi_scan_config_t scan_config = {};
 	scan_config.show_hidden = false;
 
 	setStatus(WiFiStatus::SCANNING);
+	WiFiEvents::publish(WiFiEvent::ScanStarted);
 
 	wifi_mode_t current_mode;
 	esp_wifi_get_mode(&current_mode);
@@ -173,7 +194,7 @@ esp_err_t WiFiManager::scan(ScanCallback callback) {
 	if (err != ESP_OK) {
 		m_is_scanning.store(false);
 		m_scan_callback = nullptr;
-		setStatus(m_is_enabled ? WiFiStatus::DISCONNECTED : WiFiStatus::DISABLED);
+		setStatus(m_is_enabled ? WiFiStatus::DISCONNECTED : WiFiStatus::RADIO_OFF);
 	}
 	return err;
 }
@@ -243,6 +264,12 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 	if (is_auth_failure) {
 		m_should_reconnect = false;
 		setStatus(WiFiStatus::AUTH_FAILED);
+		WiFiEvents::publish(WiFiEvent::AuthFailed, m_pending_ssid);
+	} else if (m_manual_disconnect) {
+		// User explicitly disconnected — don't auto-reconnect
+		Log::info(TAG, "Manual disconnect — suppressing auto-reconnect");
+		setStatus(WiFiStatus::DISCONNECTED);
+		WiFiEvents::publish(WiFiEvent::Disconnected, m_pending_ssid);
 	} else if (m_should_reconnect && m_retry_count < MAX_RETRIES) {
 		setStatus(WiFiStatus::CONNECTING);
 		esp_err_t const err = esp_wifi_connect();
@@ -252,8 +279,14 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 	} else if (m_retry_count >= MAX_RETRIES) {
 		m_should_reconnect = false;
 		setStatus(WiFiStatus::NOT_FOUND);
+		WiFiEvents::publish(WiFiEvent::NotFound, m_pending_ssid);
+		// After giving up on the current target, try another known network
+		if (!m_manual_disconnect) {
+			connectBestKnownNetwork();
+		}
 	} else {
 		setStatus(WiFiStatus::DISCONNECTED);
+		WiFiEvents::publish(WiFiEvent::Disconnected, m_pending_ssid);
 	}
 }
 
@@ -287,7 +320,8 @@ void WiFiManager::handleScanDone() {
 
 	m_is_scanning.store(false);
 	m_scan_callback = nullptr;
-	setStatus(isConnected() ? WiFiStatus::CONNECTED : (m_is_enabled ? WiFiStatus::DISCONNECTED : WiFiStatus::DISABLED));
+	WiFiEvents::publish(WiFiEvent::ScanFinished);
+	setStatus(isConnected() ? WiFiStatus::CONNECTED : (m_is_enabled ? WiFiStatus::DISCONNECTED : WiFiStatus::RADIO_OFF));
 }
 
 void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, int32_t event_id, void* event_data) {
@@ -308,18 +342,63 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 		self->m_retry_count = 0;
 		self->setStatus(WiFiStatus::CONNECTED);
 
-		flx::core::Bundle data;
-		data.putString("title", "WiFi Connected");
-		const std::string ssid = self->m_ssid_subject ? self->m_ssid_subject->get() : "Unknown";
-		data.putString("message", "Connected to " + ssid);
-		data.putString("appName", "Connectivity");
-		data.putString("icon", "wifi");
-		flx::core::EventBus::getInstance().publish("system.notify", data);
+		// Update lastConnected timestamp in the credential store
+		const std::string ssid = self->m_ssid_subject ? self->m_ssid_subject->get() : "";
+		if (!ssid.empty() && ssid != "Disconnected") {
+			WiFiCredentialStore::getInstance().updateLastConnected(ssid);
+		}
+
+		// Publish typed event (replaces the old ad-hoc system.notify)
+		WiFiEvents::publish(WiFiEvent::Connected, ssid);
 
 		if (self->m_got_ip_callback) {
 			self->m_got_ip_callback();
 		}
 	}
+}
+
+esp_err_t WiFiManager::connectBestKnownNetwork() {
+	if (!m_is_enabled || m_manual_disconnect) {
+		return ESP_ERR_INVALID_STATE;
+	}
+
+	Log::info(TAG, "connectBestKnownNetwork: scanning for known networks...");
+
+	// Use a one-shot internal scan and connect to best match
+	esp_err_t err = scan([this](const std::vector<wifi_ap_record_t>& visible) {
+		const auto saved = WiFiCredentialStore::getInstance().loadAll();
+		if (saved.empty()) {
+			Log::info(TAG, "No saved credentials — cannot auto-connect");
+			return;
+		}
+
+		// Find the best (priority DESC, then RSSI DESC) match
+		const WiFiCredential* best_cred = nullptr;
+		int8_t best_rssi = -128;
+
+		for (const auto& cred: saved) {
+			if (!cred.autoConnect) continue;
+			for (const auto& ap: visible) {
+				std::string ap_ssid(reinterpret_cast<const char*>(ap.ssid), strnlen(reinterpret_cast<const char*>(ap.ssid), 32));
+				if (ap_ssid == cred.ssid && ap.rssi > best_rssi) {
+					best_cred = &cred;
+					best_rssi = ap.rssi;
+					break; // saved list already sorted by priority
+				}
+			}
+			if (best_cred != nullptr) break; // first priority match wins
+		}
+
+		if (best_cred == nullptr) {
+			Log::info(TAG, "No known networks visible in scan results");
+			return;
+		}
+
+		Log::info(TAG, "Auto-connecting to best known network: %s (RSSI %d)", best_cred->ssid.c_str(), best_rssi);
+		connect(best_cred->ssid.c_str(), best_cred->password.c_str());
+	});
+
+	return err;
 }
 
 } // namespace flx::connectivity

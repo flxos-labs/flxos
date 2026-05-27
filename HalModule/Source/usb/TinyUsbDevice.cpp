@@ -92,8 +92,7 @@ void TinyUsbDevice::stopMode() {
 }
 
 bool TinyUsbDevice::canReboot(UsbMode mode) const {
-	(void)mode;
-	return true; // ESP32 series can always soft reboot
+	return mode == UsbMode::Default;
 }
 
 void TinyUsbDevice::rebootInto(UsbMode mode) {

@@ -113,9 +113,13 @@ void ThemeEngine::apply_theme(ThemeType theme, lv_display_t* disp) {
 		final_theme = specific_th;
 	}
 
-	lv_display_set_theme(disp, final_theme);
-
+	// Free the old theme chain BEFORE making the new one active.
+	// If cleanup happened after lv_display_set_theme, any re-entrant
+	// apply_cb triggered by style propagation would call through a freed
+	// function pointer (heap-poisoned to 0xabab) → InstrFetchProhibited.
 	cleanup_previous_theme(disp);
+
+	lv_display_set_theme(disp, final_theme);
 
 	engine_themes[disp] = new_themes_vec;
 

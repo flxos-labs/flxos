@@ -37,10 +37,7 @@ bool hasSuffix(const std::string& value, const char* suffix) {
 }
 
 bool isFlxAppFile(const std::string& path) {
-    return hasSuffix(path, ".flxapp") ||
-           hasSuffix(path, ".flxapp.json") ||
-           hasSuffix(path, ".flxapp.yaml") ||
-           hasSuffix(path, ".flxapp.yml");
+    return hasSuffix(path, ".flxapp");
 }
 
 bool isDirectory(const std::string& path) {
@@ -140,9 +137,6 @@ void FlxAppLoader::scanAndRegister() {
 
             if (isDirectory(fullPath)) {
                 registerAppFile((fullPath + "/app.flxapp").c_str());
-                registerAppFile((fullPath + "/app.flxapp.json").c_str());
-                registerAppFile((fullPath + "/app.flxapp.yaml").c_str());
-                registerAppFile((fullPath + "/app.flxapp.yml").c_str());
             }
         }
 

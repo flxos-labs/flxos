@@ -1,6 +1,7 @@
 idf_component_register(
     SRCS "Source/ConnectivityManager.cpp"
          "Source/wifi/WiFiManager.cpp"
+         "Source/wifi/WiFiCredentialStore.cpp"
          "Source/bluetooth/BluetoothManager.cpp"
          "Source/hotspot/HotspotManager.cpp"
     INCLUDE_DIRS Include

@@ -7,6 +7,7 @@
 #include <flx/core/Logger.hpp>
 #include <flx/flxapp/FlxApp.hpp>
 #include <flx/flxapp/FlxAppState.hpp>
+#include <flx/flxapp/FlxScript.hpp>
 #include <flx/flxapp/NumberUtils.hpp>
 
 #include <esp_err.h>
@@ -229,6 +230,13 @@ void FlxAppActionRunner::runSingle(const flx::core::FlxValueView& action) {
 		flx::core::EventBus::getInstance().publish("system.notify", data);
 	} else if (type == "http_get") {
 		refreshViaState = runHttpGet(action, key);
+	} else if (type == "script") {
+		const std::string code = resolveString(action.child("code"));
+		if (!code.empty()) {
+			FlxScript script(m_state, m_app);
+			script.execute(code);
+			refreshViaState = true;
+		}
 	}
 
 	if (!refreshViaState) {

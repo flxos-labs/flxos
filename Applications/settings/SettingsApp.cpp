@@ -1,5 +1,7 @@
 #include "SettingsApp.hpp"
+#include <algorithm>
 #include <array>
+#include <cctype>
 #include <flx/apps/AppManifest.hpp>
 #include <utility>
 
@@ -25,14 +27,53 @@ const AppManifest SettingsApp::manifest = {
 	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<SettingsApp>(); }};
 
+static bool containsIgnoreCase(const std::string& str, const std::string& query) {
+	if (query.empty()) return true;
+	auto it = std::search(
+		str.begin(), str.end(),
+		query.begin(), query.end(),
+		[](char ch1, char ch2) {
+			return std::tolower(static_cast<unsigned char>(ch1)) == std::tolower(static_cast<unsigned char>(ch2));
+		});
+	return it != str.end();
+}
+
 void SettingsApp::createUI(void* parent) {
 	m_container = static_cast<lv_obj_t*>(parent);
 	m_mainList = nullptr;
+	m_searchTa = nullptr;
+	m_searchQuery.clear();
 	m_activePluginId.clear();
 	m_plugins.clear();
 	m_pluginOrder.clear();
 	m_buttonBindings.clear();
 	m_pluginRefreshPending.store(false);
+
+	// Setup container layout to flex column
+	lv_obj_set_flex_flow(m_container, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(m_container, 0, 0);
+	lv_obj_set_style_pad_gap(m_container, 0, 0);
+
+	// Create search text area
+	m_searchTa = lv_textarea_create(m_container);
+	lv_textarea_set_one_line(m_searchTa, true);
+	lv_textarea_set_placeholder_text(m_searchTa, "Search settings...");
+	lv_obj_set_width(m_searchTa, lv_pct(100));
+	lv_obj_set_style_border_width(m_searchTa, 0, 0);
+	lv_obj_set_style_border_side(m_searchTa, LV_BORDER_SIDE_BOTTOM, 0);
+	lv_obj_set_style_border_width(m_searchTa, lv_dpx(1), 0);
+	lv_obj_set_style_radius(m_searchTa, 0, 0);
+
+	lv_obj_add_event_cb(
+		m_searchTa,
+		[](lv_event_t* e) {
+			auto* app = static_cast<SettingsApp*>(lv_event_get_user_data(e));
+			if (app && app->m_searchTa) {
+				app->m_searchQuery = lv_textarea_get_text(app->m_searchTa);
+				app->rebuildMainList();
+			}
+		},
+		LV_EVENT_VALUE_CHANGED, this);
 
 	auto& registry = Settings::SettingsPluginRegistry::getInstance();
 	if (m_registryObserver == 0) {
@@ -66,6 +107,8 @@ void SettingsApp::onStop() {
 
 	m_container = nullptr;
 	m_mainList = nullptr;
+	m_searchTa = nullptr;
+	m_searchQuery.clear();
 	m_activePluginId.clear();
 	m_plugins.clear();
 	m_pluginOrder.clear();
@@ -95,6 +138,13 @@ void SettingsApp::showMainSettings() {
 		deactivatePlugin(m_activePluginId);
 	}
 
+	// Reset search when returning to main settings list
+	if (m_searchTa) {
+		lv_textarea_set_text(m_searchTa, "");
+		m_searchQuery.clear();
+		lv_obj_remove_flag(m_searchTa, LV_OBJ_FLAG_HIDDEN);
+	}
+
 	rebuildMainList();
 	if (m_mainList) {
 		lv_obj_remove_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
@@ -116,6 +166,9 @@ void SettingsApp::showPlugin(const std::string& pluginId) {
 
 	if (m_mainList) {
 		lv_obj_add_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
+	}
+	if (m_searchTa) {
+		lv_obj_add_flag(m_searchTa, LV_OBJ_FLAG_HIDDEN);
 	}
 
 	it->second.instance->onShow();
@@ -217,6 +270,9 @@ void SettingsApp::syncPluginsFromRegistry() {
 		rebuildMainList();
 		if (activePluginRemoved) {
 			lv_obj_remove_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
+			if (m_searchTa) {
+				lv_obj_remove_flag(m_searchTa, LV_OBJ_FLAG_HIDDEN);
+			}
 		}
 	}
 }
@@ -228,7 +284,8 @@ void SettingsApp::rebuildMainList() {
 
 	if (m_mainList == nullptr) {
 		m_mainList = lv_list_create(m_container);
-		lv_obj_set_size(m_mainList, lv_pct(100), lv_pct(100));
+		lv_obj_set_width(m_mainList, lv_pct(100));
+		lv_obj_set_flex_grow(m_mainList, 1);
 		lv_obj_set_style_border_width(m_mainList, 0, 0);
 	} else {
 		lv_obj_clean(m_mainList);
@@ -257,6 +314,10 @@ void SettingsApp::rebuildMainList() {
 
 			auto const& manifest = it->second.descriptor.manifest;
 			if (manifest.category != category) {
+				continue;
+			}
+
+			if (!m_searchQuery.empty() && !containsIgnoreCase(manifest.displayName, m_searchQuery)) {
 				continue;
 			}
 

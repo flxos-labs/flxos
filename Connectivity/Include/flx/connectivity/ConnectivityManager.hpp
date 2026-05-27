@@ -3,6 +3,7 @@
 #include <esp_err.h>
 #include <esp_event.h>
 #include <flx/connectivity/hotspot/HotspotManager.hpp>
+#include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
@@ -39,11 +40,20 @@ public:
 	esp_err_t scanWiFi(WiFiManager::ScanCallback callback);
 	esp_err_t setWiFiEnabled(bool enabled);
 	bool isWiFiEnabled();
+
+	// Multi-network credential store (new in Phase 1)
+	esp_err_t saveWiFiNetwork(const WiFiCredential& cred);
+	bool loadWiFiNetwork(const std::string& ssid, WiFiCredential& out) const;
+	esp_err_t removeWiFiNetwork(const std::string& ssid);
+	std::vector<WiFiCredential> getSavedNetworks() const;
+	esp_err_t connectBestKnownNetwork();
+
+	// Legacy single-network helpers (delegates to credential store; kept for backwards compat)
 	void saveWiFiCredentials(const char* ssid, const char* password);
 	void clearSavedWiFiCredentials();
 	bool hasSavedWiFiCredentials() const;
-	std::string getSavedWiFiSsid() const { return m_saved_wifi_ssid_subject.get(); }
-	std::string getSavedWiFiPassword() const { return m_saved_wifi_password_subject.get(); }
+	std::string getSavedWiFiSsid() const; ///< Falls back to credential store after migration
+	std::string getSavedWiFiPassword() const; ///< Falls back to credential store after migration
 
 	// WiFi Hotspot (SoftAP)
 	esp_err_t startHotspot(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);

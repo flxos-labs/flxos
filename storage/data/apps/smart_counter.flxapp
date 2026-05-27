@@ -1,0 +1,53 @@
+app:
+  id: com.flxos.flxapp.smartcounter
+  name: Smart Counter
+  version: 1.0.0
+  description: Counter with conditional logic via FlxScript
+  icon: list
+  sort_priority: 170
+  capabilities:
+    - storage
+
+variables:
+  counter: 0
+  title: "Tap the button!"
+  milestone: false
+
+ui:
+  type: column
+  children:
+    - type: label
+      text: "{{title}}"
+    - type: label
+      text: "Count: {{counter}}"
+    - type: button
+      text: Increment
+      on_click:
+        - type: script
+          code: |
+            counter = counter + 1
+            if counter == 10 then
+                title = "Milestone: 10 reached!"
+                milestone = true
+                notify("Achievement", "You hit 10 clicks!")
+            else
+                if counter == 25 then
+                    title = "Quarter century!"
+                    notify("Achievement", "25 clicks!")
+                else
+                    title = "Keep clicking!"
+                endif
+            endif
+            log("counter = " + counter)
+    - type: button
+      text: Reset
+      on_click:
+        - type: set
+          key: counter
+          value: 0
+        - type: set
+          key: title
+          value: "Tap the button!"
+        - type: set
+          key: milestone
+          value: false
