@@ -12,7 +12,9 @@ else()
         "Source/FlxAppActionRunner.cpp"
         "Source/FlxAppLoader.cpp"
         "Source/FlxAppBenchmark.cpp"
+        "Source/FlxScript.cpp"
     )
+
 endif()
 
 idf_component_register(
