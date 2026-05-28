@@ -47,6 +47,7 @@ public:
 		// Unsubscribe from the observable so no callbacks fire into freed memory
 		lv_async_call_cancel(async_cb, this);
 		m_observable.unsubscribe(m_observerIndex);
+		lv_subject_deinit(&m_subject);
 	}
 
 	lv_subject_t* getSubject() { return &m_subject; }
@@ -104,6 +105,7 @@ public:
 	~LvglStringObserverBridge() {
 		// Unsubscribe from the observable so no callbacks fire into freed memory
 		m_observable.unsubscribe(m_observerIndex);
+		lv_subject_deinit(&m_subject);
 	}
 
 	lv_subject_t* getSubject() { return &m_subject; }
