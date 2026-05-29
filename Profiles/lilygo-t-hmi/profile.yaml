@@ -90,7 +90,7 @@ hardware:
       mosi: 3
       miso: 4
     spi:
-      host: -1
+      host: 2
       freq: 1000000
       bus_shared: false
       separate_pins: true
