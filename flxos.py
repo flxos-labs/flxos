@@ -323,6 +323,7 @@ def cmd_select(args):
         print(f"Run 'python flxos.py list' to see available profiles.")
         return 1
 
+    old_profile = get_current_profile()
     data = parse_yaml(yaml_file)
     new_target = data.get("target", "esp32")
 
@@ -338,6 +339,14 @@ def cmd_select(args):
     print(f"  Flash:  {data.get('flash_size', '4MB')}")
     if data.get('headless'):
         print(f"  Mode:   {C_YELLOW}Headless{C_RESET}")
+
+    # Handle profile change (even if target remains the same)
+    # This prevents stale cached settings (like partitions, PSRAM, USB, flash size) from persisting.
+    # If the target changes, the block below will delete both build/ and sdkconfig anyway.
+    if old_profile and old_profile != profile_id and (not old_target or old_target == new_target):
+        if SDKCONFIG_FILE.exists():
+            SDKCONFIG_FILE.unlink()
+            print(f"  Deleted sdkconfig (profile changed: {old_profile} → {profile_id})")
 
     # Handle target change
     if old_target and old_target != new_target:
