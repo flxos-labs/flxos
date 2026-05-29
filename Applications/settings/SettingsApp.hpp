@@ -26,6 +26,7 @@ public:
 
 	void createUI(void* parent) override;
 	void onPause() override;
+	bool onResume() override;
 	void onStop() override;
 	void update() override;
 

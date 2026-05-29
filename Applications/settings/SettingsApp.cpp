@@ -123,6 +123,18 @@ void SettingsApp::onPause() {
 	m_pluginRefreshPending.store(false);
 }
 
+bool SettingsApp::onResume() {
+	if (m_container == nullptr) {
+		return true;
+	}
+
+	// onPause() deactivated the plugin (hiding its UI) but left
+	// m_mainList and m_searchTa hidden.  Restore the main settings view
+	// so the user doesn't see a blank white screen.
+	showMainSettings();
+	return true;
+}
+
 void SettingsApp::update() {
 	if (!m_pluginRefreshPending.exchange(false) || m_container == nullptr) {
 		return;
