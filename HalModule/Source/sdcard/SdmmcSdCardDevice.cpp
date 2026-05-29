@@ -67,6 +67,7 @@ bool SdmmcSdCardDevice::mount(const std::string& mountPath) {
 	host.max_freq_khz = flx::config::sdcard.maxFreqKhz;
 
 	sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+	slot_config.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
 
 	// If pins are specified in config, we should set them.
 	// Note: On some ESP32 targets, SDMMC pins are fixed. On S3 they can be remapped.
