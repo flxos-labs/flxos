@@ -4,8 +4,8 @@
 #include <flx/hal/input/IInputDevice.hpp>
 #include <lvgl.h>
 #include <mutex>
-#include <vector>
 #include <string_view>
+#include <vector>
 
 namespace flx::hal::input {
 

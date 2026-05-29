@@ -1,9 +1,9 @@
+#include <cstring>
 #include <driver/gpio.h>
 #include <flx/core/Logger.hpp>
 #include <flx/hal/input/CardputerMatrixKeyboard.hpp>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <cstring>
 
 namespace flx::hal::input {
 
@@ -25,8 +25,7 @@ const Chart_t X_map_chart[7] = {
 	{8, 6, 7},
 	{16, 8, 9},
 	{32, 10, 11},
-	{64, 12, 13}
-};
+	{64, 12, 13}};
 
 struct KeyValue_t {
 	const char* value_first;
@@ -37,17 +36,17 @@ struct KeyValue_t {
 
 // HID key codes mapped in standard keymap.h
 #define KEY_BACKSPACE 0x2a
-#define KEY_ENTER     0x28
-#define KEY_SPACE     0x2c
-#define KEY_TAB       0x2b
+#define KEY_ENTER 0x28
+#define KEY_SPACE 0x2c
+#define KEY_TAB 0x2b
 #define KEY_SEMICOLON 0x33
-#define KEY_DOT       0x37
-#define KEY_COMMA     0x36
-#define KEY_SLASH     0x38
-#define KEY_GRAVE     0x35
+#define KEY_DOT 0x37
+#define KEY_COMMA 0x36
+#define KEY_SLASH 0x38
+#define KEY_GRAVE 0x35
 #define KEY_APOSTROPHE 0x34
-#define KEY_MINUS     0x2d
-#define KEY_EQUAL     0x2e
+#define KEY_MINUS 0x2d
+#define KEY_EQUAL 0x2e
 #define KEY_LEFTBRACE 0x2f
 #define KEY_RIGHTBRACE 0x30
 #define KEY_BACKSLASH 0x31
@@ -93,7 +92,7 @@ struct KeyValue_t {
 #define KEY_M 0x10
 
 #define KEY_LEFTCTRL 0xe0
-#define KEY_LEFTALT  0xe2
+#define KEY_LEFTALT 0xe2
 #define KEY_KPASTERISK 0x55
 #define KEY_KPLEFTPAREN 0xb6
 #define KEY_KPRIGHTPAREN 0xb7
@@ -103,62 +102,61 @@ struct KeyValue_t {
 
 const KeyValue_t _key_value_map[4][14] = {
 	{{"`", KEY_GRAVE, "~", KEY_GRAVE},
-	 {"1", KEY_1, "!", KEY_1},
-	 {"2", KEY_2, "@", KEY_2},
-	 {"3", KEY_3, "#", KEY_3},
-	 {"4", KEY_4, "$", KEY_4},
-	 {"5", KEY_5, "%", KEY_5},
-	 {"6", KEY_6, "^", KEY_6},
-	 {"7", KEY_7, "&", KEY_7},
-	 {"8", KEY_8, "*", KEY_KPASTERISK},
-	 {"9", KEY_9, "(", KEY_KPLEFTPAREN},
-	 {"0", KEY_0, ")", KEY_KPRIGHTPAREN},
-	 {"-", KEY_MINUS, "_", KEY_KPMINUS},
-	 {"=", KEY_EQUAL, "+", KEY_KPPLUS},
-	 {"del", KEY_BACKSPACE, "del", KEY_BACKSPACE}},
+		{"1", KEY_1, "!", KEY_1},
+		{"2", KEY_2, "@", KEY_2},
+		{"3", KEY_3, "#", KEY_3},
+		{"4", KEY_4, "$", KEY_4},
+		{"5", KEY_5, "%", KEY_5},
+		{"6", KEY_6, "^", KEY_6},
+		{"7", KEY_7, "&", KEY_7},
+		{"8", KEY_8, "*", KEY_KPASTERISK},
+		{"9", KEY_9, "(", KEY_KPLEFTPAREN},
+		{"0", KEY_0, ")", KEY_KPRIGHTPAREN},
+		{"-", KEY_MINUS, "_", KEY_KPMINUS},
+		{"=", KEY_EQUAL, "+", KEY_KPPLUS},
+		{"del", KEY_BACKSPACE, "del", KEY_BACKSPACE}},
 	{{"tab", KEY_TAB, "tab", KEY_TAB},
-	 {"q", KEY_Q, "Q", KEY_Q},
-	 {"w", KEY_W, "W", KEY_W},
-	 {"e", KEY_E, "E", KEY_E},
-	 {"r", KEY_R, "R", KEY_R},
-	 {"t", KEY_T, "T", KEY_T},
-	 {"y", KEY_Y, "Y", KEY_Y},
-	 {"u", KEY_U, "U", KEY_U},
-	 {"i", KEY_I, "I", KEY_I},
-	 {"o", KEY_O, "O", KEY_O},
-	 {"p", KEY_P, "P", KEY_P},
-	 {"[", KEY_LEFTBRACE, "{", KEY_LEFTBRACE},
-	 {"]", KEY_RIGHTBRACE, "}", KEY_RIGHTBRACE},
-	 {"\\", KEY_BACKSLASH, "|", KEY_BACKSLASH}},
+		{"q", KEY_Q, "Q", KEY_Q},
+		{"w", KEY_W, "W", KEY_W},
+		{"e", KEY_E, "E", KEY_E},
+		{"r", KEY_R, "R", KEY_R},
+		{"t", KEY_T, "T", KEY_T},
+		{"y", KEY_Y, "Y", KEY_Y},
+		{"u", KEY_U, "U", KEY_U},
+		{"i", KEY_I, "I", KEY_I},
+		{"o", KEY_O, "O", KEY_O},
+		{"p", KEY_P, "P", KEY_P},
+		{"[", KEY_LEFTBRACE, "{", KEY_LEFTBRACE},
+		{"]", KEY_RIGHTBRACE, "}", KEY_RIGHTBRACE},
+		{"\\", KEY_BACKSLASH, "|", KEY_BACKSLASH}},
 	{{"fn", 0, "fn", 0},
-	 {"shift", 0, "shift", 0},
-	 {"a", KEY_A, "A", KEY_A},
-	 {"s", KEY_S, "S", KEY_S},
-	 {"d", KEY_D, "D", KEY_D},
-	 {"f", KEY_F, "F", KEY_F},
-	 {"g", KEY_G, "G", KEY_G},
-	 {"h", KEY_H, "H", KEY_H},
-	 {"j", KEY_J, "J", KEY_J},
-	 {"k", KEY_K, "K", KEY_K},
-	 {"l", KEY_L, "L", KEY_L},
-	 {";", KEY_SEMICOLON, ":", KEY_SEMICOLON},
-	 {"'", KEY_APOSTROPHE, "\"", KEY_APOSTROPHE},
-	 {"enter", KEY_ENTER, "enter", KEY_ENTER}},
+		{"shift", 0, "shift", 0},
+		{"a", KEY_A, "A", KEY_A},
+		{"s", KEY_S, "S", KEY_S},
+		{"d", KEY_D, "D", KEY_D},
+		{"f", KEY_F, "F", KEY_F},
+		{"g", KEY_G, "G", KEY_G},
+		{"h", KEY_H, "H", KEY_H},
+		{"j", KEY_J, "J", KEY_J},
+		{"k", KEY_K, "K", KEY_K},
+		{"l", KEY_L, "L", KEY_L},
+		{";", KEY_SEMICOLON, ":", KEY_SEMICOLON},
+		{"'", KEY_APOSTROPHE, "\"", KEY_APOSTROPHE},
+		{"enter", KEY_ENTER, "enter", KEY_ENTER}},
 	{{"ctrl", KEY_LEFTCTRL, "ctrl", KEY_LEFTCTRL},
-	 {"opt", 0, "opt", 0},
-	 {"alt", KEY_LEFTALT, "alt", KEY_LEFTALT},
-	 {"z", KEY_Z, "Z", KEY_Z},
-	 {"x", KEY_X, "X", KEY_X},
-	 {"c", KEY_C, "C", KEY_C},
-	 {"v", KEY_V, "V", KEY_V},
-	 {"b", KEY_B, "B", KEY_B},
-	 {"n", KEY_N, "N", KEY_N},
-	 {"m", KEY_M, "M", KEY_M},
-	 {",", KEY_COMMA, "<", KEY_COMMA},
-	 {".", KEY_DOT, ">", KEY_DOT},
-	 {"/", KEY_KPSLASH, "?", KEY_KPSLASH},
-	 {"space", KEY_SPACE, "space", KEY_SPACE}}
-};
+		{"opt", 0, "opt", 0},
+		{"alt", KEY_LEFTALT, "alt", KEY_LEFTALT},
+		{"z", KEY_Z, "Z", KEY_Z},
+		{"x", KEY_X, "X", KEY_X},
+		{"c", KEY_C, "C", KEY_C},
+		{"v", KEY_V, "V", KEY_V},
+		{"b", KEY_B, "B", KEY_B},
+		{"n", KEY_N, "N", KEY_N},
+		{"m", KEY_M, "M", KEY_M},
+		{",", KEY_COMMA, "<", KEY_COMMA},
+		{".", KEY_DOT, ">", KEY_DOT},
+		{"/", KEY_KPSLASH, "?", KEY_KPSLASH},
+		{"space", KEY_SPACE, "space", KEY_SPACE}}};
 
 } // namespace
 
@@ -224,14 +222,14 @@ void CardputerMatrixKeyboard::unsubscribeKeyEvents(int id) {
 }
 
 void CardputerMatrixKeyboard::initHardware() {
-	for (auto i : output_list) {
+	for (auto i: output_list) {
 		gpio_reset_pin(static_cast<gpio_num_t>(i));
 		gpio_set_direction(static_cast<gpio_num_t>(i), GPIO_MODE_OUTPUT);
 		gpio_set_pull_mode(static_cast<gpio_num_t>(i), GPIO_PULLUP_PULLDOWN);
 		gpio_set_level(static_cast<gpio_num_t>(i), 0);
 	}
 
-	for (auto i : input_list) {
+	for (auto i: input_list) {
 		gpio_reset_pin(static_cast<gpio_num_t>(i));
 		gpio_set_direction(static_cast<gpio_num_t>(i), GPIO_MODE_INPUT);
 		gpio_set_pull_mode(static_cast<gpio_num_t>(i), GPIO_PULLUP_ONLY);
@@ -276,7 +274,7 @@ void CardputerMatrixKeyboard::updateKeyList() {
 			for (int j = 0; j < 7; j++) {
 				if (input_value & (0x01 << j)) {
 					coor.x = (i > 3) ? X_map_chart[j].x_1 : X_map_chart[j].x_2;
-				
+
 					/* Get Y */
 					coor.y = (i > 3) ? (i - 4) : i;
 
@@ -295,8 +293,8 @@ void CardputerMatrixKeyboard::updateKeysState() {
 	m_keysStateBuffer.reset();
 	m_keyValuesWithoutSpecialKeys.clear();
 
-	// Get special keys 
-	for (auto& i : m_keyListBuffer) {
+	// Get special keys
+	for (auto& i: m_keyListBuffer) {
 		const char* val = _key_value_map[i.y][i.x].value_first;
 		if (strcmp(val, "tab") == 0) {
 			m_keysStateBuffer.tab = true;
@@ -321,7 +319,7 @@ void CardputerMatrixKeyboard::updateKeysState() {
 		if (strcmp(val, "alt") == 0) {
 			m_keysStateBuffer.alt = true;
 			continue;
-		} 
+		}
 		if (strcmp(val, "del") == 0) {
 			m_keysStateBuffer.del = true;
 			m_keysStateBuffer.hidKey.push_back(KEY_BACKSPACE);
@@ -336,13 +334,13 @@ void CardputerMatrixKeyboard::updateKeysState() {
 			m_keysStateBuffer.space = true;
 			m_keysStateBuffer.hidKey.push_back(KEY_SPACE);
 			continue;
-		} 
+		}
 
 		m_keyValuesWithoutSpecialKeys.push_back(i);
 	}
 
 	// Deal with the rest
-	for (auto& i : m_keyValuesWithoutSpecialKeys) {
+	for (auto& i: m_keyValuesWithoutSpecialKeys) {
 		if (m_keysStateBuffer.ctrl || m_keysStateBuffer.shift) {
 			m_keysStateBuffer.values.push_back(*_key_value_map[i.y][i.x].value_second);
 			m_keysStateBuffer.hidKey.push_back(_key_value_map[i.y][i.x].value_num_second);
