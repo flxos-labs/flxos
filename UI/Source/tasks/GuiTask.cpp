@@ -140,7 +140,7 @@ void GuiTask::display_init() {
 
 	// Start all registered keyboard input devices
 	auto keyboards = registry.findAll<flx::hal::input::IInputDevice>(flx::hal::IDevice::Type::Keyboard);
-	for (auto& kbd : keyboards) {
+	for (auto& kbd: keyboards) {
 		if (kbd->getState() != flx::hal::IDevice::State::Ready) {
 			Log::info(TAG, "Starting keyboard input device: %s", std::string(kbd->getName()).c_str());
 			if (kbd->start()) {
