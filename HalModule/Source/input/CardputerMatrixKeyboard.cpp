@@ -171,6 +171,11 @@ CardputerMatrixKeyboard::~CardputerMatrixKeyboard() {
 }
 
 bool CardputerMatrixKeyboard::start() {
+	if (getState() == State::Ready) {
+		flx::Log::warn("CardputerKeyboard", "start() called on already-running keyboard; ignoring");
+		return true;
+	}
+
 	this->setState(State::Starting);
 
 	initHardware();
@@ -240,9 +245,9 @@ void CardputerMatrixKeyboard::initHardware() {
 
 void CardputerMatrixKeyboard::setDemuxOutput(uint8_t output) {
 	output = output & 0B00000111;
-	gpio_set_level(static_cast<gpio_num_t>(output_list[0]), (output & 0B00000001));
-	gpio_set_level(static_cast<gpio_num_t>(output_list[1]), (output & 0B00000010));
-	gpio_set_level(static_cast<gpio_num_t>(output_list[2]), (output & 0B00000100));
+	gpio_set_level(static_cast<gpio_num_t>(output_list[0]), (output >> 0) & 0x01);
+	gpio_set_level(static_cast<gpio_num_t>(output_list[1]), (output >> 1) & 0x01);
+	gpio_set_level(static_cast<gpio_num_t>(output_list[2]), (output >> 2) & 0x01);
 }
 
 uint8_t CardputerMatrixKeyboard::readRowInputs() {
