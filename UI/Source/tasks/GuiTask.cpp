@@ -33,6 +33,7 @@
 #include <Config.hpp>
 #include <flx/hal/BusManager.hpp>
 #include <flx/hal/display/LgfxDisplayDevice.hpp>
+#include <flx/hal/input/IInputDevice.hpp>
 #else
 #include <flx/hal/display/HeadlessDisplayDevice.hpp>
 #endif
@@ -136,6 +137,23 @@ void GuiTask::display_init() {
 
 	lv_group_t* g = lv_group_create();
 	lv_group_set_default(g);
+
+	// Start all registered keyboard input devices
+	auto keyboards = registry.findAll<flx::hal::input::IInputDevice>(flx::hal::IDevice::Type::Keyboard);
+	for (auto& kbd : keyboards) {
+		if (kbd->getState() != flx::hal::IDevice::State::Ready) {
+			Log::info(TAG, "Starting keyboard input device: %s", std::string(kbd->getName()).c_str());
+			if (kbd->start()) {
+				// Link the keypad to the default group so it can control focus
+				lv_indev_t* lvkbd = kbd->getLvglIndev();
+				if (lvkbd) {
+					lv_indev_set_group(lvkbd, g);
+				}
+			} else {
+				Log::error(TAG, "Failed to start keyboard input device: %s", std::string(kbd->getName()).c_str());
+			}
+		}
+	}
 
 	lv_tick_set_cb([]() { return (uint32_t)(esp_timer_get_time() / 1000); });
 }
