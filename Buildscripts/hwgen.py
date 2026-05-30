@@ -836,14 +836,14 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
             lines.extend([
                 "    {",
                 "        auto display = std::make_shared<flx::hal::display::LgfxDisplayDevice>();",
-                "        registry.registerDevice(display);",
+                "        if (display->start()) registry.registerDevice(display);",
                 "    }"
             ])
         elif ptype == "keyboard" and cfg.get("driver") == "matrix_demux":
             lines.extend([
                 "    {",
                 "        auto keyboard = std::make_shared<flx::hal::input::CardputerMatrixKeyboard>();",
-                "        registry.registerDevice(keyboard);",
+                "        if (keyboard->start()) registry.registerDevice(keyboard);",
                 "    }"
             ])
         elif ptype == "touch":

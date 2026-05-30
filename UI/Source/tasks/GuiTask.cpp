@@ -138,20 +138,21 @@ void GuiTask::display_init() {
 	lv_group_t* g = lv_group_create();
 	lv_group_set_default(g);
 
-	// Start all registered keyboard input devices
+	// Start all registered keyboard input devices and attach them to the
+	// default LVGL group so they can control focus/navigation.
 	auto keyboards = registry.findAll<flx::hal::input::IInputDevice>(flx::hal::IDevice::Type::Keyboard);
 	for (auto& kbd: keyboards) {
 		if (kbd->getState() != flx::hal::IDevice::State::Ready) {
 			Log::info(TAG, "Starting keyboard input device: %s", std::string(kbd->getName()).c_str());
-			if (kbd->start()) {
-				// Link the keypad to the default group so it can control focus
-				lv_indev_t* lvkbd = kbd->getLvglIndev();
-				if (lvkbd) {
-					lv_indev_set_group(lvkbd, g);
-				}
-			} else {
+			if (!kbd->start()) {
 				Log::error(TAG, "Failed to start keyboard input device: %s", std::string(kbd->getName()).c_str());
+				continue;
 			}
+		}
+		// Attach the device (whether just started or already ready) to the group
+		lv_indev_t* lvkbd = kbd->getLvglIndev();
+		if (lvkbd) {
+			lv_indev_set_group(lvkbd, g);
 		}
 	}
 
