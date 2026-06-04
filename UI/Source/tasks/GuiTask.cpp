@@ -1,3 +1,4 @@
+#include <core/lv_obj_style.h>
 #include <cstddef>
 #include <cstdint>
 #include <display/lv_display.h>
@@ -22,7 +23,6 @@
 #include <libs/fsdrv/lv_fsdrv.h>
 #include <lv_init.h>
 #include <misc/lv_timer.h>
-#include <core/lv_obj_style.h>
 #include <misc/lv_types.h>
 #include <portmacro.h>
 #include <sdkconfig.h>
