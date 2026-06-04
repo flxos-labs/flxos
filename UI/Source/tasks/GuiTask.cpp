@@ -22,6 +22,7 @@
 #include <libs/fsdrv/lv_fsdrv.h>
 #include <lv_init.h>
 #include <misc/lv_timer.h>
+#include <core/lv_obj_style.h>
 #include <misc/lv_types.h>
 #include <portmacro.h>
 #include <sdkconfig.h>
@@ -200,6 +201,10 @@ void GuiTask::run(void* /*data*/) {
 	int32_t currentRotation = rotationObs.get();
 	if (lv_disp) {
 		lv_display_set_rotation(lv_disp, (lv_display_rotation_t)(currentRotation / 90));
+		lv_obj_report_style_change(nullptr);
+		lv_obj_invalidate(lv_display_get_screen_active(lv_disp));
+		lv_obj_invalidate(lv_display_get_layer_top(lv_disp));
+		lv_obj_invalidate(lv_display_get_layer_sys(lv_disp));
 	}
 
 	// Subscribe to changes
@@ -207,6 +212,10 @@ void GuiTask::run(void* /*data*/) {
 		GuiTask::perform([lv_disp, val]() {
 			if (lv_disp) {
 				lv_display_set_rotation(lv_disp, (lv_display_rotation_t)(val / 90));
+				lv_obj_report_style_change(nullptr);
+				lv_obj_invalidate(lv_display_get_screen_active(lv_disp));
+				lv_obj_invalidate(lv_display_get_layer_top(lv_disp));
+				lv_obj_invalidate(lv_display_get_layer_sys(lv_disp));
 			}
 		});
 	});
