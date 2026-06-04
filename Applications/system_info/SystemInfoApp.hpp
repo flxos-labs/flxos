@@ -79,7 +79,7 @@ private:
 	void updateWiFi(flx::services::SystemInfoService& service);
 	void updateTaskList(std::vector<flx::services::TaskInfo>& tasks);
 	void createSystemTab(lv_obj_t* tab);
-	void createMemoryTab(lv_obj_t* tab);
+	void createResourcesTab(lv_obj_t* tab);
 	void createNetworkTab(lv_obj_t* tab);
 	void createTasksTab(lv_obj_t* tab);
 };

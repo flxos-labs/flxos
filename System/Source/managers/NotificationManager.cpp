@@ -91,8 +91,8 @@ std::string NotificationManager::generateId() {
 }
 
 void NotificationManager::addNotification(const std::string& title, const std::string& message, const std::string& appName, const void* icon, int priority) {
-	if (!isRunning() && heap_caps_get_total_size(MALLOC_CAP_SPIRAM) == 0) {
-		Log::warn(TAG, "Dropping notification while service is stopped in no-PSRAM mode: %s", title.c_str());
+	if (!isRunning()) {
+		Log::warn(TAG, "Dropping notification while service is stopped: %s", title.c_str());
 		return;
 	}
 

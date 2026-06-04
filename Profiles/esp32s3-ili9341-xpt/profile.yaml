@@ -128,4 +128,4 @@ distribution:
     - dev-board
 
 sdkconfig:
-  CONFIG_LV_CACHE_DEF_SIZE: 524288
+  CONFIG_LV_CACHE_DEF_SIZE: 0

@@ -119,12 +119,8 @@ void SystemManager::registerServices() {
 #endif
 
 #if LV_USE_LOVYAN_GFX
-	if (hasPsram()) {
-		registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
-		registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
-	} else {
-		Log::warn(TAG, "Skipping Notifications and Screenshot services at boot (no PSRAM; low-memory test mode)");
-	}
+	registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
 #endif
 }
 

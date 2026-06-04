@@ -92,7 +92,7 @@ struct AppManager::AppCommand {
 class AppExecutor : public flx::kernel::Task {
 public:
 
-	AppExecutor() : flx::kernel::Task("app_executor", 32 * 1024, 4) {
+	AppExecutor() : flx::kernel::Task("app_executor", 16 * 1024, 4) {
 		setRestartPolicy(RestartPolicy::RESTART_TASK);
 	}
 
