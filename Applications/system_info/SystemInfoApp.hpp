@@ -70,6 +70,7 @@ private:
 	uint32_t m_last_update = 0;
 
 	// Helper methods
+	lv_obj_t* createCard(lv_obj_t* parent, const char* title);
 	void updateInfo();
 	void updateUptime(const flx::services::SystemStats& sysStats);
 	void updateBattery(flx::services::SystemInfoService& service);
