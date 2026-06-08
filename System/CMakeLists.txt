@@ -1,5 +1,5 @@
 # System component — FlxOS System Services and Managers
-set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule Apps)
+set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule Apps esp_http_server)
 set(SYSTEM_SRCS
     "Source/SystemManager.cpp"
     "Source/SystemDiagnostics.cpp"
@@ -33,5 +33,5 @@ idf_component_register(
     SRCS ${SYSTEM_SRCS}
     INCLUDE_DIRS Include
     REQUIRES ${SYSTEM_REQUIRES}
-    PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console esp_driver_i2c esp_adc esp_http_server mdns
+    PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console esp_driver_i2c esp_adc mdns
 )

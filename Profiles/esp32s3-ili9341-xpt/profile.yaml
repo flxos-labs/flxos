@@ -106,7 +106,7 @@ cli:
 
 lvgl:
   font_size: 14
-  theme: DefaultDark
+  theme: Dark
   ui_density: normal
 
 capabilities:
@@ -127,7 +127,8 @@ distribution:
     - ili9341
     - dev-board
 
+webserver:
+  enabled: true
+
 sdkconfig:
   CONFIG_LV_CACHE_DEF_SIZE: 0
-  CONFIG_FLXOS_WEBSERVER_ENABLED: y
-

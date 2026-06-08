@@ -24,4 +24,12 @@ menu "FlxOS Configuration"
             Provides system commands like sysinfo, heap, uptime, reboot.
             Works in both headless and GUI modes.
 
+    config FLXOS_WEBSERVER_ENABLED
+        bool "Enable Web Server and Management Dashboard"
+        default n
+        help
+            Enable the embedded Web Server and Captive Portal DNS.
+            Provides remote dashboard for system diagnostics, wifi management,
+            file system explorer, and REST APIs.
+
 endmenu

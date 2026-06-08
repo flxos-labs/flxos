@@ -963,6 +963,16 @@ function(_flx_generate_sdkconfig_frag PREFIX OUTPUT_FILE)
         string(APPEND _frag "CONFIG_FLXOS_CLI_ENABLED=y\n")
     endif()
 
+    # Web Server
+    _b("webserver_enabled" "false" _webserver_en)
+    if("${_webserver_en}" STREQUAL "true")
+        string(APPEND _frag "\n# Web Server\n")
+        string(APPEND _frag "CONFIG_FLXOS_WEBSERVER_ENABLED=y\n")
+    else()
+        string(APPEND _frag "\n# Web Server\n")
+        string(APPEND _frag "CONFIG_FLXOS_WEBSERVER_ENABLED=n\n")
+    endif()
+
     # Profile ID
     _y("id" "" _prof_id)
     string(APPEND _frag "\n# Profile\n")

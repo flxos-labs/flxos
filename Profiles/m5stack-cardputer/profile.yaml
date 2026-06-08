@@ -92,13 +92,13 @@ console:
   usb_serial_jtag: true
 
 cli:
-  enabled: true
+  enabled: false
   prompt: "flxos> "
   max_cmdline_length: 256
 
 lvgl:
   font_size: 14
-  theme: DefaultDark
+  theme: Dark
   ui_density: compact
 
 capabilities:
@@ -122,6 +122,5 @@ distribution:
     - keyboard
     - compact
 
-sdkconfig:
-  CONFIG_FLXOS_WEBSERVER_ENABLED: y
-
+webserver:
+  enabled: true
