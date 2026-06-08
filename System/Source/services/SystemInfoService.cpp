@@ -11,6 +11,7 @@
 #include <esp_wifi_types_generic.h>
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/system/services/SdCardService.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
 #include <freertos/task.h>
 #include <sdkconfig.h>
@@ -257,7 +258,9 @@ std::vector<StorageStats> SystemInfoService::getStorageStats() {
 	addStats("System", "/system");
 	addStats("Data", "/data");
 	if constexpr (flx::config::sdcard.enabled) {
-		addStats("SD Card", flx::config::sdcard.mountPoint);
+		if (flx::services::SdCardService::getInstance().isMounted()) {
+			addStats("SD Card", flx::config::sdcard.mountPoint);
+		}
 	}
 
 	return storageStats;

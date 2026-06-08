@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <ctime>
 #include <flx/core/Logger.hpp>
 #include <string_view>
 
@@ -108,7 +109,7 @@ void NotificationManager::addNotification(const std::string& title, const std::s
 		notif.appName = appName;
 		notif.icon = icon;
 		notif.priority = priority;
-		notif.timestamp = (uint32_t)(esp_timer_get_time() / 1000000);
+		notif.timestamp = (uint32_t)time(nullptr);
 		notif.isRead = false;
 
 		m_notifications.insert(m_notifications.begin(), notif);

@@ -30,7 +30,7 @@ namespace {
 
 static constexpr std::string_view TAG = "FileSystemService";
 constexpr uint32_t kQueueDepth = 8;
-constexpr uint32_t kExecutorStack = 14 * 1024;
+constexpr uint32_t kExecutorStack = 10 * 1024;
 constexpr uint32_t kExecutorPriority = 4;
 
 struct FileCloser {
@@ -159,7 +159,6 @@ FileSystemService::FileSystemService() {
 		Log::error(TAG, "Failed to create file operation queue");
 		return;
 	}
-	ensureExecutorStarted();
 	updateQueueDepth();
 }
 
