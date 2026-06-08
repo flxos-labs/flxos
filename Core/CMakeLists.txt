@@ -1,7 +1,7 @@
 idf_component_register(
-    SRCS "Source/EventBus.cpp" "Source/Bundle.cpp" "Source/Preferences.cpp" "Source/BootTimeline.cpp"
+    SRCS "Source/EventBus.cpp" "Source/Bundle.cpp" "Source/Preferences.cpp" "Source/BootTimeline.cpp" "Source/FlxYamlParser.cpp"
     INCLUDE_DIRS Include
-    REQUIRES fkyaml
+    REQUIRES cjson
     PRIV_REQUIRES log nvs_flash esp_timer
 )
 
