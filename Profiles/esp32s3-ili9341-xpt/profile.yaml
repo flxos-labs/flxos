@@ -100,7 +100,7 @@ console:
   usb_serial_jtag: true
 
 cli:
-  enabled: true
+  enabled: false
   prompt: "flxos> "
   max_cmdline_length: 256
 
@@ -129,3 +129,5 @@ distribution:
 
 sdkconfig:
   CONFIG_LV_CACHE_DEF_SIZE: 0
+  CONFIG_FLXOS_WEBSERVER_ENABLED: y
+

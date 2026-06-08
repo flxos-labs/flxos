@@ -12,6 +12,7 @@ set(SYSTEM_SRCS
     "Source/services/FileSystemService.cpp"
     "Source/services/SystemInfoService.cpp"
     "Source/services/HalInitService.cpp"
+    "Source/services/WebServerService.cpp"
 )
 
 if(NOT "$ENV{FLXOS_HEADLESS_MODE_ENABLED}" STREQUAL "ON")
@@ -32,5 +33,5 @@ idf_component_register(
     SRCS ${SYSTEM_SRCS}
     INCLUDE_DIRS Include
     REQUIRES ${SYSTEM_REQUIRES}
-    PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console esp_driver_i2c esp_adc
+    PRIV_REQUIRES nvs_flash fatfs sdmmc spi_flash console esp_driver_i2c esp_adc esp_http_server mdns
 )

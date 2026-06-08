@@ -30,6 +30,9 @@
 #endif
 #include <flx/system/services/DeviceProfileService.hpp>
 #include <flx/system/services/HalInitService.hpp>
+#if CONFIG_FLXOS_WEBSERVER_ENABLED
+#include <flx/system/services/WebServerService.hpp>
+#endif
 #if LV_USE_LOVYAN_GFX
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
@@ -121,6 +124,9 @@ void SystemManager::registerServices() {
 #if LV_USE_LOVYAN_GFX
 	registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
+#endif
+#if CONFIG_FLXOS_WEBSERVER_ENABLED
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::system::services::WebServerService::getInstance(), noDelete));
 #endif
 }
 

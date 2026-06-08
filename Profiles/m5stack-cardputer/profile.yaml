@@ -121,3 +121,7 @@ distribution:
     - 1.14-inch
     - keyboard
     - compact
+
+sdkconfig:
+  CONFIG_FLXOS_WEBSERVER_ENABLED: y
+
