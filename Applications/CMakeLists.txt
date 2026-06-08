@@ -17,7 +17,7 @@ else()
             "*.cpp"
         )
     endif()
-    set(APP_REQUIRES Core Apps UI Connectivity System)
+    set(APP_REQUIRES Core Apps UI Connectivity System lwip)
 endif()
 
 idf_component_register(

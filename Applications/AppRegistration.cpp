@@ -4,6 +4,7 @@
 #include "calendar/CalendarApp.hpp"
 #include "files/FilesApp.hpp"
 #include "image_viewer/ImageViewerApp.hpp"
+#include "network_diag/NetworkDiagApp.hpp"
 #include "settings/SettingsApp.hpp"
 #include "settings/plugins/SettingsPluginRegistration.hpp"
 #include "system_info/SystemInfoApp.hpp"
@@ -22,6 +23,7 @@ void registerBuiltInApps() {
 	appRegistry.addApp(FilesApp::manifest);
 	appRegistry.addApp(ImageViewerApp::manifest);
 	appRegistry.addApp(SystemInfoApp::manifest);
+	appRegistry.addApp(NetworkDiagApp::manifest);
 	appRegistry.addApp(TextEditorApp::manifest);
 	appRegistry.addApp(ToolsApp::manifest);
 	appRegistry.addApp(WallpaperEngineApp::manifest);
