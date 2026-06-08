@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <esp_err.h>
 #include <flx/core/Singleton.hpp>
 #include <mutex>
@@ -15,6 +16,8 @@ struct WiFiCredential {
 	bool autoConnect = true; ///< Attempt connection on boot / auto-scan
 	int priority = 0; ///< Higher = preferred when multiple known nets visible
 	int64_t lastConnectedMs = 0; ///< Epoch-ms of last successful connection; used for recency sort
+	int32_t lastChannel = 0; ///< Channel of last successful connection (0 = any)
+	uint8_t lastBssid[6] = {}; ///< BSSID of last AP (for multi-AP SSID roaming)
 };
 
 /**
@@ -71,6 +74,11 @@ private:
 	/// Low-level JSON read/write helpers
 	static bool readCredential(const std::string& path, WiFiCredential& out);
 	static bool writeCredential(const std::string& path, const WiFiCredential& cred);
+
+	/// Helper methods for password encryption/decryption using AES-256-CBC
+	static bool encryptPassword(const std::string& plaintext, std::string& out_ciphertext_b64, std::string& out_iv_b64);
+	static bool decryptPassword(const std::string& ciphertext_b64, const std::string& iv_b64, std::string& out_plaintext);
+	static void getEncryptionKey(uint8_t key[32]);
 
 	mutable std::mutex m_mutex;
 };
