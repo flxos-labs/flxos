@@ -909,7 +909,7 @@ def cmd_new(args):
             "",
             "lvgl:",
             "  font_size: 14",
-            "  theme: DefaultDark",
+            "  theme: Dark",
             "  ui_density: normal",
         ])
 
