@@ -851,7 +851,7 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
                 "    {",
                 "        auto display = registry.findFirst<flx::hal::display::IDisplayDevice>(flx::hal::IDevice::Type::Display);",
                 "        if (display) {",
-                "            auto lgfx_disp_sp = std::dynamic_pointer_cast<flx::hal::display::LgfxDisplayDevice>(display);",
+                "            auto lgfx_disp_sp = std::static_pointer_cast<flx::hal::display::LgfxDisplayDevice>(display);",
                 "            if (lgfx_disp_sp) {",
                 "                auto touch = std::make_shared<flx::hal::touch::LgfxTouchDevice>(lgfx_disp_sp->getRawDriver());",
                 "                if (touch->start()) registry.registerDevice(touch);",

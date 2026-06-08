@@ -29,6 +29,7 @@ public:
     std::string getAppName() const override;
     const void* getIcon() const override;
     std::string getVersion() const override;
+    bool isFlxApp() const override { return true; }
 
     const std::string& getSourcePath() const { return m_sourcePath; }
 	void applyHttpGetResult(

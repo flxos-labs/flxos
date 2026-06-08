@@ -118,7 +118,10 @@ void applyHttpGetResultAsync(void* userData) {
 		return;
 	}
 
-	std::shared_ptr<flx::flxapp::FlxApp> flxApp = std::dynamic_pointer_cast<flx::flxapp::FlxApp>(app);
+	std::shared_ptr<flx::flxapp::FlxApp> flxApp = nullptr;
+	if (app->isFlxApp()) {
+		flxApp = std::static_pointer_cast<flx::flxapp::FlxApp>(app);
+	}
 	if (!flxApp) {
 		return;
 	}
