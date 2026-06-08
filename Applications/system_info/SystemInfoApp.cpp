@@ -87,6 +87,9 @@ void SystemInfoApp::onStop() {
 	m_storage_system_bar = nullptr;
 	m_storage_data_label = nullptr;
 	m_storage_data_bar = nullptr;
+	m_storage_sd_sep = nullptr;
+	m_storage_sd_label = nullptr;
+	m_storage_sd_bar = nullptr;
 	m_wifi_status_label = nullptr;
 	m_wifi_ssid_label = nullptr;
 	m_wifi_ip_label = nullptr;
@@ -126,6 +129,8 @@ void SystemInfoApp::createUI(void* parent) {
 	createResourcesTab(tab_resources);
 	createNetworkTab(tab_network);
 	createTasksTab(tab_tasks);
+
+	lv_tabview_set_active(m_tabview, 1, LV_ANIM_OFF);
 
 	updateInfo();
 }
@@ -297,6 +302,17 @@ void SystemInfoApp::createResourcesTab(lv_obj_t* tab) {
 	m_storage_data_bar = lv_bar_create(card_storage);
 	lv_obj_set_size(m_storage_data_bar, lv_pct(100), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 	lv_bar_set_range(m_storage_data_bar, 0, 100);
+
+	m_storage_sd_sep = lv_obj_create(card_storage);
+	UI::StyleUtils::applyThemedSeparator(m_storage_sd_sep, UiConstants::OPA_30);
+	lv_obj_set_style_margin_top(m_storage_sd_sep, lv_dpx(UiConstants::PAD_SMALL), 0);
+	lv_obj_set_style_margin_bottom(m_storage_sd_sep, lv_dpx(UiConstants::PAD_SMALL), 0);
+
+	m_storage_sd_label = lv_label_create(card_storage);
+	lv_label_set_text(m_storage_sd_label, "SD Card: --");
+	m_storage_sd_bar = lv_bar_create(card_storage);
+	lv_obj_set_size(m_storage_sd_bar, lv_pct(100), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+	lv_bar_set_range(m_storage_sd_bar, 0, 100);
 }
 
 void SystemInfoApp::createNetworkTab(lv_obj_t* tab) {
@@ -437,6 +453,7 @@ void SystemInfoApp::updateHeap(flx::services::SystemInfoService& service) {
 void SystemInfoApp::updateStorage(flx::services::SystemInfoService& service) {
 	if (m_storage_system_label && m_storage_data_label) {
 		auto storageStats = service.getStorageStats();
+		bool sd_found = false;
 		for (const auto& stat: storageStats) {
 			int usage = (stat.totalBytes > 0) ? (stat.usedBytes * 100 / stat.totalBytes) : 0;
 			if (stat.name == "System") {
@@ -445,7 +462,21 @@ void SystemInfoApp::updateStorage(flx::services::SystemInfoService& service) {
 			} else if (stat.name == "Data") {
 				lv_label_set_text_fmt(m_storage_data_label, "Data: %s / %s", service.formatBytes(stat.usedBytes).c_str(), service.formatBytes(stat.totalBytes).c_str());
 				lv_bar_set_value(m_storage_data_bar, usage, LV_ANIM_ON);
+			} else if (stat.name == "SD Card") {
+				sd_found = true;
+				if (m_storage_sd_label && m_storage_sd_bar && m_storage_sd_sep) {
+					lv_obj_clear_flag(m_storage_sd_sep, LV_OBJ_FLAG_HIDDEN);
+					lv_obj_clear_flag(m_storage_sd_label, LV_OBJ_FLAG_HIDDEN);
+					lv_obj_clear_flag(m_storage_sd_bar, LV_OBJ_FLAG_HIDDEN);
+					lv_label_set_text_fmt(m_storage_sd_label, "SD Card: %s / %s", service.formatBytes(stat.usedBytes).c_str(), service.formatBytes(stat.totalBytes).c_str());
+					lv_bar_set_value(m_storage_sd_bar, usage, LV_ANIM_ON);
+				}
 			}
+		}
+		if (!sd_found && m_storage_sd_label && m_storage_sd_bar && m_storage_sd_sep) {
+			lv_obj_add_flag(m_storage_sd_sep, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(m_storage_sd_label, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(m_storage_sd_bar, LV_OBJ_FLAG_HIDDEN);
 		}
 	}
 }

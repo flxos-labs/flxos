@@ -56,6 +56,9 @@ private:
 	lv_obj_t* m_storage_system_bar {nullptr};
 	lv_obj_t* m_storage_data_label {nullptr};
 	lv_obj_t* m_storage_data_bar {nullptr};
+	lv_obj_t* m_storage_sd_sep {nullptr};
+	lv_obj_t* m_storage_sd_label {nullptr};
+	lv_obj_t* m_storage_sd_bar {nullptr};
 
 	// Network tab labels
 	lv_obj_t* m_wifi_status_label {nullptr};
