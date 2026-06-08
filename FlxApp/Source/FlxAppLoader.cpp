@@ -23,7 +23,7 @@ constexpr const char* DATA_APP_ROOT = "/data/apps";
 constexpr const char* SD_APP_ROOT = "/sdcard/apps";
 constexpr const char* SCAN_TASK_NAME = "flxapp_scan";
 // Matches AppExecutor task stack size used for app/runtime call paths in this codebase.
-constexpr uint32_t SCAN_TASK_STACK_WORDS = 8192;
+constexpr uint32_t SCAN_TASK_STACK_WORDS = 6 * 1024;
 // Keep this low so UI/system tasks stay responsive.
 constexpr UBaseType_t SCAN_TASK_PRIORITY = tskIDLE_PRIORITY + 1;
 
