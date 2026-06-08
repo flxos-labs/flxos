@@ -3,6 +3,7 @@
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/core/Observable.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
+#include <flx/system/services/WebServerService.hpp>
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <lvgl.h>
 #include <memory>
@@ -20,21 +21,12 @@ public:
 
 	using SettingsPageBase::SettingsPageBase;
 
-	static inline flx::Observable<int32_t> webserverEnabled {0};
-	static inline flx::Observable<int32_t> webserverPort {80};
-
 protected:
 
 	void createUI() override {
-		static bool registered = false;
-		if (!registered) {
-			SettingsManager::getInstance().registerSetting("webserver.enabled", webserverEnabled);
-			SettingsManager::getInstance().registerSetting("webserver.port", webserverPort);
-			registered = true;
-		}
-
-		m_enabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(webserverEnabled);
-		m_portBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(webserverPort);
+		auto& ws = flx::system::services::WebServerService::getInstance();
+		m_enabledBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(ws.webserverEnabled);
+		m_portBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(ws.webserverPort);
 		m_ipBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(ConnectivityManager::getInstance().getWiFiIpObservable());
 
 		m_container = create_page_container(m_parent);
