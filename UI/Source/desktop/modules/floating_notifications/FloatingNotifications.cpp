@@ -9,6 +9,7 @@
 #include "widgets/image/lv_image.h"
 #include "widgets/label/lv_label.h"
 #include <ctime>
+#include <flx/apps/AppManager.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/desktop/modules/floating_notifications/FloatingNotifications.hpp>
@@ -222,7 +223,23 @@ void FloatingNotifications::on_container_event(lv_event_t* e) {
 	}
 
 	auto* self = static_cast<FloatingNotifications*>(lv_event_get_user_data(e));
-	if (self) {
+	if (self && !self->m_activeNotificationId.empty()) {
+		// Find the notification to get redirect details
+		const auto& notifs = flx::system::NotificationManager::getInstance().getNotifications();
+		for (const auto& n : notifs) {
+			if (n.id == self->m_activeNotificationId) {
+				if (!n.redirectAppId.empty()) {
+					flx::apps::Intent intent;
+					intent.targetAppId = n.redirectAppId;
+					intent.data = n.redirectData;
+					intent.action = n.redirectData.empty() ? flx::apps::IntentAction::ACTION_MAIN : flx::apps::IntentAction::ACTION_VIEW;
+					flx::apps::AppManager::getInstance().startApp(intent);
+				}
+				// Remove the notification from manager
+				flx::system::NotificationManager::getInstance().removeNotification(n.id);
+				break;
+			}
+		}
 		self->dismissCurrentNotification();
 	}
 }

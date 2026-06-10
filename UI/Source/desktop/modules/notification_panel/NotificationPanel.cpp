@@ -8,6 +8,7 @@
 #include <ctime>
 #include <display/lv_display.h>
 #include <draw/lv_draw_rect.h>
+#include <flx/apps/AppManager.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/desktop/modules/notification_panel/NotificationPanel.hpp>
@@ -122,6 +123,11 @@ void NotificationPanel::update_list() {
 		lv_obj_set_flex_flow(item, LV_FLEX_FLOW_ROW);
 		lv_obj_set_flex_align(item, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
 		lv_obj_set_style_pad_all(item, lv_dpx(UiConstants::PAD_DEFAULT), 0);
+		lv_obj_add_flag(item, LV_OBJ_FLAG_CLICKABLE);
+
+		std::string* item_id_ptr = new std::string(n.id);
+		lv_obj_set_user_data(item, item_id_ptr);
+		lv_obj_add_event_cb(item, on_item_click, LV_EVENT_ALL, this);
 
 		if (n.icon) {
 			lv_obj_t* icon = lv_image_create(item);
@@ -158,17 +164,19 @@ void NotificationPanel::update_list() {
 		lv_obj_set_width(msg_lbl, lv_pct(100));
 		lv_obj_set_style_text_opa(msg_lbl, UiConstants::OPA_70, 0);
 
-		lv_obj_t* close_btn = lv_button_create(item);
-		lv_obj_set_size(close_btn, lv_dpx(LayoutConstants::SIZE_TOUCH_TARGET), lv_dpx(LayoutConstants::SIZE_TOUCH_TARGET));
-		lv_obj_set_style_radius(close_btn, LV_RADIUS_CIRCLE, 0);
-		lv_obj_t* close_icon = lv_label_create(close_btn);
-		lv_label_set_text(close_icon, LV_SYMBOL_CLOSE);
-		lv_obj_center(close_icon);
-		lv_obj_set_style_text_opa(close_icon, UiConstants::OPA_TEXT_DIM, 0);
+		if (n.dismissable) {
+			lv_obj_t* close_btn = lv_button_create(item);
+			lv_obj_set_size(close_btn, lv_dpx(LayoutConstants::SIZE_TOUCH_TARGET), lv_dpx(LayoutConstants::SIZE_TOUCH_TARGET));
+			lv_obj_set_style_radius(close_btn, LV_RADIUS_CIRCLE, 0);
+			lv_obj_t* close_icon = lv_label_create(close_btn);
+			lv_label_set_text(close_icon, LV_SYMBOL_CLOSE);
+			lv_obj_center(close_icon);
+			lv_obj_set_style_text_opa(close_icon, UiConstants::OPA_TEXT_DIM, 0);
 
-		std::string* id_ptr = new std::string(n.id);
-		lv_obj_set_user_data(close_btn, id_ptr);
-		lv_obj_add_event_cb(close_btn, on_close_notif_click, LV_EVENT_ALL, nullptr);
+			std::string* id_ptr = new std::string(n.id);
+			lv_obj_set_user_data(close_btn, id_ptr);
+			lv_obj_add_event_cb(close_btn, on_close_notif_click, LV_EVENT_ALL, nullptr);
+		}
 	}
 }
 
@@ -187,6 +195,43 @@ void NotificationPanel::on_close_notif_click(lv_event_t* e) {
 		if (id) {
 			delete id;
 			lv_obj_set_user_data(btn, nullptr);
+		}
+	}
+}
+
+void NotificationPanel::on_item_click(lv_event_t* e) {
+	lv_event_code_t const code = lv_event_get_code(e);
+	lv_obj_t* item = lv_event_get_target_obj(e);
+	auto* self = static_cast<NotificationPanel*>(lv_event_get_user_data(e));
+	std::string* id = (std::string*)lv_obj_get_user_data(item);
+
+	if (code == LV_EVENT_CLICKED) {
+		if (id && self) {
+			// Find the notification to get redirect details
+			const auto& notifs = flx::system::NotificationManager::getInstance().getNotifications();
+			for (const auto& n : notifs) {
+				if (n.id == *id) {
+					if (!n.redirectAppId.empty()) {
+						flx::apps::Intent intent;
+						intent.targetAppId = n.redirectAppId;
+						intent.data = n.redirectData;
+						intent.action = n.redirectData.empty() ? flx::apps::IntentAction::ACTION_MAIN : flx::apps::IntentAction::ACTION_VIEW;
+						flx::apps::AppManager::getInstance().startApp(intent);
+						
+						// Hide the notification panel when launching an app
+						if (self->m_panel) {
+							lv_obj_add_flag(self->m_panel, LV_OBJ_FLAG_HIDDEN);
+						}
+					}
+					break;
+				}
+			}
+			flx::system::NotificationManager::getInstance().removeNotification(*id);
+		}
+	} else if (code == LV_EVENT_DELETE) {
+		if (id) {
+			delete id;
+			lv_obj_set_user_data(item, nullptr);
 		}
 	}
 }
