@@ -75,9 +75,12 @@ private:
 	// ──── Helper Methods ────
 	static std::string getQueryParameter(httpd_req_t* req, const std::string& paramName);
 	static std::string decodeBase64(const std::string& input);
+	void advertiseMdns();
 
 	httpd_handle_t m_server = nullptr;
 	bool m_events_registered = false;
+	size_t m_wifi_conn_sub_id = 0;
+	size_t m_hotspot_enabled_sub_id = 0;
 };
 
 } // namespace flx::system::services

@@ -87,12 +87,24 @@ static void dns_captive_portal_task(void* pvParameters) {
 
 	Log::info(TAG, "DNS Captive Portal redirect server listening on port 53...");
 
-	uint8_t rx_buffer[512];
+	uint8_t* rx_buffer = (uint8_t*)malloc(512);
+	uint8_t* tx_buffer = (uint8_t*)malloc(512);
+	if (!rx_buffer || !tx_buffer) {
+		Log::error(TAG, "Failed to allocate DNS buffers");
+		free(rx_buffer);
+		free(tx_buffer);
+		close(s_dns_sock);
+		s_dns_sock = -1;
+		s_dns_task_handle = nullptr;
+		vTaskDelete(nullptr);
+		return;
+	}
+
 	struct sockaddr_in client_addr;
 	socklen_t client_addr_len = sizeof(client_addr);
 
 	while (true) {
-		int len = recvfrom(s_dns_sock, rx_buffer, sizeof(rx_buffer), 0, (struct sockaddr*)&client_addr, &client_addr_len);
+		int len = recvfrom(s_dns_sock, rx_buffer, 512, 0, (struct sockaddr*)&client_addr, &client_addr_len);
 		if (len < 12) {
 			if (len < 0) break;
 			continue;
@@ -101,7 +113,6 @@ static void dns_captive_portal_task(void* pvParameters) {
 		uint16_t flags = (rx_buffer[2] << 8) | rx_buffer[3];
 		uint16_t questions = (rx_buffer[4] << 8) | rx_buffer[5];
 		if ((flags & 0x8000) == 0 && questions == 1) {
-			uint8_t tx_buffer[512];
 			memcpy(tx_buffer, rx_buffer, len);
 
 			// Response flags: Response, Authoritative, Recursion Desired
@@ -145,6 +156,8 @@ static void dns_captive_portal_task(void* pvParameters) {
 		}
 	}
 
+	free(rx_buffer);
+	free(tx_buffer);
 	close(s_dns_sock);
 	s_dns_sock = -1;
 	s_dns_task_handle = nullptr;
@@ -153,7 +166,7 @@ static void dns_captive_portal_task(void* pvParameters) {
 
 static void start_dns_server() {
 	if (s_dns_task_handle == nullptr) {
-		xTaskCreate(dns_captive_portal_task, "dns_captive", 3072, nullptr, 4, &s_dns_task_handle);
+		xTaskCreate(dns_captive_portal_task, "dns_captive", 4096, nullptr, 4, &s_dns_task_handle);
 	}
 }
 
@@ -197,6 +210,7 @@ bool WebServerService::onStart() {
 
 	// Dynamically handle switches/toggles
 	webserverEnabled.subscribe([this](int32_t val) {
+		Log::info(TAG, "webserverEnabled observable changed to %ld", (long)val);
 		if (val) {
 			startServer();
 		} else {
@@ -205,12 +219,14 @@ bool WebServerService::onStart() {
 	});
 
 	webserverPort.subscribe([this](int32_t val) {
+		Log::info(TAG, "webserverPort observable changed to %ld", (long)val);
 		if (isServerRunning()) {
 			stopServer();
 			startServer();
 		}
 	});
 
+	Log::info(TAG, "onStart: Initial webserverEnabled value: %ld", (long)webserverEnabled.get());
 	if (webserverEnabled.get()) {
 		startServer();
 	}
@@ -234,12 +250,38 @@ flx::services::HealthStatus WebServerService::onHealthCheck() {
 void WebServerService::registerEventHandlers() {
 	if (m_events_registered) return;
 
-	// Keep captive portal DNS active whenever hotspot starts
-	// (or whenever WiFi state indicates no network is saved/connected)
+	Log::info(TAG, "registerEventHandlers: Subscribing to WiFi and Hotspot events");
+
+	// Subscribe to WiFi connection events to advertise mDNS when we get an IP
+	m_wifi_conn_sub_id = ConnectivityManager::getInstance().getWiFiConnectedObservable().subscribe([this](int32_t connected) {
+		bool running = isServerRunning();
+		Log::info(TAG, "WiFi connection callback: connected=%ld, isServerRunning=%d", (long)connected, running);
+		if (connected && running) {
+			advertiseMdns();
+		}
+	});
+
+	// Subscribe to Hotspot events to advertise mDNS / manage DNS server
+	m_hotspot_enabled_sub_id = ConnectivityManager::getInstance().getHotspotEnabledObservable().subscribe([this](int32_t enabled) {
+		bool running = isServerRunning();
+		Log::info(TAG, "Hotspot enabled callback: enabled=%ld, isServerRunning=%d", (long)enabled, running);
+		if (running) {
+			advertiseMdns();
+			if (enabled) {
+				start_dns_server();
+			} else {
+				stop_dns_server();
+			}
+		}
+	});
+
 	m_events_registered = true;
 }
 
 void WebServerService::unregisterEventHandlers() {
+	if (!m_events_registered) return;
+	ConnectivityManager::getInstance().getWiFiConnectedObservable().unsubscribe(m_wifi_conn_sub_id);
+	ConnectivityManager::getInstance().getHotspotEnabledObservable().unsubscribe(m_hotspot_enabled_sub_id);
 	m_events_registered = false;
 }
 
@@ -298,10 +340,7 @@ esp_err_t WebServerService::startServer() {
 	httpd_register_err_handler(m_server, HTTPD_404_NOT_FOUND, captive_portal_redirect_handler);
 
 	// Advertise mDNS
-	mdns_init();
-	mdns_hostname_set("flxos");
-	mdns_instance_name_set("FlxOS Hub");
-	mdns_service_add(nullptr, "_http", "_tcp", port, nullptr, 0);
+	advertiseMdns();
 
 	// If hotspot active, spin up captive portal DNS server
 	if (flx::connectivity::ConnectivityManager::getInstance().isHotspotEnabled()) {
@@ -317,10 +356,44 @@ void WebServerService::stopServer() {
 		httpd_stop(m_server);
 		m_server = nullptr;
 
-		mdns_service_remove("_http", "_tcp");
+		if (mdns_service_exists("_http", "_tcp", nullptr)) {
+			mdns_service_remove("_http", "_tcp");
+		}
 		mdns_free();
 
 		stop_dns_server();
+	}
+}
+
+void WebServerService::advertiseMdns() {
+	int port = webserverPort.get();
+	Log::info(TAG, "Configuring mDNS responder (hostname: \"flxos\", port: %d)...", port);
+
+	esp_err_t err = mdns_init();
+	if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
+		Log::error(TAG, "Failed to initialize mDNS: %s", esp_err_to_name(err));
+		return;
+	}
+
+	err = mdns_hostname_set("flxos");
+	if (err != ESP_OK) {
+		Log::error(TAG, "Failed to set mDNS hostname: %s", esp_err_to_name(err));
+		return;
+	}
+
+	err = mdns_instance_name_set("FlxOS Hub");
+	if (err != ESP_OK) {
+		Log::warn(TAG, "Failed to set mDNS instance name: %s", esp_err_to_name(err));
+	}
+
+	if (mdns_service_exists("_http", "_tcp", nullptr)) {
+		mdns_service_remove("_http", "_tcp");
+	}
+	err = mdns_service_add(nullptr, "_http", "_tcp", port, nullptr, 0);
+	if (err != ESP_OK) {
+		Log::error(TAG, "Failed to add HTTP service to mDNS: %s", esp_err_to_name(err));
+	} else {
+		Log::info(TAG, "mDNS responder configured successfully. Resolve at http://flxos.local");
 	}
 }
 
@@ -880,643 +953,27 @@ esp_err_t WebServerService::postFsDeleteHandler(httpd_req_t* req) {
 
 // ──── Static Dashboard HTML/CSS/JS (Glow Dark Mode / Glassmorphism) ────
 esp_err_t WebServerService::getDashboardHandler(httpd_req_t* req) {
-	const char* html = R"html(<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlxOS System Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-dark: #090714;
-            --panel-bg: rgba(20, 16, 38, 0.45);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --accent-cyan: #06b6d4;
-            --accent-indigo: #6366f1;
-            --accent-purple: #a855f7;
-            --text-main: #f3f4f6;
-            --text-dim: #9ca3af;
-            --gradient: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo), var(--accent-purple));
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            overflow-x: hidden;
-            background-image: radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                              radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 40%);
-        }
-
-        /* Sidebar Navigation */
-        .sidebar {
-            width: 260px;
-            background: rgba(10, 8, 20, 0.7);
-            border-right: 1px solid var(--border-glass);
-            backdrop-filter: blur(20px);
-            display: flex;
-            flex-direction: column;
-            padding: 2rem 1.5rem;
-            position: fixed;
-            height: 100vh;
-            z-index: 10;
-        }
-
-        .logo {
-            font-weight: 800;
-            font-size: 1.8rem;
-            letter-spacing: 1px;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 3rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .nav-list {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .nav-item {
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            cursor: pointer;
-            color: var(--text-dim);
-            font-weight: 600;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            border: 1px solid transparent;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            color: var(--text-main);
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--border-glass);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .nav-item.active {
-            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(99, 102, 241, 0.15));
-            border-color: rgba(99, 102, 241, 0.3);
-            position: relative;
-        }
-
-        .nav-item.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 25%;
-            height: 50%;
-            width: 4px;
-            background: var(--accent-cyan);
-            border-radius: 0 4px 4px 0;
-        }
-
-        /* Main Content Container */
-        .content-area {
-            margin-left: 260px;
-            flex-grow: 1;
-            padding: 3rem;
-            max-width: 1200px;
-        }
-
-        header {
-            margin-bottom: 3rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-        }
-
-        .status-badge {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #10b981;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        /* Dashboard Grid */
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        /* Cards & Glassmorphism Panels */
-        .card {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            padding: 2rem;
-            backdrop-filter: blur(15px);
-            transition: transform 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            color: var(--text-dim);
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .metric {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .metric-sub {
-            font-size: 0.9rem;
-            color: var(--text-dim);
-            margin-top: 0.5rem;
-        }
-
-        /* Forms, Buttons, Inputs */
-        input[type="text"], input[type="password"], select {
-            width: 100%;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            color: var(--text-main);
-            outline: none;
-            margin-bottom: 1.25rem;
-            font-family: inherit;
-            transition: all 0.3s;
-        }
-
-        input:focus {
-            border-color: var(--accent-cyan);
-            background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
-        }
-
-        .btn {
-            display: inline-block;
-            width: 100%;
-            padding: 1rem;
-            background: var(--gradient);
-            color: var(--bg-dark);
-            font-weight: 700;
-            border-radius: 12px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-        }
-
-        .btn:hover {
-            box-shadow: 0 0 25px rgba(99, 102, 241, 0.45);
-            transform: scale(1.02);
-        }
-
-        /* Table Design */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        th, td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-glass);
-        }
-
-        th {
-            color: var(--text-dim);
-            font-weight: 600;
-        }
-
-        /* File Explorer */
-        .file-list {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .file-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.85rem 1rem;
-            border-bottom: 1px solid var(--border-glass);
-            transition: background 0.2s;
-            border-radius: 8px;
-        }
-
-        .file-row:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .file-icon {
-            font-size: 1.2rem;
-        }
-
-        .file-actions {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .action-link {
-            color: var(--accent-cyan);
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .action-link.delete {
-            color: #ef4444;
-        }
-    </style>
-</head>
-<body>
-    <div class="sidebar">
-        <div class="logo">⚡ FLXOS HUB</div>
-        <ul class="nav-list">
-            <li class="nav-item active" onclick="switchTab('dashboard')">Dashboard</li>
-            <li class="nav-item" onclick="switchTab('wifi')">Wi-Fi Control</li>
-            <li class="nav-item" onclick="switchTab('hotspot')">AP Hotspot</li>
-            <li class="nav-item" onclick="switchTab('files')">Files</li>
-        </ul>
-    </div>
-
-    <div class="content-area">
-        <header>
-            <h1 id="page-title">Dashboard</h1>
-            <div class="status-badge">● Device Connected</div>
-        </header>
-
-        <!-- DASHBOARD TAB -->
-        <div id="tab-dashboard" class="tab-content active">
-            <div class="grid">
-                <div class="card">
-                    <div class="card-title">Free Heap RAM</div>
-                    <div class="metric" id="stat-heap">-- KB</div>
-                    <div class="metric-sub" id="stat-min-heap">Min historical limit: -- KB</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">System Uptime</div>
-                    <div class="metric" id="stat-uptime">--s</div>
-                    <div class="metric-sub" id="stat-chip">Hardware target: --</div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-title">Active Applications</div>
-                <div id="app-list">Loading registered user interfaces...</div>
-            </div>
-        </div>
-
-        <!-- WI-FI CONTROL TAB -->
-        <div id="tab-wifi" class="tab-content">
-            <div class="grid">
-                <div class="card">
-                    <div class="card-title">Connect to Wi-Fi</div>
-                    <input type="text" id="wifi-ssid" placeholder="Network SSID">
-                    <input type="password" id="wifi-pass" placeholder="Passphrase">
-                    <button class="btn" onclick="connectWifi()">Connect Station</button>
-                </div>
-                <div class="card">
-                    <div class="card-title">Saved Networks</div>
-                    <table id="saved-wifi-table">
-                        <thead>
-                            <tr>
-                                <th>SSID</th>
-                                <th>Priority</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Filled dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>Wi-Fi Network Scan</span>
-                    <button class="btn" style="width:auto; padding:0.5rem 1.5rem;" onclick="scanWifi()">Scan</button>
-                </div>
-                <table id="scan-wifi-table">
-                    <thead>
-                        <tr>
-                            <th>SSID</th>
-                            <th>RSSI (Signal)</th>
-                            <th>Channel</th>
-                            <th>Security</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td colspan="4">Click Scan to search for active access points.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- HOTSPOT TAB -->
-        <div id="tab-hotspot" class="tab-content">
-            <div class="grid">
-                <div class="card">
-                    <div class="card-title">AP Hotspot Settings</div>
-                    <input type="text" id="hs-ssid" placeholder="Hotspot SSID">
-                    <input type="password" id="hs-pass" placeholder="Passphrase">
-                    <select id="hs-chan">
-                        <option value="1">Channel 1 (2.412 GHz)</option>
-                        <option value="6">Channel 6 (2.437 GHz)</option>
-                        <option value="11">Channel 11 (2.462 GHz)</option>
-                    </select>
-                    <button class="btn" onclick="saveHotspot()">Apply and Start AP</button>
-                    <button class="btn" style="background:#ef4444; margin-top:0.75rem; color:#fff;" onclick="stopHotspot()">Shutdown AP</button>
-                </div>
-                <div class="card">
-                    <div class="card-title">Hotspot Status</div>
-                    <div class="metric" id="hs-status-text">Inactive</div>
-                    <div class="metric-sub" id="hs-clients-count">Connected clients: 0</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- FILES TAB -->
-        <div id="tab-files" class="tab-content">
-            <div class="card">
-                <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
-                    <span>File Explorer</span>
-                    <input type="file" id="upload-file" style="display:none;" onchange="uploadFile()">
-                    <button class="btn" style="width:auto; padding:0.5rem 1.5rem;" onclick="document.getElementById('upload-file').click()">Upload File</button>
-                </div>
-                <div class="file-list" id="file-explorer-list">
-                    <!-- Loaded dynamically -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let currentPath = "/data";
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-
-            const activeItem = Array.from(document.querySelectorAll('.nav-item')).find(el => el.innerText.toLowerCase().includes(tabId));
-            if (activeItem) activeItem.classList.add('active');
-
-            const activeTab = document.getElementById('tab-' + tabId);
-            if (activeTab) activeTab.classList.add('active');
-
-            document.getElementById('page-title').innerText = activeItem.innerText;
-
-            if (tabId === 'dashboard') loadStats();
-            if (tabId === 'wifi') { loadSavedWifi(); }
-            if (tabId === 'hotspot') { loadHotspot(); }
-            if (tabId === 'files') { loadFiles(); }
-        }
-
-        // ──── Stats loading ────
-        function loadStats() {
-            fetch('/api/system')
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('stat-heap').innerText = Math.round(data.heap / 1024) + " KB";
-                    document.getElementById('stat-min-heap').innerText = "Min historical limit: " + Math.round(data.min_heap / 1024) + " KB";
-                    document.getElementById('stat-uptime').innerText = data.uptime + "s";
-                    document.getElementById('stat-chip').innerText = data.chip_model + " Cores: " + data.chip_cores;
-                });
-
-            fetch('/api/apps')
-                .then(r => r.json())
-                .then(data => {
-                    const list = document.getElementById('app-list');
-                    list.innerHTML = "";
-                    data.forEach(app => {
-                        const card = document.createElement('div');
-                        card.style.padding = "0.75rem 1rem";
-                        card.style.background = "rgba(255,255,255,0.03)";
-                        card.style.borderRadius = "8px";
-                        card.style.marginBottom = "0.5rem";
-                        card.innerText = "🚀 " + app.name + " (" + app.id + ")";
-                        list.appendChild(card);
-                    });
-                });
-        }
-
-        // ──── WiFi STA ────
-        function loadSavedWifi() {
-            fetch('/api/wifi/saved')
-                .then(r => r.json())
-                .then(data => {
-                    const tbody = document.querySelector('#saved-wifi-table tbody');
-                    tbody.innerHTML = "";
-                    data.forEach(net => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `<td>${net.ssid}</td><td>${net.priority}</td><td><span class="action-link delete" onclick="deleteSaved('${net.ssid}')">Forget</span></td>`;
-                        tbody.appendChild(tr);
-                    });
-                });
-        }
-
-        // ──── Forgotten Net ────
-        function deleteSaved(ssid) {
-            fetch(`/api/wifi/saved?ssid=${encodeURIComponent(ssid)}`, { method: 'DELETE' })
-                .then(() => loadSavedWifi());
-        }
-
-        function scanWifi() {
-            const tbody = document.querySelector('#scan-wifi-table tbody');
-            tbody.innerHTML = '<tr><td colspan="4">Scanning background airwaves...</td></tr>';
-            fetch('/api/wifi/scan', { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                    tbody.innerHTML = "";
-                    data.forEach(net => {
-                        const tr = document.createElement('tr');
-                        tr.style.cursor = "pointer";
-                        tr.onclick = () => { document.getElementById('wifi-ssid').value = net.ssid; };
-                        tr.innerHTML = `<td>${net.ssid}</td><td>${net.rssi} dBm</td><td>${net.channel}</td><td>${net.auth > 0 ? "WPA2/Secure" : "Open"}</td>`;
-                        tbody.appendChild(tr);
-                    });
-                });
-        }
-
-        function connectWifi() {
-            const ssid = document.getElementById('wifi-ssid').value;
-            const password = document.getElementById('wifi-pass').value;
-            fetch('/api/wifi/connect', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ssid, password })
-            }).then(() => alert("Connecting target wifi station..."));
-        }
-
-        // ──── Hotspot ────
-        function loadHotspot() {
-            fetch('/api/hotspot')
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('hs-ssid').value = data.ssid;
-                    document.getElementById('hs-pass').value = data.password;
-                    document.getElementById('hs-chan').value = data.channel;
-                    document.getElementById('hs-status-text').innerText = data.enabled ? "Active" : "Inactive";
-                    document.getElementById('hs-clients-count').innerText = "Connected clients: " + data.clients;
-                });
-        }
-
-        function saveHotspot() {
-            const ssid = document.getElementById('hs-ssid').value;
-            const password = document.getElementById('hs-pass').value;
-            const channel = parseInt(document.getElementById('hs-chan').value);
-            fetch('/api/hotspot/start', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ssid, password, channel, max_connections: 4, hidden: false, nat_enabled: true })
-            }).then(() => loadHotspot());
-        }
-
-        function stopHotspot() {
-            fetch('/api/hotspot/stop', { method: 'POST' })
-                .then(() => loadHotspot());
-        }
-
-        // ──── Files ────
-        function loadFiles() {
-            fetch(`/fs/list?path=${encodeURIComponent(currentPath)}`)
-                .then(r => r.json())
-                .then(data => {
-                    const list = document.getElementById('file-explorer-list');
-                    list.innerHTML = "";
-                    
-                    // Add Back Directory if not root
-                    if (currentPath !== "/data" && currentPath !== "/sdcard") {
-                        const row = document.createElement('div');
-                        row.className = "file-row";
-                        row.innerHTML = `<div class="file-info"><span class="file-icon">📁</span><span>..</span></div><div class="file-actions"><span class="action-link" onclick="goUp()">Back</span></div>`;
-                        list.appendChild(row);
-                    }
-
-                    data.forEach(item => {
-                        const row = document.createElement('div');
-                        row.className = "file-row";
-                        const icon = item.is_dir ? "📁" : "📄";
-                        const size = item.is_dir ? "" : `(${Math.round(item.size/1024)} KB)`;
-                        const path = currentPath + "/" + item.name;
-                        
-                        let actions = "";
-                        if (item.is_dir) {
-                            actions = `<span class="action-link" onclick="enterDir('${item.name}')">Enter</span>`;
-                        } else {
-                            actions = `<a class="action-link" href="/fs/download?path=${encodeURIComponent(path)}">Download</a>
-                                       <span class="action-link delete" onclick="deleteFile('${path}')">Delete</span>`;
-                        }
-
-                        row.innerHTML = `<div class="file-info"><span class="file-icon">${icon}</span><span>${item.name} ${size}</span></div><div class="file-actions">${actions}</div>`;
-                        list.appendChild(row);
-                    });
-                });
-        }
-
-        function enterDir(name) {
-            currentPath = currentPath + "/" + name;
-            loadFiles();
-        }
-
-        function goUp() {
-            const idx = currentPath.lastIndexOf('/');
-            if (idx > 0) {
-                currentPath = currentPath.substring(0, idx);
-                loadFiles();
-            }
-        }
-
-        function deleteFile(path) {
-            fetch(`/fs/delete?path=${encodeURIComponent(path)}`, { method: 'POST' })
-                .then(() => loadFiles());
-        }
-
-        function uploadFile() {
-            const fileInput = document.getElementById('upload-file');
-            if (fileInput.files.length === 0) return;
-            const file = fileInput.files[0];
-            const path = currentPath + "/" + file.name;
-
-            fetch(`/fs/upload?path=${encodeURIComponent(path)}`, {
-                method: 'POST',
-                body: file
-            }).then(() => {
-                fileInput.value = "";
-                loadFiles();
-            });
-        }
-
-        // Loop refresh dashboard stats
-        setInterval(() => {
-            if (document.getElementById('tab-dashboard').classList.contains('active')) {
-                loadStats();
-            }
-        }, 3000);
-
-        // Initial Stats Load
-        loadStats();
-    </script>
-</body>
-</html>)html";
+	const char* filepath = "/data/index.html";
+	FILE* f = fopen(filepath, "r");
+	if (!f) {
+		Log::error(TAG, "Dashboard file not found: %s", filepath);
+		httpd_resp_send_err(req, HTTPD_404_NOT_FOUND, "Dashboard HTML file not found in storage");
+		return ESP_FAIL;
+	}
 
 	httpd_resp_set_type(req, "text/html");
-	httpd_resp_send(req, html, strlen(html));
+
+	char buf[1024];
+	size_t read_bytes = 0;
+	while ((read_bytes = fread(buf, 1, sizeof(buf), f)) > 0) {
+		if (httpd_resp_send_chunk(req, buf, read_bytes) != ESP_OK) {
+			fclose(f);
+			httpd_resp_send_chunk(req, nullptr, 0);
+			return ESP_FAIL;
+		}
+	}
+	fclose(f);
+	httpd_resp_send_chunk(req, nullptr, 0);
 	return ESP_OK;
 }
 
