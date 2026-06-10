@@ -11,7 +11,7 @@ inherits: _bases/base-esp32-spi
 
 hardware:
   spiram:
-    enabled: false
+    enabled: true
     speed: 80M                # 80M | 120M (120M requires flash_freq to also be 120M)
     xip_from_psram: true
     ecc_enable: true
@@ -87,7 +87,8 @@ hardware:
       miso: -1
       sclk: -1
   battery:
-    enabled: false
+    enabled: true
+    mock: true
   usb:
     tiny_usb: false
 
@@ -131,4 +132,4 @@ webserver:
   enabled: true
 
 sdkconfig:
-  CONFIG_LV_CACHE_DEF_SIZE: 0
+  CONFIG_LV_CACHE_DEF_SIZE: 524288
