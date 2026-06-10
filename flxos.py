@@ -811,7 +811,10 @@ def cmd_info(args):
 
     battery = hw.get("battery", {})
     if battery.get("enabled"):
-        print(f"\n  {C_BOLD}Battery:{C_RESET} ADC{battery.get('adc_unit', '?')}:{battery.get('adc_channel', '?')}")
+        if battery.get("mock"):
+            print(f"\n  {C_BOLD}Battery:{C_RESET} Mocked (software emulation)")
+        else:
+            print(f"\n  {C_BOLD}Battery:{C_RESET} ADC{battery.get('adc_unit', '?')}:{battery.get('adc_channel', '?')}")
 
     # CLI
     cli = data.get("cli", {})
