@@ -420,12 +420,7 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 
 	if (event_id == WIFI_EVENT_AP_START) {
 		Log::info(TAG, "Hotspot AP started");
-		flx::core::Bundle data;
-		data.putString("title", "Hotspot");
-		data.putString("message", "Access Point active: " + self->m_current_ssid);
-		data.putString("appName", "Connectivity");
-		data.putString("icon", "wifi");
-		flx::core::EventBus::getInstance().publish("system.notify", data);
+		self->updateNotification();
 		self->initApHook();
 
 		if (self->m_nat_enabled) {
@@ -438,12 +433,12 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 		}
 	} else if (event_id == WIFI_EVENT_AP_STOP) {
 		Log::info(TAG, "Hotspot AP stopped");
-		flx::core::Bundle data;
-		data.putString("title", "Hotspot");
-		data.putString("message", "Access Point disabled");
-		data.putString("appName", "Connectivity");
-		data.putString("icon", "wifi");
-		flx::core::EventBus::getInstance().publish("system.notify", data);
+
+		// Remove the ongoing hotspot notification
+		flx::core::Bundle removeData;
+		removeData.putString("id", "hotspot_active");
+		flx::core::EventBus::getInstance().publish("system.remove_notify", removeData);
+
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
 			self->m_client_count = 0;
@@ -461,18 +456,6 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 			(wifi_event_ap_staconnected_t*)event_data;
 		Log::info(TAG, "Client connected to Hotspot, AID=%d", event->aid);
 
-		char mac_str[18];
-		snprintf(mac_str, sizeof(mac_str), "%02x:%02x:%02x:%02x:%02x:%02x",
-			event->mac[0], event->mac[1], event->mac[2],
-			event->mac[3], event->mac[4], event->mac[5]);
-
-		flx::core::Bundle data;
-		data.putString("title", "Hotspot client");
-		data.putString("message", std::string("Device connected: ") + mac_str);
-		data.putString("appName", "Connectivity");
-		data.putString("icon", "info");
-		flx::core::EventBus::getInstance().publish("system.notify", data);
-
 		{
 			std::lock_guard<std::mutex> lock(self->m_mutex);
 			ClientInfo info;
@@ -485,6 +468,8 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 			self->m_client_count++;
 			self->m_last_client_time = 0; // Reset shutdown timer
 		}
+
+		self->updateNotification();
 
 		if (self->m_client_count_subject) {
 			self->m_client_count_subject->set(self->m_client_count);
@@ -511,10 +496,34 @@ void HotspotManager::wifi_event_handler(void* arg, esp_event_base_t /*event_base
 			}
 		}
 
+		self->updateNotification();
+
 		if (self->m_client_count_subject) {
 			self->m_client_count_subject->set(self->m_client_count);
 		}
 	}
+}
+
+void HotspotManager::updateNotification() {
+	std::lock_guard<std::mutex> lock(m_mutex);
+	flx::core::Bundle data;
+	data.putString("id", "hotspot_active");
+	data.putString("title", "Hotspot");
+	std::string msg = "Access Point active: " + m_current_ssid;
+	if (m_client_count == 0) {
+		msg += " (No connected devices)";
+	} else if (m_client_count == 1) {
+		msg += " (1 device connected)";
+	} else {
+		msg += " (" + std::to_string(m_client_count) + " devices connected)";
+	}
+	data.putString("message", msg);
+	data.putString("appName", "Connectivity");
+	data.putString("icon", "wifi");
+	data.putBool("dismissable", false);
+	data.putString("redirectAppId", "com.flxos.settings");
+	data.putString("redirectData", "hotspot");
+	flx::core::EventBus::getInstance().publish("system.notify", data);
 }
 
 } // namespace flx::connectivity
