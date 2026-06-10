@@ -17,7 +17,6 @@
 #include <iomanip>
 #include <lwip/sockets.h>
 #include <mbedtls/base64.h>
-#include <mdns.h>
 #include <mutex>
 #include <sstream>
 #include <sys/stat.h>
@@ -250,23 +249,13 @@ flx::services::HealthStatus WebServerService::onHealthCheck() {
 void WebServerService::registerEventHandlers() {
 	if (m_events_registered) return;
 
-	Log::info(TAG, "registerEventHandlers: Subscribing to WiFi and Hotspot events");
+	Log::info(TAG, "registerEventHandlers: Subscribing to Hotspot events");
 
-	// Subscribe to WiFi connection events to advertise mDNS when we get an IP
-	m_wifi_conn_sub_id = ConnectivityManager::getInstance().getWiFiConnectedObservable().subscribe([this](int32_t connected) {
-		bool running = isServerRunning();
-		Log::info(TAG, "WiFi connection callback: connected=%ld, isServerRunning=%d", (long)connected, running);
-		if (connected && running) {
-			advertiseMdns();
-		}
-	});
-
-	// Subscribe to Hotspot events to advertise mDNS / manage DNS server
+	// Subscribe to Hotspot events to manage DNS server
 	m_hotspot_enabled_sub_id = ConnectivityManager::getInstance().getHotspotEnabledObservable().subscribe([this](int32_t enabled) {
 		bool running = isServerRunning();
 		Log::info(TAG, "Hotspot enabled callback: enabled=%ld, isServerRunning=%d", (long)enabled, running);
 		if (running) {
-			advertiseMdns();
 			if (enabled) {
 				start_dns_server();
 			} else {
@@ -280,7 +269,6 @@ void WebServerService::registerEventHandlers() {
 
 void WebServerService::unregisterEventHandlers() {
 	if (!m_events_registered) return;
-	ConnectivityManager::getInstance().getWiFiConnectedObservable().unsubscribe(m_wifi_conn_sub_id);
 	ConnectivityManager::getInstance().getHotspotEnabledObservable().unsubscribe(m_hotspot_enabled_sub_id);
 	m_events_registered = false;
 }
@@ -339,9 +327,6 @@ esp_err_t WebServerService::startServer() {
 	// Register redirect captive portal handler for 404 page requests
 	httpd_register_err_handler(m_server, HTTPD_404_NOT_FOUND, captive_portal_redirect_handler);
 
-	// Advertise mDNS
-	advertiseMdns();
-
 	// If hotspot active, spin up captive portal DNS server
 	if (flx::connectivity::ConnectivityManager::getInstance().isHotspotEnabled()) {
 		start_dns_server();
@@ -356,46 +341,10 @@ void WebServerService::stopServer() {
 		httpd_stop(m_server);
 		m_server = nullptr;
 
-		if (mdns_service_exists("_http", "_tcp", nullptr)) {
-			mdns_service_remove("_http", "_tcp");
-		}
-		mdns_free();
-
 		stop_dns_server();
 	}
 }
 
-void WebServerService::advertiseMdns() {
-	int port = webserverPort.get();
-	Log::info(TAG, "Configuring mDNS responder (hostname: \"flxos\", port: %d)...", port);
-
-	esp_err_t err = mdns_init();
-	if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
-		Log::error(TAG, "Failed to initialize mDNS: %s", esp_err_to_name(err));
-		return;
-	}
-
-	err = mdns_hostname_set("flxos");
-	if (err != ESP_OK) {
-		Log::error(TAG, "Failed to set mDNS hostname: %s", esp_err_to_name(err));
-		return;
-	}
-
-	err = mdns_instance_name_set("FlxOS Hub");
-	if (err != ESP_OK) {
-		Log::warn(TAG, "Failed to set mDNS instance name: %s", esp_err_to_name(err));
-	}
-
-	if (mdns_service_exists("_http", "_tcp", nullptr)) {
-		mdns_service_remove("_http", "_tcp");
-	}
-	err = mdns_service_add(nullptr, "_http", "_tcp", port, nullptr, 0);
-	if (err != ESP_OK) {
-		Log::error(TAG, "Failed to add HTTP service to mDNS: %s", esp_err_to_name(err));
-	} else {
-		Log::info(TAG, "mDNS responder configured successfully. Resolve at http://flxos.local");
-	}
-}
 
 // ──── Timing-safe comparison to prevent side-channel leaks ────
 static bool timing_safe_compare(const std::string& a, const std::string& b) {
