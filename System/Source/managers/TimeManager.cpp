@@ -38,6 +38,8 @@ static void time_sync_notification_cb(struct timeval* /*tv*/) {
 	data.putString("message", std::string("Time updated: ") + buf);
 	data.putString("appName", "System");
 	data.putString("icon", "refresh");
+	data.putString("redirectAppId", "com.flxos.settings");
+	data.putString("redirectData", "time");
 	flx::core::EventBus::getInstance().publish("system.notify", data);
 }
 

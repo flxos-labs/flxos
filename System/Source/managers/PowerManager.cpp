@@ -46,6 +46,8 @@ bool PowerManager::onStart() {
 							data.putString("appName", "Power");
 							data.putString("icon", "battery");
 							data.putInt32("priority", 2);
+							data.putString("redirectAppId", "com.flxos.settings");
+							data.putString("redirectData", "power");
 							flx::core::EventBus::getInstance().publish("system.notify", data);
 						}
 						break;
@@ -58,6 +60,8 @@ bool PowerManager::onStart() {
 							data.putString("appName", "Power");
 							data.putString("icon", "battery");
 							data.putInt32("priority", 2);
+							data.putString("redirectAppId", "com.flxos.settings");
+							data.putString("redirectData", "power");
 							flx::core::EventBus::getInstance().publish("system.notify", data);
 						}
 						break;

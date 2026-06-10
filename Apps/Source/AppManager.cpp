@@ -254,6 +254,8 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 		data.putString("appName", "System");
 		data.putString("icon", "error");
 		data.putInt32("priority", 2);
+		data.putString("redirectAppId", "com.flxos.settings");
+		data.putString("redirectData", "developer");
 		flx::core::EventBus::getInstance().publish("system.notify", data);
 		return LAUNCH_ID_INVALID;
 	}
@@ -305,6 +307,8 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 			data.putString("appName", "System");
 			data.putString("icon", "warning");
 			data.putInt32("priority", 2);
+			data.putString("redirectAppId", "com.flxos.settings");
+			data.putString("redirectData", "developer");
 			flx::core::EventBus::getInstance().publish("system.notify", data);
 			return LAUNCH_ID_INVALID;
 		}

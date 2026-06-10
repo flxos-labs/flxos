@@ -79,7 +79,11 @@ esp_err_t SystemManager::initHardware() {
 			"System storage failed to mount",
 			"System",
 			LV_SYMBOL_WARNING,
-			2);
+			2,
+			true,
+			"",
+			"com.flxos.settings",
+			"storage");
 #endif
 		m_isSafeMode = true;
 	} else {
@@ -151,7 +155,11 @@ esp_err_t SystemManager::initServices() {
 			"Core services failed to start",
 			"System",
 			LV_SYMBOL_WARNING,
-			2);
+			2,
+			true,
+			"",
+			"com.flxos.settings",
+			"developer");
 #endif
 		m_isSafeMode = true;
 	}

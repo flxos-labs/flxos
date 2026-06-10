@@ -193,7 +193,12 @@ bool ScreenshotService::capture(const std::string& savePath) {
 		"Screenshot Saved",
 		savePath,
 		"System",
-		LV_SYMBOL_IMAGE);
+		LV_SYMBOL_IMAGE,
+		1,
+		true,
+		"",
+		"com.flxos.imageviewer",
+		savePath);
 	return true;
 }
 
