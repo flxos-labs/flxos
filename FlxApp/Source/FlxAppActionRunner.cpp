@@ -230,7 +230,19 @@ void FlxAppActionRunner::runSingle(const flx::core::FlxValueView& action) {
 		data.putString("message", resolveString(action.child("message")));
 		data.putString("appName", m_app.getAppName());
 		data.putString("icon", resolveString(action.child("icon")));
+		if (action.child("dismissable").valid()) {
+			data.putBool("dismissable", action.child("dismissable").asBool(true));
+		}
+		if (action.child("id").valid()) {
+			data.putString("id", resolveString(action.child("id")));
+		}
 		flx::core::EventBus::getInstance().publish("system.notify", data);
+	} else if (type == "remove_notify") {
+		flx::core::Bundle data;
+		if (action.child("id").valid()) {
+			data.putString("id", resolveString(action.child("id")));
+		}
+		flx::core::EventBus::getInstance().publish("system.remove_notify", data);
 	} else if (type == "http_get") {
 		refreshViaState = runHttpGet(action, key);
 	} else if (type == "script") {

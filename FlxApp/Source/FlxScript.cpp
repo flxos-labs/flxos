@@ -313,7 +313,7 @@ bool FlxScript::executeAssignment(std::string_view lhs, std::string_view rhs) {
 // =============================================================================
 
 bool FlxScript::executeCall(std::string_view funcName, std::string_view argsRaw) {
-    static constexpr int kMaxArgs = 4;
+    static constexpr int kMaxArgs = 6;
     std::string args[kMaxArgs];
     int         argc = 0;
     parseArgs(argsRaw, args, kMaxArgs, argc);
@@ -327,7 +327,20 @@ bool FlxScript::executeCall(std::string_view funcName, std::string_view argsRaw)
         data.putString("message", argc > 1 ? args[1] : "");
         data.putString("appName", m_app.getAppName());
         data.putString("icon",    argc > 2 ? args[2] : "");
+        if (argc > 3) {
+            data.putBool("dismissable", args[3] == "false" || args[3] == "0" ? false : true);
+        }
+        if (argc > 4) {
+            data.putString("id", args[4]);
+        }
         flx::core::EventBus::getInstance().publish("system.notify", data);
+
+    } else if (funcName == "remove_notify") {
+        if (argc > 0) {
+            flx::core::Bundle data;
+            data.putString("id", args[0]);
+            flx::core::EventBus::getInstance().publish("system.remove_notify", data);
+        }
 
     } else if (funcName == "navigate") {
         if (argc > 0 && !args[0].empty()) {
