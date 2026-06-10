@@ -8,6 +8,10 @@ if(CCACHE_PROGRAM)
     message(STATUS "FlxOS: ccache enabled → ${CCACHE_PROGRAM}")
 endif()
 
+# Limit NAPT allocation size to fit within internal SRAM
+add_compile_definitions(IP_NAPT_MAX=16)
+add_compile_definitions(IP_PORTMAP_MAX=4)
+
 # Load profile and determine headless mode early
 # This must happen before including project.cmake
 include("${CMAKE_SOURCE_DIR}/Buildscripts/profile.cmake")

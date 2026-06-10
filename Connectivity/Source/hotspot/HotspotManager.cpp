@@ -7,6 +7,7 @@
 #include "esp_netif_types.h"
 #include "esp_timer.h"
 #include "esp_wifi.h"
+#include "esp_system.h"
 #include "flx/connectivity/ConnectivityManager.hpp"
 #include "flx/connectivity/wifi/WiFiManager.hpp"
 #include <cstdint>
@@ -373,6 +374,9 @@ esp_err_t HotspotManager::setNatEnabled(bool enabled, bool syncDns) {
 		esp_netif_get_ip_info(ap_netif, &ip_info);
 
 		// Enable NAPT
+		Log::info(TAG, "Enabling NAPT. Free Heap: %lu B, Minimum Free Heap: %lu B",
+			(unsigned long)esp_get_free_heap_size(),
+			(unsigned long)esp_get_minimum_free_heap_size());
 		ip_napt_enable(ip_info.ip.addr, 1);
 
 		// Configure DHCP server - do ONE stop, configure all options, then ONE start
