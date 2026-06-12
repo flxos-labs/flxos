@@ -1,5 +1,5 @@
 # System component — FlxOS System Services and Managers
-set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule Apps)
+set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule Apps esp_http_server)
 set(SYSTEM_SRCS
     "Source/SystemManager.cpp"
     "Source/SystemDiagnostics.cpp"
@@ -12,6 +12,7 @@ set(SYSTEM_SRCS
     "Source/services/FileSystemService.cpp"
     "Source/services/SystemInfoService.cpp"
     "Source/services/HalInitService.cpp"
+    "Source/services/WebServerService.cpp"
 )
 
 if(NOT "$ENV{FLXOS_HEADLESS_MODE_ENABLED}" STREQUAL "ON")

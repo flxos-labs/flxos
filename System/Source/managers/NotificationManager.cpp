@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <ctime>
 #include <flx/core/Logger.hpp>
 #include <string_view>
 
@@ -41,6 +42,10 @@ bool NotificationManager::onStart() {
 		std::string message = data.getStringOr("message", "");
 		std::string appName = data.getStringOr("appName", "System");
 		int priority = data.getInt32Or("priority", 1);
+		bool dismissable = data.getBoolOr("dismissable", true);
+		std::string customId = data.getStringOr("id", "");
+		std::string redirectAppId = data.getStringOr("redirectAppId", "");
+		std::string redirectData = data.getStringOr("redirectData", "");
 
 		// Map icon string to LVGL symbol if needed
 		const void* icon = nullptr;
@@ -59,7 +64,16 @@ bool NotificationManager::onStart() {
 		else if (iconStr == "refresh")
 			icon = LV_SYMBOL_REFRESH;
 
-		this->addNotification(title, message, appName, icon, priority);
+		this->addNotification(title, message, appName, icon, priority, dismissable, customId, redirectAppId, redirectData);
+	});
+
+	// Listen for remote notification removals via EventBus
+	m_event_remove_sub_id = flx::core::EventBus::getInstance().subscribe("system.remove_notify", [this](const std::string& /*event*/, const flx::core::Bundle& data) {
+		if (!this->isRunning()) return;
+		std::string id = data.getStringOr("id", "");
+		if (!id.empty()) {
+			this->removeNotification(id);
+		}
 	});
 
 	return true;
@@ -70,7 +84,11 @@ void NotificationManager::onStop() {
 		flx::core::EventBus::getInstance().unsubscribe(m_event_sub_id);
 		m_event_sub_id = 0;
 	}
-	clearAll();
+	if (m_event_remove_sub_id != 0) {
+		flx::core::EventBus::getInstance().unsubscribe(m_event_remove_sub_id);
+		m_event_remove_sub_id = 0;
+	}
+	clearAll(true);
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
 		m_latest_notification = {};
@@ -90,9 +108,9 @@ std::string NotificationManager::generateId() {
 	return std::string(id);
 }
 
-void NotificationManager::addNotification(const std::string& title, const std::string& message, const std::string& appName, const void* icon, int priority) {
-	if (!isRunning() && heap_caps_get_total_size(MALLOC_CAP_SPIRAM) == 0) {
-		Log::warn(TAG, "Dropping notification while service is stopped in no-PSRAM mode: %s", title.c_str());
+void NotificationManager::addNotification(const std::string& title, const std::string& message, const std::string& appName, const void* icon, int priority, bool dismissable, const std::string& customId, const std::string& redirectAppId, const std::string& redirectData) {
+	if (!isRunning()) {
+		Log::warn(TAG, "Dropping notification while service is stopped: %s", title.c_str());
 		return;
 	}
 
@@ -102,14 +120,23 @@ void NotificationManager::addNotification(const std::string& title, const std::s
 		std::lock_guard<std::mutex> lock(m_mutex);
 		Log::info(TAG, "New notification from %s: %s", appName.c_str(), title.c_str());
 
-		notif.id = generateId();
+		notif.id = customId.empty() ? generateId() : customId;
 		notif.title = title;
 		notif.message = message;
 		notif.appName = appName;
 		notif.icon = icon;
 		notif.priority = priority;
-		notif.timestamp = (uint32_t)(esp_timer_get_time() / 1000000);
+		notif.timestamp = (uint32_t)time(nullptr);
 		notif.isRead = false;
+		notif.dismissable = dismissable;
+		notif.redirectAppId = redirectAppId;
+		notif.redirectData = redirectData;
+
+		// Remove any existing notification with the same ID (upsert behavior)
+		auto it = std::remove_if(m_notifications.begin(), m_notifications.end(), [&notif](const Notification& n) { return n.id == notif.id; });
+		if (it != m_notifications.end()) {
+			m_notifications.erase(it, m_notifications.end());
+		}
 
 		m_notifications.insert(m_notifications.begin(), notif);
 		m_latest_notification = notif;
@@ -141,15 +168,38 @@ void NotificationManager::removeNotification(const std::string& id) {
 	}
 }
 
-void NotificationManager::clearAll() {
+void NotificationManager::clearAll(bool force) {
+	bool changed = false;
 	{
 		std::lock_guard<std::mutex> lock(m_mutex);
-		Log::info(TAG, "Clearing all notifications (%zu count)", m_notifications.size());
-		m_notifications.clear();
-		m_latest_notification = {};
-		m_latest_notification_serial = 0;
+		if (force) {
+			if (!m_notifications.empty()) {
+				Log::info(TAG, "Forcing clear of all notifications (%zu count)", m_notifications.size());
+				m_notifications.clear();
+				m_latest_notification = {};
+				m_latest_notification_serial = 0;
+				changed = true;
+			}
+		} else {
+			size_t before = m_notifications.size();
+			auto it = std::remove_if(m_notifications.begin(), m_notifications.end(), [](const Notification& n) {
+				return n.dismissable;
+			});
+			if (it != m_notifications.end()) {
+				m_notifications.erase(it, m_notifications.end());
+				changed = true;
+				// check if the latest notification was dismissed
+				if (!m_latest_notification.id.empty() && m_latest_notification.dismissable) {
+					m_latest_notification = {};
+					m_latest_notification_serial = 0;
+				}
+				Log::info(TAG, "Cleared dismissable notifications (from %zu to %zu)", before, m_notifications.size());
+			}
+		}
 	}
-	updateSubjects();
+	if (changed) {
+		updateSubjects();
+	}
 }
 
 void NotificationManager::markAsRead(const std::string& id) {

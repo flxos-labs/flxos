@@ -33,7 +33,7 @@ ResourceMonitorTask& ResourceMonitorTask::getInstance() {
 }
 
 ResourceMonitorTask::ResourceMonitorTask()
-	: Task("res_monitor", 8192, 2, tskNO_AFFINITY) {}
+	: Task("res_monitor", 4096, 2, tskNO_AFFINITY) {}
 
 ResourceMonitorTask::Stats ResourceMonitorTask::getLatestStats() const {
 	return {m_freeHeap.load(), m_minFreeHeap.load(), m_freePsram.load(), m_uptimeSeconds.load()};

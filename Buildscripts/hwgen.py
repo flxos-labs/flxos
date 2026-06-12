@@ -583,7 +583,15 @@ def derive_topology_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
         )
         peripherals["board_power"] = board_power_peripheral
 
+    keyboard = _as_dict(hardware.get("keyboard"))
+    if keyboard and keyboard.get("type") == "matrix_demux":
+        peripherals["keyboard"] = {
+            "type": "keyboard",
+            "driver": "matrix_demux"
+        }
+
     return topology
+
 
 
 def validate_hardware_doc(profile_id: str, hw: dict) -> list[str]:
@@ -683,6 +691,11 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
             }
         )
 
+    has_cardputer_keyboard = False
+    for per_cfg in peripherals.values():
+        if isinstance(per_cfg, dict) and per_cfg.get("type") == "keyboard" and per_cfg.get("driver") == "matrix_demux":
+            has_cardputer_keyboard = True
+
     lines: list[str] = [
         f"// {GENERATED_SIGNATURE}",
         f"// Profile: {profile_id}",
@@ -698,10 +711,12 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
         "",
         "#include <flx/hal/DeviceRegistry.hpp>",
         "#include <flx/hal/display/LgfxDisplayDevice.hpp>",
+        *(["#include <flx/hal/input/CardputerMatrixKeyboard.hpp>"] if has_cardputer_keyboard else []),
         "#include <flx/hal/touch/LgfxTouchDevice.hpp>",
         "#include <flx/hal/sdcard/SpiSdCardDevice.hpp>",
         "#include <flx/hal/spi/EspSpiBus.hpp>",
         "#include <flx/hal/i2c/EspI2cBus.hpp>",
+
         "",
         f"namespace flx::profile::{namespace_id}::hwd {{",
         "",
@@ -824,12 +839,19 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
                 "        if (display->start()) registry.registerDevice(display);",
                 "    }"
             ])
+        elif ptype == "keyboard" and cfg.get("driver") == "matrix_demux":
+            lines.extend([
+                "    {",
+                "        auto keyboard = std::make_shared<flx::hal::input::CardputerMatrixKeyboard>();",
+                "        if (keyboard->start()) registry.registerDevice(keyboard);",
+                "    }"
+            ])
         elif ptype == "touch":
             lines.extend([
                 "    {",
                 "        auto display = registry.findFirst<flx::hal::display::IDisplayDevice>(flx::hal::IDevice::Type::Display);",
                 "        if (display) {",
-                "            auto lgfx_disp_sp = std::dynamic_pointer_cast<flx::hal::display::LgfxDisplayDevice>(display);",
+                "            auto lgfx_disp_sp = std::static_pointer_cast<flx::hal::display::LgfxDisplayDevice>(display);",
                 "            if (lgfx_disp_sp) {",
                 "                auto touch = std::make_shared<flx::hal::touch::LgfxTouchDevice>(lgfx_disp_sp->getRawDriver());",
                 "                if (touch->start()) registry.registerDevice(touch);",

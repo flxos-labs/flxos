@@ -26,6 +26,8 @@ esp_err_t BluetoothManager::enable(bool enable) {
 	data.putString("message", enable ? "Bluetooth enabled" : "Bluetooth disabled");
 	data.putString("appName", "Connectivity");
 	data.putString("icon", "info");
+	data.putString("redirectAppId", "com.flxos.settings");
+	data.putString("redirectData", "bluetooth");
 	flx::core::EventBus::getInstance().publish("system.notify", data);
 	if (m_enabled_subject) {
 		m_enabled_subject->set(enable ? 1 : 0);

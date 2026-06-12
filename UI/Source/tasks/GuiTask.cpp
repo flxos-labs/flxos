@@ -1,3 +1,4 @@
+#include <core/lv_obj_style.h>
 #include <cstddef>
 #include <cstdint>
 #include <display/lv_display.h>
@@ -33,6 +34,7 @@
 #include <Config.hpp>
 #include <flx/hal/BusManager.hpp>
 #include <flx/hal/display/LgfxDisplayDevice.hpp>
+#include <flx/hal/input/IInputDevice.hpp>
 #else
 #include <flx/hal/display/HeadlessDisplayDevice.hpp>
 #endif
@@ -51,7 +53,7 @@ bool GuiTask::m_paused = false;
 bool GuiTask::m_resume_on_touch = false;
 GuiTask::PerfStats GuiTask::m_perfStats {};
 
-GuiTask::GuiTask() : flx::kernel::Task("gui_task", 16 * 1024, 5, 1) {
+GuiTask::GuiTask() : flx::kernel::Task("gui_task", 12 * 1024, 5, 1) {
 }
 
 void GuiTask::display_init() {
@@ -137,6 +139,24 @@ void GuiTask::display_init() {
 	lv_group_t* g = lv_group_create();
 	lv_group_set_default(g);
 
+	// Start all registered keyboard input devices and attach them to the
+	// default LVGL group so they can control focus/navigation.
+	auto keyboards = registry.findAll<flx::hal::input::IInputDevice>(flx::hal::IDevice::Type::Keyboard);
+	for (auto& kbd: keyboards) {
+		if (kbd->getState() != flx::hal::IDevice::State::Ready) {
+			Log::info(TAG, "Starting keyboard input device: %s", std::string(kbd->getName()).c_str());
+			if (!kbd->start()) {
+				Log::error(TAG, "Failed to start keyboard input device: %s", std::string(kbd->getName()).c_str());
+				continue;
+			}
+		}
+		// Attach the device (whether just started or already ready) to the group
+		lv_indev_t* lvkbd = kbd->getLvglIndev();
+		if (lvkbd) {
+			lv_indev_set_group(lvkbd, g);
+		}
+	}
+
 	lv_tick_set_cb([]() { return (uint32_t)(esp_timer_get_time() / 1000); });
 }
 
@@ -181,6 +201,10 @@ void GuiTask::run(void* /*data*/) {
 	int32_t currentRotation = rotationObs.get();
 	if (lv_disp) {
 		lv_display_set_rotation(lv_disp, (lv_display_rotation_t)(currentRotation / 90));
+		lv_obj_report_style_change(nullptr);
+		lv_obj_invalidate(lv_display_get_screen_active(lv_disp));
+		lv_obj_invalidate(lv_display_get_layer_top(lv_disp));
+		lv_obj_invalidate(lv_display_get_layer_sys(lv_disp));
 	}
 
 	// Subscribe to changes
@@ -188,6 +212,10 @@ void GuiTask::run(void* /*data*/) {
 		GuiTask::perform([lv_disp, val]() {
 			if (lv_disp) {
 				lv_display_set_rotation(lv_disp, (lv_display_rotation_t)(val / 90));
+				lv_obj_report_style_change(nullptr);
+				lv_obj_invalidate(lv_display_get_screen_active(lv_disp));
+				lv_obj_invalidate(lv_display_get_layer_top(lv_disp));
+				lv_obj_invalidate(lv_display_get_layer_sys(lv_disp));
 			}
 		});
 	});

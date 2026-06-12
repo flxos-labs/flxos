@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <esp_timer.h>
 #include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiEvents.hpp>
 #include <flx/core/Logger.hpp>
@@ -45,6 +46,16 @@ esp_err_t WiFiManager::init(flx::Observable<int32_t>* connected_subject, flx::St
 		return err;
 	}
 
+	// Create retry timer
+	esp_timer_create_args_t timer_args = {};
+	timer_args.callback = [](void* arg) {
+		Log::info(TAG, "Retry timer fired, calling esp_wifi_connect");
+		esp_wifi_connect();
+	};
+	timer_args.arg = this;
+	timer_args.name = "wifi_retry";
+	esp_timer_create(&timer_args, &m_retry_timer);
+
 	m_is_init = true;
 	return ESP_OK;
 }
@@ -58,6 +69,10 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 	m_should_reconnect = true;
 	m_manual_disconnect = false; // Clear manual-disconnect flag on explicit connect
 	m_retry_count = 0;
+	m_retry_delay_ms = 1000;
+	if (m_retry_timer) {
+		esp_timer_stop(m_retry_timer);
+	}
 	m_pending_ssid = ssid ? ssid : "";
 	m_pending_password = password ? password : "";
 	setStatus(WiFiStatus::CONNECTING);
@@ -78,6 +93,15 @@ esp_err_t WiFiManager::connect(const char* ssid, const char* password) {
 	if (password != nullptr) {
 		strncpy((char*)wifi_config.sta.password, password, sizeof(wifi_config.sta.password) - 1);
 		wifi_config.sta.password[sizeof(wifi_config.sta.password) - 1] = '\0';
+	}
+
+	// Pin channel if we have a saved credential with lastChannel
+	WiFiCredential cred;
+	if (WiFiCredentialStore::getInstance().load(ssid, cred)) {
+		if (cred.lastChannel > 0 && cred.lastChannel <= 14) {
+			wifi_config.sta.channel = cred.lastChannel;
+			Log::info(TAG, "Pinning connection to channel %d", static_cast<int>(cred.lastChannel));
+		}
 	}
 
 	wifi_mode_t current_mode = WIFI_MODE_NULL;
@@ -106,6 +130,11 @@ esp_err_t WiFiManager::disconnect() {
 	Log::info(TAG, "Disconnecting WiFi (manual)...");
 	m_should_reconnect = false;
 	m_manual_disconnect = true; // Suppress auto-reconnect until next explicit connect
+	if (m_retry_timer) {
+		esp_timer_stop(m_retry_timer);
+	}
+	m_retry_count = 0;
+	m_retry_delay_ms = 1000;
 	// Do NOT publish WiFiEvent::Disconnected here — the STA_DISCONNECTED event
 	// handler will fire and emit it via the m_manual_disconnect branch, avoiding
 	// a double-publish.
@@ -129,6 +158,11 @@ esp_err_t WiFiManager::setEnabled(bool enabled) {
 
 	if (!enabled) {
 		m_should_reconnect = false;
+		if (m_retry_timer) {
+			esp_timer_stop(m_retry_timer);
+		}
+		m_retry_count = 0;
+		m_retry_delay_ms = 1000;
 		esp_wifi_disconnect();
 		setStatus(WiFiStatus::RADIO_OFF);
 		WiFiEvents::publish(WiFiEvent::RadioDisabled);
@@ -255,6 +289,16 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 		m_ip_subject->set("0.0.0.0");
 	}
 
+	// Pinned channel cleanup on failure
+	wifi_config_t current_conf;
+	if (esp_wifi_get_config(WIFI_IF_STA, &current_conf) == ESP_OK) {
+		if (current_conf.sta.channel > 0) {
+			Log::info(TAG, "Pinned channel connect failed. Clearing channel limit for retries.");
+			current_conf.sta.channel = 0;
+			esp_wifi_set_config(WIFI_IF_STA, &current_conf);
+		}
+	}
+
 	bool const is_auth_failure =
 		(event->reason == WIFI_REASON_AUTH_EXPIRE ||
 			event->reason == WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT ||
@@ -272,10 +316,15 @@ void WiFiManager::handleStaDisconnected(void* event_data) {
 		WiFiEvents::publish(WiFiEvent::Disconnected, m_pending_ssid);
 	} else if (m_should_reconnect && m_retry_count < MAX_RETRIES) {
 		setStatus(WiFiStatus::CONNECTING);
-		esp_err_t const err = esp_wifi_connect();
-		if (err == ESP_OK) {
-			m_retry_count++;
+		uint32_t delay = m_retry_delay_ms;
+		Log::info(TAG, "Scheduling reconnect attempt %d in %lu ms", m_retry_count + 1, delay);
+		if (m_retry_timer) {
+			esp_timer_start_once(m_retry_timer, delay * 1000ULL);
+		} else {
+			esp_wifi_connect();
 		}
+		m_retry_count++;
+		m_retry_delay_ms = std::min(m_retry_delay_ms * 2, MAX_RETRY_DELAY_MS);
 	} else if (m_retry_count >= MAX_RETRIES) {
 		m_should_reconnect = false;
 		setStatus(WiFiStatus::NOT_FOUND);
@@ -340,12 +389,27 @@ void WiFiManager::ip_event_handler(void* arg, esp_event_base_t /*event_base*/, i
 			self->m_connected_subject->set(1);
 		}
 		self->m_retry_count = 0;
+		self->m_retry_delay_ms = 1000;
+		if (self->m_retry_timer) {
+			esp_timer_stop(self->m_retry_timer);
+		}
 		self->setStatus(WiFiStatus::CONNECTED);
 
-		// Update lastConnected timestamp in the credential store
+		// Update lastConnected, lastChannel, lastBssid in the credential store
 		const std::string ssid = self->m_ssid_subject ? self->m_ssid_subject->get() : "";
 		if (!ssid.empty() && ssid != "Disconnected") {
-			WiFiCredentialStore::getInstance().updateLastConnected(ssid);
+			WiFiCredential cred;
+			if (WiFiCredentialStore::getInstance().load(ssid, cred)) {
+				wifi_ap_record_t ap_info;
+				if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+					cred.lastChannel = ap_info.primary;
+					memcpy(cred.lastBssid, ap_info.bssid, 6);
+				}
+				struct timespec ts {};
+				clock_gettime(CLOCK_REALTIME, &ts);
+				cred.lastConnectedMs = static_cast<int64_t>(ts.tv_sec) * 1000LL + ts.tv_nsec / 1000000LL;
+				WiFiCredentialStore::getInstance().save(cred);
+			}
 		}
 
 		// Publish typed event (replaces the old ad-hoc system.notify)

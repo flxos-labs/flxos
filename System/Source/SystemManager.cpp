@@ -30,6 +30,9 @@
 #endif
 #include <flx/system/services/DeviceProfileService.hpp>
 #include <flx/system/services/HalInitService.hpp>
+#if CONFIG_FLXOS_WEBSERVER_ENABLED
+#include <flx/system/services/WebServerService.hpp>
+#endif
 #if LV_USE_LOVYAN_GFX
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
@@ -76,7 +79,11 @@ esp_err_t SystemManager::initHardware() {
 			"System storage failed to mount",
 			"System",
 			LV_SYMBOL_WARNING,
-			2);
+			2,
+			true,
+			"",
+			"com.flxos.settings",
+			"storage");
 #endif
 		m_isSafeMode = true;
 	} else {
@@ -119,12 +126,11 @@ void SystemManager::registerServices() {
 #endif
 
 #if LV_USE_LOVYAN_GFX
-	if (hasPsram()) {
-		registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
-		registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
-	} else {
-		Log::warn(TAG, "Skipping Notifications and Screenshot services at boot (no PSRAM; low-memory test mode)");
-	}
+	registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
+#endif
+#if CONFIG_FLXOS_WEBSERVER_ENABLED
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::system::services::WebServerService::getInstance(), noDelete));
 #endif
 }
 
@@ -149,7 +155,11 @@ esp_err_t SystemManager::initServices() {
 			"Core services failed to start",
 			"System",
 			LV_SYMBOL_WARNING,
-			2);
+			2,
+			true,
+			"",
+			"com.flxos.settings",
+			"developer");
 #endif
 		m_isSafeMode = true;
 	}

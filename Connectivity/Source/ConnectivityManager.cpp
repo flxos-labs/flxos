@@ -9,6 +9,7 @@
 #include "flx/connectivity/hotspot/HotspotManager.hpp"
 #include "flx/connectivity/wifi/WiFiCredentialStore.hpp"
 #include "flx/connectivity/wifi/WiFiManager.hpp"
+#include "flx/connectivity/wifi/WiFiProvisioning.hpp"
 #include <cstdint>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
@@ -82,12 +83,38 @@ bool ConnectivityManager::onStart() {
 		}
 	}
 
+	// SD card / boot-media provisioning
+	WiFiProvisioning::importFromBootMedia();
+
 	// Auto-start WiFi and connect to best known network if enabled
 	if (m_wifi_autostart_subject.get() != 0) {
 		Log::info(TAG, "Auto-starting WiFi...");
 		setWiFiEnabled(true);
 		WiFiManager::getInstance().connectBestKnownNetwork();
 	}
+
+	// Initialize scan timer
+	esp_timer_create_args_t scan_timer_args = {};
+	scan_timer_args.callback = [](void* arg) {
+		auto* self = static_cast<ConnectivityManager*>(arg);
+		if (self->isWiFiEnabled() && !self->isWiFiConnected() && !WiFiManager::getInstance().isConnected()) {
+			Log::info(TAG, "Periodic scan timer fired. Auto-connecting to best known network.");
+			self->connectBestKnownNetwork();
+		}
+	};
+	scan_timer_args.arg = this;
+	scan_timer_args.name = "wifi_periodic_scan";
+	esp_timer_create(&scan_timer_args, &m_scan_timer);
+
+	// Subscribe to changes to update timer dynamically
+	m_wifi_enabled_subject.subscribe([this](int32_t) {
+		updateScanTimer();
+	});
+	m_wifi_scan_interval_subject.subscribe([this](int32_t) {
+		updateScanTimer();
+	});
+
+	updateScanTimer();
 
 	// Start hotspot usage timer
 	HotspotManager::getInstance().startUsageTimer();
@@ -104,6 +131,11 @@ void ConnectivityManager::onStop() {
 	// Stop hotspot if running
 	if (isHotspotEnabled()) {
 		HotspotManager::getInstance().stop();
+	}
+	if (m_scan_timer) {
+		esp_timer_stop(m_scan_timer);
+		esp_timer_delete(m_scan_timer);
+		m_scan_timer = nullptr;
 	}
 	Log::info(TAG, "Connectivity service stopped");
 }
@@ -268,6 +300,22 @@ std::vector<WiFiCredential> ConnectivityManager::getSavedNetworks() const {
 
 esp_err_t ConnectivityManager::connectBestKnownNetwork() {
 	return WiFiManager::getInstance().connectBestKnownNetwork();
+}
+
+void ConnectivityManager::updateScanTimer() {
+	if (m_scan_timer) {
+		esp_timer_stop(m_scan_timer);
+	}
+
+	int32_t interval_sec = m_wifi_scan_interval_subject.get();
+	bool wifi_enabled = (m_wifi_enabled_subject.get() != 0);
+
+	if (wifi_enabled && interval_sec > 0) {
+		Log::info(TAG, "Starting periodic auto-connect scan timer (interval: %d s)", (int)interval_sec);
+		esp_timer_start_periodic(m_scan_timer, static_cast<uint64_t>(interval_sec) * 1000000ULL);
+	} else {
+		Log::info(TAG, "Periodic auto-connect scan timer disabled");
+	}
 }
 
 } // namespace flx::connectivity

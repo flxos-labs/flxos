@@ -51,6 +51,7 @@ public:
 	virtual const void* getIcon() const { return nullptr; }
 	virtual void createUI(void* parent) {}
 	virtual std::string getVersion() const { return "0.1.0"; }
+	virtual bool isFlxApp() const { return false; }
 
 	bool isActive() const { return m_isActive; }
 	void setActive(bool active) { m_isActive = active; }

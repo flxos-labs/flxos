@@ -22,6 +22,9 @@ struct Notification {
 	int priority {}; // 0: Low, 1: Normal, 2: High
 	uint32_t timestamp {};
 	bool isRead {};
+	bool dismissable {true};
+	std::string redirectAppId {};
+	std::string redirectData {};
 };
 
 class NotificationManager : public flx::Singleton<NotificationManager>, public flx::services::IService {
@@ -38,9 +41,9 @@ public:
 	void onStop() override;
 
 	// Notification Management
-	void addNotification(const std::string& title, const std::string& message, const std::string& appName = "System", const void* icon = nullptr, int priority = 1);
+	void addNotification(const std::string& title, const std::string& message, const std::string& appName = "System", const void* icon = nullptr, int priority = 1, bool dismissable = true, const std::string& customId = "", const std::string& redirectAppId = "", const std::string& redirectData = "");
 	void removeNotification(const std::string& id);
-	void clearAll();
+	void clearAll(bool force = false);
 	void markAsRead(const std::string& id);
 	void markAllAsRead();
 
@@ -64,6 +67,7 @@ private:
 	int32_t m_latest_notification_serial {0};
 	mutable std::mutex m_mutex {};
 	flx::core::EventBus::SubscriptionId m_event_sub_id {0};
+	flx::core::EventBus::SubscriptionId m_event_remove_sub_id {0};
 	flx::Observable<int32_t> m_unread_count_subject {0};
 	flx::Observable<int32_t> m_update_subject {0};
 	flx::Observable<int32_t> m_latest_notification_subject {0};

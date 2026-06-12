@@ -4,6 +4,7 @@
 #include "esp_event.h"
 #include "esp_wifi.h"
 #include <atomic>
+#include <esp_timer.h>
 #include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
@@ -78,6 +79,9 @@ private:
 	bool m_manual_disconnect = false; ///< Set on explicit user disconnect; suppresses auto-reconnect
 	int m_retry_count = 0;
 	static constexpr int MAX_RETRIES = 5;
+	uint32_t m_retry_delay_ms = 1000;
+	static constexpr uint32_t MAX_RETRY_DELAY_MS = 16000;
+	esp_timer_handle_t m_retry_timer = nullptr;
 
 	// Credential carried across the event-handler boundary for best-known connect
 	std::string m_pending_ssid;

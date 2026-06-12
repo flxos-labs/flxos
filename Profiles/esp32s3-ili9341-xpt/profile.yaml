@@ -87,7 +87,8 @@ hardware:
       miso: -1
       sclk: -1
   battery:
-    enabled: false
+    enabled: true
+    mock: true
   usb:
     tiny_usb: false
 
@@ -100,13 +101,13 @@ console:
   usb_serial_jtag: true
 
 cli:
-  enabled: true
+  enabled: false
   prompt: "flxos> "
   max_cmdline_length: 256
 
 lvgl:
   font_size: 14
-  theme: DefaultDark
+  theme: Dark
   ui_density: normal
 
 capabilities:
@@ -126,6 +127,9 @@ distribution:
     - spi
     - ili9341
     - dev-board
+
+webserver:
+  enabled: true
 
 sdkconfig:
   CONFIG_LV_CACHE_DEF_SIZE: 524288

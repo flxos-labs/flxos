@@ -24,4 +24,4 @@ cli:
 
 lvgl:
   font_size: 14
-  theme: DefaultDark
+  theme: Dark

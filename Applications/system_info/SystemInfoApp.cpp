@@ -87,6 +87,9 @@ void SystemInfoApp::onStop() {
 	m_storage_system_bar = nullptr;
 	m_storage_data_label = nullptr;
 	m_storage_data_bar = nullptr;
+	m_storage_sd_sep = nullptr;
+	m_storage_sd_label = nullptr;
+	m_storage_sd_bar = nullptr;
 	m_wifi_status_label = nullptr;
 	m_wifi_ssid_label = nullptr;
 	m_wifi_ip_label = nullptr;
@@ -118,14 +121,16 @@ void SystemInfoApp::createUI(void* parent) {
 
 	// Create tabs
 	lv_obj_t* tab_system = lv_tabview_add_tab(m_tabview, "System");
-	lv_obj_t* tab_memory = lv_tabview_add_tab(m_tabview, "Memory");
+	lv_obj_t* tab_resources = lv_tabview_add_tab(m_tabview, "Resources");
 	lv_obj_t* tab_network = lv_tabview_add_tab(m_tabview, "Network");
 	lv_obj_t* tab_tasks = lv_tabview_add_tab(m_tabview, "Tasks");
 
 	createSystemTab(tab_system);
-	createMemoryTab(tab_memory);
+	createResourcesTab(tab_resources);
 	createNetworkTab(tab_network);
 	createTasksTab(tab_tasks);
+
+	lv_tabview_set_active(m_tabview, 1, LV_ANIM_OFF);
 
 	updateInfo();
 }
@@ -138,31 +143,8 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	auto stats = flx::services::SystemInfoService::getInstance().getSystemStats();
 	auto& profileService = flx::services::DeviceProfileService::getInstance();
 
-	// Helper lambda to create a card
-	auto create_card = [&](const char* title) -> lv_obj_t* {
-		lv_obj_t* card = lv_obj_create(tab);
-		lv_obj_set_width(card, lv_pct(100));
-		lv_obj_set_height(card, LV_SIZE_CONTENT);
-		lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
-		lv_obj_set_style_pad_all(card, lv_dpx(UiConstants::PAD_DEFAULT), 0);
-		lv_obj_set_style_pad_row(card, lv_dpx(UiConstants::PAD_SMALL), 0);
-		lv_obj_set_style_radius(card, UiConstants::RADIUS_DEFAULT, 0);
-		UI::StyleUtils::applyThemedBorder(card, UI::StyleUtils::ThemeColorToken::CardBorder, UiConstants::BORDER_THIN, UiConstants::OPA_30);
-
-		UI::StyleUtils::apply_glass(card, UiConstants::GLASS_BLUR_DEFAULT);
-
-		// Header
-		lv_obj_t* title_label = lv_label_create(card);
-		lv_label_set_text(title_label, title);
-		lv_obj_set_style_text_font(title_label, &lv_font_montserrat_14, 0);
-		UI::StyleUtils::applyThemedText(title_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
-		lv_obj_set_style_margin_bottom(title_label, lv_dpx(UiConstants::PAD_SMALL), 0);
-
-		return card;
-	};
-
 	// 1. Software & Firmware Card
-	auto* card_sw = create_card("Software & Firmware");
+	auto* card_sw = createCard(tab, "Software & Firmware");
 	lv_obj_t* version_label = lv_label_create(card_sw);
 	lv_label_set_text_fmt(version_label, LV_SYMBOL_SETTINGS "  FlxOS %s", stats.flxosVersion.c_str());
 
@@ -176,7 +158,7 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	lv_label_set_text_fmt(boot_label, LV_SYMBOL_POWER "  Boot Reason: %s", stats.bootReason.c_str());
 
 	// 2. Hardware & Device Card
-	auto* card_hw = create_card("Hardware Info");
+	auto* card_hw = createCard(tab, "Hardware Info");
 	if (profileService.hasValidProfile()) {
 		const auto& profile = profileService.getActiveProfile();
 
@@ -221,8 +203,25 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 	lv_obj_t* display_label = lv_label_create(card_hw);
 	lv_label_set_text_fmt(display_label, LV_SYMBOL_IMAGE "  Resolution: %dx%d (%d-bpp %s)", stats.displayResX, stats.displayResY, stats.displayBpp, stats.colorFormat.c_str());
 
-	// 3. System Load (CPU) Card
-	auto* card_cpu = create_card("System Load");
+	// 3. Power & Operation Card
+	auto* card_power = createCard(tab, "Power & Operation");
+	m_battery_label = lv_label_create(card_power);
+	lv_label_set_text(m_battery_label, LV_SYMBOL_BATTERY_FULL "  Battery: --");
+
+	m_uptime_label = lv_label_create(card_power);
+	lv_label_set_text(m_uptime_label, LV_SYMBOL_PLAY "  Uptime: --:--:--");
+}
+
+void SystemInfoApp::createResourcesTab(lv_obj_t* tab) {
+	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(tab, lv_dpx(UiConstants::PAD_LARGE), 0);
+	lv_obj_set_style_pad_row(tab, lv_dpx(UiConstants::PAD_LARGE), 0); // Spacing between cards
+
+	auto stats = flx::services::SystemInfoService::getInstance().getSystemStats();
+	auto memStats = flx::services::SystemInfoService::getInstance().getMemoryStats();
+
+	// 1. CPU Load Card
+	auto* card_cpu = createCard(tab, "CPU Load");
 	m_cpu_bars.clear();
 	m_cpu_labels.clear();
 	for (int i = 0; i < stats.cores; ++i) {
@@ -246,88 +245,74 @@ void SystemInfoApp::createSystemTab(lv_obj_t* tab) {
 		m_cpu_bars.push_back(bar);
 	}
 
-	// 4. Power & Operation Card
-	auto* card_power = create_card("Power & Operation");
-	m_battery_label = lv_label_create(card_power);
-	lv_label_set_text(m_battery_label, LV_SYMBOL_BATTERY_FULL "  Battery: --");
+	// 2. RAM Card
+	auto* card_ram = createCard(tab, "RAM");
 
-	m_uptime_label = lv_label_create(card_power);
-	lv_label_set_text(m_uptime_label, LV_SYMBOL_PLAY "  Uptime: --:--:--");
-}
-
-void SystemInfoApp::createMemoryTab(lv_obj_t* tab) {
-	lv_obj_set_flex_flow(tab, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_all(tab, lv_dpx(UiConstants::PAD_LARGE), 0);
-	lv_obj_set_style_pad_row(tab, lv_dpx(UiConstants::PAD_DEFAULT), 0);
-
-	// RAM Section Header
-	lv_obj_t* ram_header = lv_label_create(tab);
-	lv_label_set_text(ram_header, "RAM");
-	lv_obj_set_style_text_font(ram_header, &lv_font_montserrat_14, 0);
-
-	// Internal Heap
-	m_internal_heap_label = lv_label_create(tab);
+	m_internal_heap_label = lv_label_create(card_ram);
 	lv_label_set_text(m_internal_heap_label, "Internal Heap: -- / --");
 
-	m_internal_heap_bar = lv_bar_create(tab);
-	lv_obj_set_size(m_internal_heap_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+	m_internal_heap_bar = lv_bar_create(card_ram);
+	lv_obj_set_size(m_internal_heap_bar, lv_pct(100), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 	lv_bar_set_range(m_internal_heap_bar, 0, 100);
 	lv_bar_set_value(m_internal_heap_bar, 0, LV_ANIM_OFF);
 
-	m_internal_heap_percent_label = lv_label_create(tab);
+	m_internal_heap_percent_label = lv_label_create(card_ram);
 	lv_label_set_text(m_internal_heap_percent_label, "--% free");
 	UI::StyleUtils::applyThemedText(m_internal_heap_percent_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
-	lv_obj_set_style_margin_bottom(m_internal_heap_percent_label, lv_dpx(UiConstants::PAD_LARGE), 0);
 
-	// PSRAM Section Header
-	auto memStats = flx::services::SystemInfoService::getInstance().getMemoryStats();
 	if (memStats.hasPsram) {
-		lv_obj_t* sep_ram = lv_obj_create(tab);
-		UI::StyleUtils::applyThemedSeparator(sep_ram, UiConstants::OPA_TEXT_DIM);
+		lv_obj_t* sep_ram = lv_obj_create(card_ram);
+		UI::StyleUtils::applyThemedSeparator(sep_ram, UiConstants::OPA_30);
+		lv_obj_set_style_margin_top(sep_ram, lv_dpx(UiConstants::PAD_SMALL), 0);
+		lv_obj_set_style_margin_bottom(sep_ram, lv_dpx(UiConstants::PAD_SMALL), 0);
 
-		lv_obj_t* psram_header = lv_label_create(tab);
-		lv_label_set_text(psram_header, "PSRAM");
-		lv_obj_set_style_text_font(psram_header, &lv_font_montserrat_14, 0);
-
-		m_psram_label = lv_label_create(tab);
+		m_psram_label = lv_label_create(card_ram);
 		lv_label_set_text(m_psram_label, "PSRAM: -- / --");
 
-		m_psram_bar = lv_bar_create(tab);
-		lv_obj_set_size(m_psram_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+		m_psram_bar = lv_bar_create(card_ram);
+		lv_obj_set_size(m_psram_bar, lv_pct(100), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 		lv_bar_set_range(m_psram_bar, 0, 100);
 		lv_bar_set_value(m_psram_bar, 0, LV_ANIM_OFF);
 
-		m_psram_percent_label = lv_label_create(tab);
+		m_psram_percent_label = lv_label_create(card_ram);
 		lv_label_set_text(m_psram_percent_label, "--% free");
 		UI::StyleUtils::applyThemedText(m_psram_percent_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
-		lv_obj_set_style_margin_bottom(m_psram_percent_label, lv_dpx(UiConstants::PAD_LARGE), 0);
 	} else {
 		m_psram_label = nullptr;
 		m_psram_bar = nullptr;
 		m_psram_percent_label = nullptr;
 	}
 
-	// Storage Section
-	lv_obj_t* separator = lv_obj_create(tab);
-	UI::StyleUtils::applyThemedSeparator(separator, UiConstants::OPA_TEXT_DIM);
+	// 3. Storage Card
+	auto* card_storage = createCard(tab, "Storage");
 
-	lv_obj_t* storage_header = lv_label_create(tab);
-	lv_label_set_text(storage_header, "Storage");
-	lv_obj_set_style_text_font(storage_header, &lv_font_montserrat_14, 0); // Assuming font usage
-
-	// System Partition
-	m_storage_system_label = lv_label_create(tab);
+	m_storage_system_label = lv_label_create(card_storage);
 	lv_label_set_text(m_storage_system_label, "System: --");
-	m_storage_system_bar = lv_bar_create(tab);
-	lv_obj_set_size(m_storage_system_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+	m_storage_system_bar = lv_bar_create(card_storage);
+	lv_obj_set_size(m_storage_system_bar, lv_pct(100), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 	lv_bar_set_range(m_storage_system_bar, 0, 100);
 
-	// Data Partition
-	m_storage_data_label = lv_label_create(tab);
+	lv_obj_t* sep_storage = lv_obj_create(card_storage);
+	UI::StyleUtils::applyThemedSeparator(sep_storage, UiConstants::OPA_30);
+	lv_obj_set_style_margin_top(sep_storage, lv_dpx(UiConstants::PAD_SMALL), 0);
+	lv_obj_set_style_margin_bottom(sep_storage, lv_dpx(UiConstants::PAD_SMALL), 0);
+
+	m_storage_data_label = lv_label_create(card_storage);
 	lv_label_set_text(m_storage_data_label, "Data: --");
-	m_storage_data_bar = lv_bar_create(tab);
-	lv_obj_set_size(m_storage_data_bar, lv_pct(LayoutConstants::BAR_WIDTH_PCT), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+	m_storage_data_bar = lv_bar_create(card_storage);
+	lv_obj_set_size(m_storage_data_bar, lv_pct(100), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
 	lv_bar_set_range(m_storage_data_bar, 0, 100);
+
+	m_storage_sd_sep = lv_obj_create(card_storage);
+	UI::StyleUtils::applyThemedSeparator(m_storage_sd_sep, UiConstants::OPA_30);
+	lv_obj_set_style_margin_top(m_storage_sd_sep, lv_dpx(UiConstants::PAD_SMALL), 0);
+	lv_obj_set_style_margin_bottom(m_storage_sd_sep, lv_dpx(UiConstants::PAD_SMALL), 0);
+
+	m_storage_sd_label = lv_label_create(card_storage);
+	lv_label_set_text(m_storage_sd_label, "SD Card: --");
+	m_storage_sd_bar = lv_bar_create(card_storage);
+	lv_obj_set_size(m_storage_sd_bar, lv_pct(100), lv_dpx(UiConstants::SIZE_BAR_HEIGHT));
+	lv_bar_set_range(m_storage_sd_bar, 0, 100);
 }
 
 void SystemInfoApp::createNetworkTab(lv_obj_t* tab) {
@@ -468,6 +453,7 @@ void SystemInfoApp::updateHeap(flx::services::SystemInfoService& service) {
 void SystemInfoApp::updateStorage(flx::services::SystemInfoService& service) {
 	if (m_storage_system_label && m_storage_data_label) {
 		auto storageStats = service.getStorageStats();
+		bool sd_found = false;
 		for (const auto& stat: storageStats) {
 			int usage = (stat.totalBytes > 0) ? (stat.usedBytes * 100 / stat.totalBytes) : 0;
 			if (stat.name == "System") {
@@ -476,7 +462,21 @@ void SystemInfoApp::updateStorage(flx::services::SystemInfoService& service) {
 			} else if (stat.name == "Data") {
 				lv_label_set_text_fmt(m_storage_data_label, "Data: %s / %s", service.formatBytes(stat.usedBytes).c_str(), service.formatBytes(stat.totalBytes).c_str());
 				lv_bar_set_value(m_storage_data_bar, usage, LV_ANIM_ON);
+			} else if (stat.name == "SD Card") {
+				sd_found = true;
+				if (m_storage_sd_label && m_storage_sd_bar && m_storage_sd_sep) {
+					lv_obj_clear_flag(m_storage_sd_sep, LV_OBJ_FLAG_HIDDEN);
+					lv_obj_clear_flag(m_storage_sd_label, LV_OBJ_FLAG_HIDDEN);
+					lv_obj_clear_flag(m_storage_sd_bar, LV_OBJ_FLAG_HIDDEN);
+					lv_label_set_text_fmt(m_storage_sd_label, "SD Card: %s / %s", service.formatBytes(stat.usedBytes).c_str(), service.formatBytes(stat.totalBytes).c_str());
+					lv_bar_set_value(m_storage_sd_bar, usage, LV_ANIM_ON);
+				}
 			}
+		}
+		if (!sd_found && m_storage_sd_label && m_storage_sd_bar && m_storage_sd_sep) {
+			lv_obj_add_flag(m_storage_sd_sep, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(m_storage_sd_label, LV_OBJ_FLAG_HIDDEN);
+			lv_obj_add_flag(m_storage_sd_bar, LV_OBJ_FLAG_HIDDEN);
 		}
 	}
 }
@@ -525,6 +525,28 @@ void SystemInfoApp::updateTaskList(std::vector<flx::services::TaskInfo>& tasks) 
 			}
 		}
 	}
+}
+
+lv_obj_t* SystemInfoApp::createCard(lv_obj_t* parent, const char* title) {
+	lv_obj_t* card = lv_obj_create(parent);
+	lv_obj_set_width(card, lv_pct(100));
+	lv_obj_set_height(card, LV_SIZE_CONTENT);
+	lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(card, lv_dpx(UiConstants::PAD_DEFAULT), 0);
+	lv_obj_set_style_pad_row(card, lv_dpx(UiConstants::PAD_SMALL), 0);
+	lv_obj_set_style_radius(card, UiConstants::RADIUS_DEFAULT, 0);
+	UI::StyleUtils::applyThemedBorder(card, UI::StyleUtils::ThemeColorToken::CardBorder, UiConstants::BORDER_THIN, UiConstants::OPA_30);
+
+	UI::StyleUtils::apply_glass(card, UiConstants::GLASS_BLUR_DEFAULT);
+
+	// Header
+	lv_obj_t* title_label = lv_label_create(card);
+	lv_label_set_text(title_label, title);
+	lv_obj_set_style_text_font(title_label, &lv_font_montserrat_14, 0);
+	UI::StyleUtils::applyThemedText(title_label, UI::StyleUtils::ThemeColorToken::TextSecondary);
+	lv_obj_set_style_margin_bottom(title_label, lv_dpx(UiConstants::PAD_SMALL), 0);
+
+	return card;
 }
 
 } // namespace System::Apps

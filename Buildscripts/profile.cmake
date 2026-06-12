@@ -483,6 +483,7 @@ function(_flx_generate_config_hpp PREFIX OUTPUT_FILE HWD_SOURCE_EXISTS)
 
     # Battery
     _b("hardware_battery_enabled" "false" _bat_en)
+    _b("hardware_battery_mock" "false" _bat_mock)
     _y("hardware_battery_adc_unit" "1" _bat_adc_u)
     _y("hardware_battery_adc_channel" "0" _bat_adc_ch)
     _y("hardware_battery_voltage_max" "4200" _bat_vmax)
@@ -607,6 +608,7 @@ function(_flx_generate_config_hpp PREFIX OUTPUT_FILE HWD_SOURCE_EXISTS)
 
     string(APPEND _hpp "struct BatteryConfig {\n")
     string(APPEND _hpp "    bool enabled;\n")
+    string(APPEND _hpp "    bool mock;\n")
     string(APPEND _hpp "    int adcUnit, adcChannel;\n")
     string(APPEND _hpp "    int voltageMax, voltageMin;\n")
     string(APPEND _hpp "    int dividerFactor;\n")
@@ -711,6 +713,7 @@ function(_flx_generate_config_hpp PREFIX OUTPUT_FILE HWD_SOURCE_EXISTS)
 
     string(APPEND _hpp "inline constexpr BatteryConfig battery {\n")
     string(APPEND _hpp "    .enabled = ${_bat_en},\n")
+    string(APPEND _hpp "    .mock = ${_bat_mock},\n")
     string(APPEND _hpp "    .adcUnit = ${_bat_adc_u}, .adcChannel = ${_bat_adc_ch},\n")
     string(APPEND _hpp "    .voltageMax = ${_bat_vmax}, .voltageMin = ${_bat_vmin},\n")
     string(APPEND _hpp "    .dividerFactor = ${_bat_div},\n")
@@ -961,6 +964,16 @@ function(_flx_generate_sdkconfig_frag PREFIX OUTPUT_FILE)
     if("${_cli_en}" STREQUAL "true")
         string(APPEND _frag "\n# CLI\n")
         string(APPEND _frag "CONFIG_FLXOS_CLI_ENABLED=y\n")
+    endif()
+
+    # Web Server
+    _b("webserver_enabled" "false" _webserver_en)
+    if("${_webserver_en}" STREQUAL "true")
+        string(APPEND _frag "\n# Web Server\n")
+        string(APPEND _frag "CONFIG_FLXOS_WEBSERVER_ENABLED=y\n")
+    else()
+        string(APPEND _frag "\n# Web Server\n")
+        string(APPEND _frag "CONFIG_FLXOS_WEBSERVER_ENABLED=n\n")
     endif()
 
     # Profile ID

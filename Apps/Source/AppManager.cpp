@@ -92,7 +92,7 @@ struct AppManager::AppCommand {
 class AppExecutor : public flx::kernel::Task {
 public:
 
-	AppExecutor() : flx::kernel::Task("app_executor", 32 * 1024, 4) {
+	AppExecutor() : flx::kernel::Task("app_executor", 12 * 1024, 4) {
 		setRestartPolicy(RestartPolicy::RESTART_TASK);
 	}
 
@@ -254,6 +254,8 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 		data.putString("appName", "System");
 		data.putString("icon", "error");
 		data.putInt32("priority", 2);
+		data.putString("redirectAppId", "com.flxos.settings");
+		data.putString("redirectData", "developer");
 		flx::core::EventBus::getInstance().publish("system.notify", data);
 		return LAUNCH_ID_INVALID;
 	}
@@ -305,6 +307,8 @@ LaunchId AppManager::startAppForResultImpl(const Intent& intent, ResultCallback 
 			data.putString("appName", "System");
 			data.putString("icon", "warning");
 			data.putInt32("priority", 2);
+			data.putString("redirectAppId", "com.flxos.settings");
+			data.putString("redirectData", "developer");
 			flx::core::EventBus::getInstance().publish("system.notify", data);
 			return LAUNCH_ID_INVALID;
 		}

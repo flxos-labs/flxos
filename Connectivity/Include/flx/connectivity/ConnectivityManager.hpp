@@ -2,6 +2,7 @@
 
 #include <esp_err.h>
 #include <esp_event.h>
+#include <esp_timer.h>
 #include <flx/connectivity/hotspot/HotspotManager.hpp>
 #include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
@@ -133,6 +134,9 @@ private:
 	flx::Observable<int32_t> m_wifi_scan_interval_subject {0};
 	flx::StringObservable m_saved_wifi_ssid_subject {""};
 	flx::StringObservable m_saved_wifi_password_subject {""};
+
+	esp_timer_handle_t m_scan_timer = nullptr;
+	void updateScanTimer();
 
 	std::recursive_mutex m_wifi_mutex {};
 };

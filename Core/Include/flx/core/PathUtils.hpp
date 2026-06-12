@@ -19,17 +19,32 @@ inline bool ensureDirectoryExists(const std::string& path) {
 		return S_ISDIR(st.st_mode);
 	}
 
-	if (errno == ENOENT) {
-		if (mkdir(path.c_str(), 0755) == 0) {
-			return true;
+	// Recursive directory creation
+	size_t pos = 0;
+	do {
+		pos = path.find('/', pos + 1);
+		std::string subdir = (pos == std::string::npos) ? path : path.substr(0, pos);
+		if (subdir.empty()) {
+			continue;
 		}
-		if (errno == EEXIST) {
-			return stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+		struct stat sub_st {};
+		if (stat(subdir.c_str(), &sub_st) != 0) {
+			if (errno == ENOENT) {
+				if (mkdir(subdir.c_str(), 0755) != 0 && errno != EEXIST) {
+					Log::error("PathUtils", "Failed to create directory %s: %s", subdir.c_str(), std::strerror(errno));
+					return false;
+				}
+			} else {
+				Log::error("PathUtils", "Failed to stat subdirectory %s: %s", subdir.c_str(), std::strerror(errno));
+				return false;
+			}
+		} else if (!S_ISDIR(sub_st.st_mode)) {
+			Log::error("PathUtils", "Path segment %s exists but is not a directory", subdir.c_str());
+			return false;
 		}
-	}
+	} while (pos != std::string::npos);
 
-	Log::error("PathUtils", "Failed to ensure directory %s: %s", path.c_str(), std::strerror(errno));
-	return false;
+	return true;
 }
 
 inline std::string sanitizeSegment(const std::string& segment) {

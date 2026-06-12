@@ -21,6 +21,7 @@ private:
 	void create();
 	static void on_clear_click(lv_event_t* e);
 	static void on_close_notif_click(lv_event_t* e);
+	static void on_item_click(lv_event_t* e);
 
 	lv_obj_t* m_parent;
 	lv_obj_t* m_statusBar;

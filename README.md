@@ -22,10 +22,10 @@ FlxOS is a production-focused operating system architecture for ESP32-class devi
 
 <table>
   <tr>
-    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_162354_sleek_app_launcher.png" width="180" alt="App launcher"/><br/><sub>App launcher</sub></td>
-    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_162819_notification_panel.png" width="180" alt="Notification panel"/><br/><sub>Notifications</sub></td>
-    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_162917_quickaccess_panel.png" width="180" alt="Quick access panel"/><br/><sub>Quick access</sub></td>
-    <td align="center"><img src="https://flxos-labs.github.io/assets/images/screenshots/scr_20260312_163129_open_image_in_image_viewer_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="180" alt="Image viewer"/><br/><sub>Multi-window</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_162354_sleek_app_launcher.png" width="180" alt="App launcher"/><br/><sub>App launcher</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_162819_notification_panel.png" width="180" alt="Notification panel"/><br/><sub>Notifications</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_162917_quickaccess_panel.png" width="180" alt="Quick access panel"/><br/><sub>Quick access</sub></td>
+    <td align="center"><img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_163129_open_image_in_image_viewer_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="180" alt="Image viewer"/><br/><sub>Multi-window</sub></td>
   </tr>
 </table>
 

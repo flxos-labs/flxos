@@ -13,7 +13,9 @@
 #include "settings/storage/StorageSettings.hpp"
 #include "settings/time/TimeSettings.hpp"
 #include "settings/usb/UsbSettings.hpp"
+#if CONFIG_FLXOS_WEBSERVER_ENABLED
 #include "settings/webserver/WebServerSettings.hpp"
+#endif
 #include "settings/wifi/WiFiSettings.hpp"
 #include <memory>
 
@@ -191,6 +193,7 @@ void registerBuiltInSettingsPlugins() {
 			return std::make_unique<SettingsPagePluginAdapter<UsbSettings>>();
 		});
 
+#if CONFIG_FLXOS_WEBSERVER_ENABLED
 	registry.registerPlugin(
 		{
 			.id = "webserver",
@@ -203,6 +206,7 @@ void registerBuiltInSettingsPlugins() {
 		[]() -> std::unique_ptr<ISettingsPlugin> {
 			return std::make_unique<SettingsPagePluginAdapter<WebServerSettings>>();
 		});
+#endif
 }
 
 } // namespace System::Apps::Settings

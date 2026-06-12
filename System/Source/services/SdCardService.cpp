@@ -86,6 +86,8 @@ void SdCardService::onGuiInit() {
 		data.putString("message", "SD Card mounted at " + getMountPoint());
 		data.putString("appName", "System");
 		data.putString("icon", "info");
+		data.putString("redirectAppId", "com.flxos.files");
+		data.putString("redirectData", getMountPoint());
 		flx::core::EventBus::getInstance().publish("system.notify", data);
 	}
 }

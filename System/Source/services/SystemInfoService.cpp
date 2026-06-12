@@ -11,6 +11,7 @@
 #include <esp_wifi_types_generic.h>
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/core/Logger.hpp>
+#include <flx/system/services/SdCardService.hpp>
 #include <flx/system/services/SystemInfoService.hpp>
 #include <freertos/task.h>
 #include <sdkconfig.h>
@@ -53,6 +54,12 @@ SystemInfoService& SystemInfoService::getInstance() {
 void SystemInfoService::initBatteryAdc() {
 	if (m_batteryInitialized)
 		return;
+
+	if (flx::config::battery.mock) {
+		Log::info(TAG, "Battery initialized in MOCK mode");
+		m_batteryInitialized = true;
+		return;
+	}
 
 	Log::info(TAG, "Initializing Battery ADC...");
 
@@ -257,7 +264,9 @@ std::vector<StorageStats> SystemInfoService::getStorageStats() {
 	addStats("System", "/system");
 	addStats("Data", "/data");
 	if constexpr (flx::config::sdcard.enabled) {
-		addStats("SD Card", flx::config::sdcard.mountPoint);
+		if (flx::services::SdCardService::getInstance().isMounted()) {
+			addStats("SD Card", flx::config::sdcard.mountPoint);
+		}
 	}
 
 	return storageStats;
@@ -267,6 +276,34 @@ BatteryStats SystemInfoService::getBatteryStats() {
 	BatteryStats stats {};
 #if FLXOS_BATTERY_ENABLED
 	stats.isConfigured = true;
+	if (flx::config::battery.mock) {
+		static int32_t level = 85;
+		static bool charging = false;
+		static uint64_t lastUpdateSec = 0;
+		uint64_t nowSec = esp_timer_get_time() / 1000000;
+		if (lastUpdateSec == 0) {
+			lastUpdateSec = nowSec;
+		}
+		if (nowSec - lastUpdateSec >= 5) {
+			lastUpdateSec = nowSec;
+			if (charging) {
+				level += 5;
+				if (level >= 100) {
+					level = 100;
+					charging = false;
+				}
+			} else {
+				level -= 3;
+				if (level <= 10) {
+					level = 10;
+					charging = true;
+				}
+			}
+		}
+		stats.level = level;
+		stats.isCharging = charging;
+		return stats;
+	}
 	if (m_batteryInitialized && m_adcHandle) {
 		int raw = 0;
 		if (adc_oneshot_read((adc_oneshot_unit_handle_t)m_adcHandle, (adc_channel_t)flx::config::battery.adcChannel, &raw) == ESP_OK) {

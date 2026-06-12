@@ -71,22 +71,22 @@ void FlxAppBenchmark::logResult(const Result& result) {
 
     if (result.jsonSuccess && it > 0) {
         const uint64_t jsonAvg = result.jsonTotalUs / it;
-        Log::info(TAG, "  [JSON/fkyaml]  total=%llu us  avg=%llu us  (%lu iters)",
+        Log::info(TAG, "  [JSON/cJSON]  total=%llu us  avg=%llu us  (%lu iters)",
                   (unsigned long long)result.jsonTotalUs,
                   (unsigned long long)jsonAvg,
                   (unsigned long)it);
     } else {
-        Log::warn(TAG, "  [JSON/fkyaml]  FAILED or skipped");
+        Log::warn(TAG, "  [JSON/cJSON]  FAILED or skipped");
     }
 
     if (result.yamlSuccess && it > 0) {
         const uint64_t yamlAvg = result.yamlTotalUs / it;
-        Log::info(TAG, "  [YAML/fkyaml] total=%llu us  avg=%llu us  (%lu iters)",
+        Log::info(TAG, "  [YAML/FlxYamlParser] total=%llu us  avg=%llu us  (%lu iters)",
                   (unsigned long long)result.yamlTotalUs,
                   (unsigned long long)yamlAvg,
                   (unsigned long)it);
     } else {
-        Log::warn(TAG, "  [YAML/fkyaml] FAILED or skipped");
+        Log::warn(TAG, "  [YAML/FlxYamlParser] FAILED or skipped");
     }
 
     if (result.jsonSuccess && result.yamlSuccess && result.jsonTotalUs > 0) {
@@ -95,9 +95,9 @@ void FlxAppBenchmark::logResult(const Result& result) {
                             static_cast<float>(result.jsonTotalUs);
         Log::info(TAG, "  Overhead ratio: YAML/JSON = %.2fx", ratio);
         if (ratio < 1.0f) {
-            Log::info(TAG, "  Winner: fkyaml YAML (%.2fx faster)", 1.0f / ratio);
+            Log::info(TAG, "  Winner: FlxYamlParser YAML (%.2fx faster)", 1.0f / ratio);
         } else {
-            Log::info(TAG, "  Winner: fkyaml JSON (%.2fx faster)", ratio);
+            Log::info(TAG, "  Winner: cJSON JSON (%.2fx faster)", ratio);
         }
     }
 

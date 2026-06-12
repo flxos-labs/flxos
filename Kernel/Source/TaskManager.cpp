@@ -132,7 +132,7 @@ void TaskManager::initWatchdog(uint32_t interval) {
 
 	if (!m_watchdogTaskHandle) {
 		BaseType_t const res = xTaskCreatePinnedToCore(
-			watchdogTaskEntry, "tm_watchdog", 3072, this, configMAX_PRIORITIES - 1,
+			watchdogTaskEntry, "tm_watchdog", 2048, this, configMAX_PRIORITIES - 1,
 			&m_watchdogTaskHandle, 0);
 		if (res != pdPASS) {
 		}

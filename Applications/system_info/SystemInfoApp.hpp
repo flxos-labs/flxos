@@ -56,6 +56,9 @@ private:
 	lv_obj_t* m_storage_system_bar {nullptr};
 	lv_obj_t* m_storage_data_label {nullptr};
 	lv_obj_t* m_storage_data_bar {nullptr};
+	lv_obj_t* m_storage_sd_sep {nullptr};
+	lv_obj_t* m_storage_sd_label {nullptr};
+	lv_obj_t* m_storage_sd_bar {nullptr};
 
 	// Network tab labels
 	lv_obj_t* m_wifi_status_label {nullptr};
@@ -70,6 +73,7 @@ private:
 	uint32_t m_last_update = 0;
 
 	// Helper methods
+	lv_obj_t* createCard(lv_obj_t* parent, const char* title);
 	void updateInfo();
 	void updateUptime(const flx::services::SystemStats& sysStats);
 	void updateBattery(flx::services::SystemInfoService& service);
@@ -79,7 +83,7 @@ private:
 	void updateWiFi(flx::services::SystemInfoService& service);
 	void updateTaskList(std::vector<flx::services::TaskInfo>& tasks);
 	void createSystemTab(lv_obj_t* tab);
-	void createMemoryTab(lv_obj_t* tab);
+	void createResourcesTab(lv_obj_t* tab);
 	void createNetworkTab(lv_obj_t* tab);
 	void createTasksTab(lv_obj_t* tab);
 };
