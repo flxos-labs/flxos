@@ -226,7 +226,7 @@ void FloatingNotifications::on_container_event(lv_event_t* e) {
 	if (self && !self->m_activeNotificationId.empty()) {
 		// Find the notification to get redirect details
 		const auto& notifs = flx::system::NotificationManager::getInstance().getNotifications();
-		for (const auto& n : notifs) {
+		for (const auto& n: notifs) {
 			if (n.id == self->m_activeNotificationId) {
 				if (!n.redirectAppId.empty()) {
 					flx::apps::Intent intent;

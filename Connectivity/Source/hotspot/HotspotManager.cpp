@@ -5,9 +5,9 @@
 #include "esp_event_base.h"
 #include "esp_netif_ip_addr.h"
 #include "esp_netif_types.h"
+#include "esp_system.h"
 #include "esp_timer.h"
 #include "esp_wifi.h"
-#include "esp_system.h"
 #include "flx/connectivity/ConnectivityManager.hpp"
 #include "flx/connectivity/wifi/WiFiManager.hpp"
 #include <cstdint>

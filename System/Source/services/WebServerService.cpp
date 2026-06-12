@@ -345,7 +345,6 @@ void WebServerService::stopServer() {
 	}
 }
 
-
 // ──── Timing-safe comparison to prevent side-channel leaks ────
 static bool timing_safe_compare(const std::string& a, const std::string& b) {
 	if (a.length() != b.length()) return false;

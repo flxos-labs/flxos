@@ -209,7 +209,7 @@ void NotificationPanel::on_item_click(lv_event_t* e) {
 		if (id && self) {
 			// Find the notification to get redirect details
 			const auto& notifs = flx::system::NotificationManager::getInstance().getNotifications();
-			for (const auto& n : notifs) {
+			for (const auto& n: notifs) {
 				if (n.id == *id) {
 					if (!n.redirectAppId.empty()) {
 						flx::apps::Intent intent;
@@ -217,7 +217,7 @@ void NotificationPanel::on_item_click(lv_event_t* e) {
 						intent.data = n.redirectData;
 						intent.action = n.redirectData.empty() ? flx::apps::IntentAction::ACTION_MAIN : flx::apps::IntentAction::ACTION_VIEW;
 						flx::apps::AppManager::getInstance().startApp(intent);
-						
+
 						// Hide the notification panel when launching an app
 						if (self->m_panel) {
 							lv_obj_add_flag(self->m_panel, LV_OBJ_FLAG_HIDDEN);
