@@ -49,6 +49,7 @@ void WiFiSettings::createUI() {
 	m_wifiConnectedBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiConnectedObservable());
 	m_wifiScanIntervalBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiScanIntervalObservable());
 	m_wifiAutostartBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiAutostartObservable());
+	m_wifiIpBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(cm.getWiFiIpObservable());
 
 	lv_obj_t* backBtn = nullptr;
 	lv_obj_t* header = create_header(m_container, "Wi-Fi", &backBtn);
@@ -134,6 +135,67 @@ void WiFiSettings::createUI() {
 			instance->refreshScan();
 		},
 		LV_EVENT_CLICKED, this);
+
+	m_infoPanel = lv_obj_create(m_container);
+	lv_obj_set_width(m_infoPanel, lv_pct(100));
+	lv_obj_set_height(m_infoPanel, LV_SIZE_CONTENT);
+	lv_obj_set_style_pad_all(m_infoPanel, lv_dpx(UiConstants::PAD_MEDIUM), 0);
+	lv_obj_set_style_border_width(m_infoPanel, 0, 0);
+	lv_obj_set_style_bg_opa(m_infoPanel, LV_OPA_10, 0);
+	lv_obj_set_style_bg_color(m_infoPanel, lv_color_hex(0x888888), 0);
+	lv_obj_set_style_radius(m_infoPanel, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
+	lv_obj_set_flex_flow(m_infoPanel, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_gap(m_infoPanel, lv_dpx(UiConstants::PAD_SMALL), 0);
+	lv_obj_add_flag(m_infoPanel, LV_OBJ_FLAG_HIDDEN);
+
+	auto addInfoRow = [](lv_obj_t* parent, const char* labelStr, lv_obj_t** valLabelOut) {
+		lv_obj_t* row = lv_obj_create(parent);
+		lv_obj_set_width(row, lv_pct(100));
+		lv_obj_set_height(row, LV_SIZE_CONTENT);
+		lv_obj_set_style_pad_all(row, 0, 0);
+		lv_obj_set_style_border_width(row, 0, 0);
+		lv_obj_set_style_bg_opa(row, 0, 0);
+		lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
+		lv_obj_set_flex_align(row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+		lv_obj_t* lbl = lv_label_create(row);
+		lv_label_set_text(lbl, labelStr);
+		lv_obj_set_style_text_opa(lbl, LV_OPA_60, 0);
+
+		*valLabelOut = lv_label_create(row);
+		lv_label_set_text(*valLabelOut, "-");
+	};
+
+	addInfoRow(m_infoPanel, "IP Address", &m_infoIpLabel);
+	addInfoRow(m_infoPanel, "RSSI", &m_infoRssiLabel);
+	addInfoRow(m_infoPanel, "Channel", &m_infoChannelLabel);
+	addInfoRow(m_infoPanel, "MAC Address", &m_infoMacLabel);
+
+	lv_obj_t* forgetBtn = lv_button_create(m_infoPanel);
+	lv_obj_set_width(forgetBtn, lv_pct(100));
+	lv_obj_set_style_bg_color(forgetBtn, lv_color_hex(0xcc3333), 0);
+	lv_obj_t* forgetLbl = lv_label_create(forgetBtn);
+	lv_label_set_text(forgetLbl, "Forget Network");
+	lv_obj_center(forgetLbl);
+	lv_obj_add_event_cb(forgetBtn, [](lv_event_t* e) {
+		auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+		auto& cm = flx::connectivity::ConnectivityManager::getInstance();
+		wifi_ap_record_t ap_info;
+		if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+			cm.removeWiFiNetwork(std::string((char*)ap_info.ssid));
+			cm.disconnectWiFi();
+		} }, LV_EVENT_CLICKED, this);
+
+	lv_subject_add_observer_obj(
+		m_wifiIpBridge->getSubject(),
+		[](lv_observer_t* observer, lv_subject_t* subject) {
+			auto* instance = (WiFiSettings*)lv_observer_get_user_data(observer);
+			const char* ip = (const char*)lv_subject_get_pointer(subject);
+			if (instance->m_infoIpLabel && ip) {
+				lv_label_set_text(instance->m_infoIpLabel, ip);
+			}
+		},
+		m_container, this);
 
 	m_list = create_settings_list(m_container);
 
@@ -415,6 +477,22 @@ const char* WiFiSettings::getSignalIcon(int8_t rssi) {
 	return LV_SYMBOL_WIFI;
 }
 
+void WiFiSettings::updateInfoPanel() {
+	if (!m_infoPanel) return;
+
+	wifi_ap_record_t ap_info;
+	if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+		lv_label_set_text_fmt(m_infoRssiLabel, "%d dBm", ap_info.rssi);
+		lv_label_set_text_fmt(m_infoChannelLabel, "%d", ap_info.primary);
+	}
+
+	uint8_t mac[6];
+	if (esp_wifi_get_mac(WIFI_IF_STA, mac) == ESP_OK) {
+		lv_label_set_text_fmt(m_infoMacLabel, "%02x:%02x:%02x:%02x:%02x:%02x",
+			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	}
+}
+
 void WiFiSettings::updateStatus() {
 	if (m_statusLabel == nullptr) {
 		return;
@@ -422,6 +500,15 @@ void WiFiSettings::updateStatus() {
 
 	auto const status = static_cast<flx::connectivity::WiFiStatus>(lv_subject_get_int(
 		m_wifiStatusBridge->getSubject()));
+
+	if (m_infoPanel) {
+		if (status == flx::connectivity::WiFiStatus::CONNECTED) {
+			lv_obj_remove_flag(m_infoPanel, LV_OBJ_FLAG_HIDDEN);
+			updateInfoPanel();
+		} else {
+			lv_obj_add_flag(m_infoPanel, LV_OBJ_FLAG_HIDDEN);
+		}
+	}
 
 	switch (status) {
 		case flx::connectivity::WiFiStatus::RADIO_OFF:
@@ -576,6 +663,11 @@ void WiFiSettings::onDestroy() {
 	m_scanSliderRow = nullptr;
 	m_statusObserver = nullptr; // Auto-cleaned when m_container is deleted
 	m_scanIntervalObserver = nullptr; // Auto-cleaned when m_container is deleted
+	m_infoPanel = nullptr;
+	m_infoIpLabel = nullptr;
+	m_infoRssiLabel = nullptr;
+	m_infoChannelLabel = nullptr;
+	m_infoMacLabel = nullptr;
 }
 
 // ──────────────────────────────────────────────────────────────────────

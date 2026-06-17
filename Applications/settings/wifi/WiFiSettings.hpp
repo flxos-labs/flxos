@@ -59,11 +59,20 @@ private:
 	void hideSavedNetworks();
 	void refreshSavedNetworksList();
 
+	// Info panel
+	lv_obj_t* m_infoPanel = nullptr;
+	lv_obj_t* m_infoIpLabel = nullptr;
+	lv_obj_t* m_infoRssiLabel = nullptr;
+	lv_obj_t* m_infoChannelLabel = nullptr;
+	lv_obj_t* m_infoMacLabel = nullptr;
+	void updateInfoPanel();
+
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiEnabledBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiStatusBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiConnectedBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiScanIntervalBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiAutostartBridge;
+	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_wifiIpBridge;
 };
 
 } // namespace System::Apps::Settings
