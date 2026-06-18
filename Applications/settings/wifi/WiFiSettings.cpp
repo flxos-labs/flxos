@@ -142,7 +142,7 @@ void WiFiSettings::createUI() {
 	lv_obj_set_style_pad_all(m_infoPanel, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 	lv_obj_set_style_border_width(m_infoPanel, 0, 0);
 	lv_obj_set_style_bg_opa(m_infoPanel, LV_OPA_10, 0);
-	lv_obj_set_style_bg_color(m_infoPanel, lv_color_hex(0x888888), 0);
+	lv_obj_set_style_bg_color(m_infoPanel, flx::ui::Themes::getColor(flx::ui::UiConstants::COLOR_SURFACE_VARIANT), 0);
 	lv_obj_set_style_radius(m_infoPanel, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
 	lv_obj_set_flex_flow(m_infoPanel, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_style_pad_gap(m_infoPanel, lv_dpx(UiConstants::PAD_SMALL), 0);
@@ -173,7 +173,7 @@ void WiFiSettings::createUI() {
 
 	lv_obj_t* forgetBtn = lv_button_create(m_infoPanel);
 	lv_obj_set_width(forgetBtn, lv_pct(100));
-	lv_obj_set_style_bg_color(forgetBtn, lv_color_hex(0xcc3333), 0);
+	lv_obj_set_style_bg_color(forgetBtn, flx::ui::Themes::getColor(flx::ui::UiConstants::COLOR_ERROR), 0);
 	lv_obj_t* forgetLbl = lv_label_create(forgetBtn);
 	lv_label_set_text(forgetLbl, "Forget Network");
 	lv_obj_center(forgetLbl);
