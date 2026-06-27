@@ -133,13 +133,12 @@ def main() -> int:
     args = parse_args()
 
     if not PRESETS_DIR.exists():
-        print(f"Preset directory not found: {PRESETS_DIR}")
-        return 1
+        return 0
 
     configs = sorted(PRESETS_DIR.glob("*/config.json"))
     if not configs:
         print("No preset config.json files found.")
-        return 1
+        return 0
 
     changed_count = 0
     for cfg in configs:

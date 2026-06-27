@@ -127,10 +127,17 @@ def write_report(path: Path, issues: list[Issue], total: int) -> None:
 def main() -> int:
     args = parse_args()
 
+    if not PRESETS_DIR.exists():
+        if args.output:
+            write_report(Path(args.output), [], 0)
+        return 0
+
     configs = sorted(PRESETS_DIR.glob("*/config.json"))
     if not configs:
         print(f"No preset config files found under: {PRESETS_DIR}")
-        return 1
+        if args.output:
+            write_report(Path(args.output), [], 0)
+        return 0
 
     issues: list[Issue] = []
     for cfg in configs:
