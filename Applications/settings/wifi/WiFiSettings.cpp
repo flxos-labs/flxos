@@ -16,6 +16,7 @@
 #include <flx/connectivity/wifi/WiFiManager.hpp>
 #include <flx/ui/GuiTask.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
 #include <font/lv_symbol_def.h>
@@ -141,8 +142,7 @@ void WiFiSettings::createUI() {
 	lv_obj_set_height(m_infoPanel, LV_SIZE_CONTENT);
 	lv_obj_set_style_pad_all(m_infoPanel, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 	lv_obj_set_style_border_width(m_infoPanel, 0, 0);
-	lv_obj_set_style_bg_opa(m_infoPanel, LV_OPA_10, 0);
-	lv_obj_set_style_bg_color(m_infoPanel, flx::ui::Themes::getColor(flx::ui::UiConstants::COLOR_SURFACE_VARIANT), 0);
+	UI::StyleUtils::applyThemedBg(m_infoPanel, UI::StyleUtils::ThemeColorToken::Surface, LV_OPA_10);
 	lv_obj_set_style_radius(m_infoPanel, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
 	lv_obj_set_flex_flow(m_infoPanel, LV_FLEX_FLOW_COLUMN);
 	lv_obj_set_style_pad_gap(m_infoPanel, lv_dpx(UiConstants::PAD_SMALL), 0);
@@ -173,12 +173,11 @@ void WiFiSettings::createUI() {
 
 	lv_obj_t* forgetBtn = lv_button_create(m_infoPanel);
 	lv_obj_set_width(forgetBtn, lv_pct(100));
-	lv_obj_set_style_bg_color(forgetBtn, flx::ui::Themes::getColor(flx::ui::UiConstants::COLOR_ERROR), 0);
+	UI::StyleUtils::applyThemedBg(forgetBtn, UI::StyleUtils::ThemeColorToken::Error);
 	lv_obj_t* forgetLbl = lv_label_create(forgetBtn);
 	lv_label_set_text(forgetLbl, "Forget Network");
 	lv_obj_center(forgetLbl);
 	lv_obj_add_event_cb(forgetBtn, [](lv_event_t* e) {
-		auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
 		auto& cm = flx::connectivity::ConnectivityManager::getInstance();
 		wifi_ap_record_t ap_info;
 		if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
