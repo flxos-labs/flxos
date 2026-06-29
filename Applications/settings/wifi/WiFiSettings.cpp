@@ -167,6 +167,9 @@ void WiFiSettings::createUI() {
 	};
 
 	addInfoRow(m_infoPanel, "IP Address", &m_infoIpLabel);
+	if (m_infoIpLabel) {
+		lv_label_set_text(m_infoIpLabel, cm.getWiFiIpObservable().get().c_str());
+	}
 	addInfoRow(m_infoPanel, "RSSI", &m_infoRssiLabel);
 	addInfoRow(m_infoPanel, "Channel", &m_infoChannelLabel);
 	addInfoRow(m_infoPanel, "MAC Address", &m_infoMacLabel);

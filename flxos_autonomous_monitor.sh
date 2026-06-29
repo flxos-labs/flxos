@@ -6,6 +6,12 @@ LOG_FILE="${LOG_FILE:-$PROJECT_DIR/flxos_monitor.log}"
 SUMMARY_JSON="${SUMMARY_JSON:-$PROJECT_DIR/flxos_monitor_summary.json}"
 HOURS_BACK="${HOURS_BACK:-24}"
 
+# Validate that HOURS_BACK is numeric
+if [[ ! "$HOURS_BACK" =~ ^[0-9]+$ ]]; then
+	echo "Error: HOURS_BACK must be a numeric integer: '$HOURS_BACK'" >&2
+	exit 1
+fi
+
 cd "$PROJECT_DIR"
 
 mkdir -p "$(dirname "$LOG_FILE")"
@@ -69,8 +75,8 @@ count_lines() {
  while IFS= read -r -d '' f; do
  files+=("$f")
  done < <(
- find Kernel Services HalModule Connectivity \
- -type f \( -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) \
+  find Applications Apps UI Services System Core HalModule Connectivity \
+  -type f \( -name '*.c' -o -name '*.cpp' -o -name '*.h' -o -name '*.hpp' \) \
  -print0 2>/dev/null || true
  )
 
