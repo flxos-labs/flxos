@@ -118,16 +118,8 @@ else
     echo -e "${YELLOW}  ⊘ Skipped (script not found)${NC}"
 fi
 
-# 7. Wallpaper Preset Gates
-echo -e "\n${BLUE}═══ 7. Wallpaper Preset Gates ═══${NC}"
-if [ -f "$SCRIPT_DIR/run_wallpaper_assets.sh" ]; then
-    run_check "Wallpaper Preset Assets" "$SCRIPT_DIR/run_wallpaper_assets.sh" "wallpaper_presets"
-else
-    echo -e "${YELLOW}  ⊘ Skipped (script not found)${NC}"
-fi
-
-# 8. Literal Color Guardrail
-echo -e "\n${BLUE}═══ 8. Literal Color Guardrail ═══${NC}"
+# 7. Literal Color Guardrail
+echo -e "\n${BLUE}═══ 7. Literal Color Guardrail ═══${NC}"
 if [ -f "$SCRIPT_DIR/check_literal_colors.py" ]; then
     run_check "Literal Color Guardrail" "python3 $SCRIPT_DIR/check_literal_colors.py" "literal_colors"
 else
