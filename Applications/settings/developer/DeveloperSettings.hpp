@@ -23,30 +23,26 @@ public:
 
 	using SettingsPageBase::SettingsPageBase;
 
-	static inline flx::Observable<int32_t> verboseLogging {0};
-	static inline flx::Observable<int32_t> diagnosticOverlay {0};
-
 protected:
 
 	void createUI() override {
+		auto& sm = SettingsManager::getInstance();
 		static bool registered = false;
 		if (!registered) {
-			SettingsManager::getInstance().registerSetting("developer.verbose_logging", verboseLogging);
-			SettingsManager::getInstance().registerSetting("developer.diagnostic_overlay", diagnosticOverlay);
-			SettingsManager::getInstance().registerSetting("developer.demo_mode", DemoModeService::demoMode);
-			SettingsManager::getInstance().registerSetting("developer.demo_simulate_battery", DemoModeService::simulateBattery);
-			SettingsManager::getInstance().registerSetting("developer.demo_simulate_wifi", DemoModeService::simulateWifi);
-			SettingsManager::getInstance().registerSetting("developer.demo_simulate_bluetooth", DemoModeService::simulateBluetooth);
-			SettingsManager::getInstance().registerSetting("developer.demo_simulate_hotspot", DemoModeService::simulateHotspot);
-			SettingsManager::getInstance().registerSetting("developer.demo_simulate_notifications", DemoModeService::simulateNotifications);
-			SettingsManager::getInstance().registerSetting("developer.demo_interval_ms", DemoModeService::demoIntervalMs);
+			sm.registerSetting("developer.demo_mode", DemoModeService::demoMode);
+			sm.registerSetting("developer.demo_simulate_battery", DemoModeService::simulateBattery);
+			sm.registerSetting("developer.demo_simulate_wifi", DemoModeService::simulateWifi);
+			sm.registerSetting("developer.demo_simulate_bluetooth", DemoModeService::simulateBluetooth);
+			sm.registerSetting("developer.demo_simulate_hotspot", DemoModeService::simulateHotspot);
+			sm.registerSetting("developer.demo_simulate_notifications", DemoModeService::simulateNotifications);
+			sm.registerSetting("developer.demo_interval_ms", DemoModeService::demoIntervalMs);
 			registered = true;
 		}
 
 		DemoModeService::init();
 
-		m_verboseLoggingBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(verboseLogging);
-		m_diagnosticOverlayBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(diagnosticOverlay);
+		m_verboseLoggingBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(sm.getVerboseLogging());
+		m_diagnosticOverlayBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(sm.getDiagnosticOverlay());
 		m_demoModeBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::demoMode);
 		m_simulateBatteryBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::simulateBattery);
 		m_simulateWifiBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::simulateWifi);

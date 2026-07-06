@@ -13,6 +13,7 @@
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/managers/PowerManager.hpp>
+#include <flx/system/managers/SettingsManager.hpp>
 #include <flx/ui/desktop/modules/status_bar/StatusBar.hpp>
 #include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
@@ -324,18 +325,36 @@ void StatusBar::create() {
 
 	time_t now = 0;
 	struct tm timeinfo = {};
+	tzset();
 	time(&now);
 	localtime_r(&now, &timeinfo);
-	lv_label_set_text_fmt(m_timeLabel, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+	
+	bool const is24h = flx::system::SettingsManager::getInstance().getTimeFormat24h().get() != 0;
+	if (is24h) {
+		lv_label_set_text_fmt(m_timeLabel, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+	} else {
+		int const hour12 = timeinfo.tm_hour % 12 == 0 ? 12 : timeinfo.tm_hour % 12;
+		const char* ampm = timeinfo.tm_hour >= 12 ? "PM" : "AM";
+		lv_label_set_text_fmt(m_timeLabel, "%d:%02d %s", hour12, timeinfo.tm_min, ampm);
+	}
 
 	m_timer = lv_timer_create(
 		[](lv_timer_t* t) {
 			auto* label = (lv_obj_t*)lv_timer_get_user_data(t);
-			time_t now = 0;
-			struct tm timeinfo = {};
-			time(&now);
-			localtime_r(&now, &timeinfo);
-			lv_label_set_text_fmt(label, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+			tzset();
+			time_t now_tick = 0;
+			struct tm timeinfo_tick = {};
+			time(&now_tick);
+			localtime_r(&now_tick, &timeinfo_tick);
+			
+			bool const is24h_tick = flx::system::SettingsManager::getInstance().getTimeFormat24h().get() != 0;
+			if (is24h_tick) {
+				lv_label_set_text_fmt(label, "%02d:%02d", timeinfo_tick.tm_hour, timeinfo_tick.tm_min);
+			} else {
+				int const hour12 = timeinfo_tick.tm_hour % 12 == 0 ? 12 : timeinfo_tick.tm_hour % 12;
+				const char* ampm = timeinfo_tick.tm_hour >= 12 ? "PM" : "AM";
+				lv_label_set_text_fmt(label, "%d:%02d %s", hour12, timeinfo_tick.tm_min, ampm);
+			}
 		},
 		1000, m_timeLabel);
 

@@ -46,6 +46,10 @@ protected:
 		m_freeLabel = nullptr;
 		m_mountBtn = nullptr;
 		m_unmountBtn = nullptr;
+		m_mountPathBtn = nullptr;
+		m_fsTypeBtn = nullptr;
+		m_totalBtn = nullptr;
+		m_freeBtn = nullptr;
 	}
 
 private:
@@ -61,27 +65,27 @@ private:
 		lv_label_set_text(m_mountStateLabel, "Unknown");
 
 		// Mount path
-		lv_obj_t* pathBtn = add_list_btn(m_list, LV_SYMBOL_DIRECTORY, "Mount Path");
-		lv_obj_set_flex_grow(lv_obj_get_child(pathBtn, 1), 1);
-		m_mountPathLabel = lv_label_create(pathBtn);
+		m_mountPathBtn = add_list_btn(m_list, LV_SYMBOL_DIRECTORY, "Mount Path");
+		lv_obj_set_flex_grow(lv_obj_get_child(m_mountPathBtn, 1), 1);
+		m_mountPathLabel = lv_label_create(m_mountPathBtn);
 		lv_label_set_text(m_mountPathLabel, "--");
 
 		// Filesystem type
-		lv_obj_t* fsBtn = add_list_btn(m_list, LV_SYMBOL_FILE, "Filesystem");
-		lv_obj_set_flex_grow(lv_obj_get_child(fsBtn, 1), 1);
-		m_fsTypeLabel = lv_label_create(fsBtn);
+		m_fsTypeBtn = add_list_btn(m_list, LV_SYMBOL_FILE, "Filesystem");
+		lv_obj_set_flex_grow(lv_obj_get_child(m_fsTypeBtn, 1), 1);
+		m_fsTypeLabel = lv_label_create(m_fsTypeBtn);
 		lv_label_set_text(m_fsTypeLabel, "--");
 
 		// Total capacity
-		lv_obj_t* totalBtn = add_list_btn(m_list, LV_SYMBOL_CHARGE, "Total");
-		lv_obj_set_flex_grow(lv_obj_get_child(totalBtn, 1), 1);
-		m_totalLabel = lv_label_create(totalBtn);
+		m_totalBtn = add_list_btn(m_list, LV_SYMBOL_CHARGE, "Total");
+		lv_obj_set_flex_grow(lv_obj_get_child(m_totalBtn, 1), 1);
+		m_totalLabel = lv_label_create(m_totalBtn);
 		lv_label_set_text(m_totalLabel, "--");
 
 		// Free space
-		lv_obj_t* freeBtn = add_list_btn(m_list, LV_SYMBOL_OK, "Free Space");
-		lv_obj_set_flex_grow(lv_obj_get_child(freeBtn, 1), 1);
-		m_freeLabel = lv_label_create(freeBtn);
+		m_freeBtn = add_list_btn(m_list, LV_SYMBOL_OK, "Free Space");
+		lv_obj_set_flex_grow(lv_obj_get_child(m_freeBtn, 1), 1);
+		m_freeLabel = lv_label_create(m_freeBtn);
 		lv_label_set_text(m_freeLabel, "--");
 
 		// ── SD Card Actions ──
@@ -147,6 +151,13 @@ private:
 			if (m_fsTypeLabel) lv_label_set_text(m_fsTypeLabel, "--");
 			if (m_totalLabel) lv_label_set_text(m_totalLabel, "--");
 			if (m_freeLabel) lv_label_set_text(m_freeLabel, "--");
+			
+			if (m_mountPathBtn) lv_obj_add_flag(m_mountPathBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_fsTypeBtn) lv_obj_add_flag(m_fsTypeBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_totalBtn) lv_obj_add_flag(m_totalBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_freeBtn) lv_obj_add_flag(m_freeBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_mountBtn) lv_obj_add_flag(m_mountBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_unmountBtn) lv_obj_add_flag(m_unmountBtn, LV_OBJ_FLAG_HIDDEN);
 			return;
 		}
 
@@ -175,7 +186,15 @@ private:
 		}
 
 		// Card info (only if mounted)
-		if (sdCard->isMounted()) {
+		bool const mounted = sdCard->isMounted();
+		if (mounted) {
+			if (m_mountPathBtn) lv_obj_remove_flag(m_mountPathBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_fsTypeBtn) lv_obj_remove_flag(m_fsTypeBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_totalBtn) lv_obj_remove_flag(m_totalBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_freeBtn) lv_obj_remove_flag(m_freeBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_unmountBtn) lv_obj_remove_flag(m_unmountBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_mountBtn) lv_obj_add_flag(m_mountBtn, LV_OBJ_FLAG_HIDDEN);
+
 			flx::hal::sdcard::ISdCardDevice::CardInfo info;
 			if (sdCard->getCardInfo(info)) {
 				if (m_fsTypeLabel) {
@@ -193,6 +212,13 @@ private:
 				if (m_freeLabel) lv_label_set_text(m_freeLabel, "--");
 			}
 		} else {
+			if (m_mountPathBtn) lv_obj_add_flag(m_mountPathBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_fsTypeBtn) lv_obj_add_flag(m_fsTypeBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_totalBtn) lv_obj_add_flag(m_totalBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_freeBtn) lv_obj_add_flag(m_freeBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_unmountBtn) lv_obj_add_flag(m_unmountBtn, LV_OBJ_FLAG_HIDDEN);
+			if (m_mountBtn) lv_obj_remove_flag(m_mountBtn, LV_OBJ_FLAG_HIDDEN);
+
 			if (m_fsTypeLabel) lv_label_set_text(m_fsTypeLabel, "--");
 			if (m_totalLabel) lv_label_set_text(m_totalLabel, "--");
 			if (m_freeLabel) lv_label_set_text(m_freeLabel, "--");
@@ -240,6 +266,10 @@ private:
 	lv_obj_t* m_freeLabel = nullptr;
 	lv_obj_t* m_mountBtn = nullptr;
 	lv_obj_t* m_unmountBtn = nullptr;
+	lv_obj_t* m_mountPathBtn = nullptr;
+	lv_obj_t* m_fsTypeBtn = nullptr;
+	lv_obj_t* m_totalBtn = nullptr;
+	lv_obj_t* m_freeBtn = nullptr;
 };
 
 } // namespace System::Apps::Settings

@@ -2,6 +2,8 @@
 
 #include <flx/system/managers/PowerManager.hpp>
 #include <flx/ui/LvglObserverBridge.hpp>
+#include <flx/hal/DeviceRegistry.hpp>
+#include <flx/hal/power/IPowerDevice.hpp>
 #include <lvgl.h>
 #include <memory>
 
@@ -105,22 +107,40 @@ protected:
 		lv_obj_set_style_text_opa(lv_obj_get_child(noticeCont, 1), LV_OPA_60, 0);
 		m_noticeItem = noticeCont;
 
+		m_deviceItem = lv_list_add_button(m_list, LV_SYMBOL_SETTINGS, "Power Controller");
+		lv_obj_add_flag(m_deviceItem, LV_OBJ_FLAG_HIDDEN);
+
 		// Wire the configure observer to the notice item now that it's created
 		lv_subject_add_observer_obj(
 			m_configuredBridge->getSubject(),
 			[](lv_observer_t* observer, lv_subject_t* subject) {
-				auto* btn = lv_observer_get_target_obj(observer);
-				if (!btn) {
+				auto* instance = (PowerSettings*)lv_observer_get_user_data(observer);
+				if (!instance) {
 					return;
 				}
 				bool const configured = lv_subject_get_int(subject) != 0;
 				if (configured) {
-					lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+					if (instance->m_noticeItem) lv_obj_add_flag(instance->m_noticeItem, LV_OBJ_FLAG_HIDDEN);
+					
+					auto powerDev = flx::hal::DeviceRegistry::getInstance()
+									  .findFirst<flx::hal::power::IPowerDevice>(flx::hal::IDevice::Type::Power);
+					std::string name = "Power Controller";
+					if (powerDev) {
+						name = std::string(powerDev->getName());
+					}
+					if (instance->m_deviceItem) {
+						lv_obj_t* label = lv_obj_get_child(instance->m_deviceItem, 1);
+						if (label) {
+							lv_label_set_text(label, name.c_str());
+						}
+						lv_obj_remove_flag(instance->m_deviceItem, LV_OBJ_FLAG_HIDDEN);
+					}
 				} else {
-					lv_obj_remove_flag(btn, LV_OBJ_FLAG_HIDDEN);
+					if (instance->m_noticeItem) lv_obj_remove_flag(instance->m_noticeItem, LV_OBJ_FLAG_HIDDEN);
+					if (instance->m_deviceItem) lv_obj_add_flag(instance->m_deviceItem, LV_OBJ_FLAG_HIDDEN);
 				}
 			},
-			m_noticeItem, nullptr);
+			m_noticeItem, this);
 	}
 
 	void onShow() override {
@@ -131,6 +151,7 @@ protected:
 		m_levelLabel = nullptr;
 		m_chargingLabel = nullptr;
 		m_noticeItem = nullptr;
+		m_deviceItem = nullptr;
 	}
 
 private:
@@ -138,6 +159,7 @@ private:
 	lv_obj_t* m_levelLabel = nullptr;
 	lv_obj_t* m_chargingLabel = nullptr;
 	lv_obj_t* m_noticeItem = nullptr;
+	lv_obj_t* m_deviceItem = nullptr;
 
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_batteryBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_chargingBridge;

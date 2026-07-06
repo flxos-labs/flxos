@@ -86,6 +86,13 @@ bool SettingsManager::onStart() {
 	esp_timer_create(&timer_args, &m_save_timer);
 
 	loadSettings();
+
+	registerSetting("locale.language_index", m_languageIndex);
+	registerSetting("locale.time_format_24h", m_timeFormat24h);
+	registerSetting("locale.date_format_index", m_dateFormatIndex);
+	registerSetting("developer.verbose_logging", m_verboseLogging);
+	registerSetting("developer.diagnostic_overlay", m_diagnosticOverlay);
+
 	Log::info(TAG, "Settings service started");
 	return true;
 }

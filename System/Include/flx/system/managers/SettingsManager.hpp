@@ -36,6 +36,13 @@ public:
 	void saveSettings();
 	void loadSettings();
 
+	// Global settings observables
+	flx::Observable<int32_t>& getLanguageIndex() { return m_languageIndex; }
+	flx::Observable<int32_t>& getTimeFormat24h() { return m_timeFormat24h; }
+	flx::Observable<int32_t>& getDateFormatIndex() { return m_dateFormatIndex; }
+	flx::Observable<int32_t>& getVerboseLogging() { return m_verboseLogging; }
+	flx::Observable<int32_t>& getDiagnosticOverlay() { return m_diagnosticOverlay; }
+
 private:
 
 	SettingsManager() = default;
@@ -46,6 +53,12 @@ private:
 			STRING } type;
 		void* observable;
 	};
+
+	flx::Observable<int32_t> m_languageIndex {0};
+	flx::Observable<int32_t> m_timeFormat24h {1};
+	flx::Observable<int32_t> m_dateFormatIndex {0};
+	flx::Observable<int32_t> m_verboseLogging {0};
+	flx::Observable<int32_t> m_diagnosticOverlay {0};
 
 	std::map<std::string, Setting> m_registeredSettings {};
 	std::optional<flx::core::FlxValueDocument> m_cachedSettings {};
