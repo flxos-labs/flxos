@@ -61,6 +61,7 @@ private:
 
 	// Info panel
 	lv_obj_t* m_infoPanel = nullptr;
+	lv_obj_t* m_infoBtn = nullptr;
 	lv_obj_t* m_infoIpLabel = nullptr;
 	lv_obj_t* m_infoRssiLabel = nullptr;
 	lv_obj_t* m_infoChannelLabel = nullptr;

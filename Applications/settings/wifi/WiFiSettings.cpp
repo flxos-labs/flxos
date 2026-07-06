@@ -59,6 +59,17 @@ void WiFiSettings::createUI() {
 	lv_obj_t* title = lv_obj_get_child(header, 1);
 	lv_obj_set_flex_grow(title, 1);
 
+	lv_obj_remove_flag(m_container, LV_OBJ_FLAG_SCROLLABLE);
+
+	lv_obj_t* body = lv_obj_create(m_container);
+	lv_obj_set_width(body, lv_pct(100));
+	lv_obj_set_flex_grow(body, 1);
+	lv_obj_set_flex_flow(body, LV_FLEX_FLOW_COLUMN);
+	lv_obj_set_style_pad_all(body, 0, 0);
+	lv_obj_set_style_pad_gap(body, 0, 0);
+	lv_obj_set_style_border_width(body, 0, 0);
+	lv_obj_set_style_bg_opa(body, 0, 0);
+
 	// Config Button
 	lv_obj_t* configBtn = lv_button_create(header);
 	lv_obj_set_size(configBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -108,7 +119,7 @@ void WiFiSettings::createUI() {
 		},
 		LV_EVENT_VALUE_CHANGED, this);
 
-	lv_obj_t* statusCont = lv_obj_create(m_container);
+	lv_obj_t* statusCont = lv_obj_create(body);
 	lv_obj_set_size(statusCont, lv_pct(100), LV_SIZE_CONTENT);
 	lv_obj_set_style_pad_all(statusCont, 0, 0);
 	lv_obj_set_style_pad_gap(statusCont, 0, 0);
@@ -123,7 +134,26 @@ void WiFiSettings::createUI() {
 	m_statusLabel = lv_label_create(statusCont);
 	lv_obj_set_flex_grow(m_statusLabel, 1);
 	lv_label_set_long_mode(m_statusLabel, LV_LABEL_LONG_MODE_SCROLL);
-	updateStatus();
+
+	m_infoBtn = lv_button_create(statusCont);
+	lv_obj_set_size(m_infoBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_t* infoLabel = lv_image_create(m_infoBtn);
+	lv_image_set_src(infoLabel, LV_SYMBOL_EYE_OPEN);
+	lv_obj_add_flag(m_infoBtn, LV_OBJ_FLAG_HIDDEN);
+	lv_obj_add_event_cb(
+		m_infoBtn,
+		[](lv_event_t* e) {
+			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+			if (instance->m_infoPanel) {
+				if (lv_obj_has_flag(instance->m_infoPanel, LV_OBJ_FLAG_HIDDEN)) {
+					lv_obj_remove_flag(instance->m_infoPanel, LV_OBJ_FLAG_HIDDEN);
+					instance->updateInfoPanel();
+				} else {
+					lv_obj_add_flag(instance->m_infoPanel, LV_OBJ_FLAG_HIDDEN);
+				}
+			}
+		},
+		LV_EVENT_CLICKED, this);
 
 	lv_obj_t* refreshBtn = lv_button_create(statusCont);
 	lv_obj_set_size(refreshBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
@@ -137,7 +167,9 @@ void WiFiSettings::createUI() {
 		},
 		LV_EVENT_CLICKED, this);
 
-	m_infoPanel = lv_obj_create(m_container);
+	updateStatus();
+
+	m_infoPanel = lv_obj_create(body);
 	lv_obj_set_width(m_infoPanel, lv_pct(100));
 	lv_obj_set_height(m_infoPanel, LV_SIZE_CONTENT);
 	lv_obj_set_style_pad_all(m_infoPanel, lv_dpx(UiConstants::PAD_MEDIUM), 0);
@@ -199,7 +231,10 @@ void WiFiSettings::createUI() {
 		},
 		m_container, this);
 
-	m_list = create_settings_list(m_container);
+	m_list = create_settings_list(body);
+	lv_obj_set_flex_grow(m_list, 0);
+	lv_obj_set_height(m_list, LV_SIZE_CONTENT);
+	lv_obj_remove_flag(m_list, LV_OBJ_FLAG_SCROLLABLE);
 
 	// Observer for WiFi status changes - triggers auto-scan after connection
 	m_statusObserver = lv_subject_add_observer_obj(
@@ -295,11 +330,16 @@ void WiFiSettings::onHide() {
 		m_passwordTa = nullptr;
 		m_saveSwitch = nullptr;
 	}
+	hideSavedNetworks();
 	hideConfig();
 }
 
 void WiFiSettings::showConfig() {
 	if (m_configContainer) return;
+
+	if (m_container) {
+		lv_obj_add_flag(m_container, LV_OBJ_FLAG_HIDDEN);
+	}
 
 	m_configContainer = create_page_container(m_parent);
 	lv_obj_t* backBtn = nullptr;
@@ -381,6 +421,9 @@ void WiFiSettings::hideConfig() {
 		lv_obj_delete(m_configContainer);
 		m_configContainer = nullptr;
 		m_scanSliderRow = nullptr;
+		if (m_container) {
+			lv_obj_remove_flag(m_container, LV_OBJ_FLAG_HIDDEN);
+		}
 	}
 }
 
@@ -503,10 +546,19 @@ void WiFiSettings::updateStatus() {
 	auto const status = static_cast<flx::connectivity::WiFiStatus>(lv_subject_get_int(
 		m_wifiStatusBridge->getSubject()));
 
+	if (m_infoBtn) {
+		if (status == flx::connectivity::WiFiStatus::CONNECTED) {
+			lv_obj_remove_flag(m_infoBtn, LV_OBJ_FLAG_HIDDEN);
+		} else {
+			lv_obj_add_flag(m_infoBtn, LV_OBJ_FLAG_HIDDEN);
+		}
+	}
+
 	if (m_infoPanel) {
 		if (status == flx::connectivity::WiFiStatus::CONNECTED) {
-			lv_obj_remove_flag(m_infoPanel, LV_OBJ_FLAG_HIDDEN);
-			updateInfoPanel();
+			if (!lv_obj_has_flag(m_infoPanel, LV_OBJ_FLAG_HIDDEN)) {
+				updateInfoPanel();
+			}
 		} else {
 			lv_obj_add_flag(m_infoPanel, LV_OBJ_FLAG_HIDDEN);
 		}
@@ -554,6 +606,10 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 		return;
 	}
 
+	if (m_container) {
+		lv_obj_add_flag(m_container, LV_OBJ_FLAG_HIDDEN);
+	}
+
 	m_connectContainer = lv_obj_create(m_parent);
 	lv_obj_set_size(m_connectContainer, lv_pct(100), lv_pct(100));
 	lv_obj_set_style_pad_all(m_connectContainer, 0, 0);
@@ -599,6 +655,9 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 			instance->m_connectContainer = nullptr;
 			instance->m_passwordTa = nullptr;
 			instance->m_saveSwitch = nullptr;
+			if (instance->m_container) {
+				lv_obj_remove_flag(instance->m_container, LV_OBJ_FLAG_HIDDEN);
+			}
 		},
 		LV_EVENT_CLICKED, this);
 
@@ -618,6 +677,9 @@ void WiFiSettings::showConnectScreen(const char* ssid) {
 			instance->m_passwordTa = nullptr;
 			instance->m_saveSwitch = nullptr;
 			instance->updateStatus();
+			if (instance->m_container) {
+				lv_obj_remove_flag(instance->m_container, LV_OBJ_FLAG_HIDDEN);
+			}
 		},
 		LV_EVENT_CLICKED, this);
 
@@ -666,6 +728,7 @@ void WiFiSettings::onDestroy() {
 	m_statusObserver = nullptr; // Auto-cleaned when m_container is deleted
 	m_scanIntervalObserver = nullptr; // Auto-cleaned when m_container is deleted
 	m_infoPanel = nullptr;
+	m_infoBtn = nullptr;
 	m_infoIpLabel = nullptr;
 	m_infoRssiLabel = nullptr;
 	m_infoChannelLabel = nullptr;
@@ -678,6 +741,10 @@ void WiFiSettings::onDestroy() {
 
 void WiFiSettings::showSavedNetworks() {
 	if (m_savedNetContainer) return;
+
+	if (m_configContainer) {
+		lv_obj_add_flag(m_configContainer, LV_OBJ_FLAG_HIDDEN);
+	}
 
 	m_savedNetContainer = create_page_container(m_parent);
 	lv_obj_t* backBtn = nullptr;
@@ -700,6 +767,9 @@ void WiFiSettings::hideSavedNetworks() {
 		lv_obj_delete(m_savedNetContainer);
 		m_savedNetContainer = nullptr;
 		m_savedNetList = nullptr;
+		if (m_configContainer) {
+			lv_obj_remove_flag(m_configContainer, LV_OBJ_FLAG_HIDDEN);
+		}
 	}
 }
 

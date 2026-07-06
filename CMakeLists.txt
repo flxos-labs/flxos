@@ -17,6 +17,12 @@ add_compile_definitions(IP_PORTMAP_MAX=4)
 include("${CMAKE_SOURCE_DIR}/Buildscripts/profile.cmake")
 flx_load_profile()
 
+# Set IDF_TARGET from the profile target to ensure ESP-IDF CMake files match the active profile
+if(DEFINED FLXOS_PROFILE_TARGET)
+    set(ENV{IDF_TARGET} "${FLXOS_PROFILE_TARGET}")
+    set(IDF_TARGET "${FLXOS_PROFILE_TARGET}" CACHE STRING "IDF Target" FORCE)
+endif()
+
 # ── Component Directory Discovery ──
 # We explicitly list fundamental core modules.
 set(EXTRA_COMPONENT_DIRS
