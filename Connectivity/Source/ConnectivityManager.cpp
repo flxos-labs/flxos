@@ -52,7 +52,7 @@ bool ConnectivityManager::onStart() {
 	flx::system::SettingsManager::getInstance().registerSetting("hs_max", m_hotspot_max_conn_subject);
 	flx::system::SettingsManager::getInstance().registerSetting("hs_hide", m_hotspot_hidden_subject);
 	flx::system::SettingsManager::getInstance().registerSetting("hs_auth", m_hotspot_auth_subject);
-	flx::system::SettingsManager::getInstance().registerSetting("wifi_autostart", m_wifi_autostart_subject);
+	flx::system::SettingsManager::getInstance().registerSetting("wifi_enabled", m_wifi_enabled_subject);
 	flx::system::SettingsManager::getInstance().registerSetting("wifi_scan_int", m_wifi_scan_interval_subject);
 	flx::system::SettingsManager::getInstance().registerSetting("wifi_ssid", m_saved_wifi_ssid_subject);
 	flx::system::SettingsManager::getInstance().registerSetting("wifi_pass", m_saved_wifi_password_subject);
@@ -84,13 +84,16 @@ bool ConnectivityManager::onStart() {
 	}
 
 	// SD card / boot-media provisioning
-	WiFiProvisioning::importFromBootMedia();
+	bool const newly_provisioned = WiFiProvisioning::importFromBootMedia();
 
-	// Auto-start WiFi and connect to best known network if enabled
-	if (m_wifi_autostart_subject.get() != 0) {
-		Log::info(TAG, "Auto-starting WiFi...");
+	// Restore previous state of Wi-Fi (wifi_enabled)
+	if (newly_provisioned || m_wifi_enabled_subject.get() != 0) {
+		Log::info(TAG, "Restoring Wi-Fi previous enabled state (or newly provisioned)...");
 		setWiFiEnabled(true);
 		WiFiManager::getInstance().connectBestKnownNetwork();
+	} else {
+		Log::info(TAG, "Restoring Wi-Fi previous disabled state...");
+		setWiFiEnabled(false);
 	}
 
 	// Initialize scan timer
@@ -196,6 +199,7 @@ esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
 	Log::info(TAG, "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
 	esp_err_t const err = WiFiManager::getInstance().setEnabled(enabled);
 	if (err == ESP_OK) {
+		m_wifi_enabled_subject.set(enabled ? 1 : 0);
 	}
 	return err;
 }

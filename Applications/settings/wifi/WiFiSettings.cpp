@@ -11,6 +11,7 @@
 #include <esp_err.h>
 #include <esp_wifi.h>
 #include <esp_wifi_types_generic.h>
+#include <esp_netif.h>
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
@@ -49,7 +50,6 @@ void WiFiSettings::createUI() {
 	m_wifiStatusBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiStatusObservable());
 	m_wifiConnectedBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiConnectedObservable());
 	m_wifiScanIntervalBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiScanIntervalObservable());
-	m_wifiAutostartBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(cm.getWiFiAutostartObservable());
 	m_wifiIpBridge = std::make_unique<flx::ui::LvglStringObserverBridge>(cm.getWiFiIpObservable());
 
 	lv_obj_t* backBtn = nullptr;
@@ -144,14 +144,7 @@ void WiFiSettings::createUI() {
 		m_infoBtn,
 		[](lv_event_t* e) {
 			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
-			if (instance->m_infoPanel) {
-				if (lv_obj_has_flag(instance->m_infoPanel, LV_OBJ_FLAG_HIDDEN)) {
-					lv_obj_remove_flag(instance->m_infoPanel, LV_OBJ_FLAG_HIDDEN);
-					instance->updateInfoPanel();
-				} else {
-					lv_obj_add_flag(instance->m_infoPanel, LV_OBJ_FLAG_HIDDEN);
-				}
-			}
+			instance->showInfoPage();
 		},
 		LV_EVENT_CLICKED, this);
 
@@ -168,57 +161,6 @@ void WiFiSettings::createUI() {
 		LV_EVENT_CLICKED, this);
 
 	updateStatus();
-
-	m_infoPanel = lv_obj_create(body);
-	lv_obj_set_width(m_infoPanel, lv_pct(100));
-	lv_obj_set_height(m_infoPanel, LV_SIZE_CONTENT);
-	lv_obj_set_style_pad_all(m_infoPanel, lv_dpx(UiConstants::PAD_MEDIUM), 0);
-	lv_obj_set_style_border_width(m_infoPanel, 0, 0);
-	UI::StyleUtils::applyThemedBg(m_infoPanel, UI::StyleUtils::ThemeColorToken::Surface, LV_OPA_10);
-	lv_obj_set_style_radius(m_infoPanel, lv_dpx(UiConstants::RADIUS_DEFAULT), 0);
-	lv_obj_set_flex_flow(m_infoPanel, LV_FLEX_FLOW_COLUMN);
-	lv_obj_set_style_pad_gap(m_infoPanel, lv_dpx(UiConstants::PAD_SMALL), 0);
-	lv_obj_add_flag(m_infoPanel, LV_OBJ_FLAG_HIDDEN);
-
-	auto addInfoRow = [](lv_obj_t* parent, const char* labelStr, lv_obj_t** valLabelOut) {
-		lv_obj_t* row = lv_obj_create(parent);
-		lv_obj_set_width(row, lv_pct(100));
-		lv_obj_set_height(row, LV_SIZE_CONTENT);
-		lv_obj_set_style_pad_all(row, 0, 0);
-		lv_obj_set_style_border_width(row, 0, 0);
-		lv_obj_set_style_bg_opa(row, 0, 0);
-		lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-		lv_obj_set_flex_align(row, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-
-		lv_obj_t* lbl = lv_label_create(row);
-		lv_label_set_text(lbl, labelStr);
-		lv_obj_set_style_text_opa(lbl, LV_OPA_60, 0);
-
-		*valLabelOut = lv_label_create(row);
-		lv_label_set_text(*valLabelOut, "-");
-	};
-
-	addInfoRow(m_infoPanel, "IP Address", &m_infoIpLabel);
-	if (m_infoIpLabel) {
-		lv_label_set_text(m_infoIpLabel, cm.getWiFiIpObservable().get().c_str());
-	}
-	addInfoRow(m_infoPanel, "RSSI", &m_infoRssiLabel);
-	addInfoRow(m_infoPanel, "Channel", &m_infoChannelLabel);
-	addInfoRow(m_infoPanel, "MAC Address", &m_infoMacLabel);
-
-	lv_obj_t* forgetBtn = lv_button_create(m_infoPanel);
-	lv_obj_set_width(forgetBtn, lv_pct(100));
-	UI::StyleUtils::applyThemedBg(forgetBtn, UI::StyleUtils::ThemeColorToken::Error);
-	lv_obj_t* forgetLbl = lv_label_create(forgetBtn);
-	lv_label_set_text(forgetLbl, "Forget Network");
-	lv_obj_center(forgetLbl);
-	lv_obj_add_event_cb(forgetBtn, [](lv_event_t* e) {
-		auto& cm = flx::connectivity::ConnectivityManager::getInstance();
-		wifi_ap_record_t ap_info;
-		if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
-			cm.removeWiFiNetwork(std::string((char*)ap_info.ssid));
-			cm.disconnectWiFi();
-		} }, LV_EVENT_CLICKED, this);
 
 	lv_subject_add_observer_obj(
 		m_wifiIpBridge->getSubject(),
@@ -331,6 +273,7 @@ void WiFiSettings::onHide() {
 		m_saveSwitch = nullptr;
 	}
 	hideSavedNetworks();
+	hideInfoPage();
 	hideConfig();
 }
 
@@ -354,11 +297,6 @@ void WiFiSettings::showConfig() {
 		LV_EVENT_CLICKED, this);
 
 	lv_obj_t* list = create_settings_list(m_configContainer);
-
-	add_switch_item(
-		list,
-		"Auto-start on Boot",
-		m_wifiAutostartBridge->getSubject());
 
 	// Saved Networks button
 	lv_obj_t* savedBtn = lv_list_add_button(list, LV_SYMBOL_LIST, "Saved Networks");
@@ -522,19 +460,90 @@ const char* WiFiSettings::getSignalIcon(int8_t rssi) {
 	return LV_SYMBOL_WIFI;
 }
 
+static const char* wifi_authmode_str(wifi_auth_mode_t mode) {
+	switch (mode) {
+		case WIFI_AUTH_OPEN: return "Open";
+		case WIFI_AUTH_WEP: return "WEP";
+		case WIFI_AUTH_WPA_PSK: return "WPA-PSK";
+		case WIFI_AUTH_WPA2_PSK: return "WPA2-PSK";
+		case WIFI_AUTH_WPA_WPA2_PSK: return "WPA/WPA2-PSK";
+		case WIFI_AUTH_WPA2_ENTERPRISE: return "WPA2-Enterprise";
+		case WIFI_AUTH_WPA3_PSK: return "WPA3-PSK";
+		case WIFI_AUTH_WPA2_WPA3_PSK: return "WPA2/WPA3-PSK";
+		default: return "Unknown";
+	}
+}
+
+static const char* wifi_phy_mode_str(wifi_ap_record_t const& ap_info) {
+	if (ap_info.phy_11n) return "802.11n (Wi-Fi 4)";
+	if (ap_info.phy_11g) return "802.11g";
+	if (ap_info.phy_11b) return "802.11b";
+	return "802.11";
+}
+
 void WiFiSettings::updateInfoPanel() {
-	if (!m_infoPanel) return;
+	if (!m_infoContainer) return;
 
 	wifi_ap_record_t ap_info;
 	if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
-		lv_label_set_text_fmt(m_infoRssiLabel, "%d dBm", ap_info.rssi);
-		lv_label_set_text_fmt(m_infoChannelLabel, "%d", ap_info.primary);
+		if (m_infoSsidLabel) {
+			lv_label_set_text(m_infoSsidLabel, (char*)ap_info.ssid);
+		}
+		if (m_infoRssiLabel) {
+			lv_label_set_text_fmt(m_infoRssiLabel, "%d dBm", ap_info.rssi);
+		}
+		if (m_infoChannelLabel) {
+			lv_label_set_text_fmt(m_infoChannelLabel, "%d", ap_info.primary);
+		}
+		if (m_infoBssidLabel) {
+			lv_label_set_text_fmt(m_infoBssidLabel, "%02x:%02x:%02x:%02x:%02x:%02x",
+				ap_info.bssid[0], ap_info.bssid[1], ap_info.bssid[2],
+				ap_info.bssid[3], ap_info.bssid[4], ap_info.bssid[5]);
+		}
+		if (m_infoSecurityLabel) {
+			lv_label_set_text(m_infoSecurityLabel, wifi_authmode_str(ap_info.authmode));
+		}
+		if (m_infoStandardLabel) {
+			lv_label_set_text(m_infoStandardLabel, wifi_phy_mode_str(ap_info));
+		}
 	}
 
 	uint8_t mac[6];
 	if (esp_wifi_get_mac(WIFI_IF_STA, mac) == ESP_OK) {
-		lv_label_set_text_fmt(m_infoMacLabel, "%02x:%02x:%02x:%02x:%02x:%02x",
-			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		if (m_infoMacLabel) {
+			lv_label_set_text_fmt(m_infoMacLabel, "%02x:%02x:%02x:%02x:%02x:%02x",
+				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		}
+	}
+
+	esp_netif_t* sta_netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+	if (sta_netif) {
+		esp_netif_ip_info_t ip_info;
+		if (esp_netif_get_ip_info(sta_netif, &ip_info) == ESP_OK) {
+			char ip_str[16];
+			char gw_str[16];
+			char mask_str[16];
+			esp_ip4addr_ntoa(&ip_info.ip, ip_str, sizeof(ip_str));
+			esp_ip4addr_ntoa(&ip_info.gw, gw_str, sizeof(gw_str));
+			esp_ip4addr_ntoa(&ip_info.netmask, mask_str, sizeof(mask_str));
+			if (m_infoIpLabel) {
+				lv_label_set_text(m_infoIpLabel, ip_str);
+			}
+			if (m_infoGatewayLabel) {
+				lv_label_set_text(m_infoGatewayLabel, gw_str);
+			}
+			if (m_infoSubnetLabel) {
+				lv_label_set_text(m_infoSubnetLabel, mask_str);
+			}
+		}
+		esp_netif_dns_info_t dns_info;
+		if (esp_netif_get_dns_info(sta_netif, ESP_NETIF_DNS_MAIN, &dns_info) == ESP_OK) {
+			char dns_str[16];
+			esp_ip4addr_ntoa(&dns_info.ip.u_addr.ip4, dns_str, sizeof(dns_str));
+			if (m_infoDnsLabel) {
+				lv_label_set_text(m_infoDnsLabel, dns_str);
+			}
+		}
 	}
 }
 
@@ -554,14 +563,12 @@ void WiFiSettings::updateStatus() {
 		}
 	}
 
-	if (m_infoPanel) {
-		if (status == flx::connectivity::WiFiStatus::CONNECTED) {
-			if (!lv_obj_has_flag(m_infoPanel, LV_OBJ_FLAG_HIDDEN)) {
-				updateInfoPanel();
-			}
-		} else {
-			lv_obj_add_flag(m_infoPanel, LV_OBJ_FLAG_HIDDEN);
+	if (status == flx::connectivity::WiFiStatus::CONNECTED) {
+		if (m_infoContainer) {
+			updateInfoPanel();
 		}
+	} else {
+		hideInfoPage();
 	}
 
 	switch (status) {
@@ -717,6 +724,7 @@ void WiFiSettings::onDestroy() {
 		m_savedNetContainer = nullptr;
 		m_savedNetList = nullptr;
 	}
+	hideInfoPage();
 	hideConfig();
 	// m_container is deleted by base class
 	m_list = nullptr;
@@ -727,11 +735,18 @@ void WiFiSettings::onDestroy() {
 	m_scanSliderRow = nullptr;
 	m_statusObserver = nullptr; // Auto-cleaned when m_container is deleted
 	m_scanIntervalObserver = nullptr; // Auto-cleaned when m_container is deleted
-	m_infoPanel = nullptr;
+	m_infoContainer = nullptr;
 	m_infoBtn = nullptr;
+	m_infoSsidLabel = nullptr;
 	m_infoIpLabel = nullptr;
+	m_infoSubnetLabel = nullptr;
+	m_infoGatewayLabel = nullptr;
+	m_infoDnsLabel = nullptr;
+	m_infoSecurityLabel = nullptr;
+	m_infoStandardLabel = nullptr;
 	m_infoRssiLabel = nullptr;
 	m_infoChannelLabel = nullptr;
+	m_infoBssidLabel = nullptr;
 	m_infoMacLabel = nullptr;
 }
 
@@ -843,6 +858,91 @@ void WiFiSettings::refreshSavedNetworksList() {
 				}
 			},
 			LV_EVENT_CLICKED, this);
+	}
+}
+
+void WiFiSettings::showInfoPage() {
+	if (m_infoContainer) return;
+
+	if (m_container) {
+		lv_obj_add_flag(m_container, LV_OBJ_FLAG_HIDDEN);
+	}
+
+	m_infoContainer = create_page_container(m_parent);
+	lv_obj_t* backBtn = nullptr;
+	lv_obj_t* header = create_header(m_infoContainer, "Wi-Fi Info", &backBtn);
+
+	lv_obj_add_event_cb(
+		backBtn,
+		[](lv_event_t* e) {
+			auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+			instance->hideInfoPage();
+		},
+		LV_EVENT_CLICKED, this);
+
+	// Forget Network button beside the wifi info in header, right aligned
+	lv_obj_t* forgetBtn = lv_button_create(header);
+	lv_obj_set_size(forgetBtn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+	lv_obj_add_flag(forgetBtn, LV_OBJ_FLAG_FLOATING);
+	lv_obj_align(forgetBtn, LV_ALIGN_RIGHT_MID, -lv_dpx(UiConstants::PAD_SMALL), 0);
+	lv_obj_set_style_pad_all(forgetBtn, lv_dpx(4), 0);
+
+	lv_obj_t* forgetLabel = lv_label_create(forgetBtn);
+	lv_label_set_text(forgetLabel, "Forget");
+
+	lv_obj_add_event_cb(forgetBtn, [](lv_event_t* e) {
+		auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
+		auto& cm = flx::connectivity::ConnectivityManager::getInstance();
+		wifi_ap_record_t ap_info;
+		if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+			cm.removeWiFiNetwork(std::string((char*)ap_info.ssid));
+			cm.disconnectWiFi();
+		}
+		instance->hideInfoPage();
+	}, LV_EVENT_CLICKED, this);
+
+	lv_obj_t* list = create_settings_list(m_infoContainer);
+
+	auto addInfoRow = [](lv_obj_t* parent, const char* labelStr, lv_obj_t** valLabelOut) {
+		lv_obj_t* row = lv_list_add_button(parent, nullptr, labelStr);
+		*valLabelOut = lv_label_create(row);
+		lv_obj_align(*valLabelOut, LV_ALIGN_RIGHT_MID, 0, 0);
+		lv_label_set_text(*valLabelOut, "-");
+	};
+
+	addInfoRow(list, "SSID", &m_infoSsidLabel);
+	addInfoRow(list, "IP Address", &m_infoIpLabel);
+	addInfoRow(list, "Subnet Mask", &m_infoSubnetLabel);
+	addInfoRow(list, "Gateway", &m_infoGatewayLabel);
+	addInfoRow(list, "DNS Server", &m_infoDnsLabel);
+	addInfoRow(list, "Security", &m_infoSecurityLabel);
+	addInfoRow(list, "Wi-Fi Standard", &m_infoStandardLabel);
+	addInfoRow(list, "RSSI", &m_infoRssiLabel);
+	addInfoRow(list, "Channel", &m_infoChannelLabel);
+	addInfoRow(list, "BSSID", &m_infoBssidLabel);
+	addInfoRow(list, "Device MAC", &m_infoMacLabel);
+
+	updateInfoPanel();
+}
+
+void WiFiSettings::hideInfoPage() {
+	if (m_infoContainer) {
+		lv_obj_delete(m_infoContainer);
+		m_infoContainer = nullptr;
+		m_infoSsidLabel = nullptr;
+		m_infoIpLabel = nullptr;
+		m_infoSubnetLabel = nullptr;
+		m_infoGatewayLabel = nullptr;
+		m_infoDnsLabel = nullptr;
+		m_infoSecurityLabel = nullptr;
+		m_infoStandardLabel = nullptr;
+		m_infoRssiLabel = nullptr;
+		m_infoChannelLabel = nullptr;
+		m_infoBssidLabel = nullptr;
+		m_infoMacLabel = nullptr;
+		if (m_container) {
+			lv_obj_remove_flag(m_container, LV_OBJ_FLAG_HIDDEN);
+		}
 	}
 }
 

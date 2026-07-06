@@ -98,7 +98,6 @@ public:
 	flx::Observable<int32_t>& getHotspotMaxConnObservable() { return m_hotspot_max_conn_subject; }
 	flx::Observable<int32_t>& getHotspotHiddenObservable() { return m_hotspot_hidden_subject; }
 	flx::Observable<int32_t>& getHotspotAuthObservable() { return m_hotspot_auth_subject; }
-	flx::Observable<int32_t>& getWiFiAutostartObservable() { return m_wifi_autostart_subject; }
 	flx::Observable<int32_t>& getWiFiScanIntervalObservable() { return m_wifi_scan_interval_subject; }
 	flx::StringObservable& getSavedWiFiSsidObservable() { return m_saved_wifi_ssid_subject; }
 	flx::StringObservable& getSavedWiFiPasswordObservable() { return m_saved_wifi_password_subject; }
@@ -130,7 +129,6 @@ private:
 	flx::Observable<int32_t> m_hotspot_max_conn_subject {4};
 	flx::Observable<int32_t> m_hotspot_hidden_subject {0};
 	flx::Observable<int32_t> m_hotspot_auth_subject {1};
-	flx::Observable<int32_t> m_wifi_autostart_subject {0};
 	flx::Observable<int32_t> m_wifi_scan_interval_subject {0};
 	flx::StringObservable m_saved_wifi_ssid_subject {""};
 	flx::StringObservable m_saved_wifi_password_subject {""};

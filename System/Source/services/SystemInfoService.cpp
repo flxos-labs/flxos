@@ -289,7 +289,7 @@ BatteryStats SystemInfoService::getBatteryStats() {
 #if FLXOS_BATTERY_ENABLED
 	stats.isConfigured = true;
 	if (flx::config::battery.mock) {
-		static int32_t level = 85;
+		static int32_t level = 50;
 		static bool charging = false;
 		static uint64_t lastUpdateSec = 0;
 		uint64_t nowSec = esp_timer_get_time() / 1000000;

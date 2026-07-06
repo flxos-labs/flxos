@@ -14,21 +14,28 @@ static constexpr const char* TAG = "WiFiProvisioning";
 
 namespace flx::connectivity {
 
-void WiFiProvisioning::importFromBootMedia() {
+bool WiFiProvisioning::importFromBootMedia() {
 	Log::info(TAG, "Checking for boot-media WiFi provisioning files...");
-	importFromDirectory("/data/provisioning/wifi");
+	bool imported = false;
+	if (importFromDirectory("/data/provisioning/wifi")) {
+		imported = true;
+	}
 #if FLXOS_SD_CARD_ENABLED
-	importFromDirectory("/sdcard/provisioning/wifi");
+	if (importFromDirectory("/sdcard/provisioning/wifi")) {
+		imported = true;
+	}
 #endif
+	return imported;
 }
 
-void WiFiProvisioning::importFromDirectory(const char* dir) {
+bool WiFiProvisioning::importFromDirectory(const char* dir) {
 	DIR* d = opendir(dir);
 	if (!d) {
 		// Directory doesn't exist — no provisioning files
-		return;
+		return false;
 	}
 
+	bool any_imported = false;
 	struct dirent* entry;
 	while ((entry = readdir(d)) != nullptr) {
 		if (entry->d_type != DT_REG && entry->d_type != DT_UNKNOWN) {
@@ -41,9 +48,11 @@ void WiFiProvisioning::importFromDirectory(const char* dir) {
 		std::string path = std::string(dir) + "/" + filename;
 		if (importFile(path)) {
 			Log::info(TAG, "Successfully imported provisioning file: %s", path.c_str());
+			any_imported = true;
 		}
 	}
 	closedir(d);
+	return any_imported;
 }
 
 bool WiFiProvisioning::importFile(const std::string& path) {
@@ -101,7 +110,7 @@ bool WiFiProvisioning::importFile(const std::string& path) {
 		if (autoRemove) {
 			::remove(path.c_str());
 		}
-		return true;
+		return false;
 	}
 
 	WiFiCredential cred;

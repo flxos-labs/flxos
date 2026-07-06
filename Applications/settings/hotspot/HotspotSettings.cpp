@@ -8,6 +8,7 @@
 #include "core/lv_observer.h"
 #include "display/lv_display.h"
 #include "esp_err.h"
+#include "esp_wifi.h"
 #include "esp_wifi_types_generic.h"
 #include "flx/connectivity/ConnectivityManager.hpp"
 #include "flx/connectivity/hotspot/HotspotManager.hpp"
@@ -86,6 +87,7 @@ void HotspotSettings::onDestroy() {
 	m_securityDropdown = nullptr;
 	m_txPowerSlider = nullptr;
 	m_autoShutdownSwitch = nullptr;
+	m_powerSaveDropdown = nullptr;
 	m_clientsCont = nullptr;
 	m_configTitle = nullptr;
 }
@@ -515,6 +517,30 @@ void HotspotSettings::createConfigPage() {
 	if (flx::connectivity::HotspotManager::getInstance().getAutoShutdownTimeout() > 0) {
 		lv_obj_add_state(m_autoShutdownSwitch, LV_STATE_CHECKED);
 	}
+
+	// Power Save Mode
+	lv_obj_t* psCont = lv_obj_create(content);
+	lv_obj_set_size(psCont, lv_pct(100), LV_SIZE_CONTENT);
+	lv_obj_set_style_pad_all(psCont, 0, 0);
+	lv_obj_set_style_border_width(psCont, 0, 0);
+	lv_obj_set_flex_flow(psCont, LV_FLEX_FLOW_ROW);
+	lv_obj_set_flex_align(psCont, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+	lv_obj_t* psLabel = lv_label_create(psCont);
+	lv_label_set_text(psLabel, "Power Save:");
+	m_powerSaveDropdown = lv_dropdown_create(psCont);
+	lv_dropdown_set_options(m_powerSaveDropdown, "Off\nLow\nHigh");
+	lv_obj_set_width(m_powerSaveDropdown, lv_dpx(LayoutConstants::SIZE_DROPDOWN_WIDTH_LARGE));
+	lv_dropdown_set_dir(m_powerSaveDropdown, LV_DIR_LEFT);
+	// Default to current power save mode
+	wifi_ps_type_t cur_ps = WIFI_PS_NONE;
+	esp_wifi_get_ps(&cur_ps);
+	if (cur_ps == WIFI_PS_MIN_MODEM) {
+		lv_dropdown_set_selected(m_powerSaveDropdown, 1);
+	} else if (cur_ps == WIFI_PS_MAX_MODEM) {
+		lv_dropdown_set_selected(m_powerSaveDropdown, 2);
+	} else {
+		lv_dropdown_set_selected(m_powerSaveDropdown, 0);
+	}
 }
 
 void HotspotSettings::showMainPage() {
@@ -590,6 +616,15 @@ void HotspotSettings::applyHotspotSettings() {
 		if (err != ESP_OK) {
 			lv_obj_remove_state(m_hotspotSwitch, LV_STATE_CHECKED);
 		}
+	}
+
+	// Apply power save mode
+	if (m_powerSaveDropdown) {
+		int const ps_idx = lv_dropdown_get_selected(m_powerSaveDropdown);
+		wifi_ps_type_t ps = WIFI_PS_NONE;
+		if (ps_idx == 1) ps = WIFI_PS_MIN_MODEM;
+		else if (ps_idx == 2) ps = WIFI_PS_MAX_MODEM;
+		esp_wifi_set_ps(ps);
 	}
 }
 

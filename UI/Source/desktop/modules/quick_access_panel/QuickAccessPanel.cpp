@@ -209,7 +209,7 @@ void QuickAccessPanel::buildToggles() {
 			if (rot_btn) {
 				lv_obj_set_size(rot_btn, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 				lv_obj_set_style_radius(rot_btn, LV_RADIUS_CIRCLE, 0);
-				lv_obj_set_style_bg_color(rot_btn, lv_palette_main(LV_PALETTE_BLUE), 0);
+				UI::StyleUtils::applyThemedBg(rot_btn, UI::StyleUtils::ThemeColorToken::Primary);
 
 				lv_obj_t* rot_icon = lv_label_create(rot_btn);
 				lv_label_set_text(rot_icon, LV_SYMBOL_REFRESH);

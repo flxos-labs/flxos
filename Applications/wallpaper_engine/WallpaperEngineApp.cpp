@@ -6,6 +6,8 @@
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
+#include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 
 using namespace flx::apps;
 using namespace flx::ui::common;
@@ -147,7 +149,8 @@ void WallpaperEngineApp::ensureFallbackBanner() {
 	lv_obj_set_height(m_fallbackBanner, LV_SIZE_CONTENT);
 	lv_obj_set_style_radius(m_fallbackBanner, 0, 0);
 	lv_obj_set_style_border_width(m_fallbackBanner, 0, 0);
-	lv_obj_set_style_bg_color(m_fallbackBanner, lv_palette_main(LV_PALETTE_RED), 0);
+	ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
+	lv_obj_set_style_bg_color(m_fallbackBanner, cfg.error, 0);
 	lv_obj_set_style_bg_opa(m_fallbackBanner, LV_OPA_80, 0);
 	lv_obj_set_style_pad_all(m_fallbackBanner, lv_dpx(8), 0);
 	lv_obj_set_style_pad_column(m_fallbackBanner, lv_dpx(8), 0);

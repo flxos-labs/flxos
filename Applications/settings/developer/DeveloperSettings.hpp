@@ -11,6 +11,7 @@
 #include <memory>
 
 #include "settings/SettingsPageBase.hpp"
+#include "DemoModeService.hpp"
 
 using namespace flx::ui::common;
 using namespace flx::system;
@@ -32,11 +33,27 @@ protected:
 		if (!registered) {
 			SettingsManager::getInstance().registerSetting("developer.verbose_logging", verboseLogging);
 			SettingsManager::getInstance().registerSetting("developer.diagnostic_overlay", diagnosticOverlay);
+			SettingsManager::getInstance().registerSetting("developer.demo_mode", DemoModeService::demoMode);
+			SettingsManager::getInstance().registerSetting("developer.demo_simulate_battery", DemoModeService::simulateBattery);
+			SettingsManager::getInstance().registerSetting("developer.demo_simulate_wifi", DemoModeService::simulateWifi);
+			SettingsManager::getInstance().registerSetting("developer.demo_simulate_bluetooth", DemoModeService::simulateBluetooth);
+			SettingsManager::getInstance().registerSetting("developer.demo_simulate_hotspot", DemoModeService::simulateHotspot);
+			SettingsManager::getInstance().registerSetting("developer.demo_simulate_notifications", DemoModeService::simulateNotifications);
+			SettingsManager::getInstance().registerSetting("developer.demo_interval_ms", DemoModeService::demoIntervalMs);
 			registered = true;
 		}
 
+		DemoModeService::init();
+
 		m_verboseLoggingBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(verboseLogging);
 		m_diagnosticOverlayBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(diagnosticOverlay);
+		m_demoModeBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::demoMode);
+		m_simulateBatteryBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::simulateBattery);
+		m_simulateWifiBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::simulateWifi);
+		m_simulateBluetoothBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::simulateBluetooth);
+		m_simulateHotspotBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::simulateHotspot);
+		m_simulateNotificationsBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::simulateNotifications);
+		m_demoIntervalBridge = std::make_unique<flx::ui::LvglObserverBridge<int32_t>>(DemoModeService::demoIntervalMs);
 
 		m_container = create_page_container(m_parent);
 
@@ -64,6 +81,18 @@ protected:
 		lv_obj_add_flag(overlaySw, LV_OBJ_FLAG_EVENT_BUBBLE);
 		lv_obj_bind_checked(overlaySw, m_diagnosticOverlayBridge->getSubject());
 
+		// ── UI Simulation / Demo ──
+		lv_list_add_text(m_list, "UI Simulation / Demo");
+
+		lv_obj_t* demoPageBtn = lv_list_add_button(m_list, LV_SYMBOL_PLAY, "Configure UI Demo Mode");
+		lv_obj_add_event_cb(
+			demoPageBtn,
+			[](lv_event_t* e) {
+				auto* instance = (DeveloperSettings*)lv_event_get_user_data(e);
+				instance->showDemoPage();
+			},
+			LV_EVENT_CLICKED, this);
+
 		// ── Actions Section ──
 		lv_list_add_text(m_list, "Diagnostic Actions");
 
@@ -86,14 +115,125 @@ protected:
 	}
 
 	void onDestroy() override {
+		DemoModeService::stop();
+		DemoModeService::demoMode.set(0);
+
+		if (m_demoContainer && lv_obj_is_valid(m_demoContainer)) {
+			lv_obj_delete(m_demoContainer);
+		}
+		m_demoContainer = nullptr;
+		m_demoList = nullptr;
+
 		m_verboseLoggingBridge.reset();
 		m_diagnosticOverlayBridge.reset();
+		m_demoModeBridge.reset();
+		m_simulateBatteryBridge.reset();
+		m_simulateWifiBridge.reset();
+		m_simulateBluetoothBridge.reset();
+		m_simulateHotspotBridge.reset();
+		m_simulateNotificationsBridge.reset();
+		m_demoIntervalBridge.reset();
 	}
 
 private:
 
+	void showDemoPage() {
+		if (m_demoContainer) return;
+
+		if (m_container) {
+			lv_obj_add_flag(m_container, LV_OBJ_FLAG_HIDDEN);
+		}
+
+		m_demoContainer = create_page_container(m_parent);
+		lv_obj_t* backBtn = nullptr;
+		create_header(m_demoContainer, "UI Demo Mode", &backBtn);
+
+		lv_obj_add_event_cb(
+			backBtn,
+			[](lv_event_t* e) {
+				auto* instance = (DeveloperSettings*)lv_event_get_user_data(e);
+				instance->hideDemoPage();
+			},
+			LV_EVENT_CLICKED, this);
+
+		m_demoList = create_settings_list(m_demoContainer);
+
+		// ── Master Switch ──
+		lv_list_add_text(m_demoList, "Status Bar Automation");
+
+		lv_obj_t* demoModeBtn = add_list_btn(m_demoList, LV_SYMBOL_PLAY, "Enable UI Demo Cycle");
+		lv_obj_set_flex_grow(lv_obj_get_child(demoModeBtn, 1), 1);
+		lv_obj_t* demoModeSw = lv_switch_create(demoModeBtn);
+		lv_obj_add_flag(demoModeSw, LV_OBJ_FLAG_EVENT_BUBBLE);
+		lv_obj_bind_checked(demoModeSw, m_demoModeBridge->getSubject());
+
+		// ── Components Section ──
+		lv_list_add_text(m_demoList, "Participating Components");
+
+		// Battery
+		lv_obj_t* battBtn = add_list_btn(m_demoList, LV_SYMBOL_CHARGE, "Simulate Battery");
+		lv_obj_set_flex_grow(lv_obj_get_child(battBtn, 1), 1);
+		lv_obj_t* battSw = lv_switch_create(battBtn);
+		lv_obj_add_flag(battSw, LV_OBJ_FLAG_EVENT_BUBBLE);
+		lv_obj_bind_checked(battSw, m_simulateBatteryBridge->getSubject());
+
+		// Wi-Fi
+		lv_obj_t* wifiBtn = add_list_btn(m_demoList, LV_SYMBOL_WIFI, "Simulate Wi-Fi");
+		lv_obj_set_flex_grow(lv_obj_get_child(wifiBtn, 1), 1);
+		lv_obj_t* wifiSw = lv_switch_create(wifiBtn);
+		lv_obj_add_flag(wifiSw, LV_OBJ_FLAG_EVENT_BUBBLE);
+		lv_obj_bind_checked(wifiSw, m_simulateWifiBridge->getSubject());
+
+		// Bluetooth
+		lv_obj_t* btBtn = add_list_btn(m_demoList, LV_SYMBOL_BLUETOOTH, "Simulate Bluetooth");
+		lv_obj_set_flex_grow(lv_obj_get_child(btBtn, 1), 1);
+		lv_obj_t* btSw = lv_switch_create(btBtn);
+		lv_obj_add_flag(btSw, LV_OBJ_FLAG_EVENT_BUBBLE);
+		lv_obj_bind_checked(btSw, m_simulateBluetoothBridge->getSubject());
+
+		// Hotspot
+		lv_obj_t* hotspotBtn = add_list_btn(m_demoList, LV_SYMBOL_WIFI, "Simulate Hotspot");
+		lv_obj_set_flex_grow(lv_obj_get_child(hotspotBtn, 1), 1);
+		lv_obj_t* hotspotSw = lv_switch_create(hotspotBtn);
+		lv_obj_add_flag(hotspotSw, LV_OBJ_FLAG_EVENT_BUBBLE);
+		lv_obj_bind_checked(hotspotSw, m_simulateHotspotBridge->getSubject());
+
+		// Notifications
+		lv_obj_t* notifBtn = add_list_btn(m_demoList, LV_SYMBOL_BELL, "Simulate Notifications");
+		lv_obj_set_flex_grow(lv_obj_get_child(notifBtn, 1), 1);
+		lv_obj_t* notifSw = lv_switch_create(notifBtn);
+		lv_obj_add_flag(notifSw, LV_OBJ_FLAG_EVENT_BUBBLE);
+		lv_obj_bind_checked(notifSw, m_simulateNotificationsBridge->getSubject());
+
+		// ── Timing Section ──
+		lv_list_add_text(m_demoList, "Simulation Timing");
+
+		add_slider_item(m_demoList, "Interval (ms)", m_demoIntervalBridge->getSubject(), 500, 5000);
+	}
+
+	void hideDemoPage() {
+		if (m_demoContainer) {
+			lv_obj_delete(m_demoContainer);
+			m_demoContainer = nullptr;
+			m_demoList = nullptr;
+		}
+		if (m_container) {
+			lv_obj_remove_flag(m_container, LV_OBJ_FLAG_HIDDEN);
+		}
+	}
+
+	lv_obj_t* m_demoContainer = nullptr;
+	lv_obj_t* m_demoList = nullptr;
+
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_verboseLoggingBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_diagnosticOverlayBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_demoModeBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_simulateBatteryBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_simulateWifiBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_simulateBluetoothBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_simulateHotspotBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_simulateNotificationsBridge;
+	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_demoIntervalBridge;
 };
 
 } // namespace System::Apps::Settings
