@@ -111,8 +111,10 @@ protected:
 	}
 
 	void onDestroy() override {
+		// Stop the runtime demo simulation without touching the persisted observable.
+		// Setting demoMode to 0 here would cause the registered setting to save the
+		// disabled state, making the user's choice non-persistent across app restarts.
 		DemoModeService::stop();
-		DemoModeService::demoMode.set(0);
 
 		if (m_demoContainer && lv_obj_is_valid(m_demoContainer)) {
 			lv_obj_delete(m_demoContainer);

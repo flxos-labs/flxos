@@ -53,6 +53,13 @@ public:
 				stop();
 			}
 		});
+
+		// Sync the current value immediately: subscribe() does not replay it,
+		// so a persisted demo_mode=1 that was applied before this subscriber
+		// existed would otherwise be silently ignored.
+		if (demoMode.get() != 0) {
+			start();
+		}
 	}
 
 	static void start() {

@@ -6,6 +6,7 @@
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <lvgl.h>
 #include <memory>
+#include <string>
 
 #include "settings/SettingsPageBase.hpp"
 

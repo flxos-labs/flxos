@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_DIR="${PROJECT_DIR:-/home/akash/flxos-labs/flxos}"
+PROJECT_DIR="${PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 LOG_FILE="${LOG_FILE:-$PROJECT_DIR/flxos_monitor.log}"
 SUMMARY_JSON="${SUMMARY_JSON:-$PROJECT_DIR/flxos_monitor_summary.json}"
 HOURS_BACK="${HOURS_BACK:-24}"
@@ -24,14 +24,12 @@ if [[ -t 1 ]]; then
  GREEN=$'\033[32m'
  YELLOW=$'\033[33m'
  BLUE=$'\033[34m'
- DIM=$'\033[2m'
  RESET=$'\033[0m'
 else
  RED=""
  GREEN=""
  YELLOW=""
  BLUE=""
- DIM=""
  RESET=""
  fi
 
@@ -225,11 +223,7 @@ echo "Quality status: $QUALITY_STATUS ($QUALITY_DETAIL)"
 echo "LOC total: $LOC_TOTAL"
 echo "Result: $RESULT"
 
-if [[ "$FORMAT_STATUS" -eq 0 && "$QUALITY_STATUS" -eq 0 ]]; then
- echo "[$(ts)] ${GREEN}=== Check Complete ===${RESET}"
-else
- echo "[$(ts)] ${YELLOW}=== Check Complete ===${RESET}"
-fi
+echo "[$(ts)] ${RESULT_COLOR}=== Check Complete ===${RESET}"
 
 cat > "$SUMMARY_JSON" <<EOF
 {

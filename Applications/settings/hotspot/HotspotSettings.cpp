@@ -618,8 +618,10 @@ void HotspotSettings::applyHotspotSettings() {
 		}
 	}
 
-	// Apply power save mode
-	if (m_powerSaveDropdown) {
+	// Apply power save mode.
+	// When NAT routing is active, setHotspotNatEnabled(true) forces WIFI_PS_NONE
+	// for reliable packet forwarding; skip the override so that setting is preserved.
+	if (m_powerSaveDropdown && !nat_enabled) {
 		int const ps_idx = lv_dropdown_get_selected(m_powerSaveDropdown);
 		wifi_ps_type_t ps = WIFI_PS_NONE;
 		if (ps_idx == 1) ps = WIFI_PS_MIN_MODEM;
