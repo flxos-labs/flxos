@@ -328,7 +328,7 @@ void StatusBar::create() {
 	tzset();
 	time(&now);
 	localtime_r(&now, &timeinfo);
-	
+
 	bool const is24h = flx::system::SettingsManager::getInstance().getTimeFormat24h().get() != 0;
 	if (is24h) {
 		lv_label_set_text_fmt(m_timeLabel, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
@@ -346,7 +346,7 @@ void StatusBar::create() {
 			struct tm timeinfo_tick = {};
 			time(&now_tick);
 			localtime_r(&now_tick, &timeinfo_tick);
-			
+
 			bool const is24h_tick = flx::system::SettingsManager::getInstance().getTimeFormat24h().get() != 0;
 			if (is24h_tick) {
 				lv_label_set_text_fmt(label, "%02d:%02d", timeinfo_tick.tm_hour, timeinfo_tick.tm_min);

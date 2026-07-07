@@ -6,8 +6,8 @@
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/WallpaperManager.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
-#include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
+#include <flx/ui/theming/themes/Themes.hpp>
 
 using namespace flx::apps;
 using namespace flx::ui::common;

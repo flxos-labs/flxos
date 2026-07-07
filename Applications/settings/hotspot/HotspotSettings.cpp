@@ -623,7 +623,8 @@ void HotspotSettings::applyHotspotSettings() {
 		int const ps_idx = lv_dropdown_get_selected(m_powerSaveDropdown);
 		wifi_ps_type_t ps = WIFI_PS_NONE;
 		if (ps_idx == 1) ps = WIFI_PS_MIN_MODEM;
-		else if (ps_idx == 2) ps = WIFI_PS_MAX_MODEM;
+		else if (ps_idx == 2)
+			ps = WIFI_PS_MAX_MODEM;
 		esp_wifi_set_ps(ps);
 	}
 }

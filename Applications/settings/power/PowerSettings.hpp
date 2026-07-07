@@ -1,9 +1,9 @@
 #pragma once
 
-#include <flx/system/managers/PowerManager.hpp>
-#include <flx/ui/LvglObserverBridge.hpp>
 #include <flx/hal/DeviceRegistry.hpp>
 #include <flx/hal/power/IPowerDevice.hpp>
+#include <flx/system/managers/PowerManager.hpp>
+#include <flx/ui/LvglObserverBridge.hpp>
 #include <lvgl.h>
 #include <memory>
 
@@ -121,9 +121,9 @@ protected:
 				bool const configured = lv_subject_get_int(subject) != 0;
 				if (configured) {
 					if (instance->m_noticeItem) lv_obj_add_flag(instance->m_noticeItem, LV_OBJ_FLAG_HIDDEN);
-					
+
 					auto powerDev = flx::hal::DeviceRegistry::getInstance()
-									  .findFirst<flx::hal::power::IPowerDevice>(flx::hal::IDevice::Type::Power);
+										.findFirst<flx::hal::power::IPowerDevice>(flx::hal::IDevice::Type::Power);
 					std::string name = "Power Controller";
 					if (powerDev) {
 						name = std::string(powerDev->getName());

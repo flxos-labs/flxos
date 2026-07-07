@@ -10,8 +10,8 @@
 #include <lvgl.h>
 #include <memory>
 
-#include "settings/SettingsPageBase.hpp"
 #include "DemoModeService.hpp"
+#include "settings/SettingsPageBase.hpp"
 
 using namespace flx::ui::common;
 using namespace flx::system;

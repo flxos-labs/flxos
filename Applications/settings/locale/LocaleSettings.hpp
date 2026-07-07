@@ -1,11 +1,11 @@
 #pragma once
 
+#include <ctime>
 #include <flx/core/Observable.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
 #include <flx/ui/LvglObserverBridge.hpp>
 #include <lvgl.h>
 #include <memory>
-#include <ctime>
 #include <string>
 
 #include "settings/SettingsPageBase.hpp"

@@ -1,15 +1,16 @@
 #pragma once
 
 #include "lvgl.h"
-#include <flx/core/Observable.hpp>
-#include <flx/system/managers/PowerManager.hpp>
 #include <flx/connectivity/ConnectivityManager.hpp>
+#include <flx/core/Observable.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
+#include <flx/system/managers/PowerManager.hpp>
 
 namespace System::Apps::Settings {
 
 class DemoModeService {
 public:
+
 	static inline flx::Observable<int32_t> demoMode {0};
 	static inline flx::Observable<int32_t> simulateBattery {1};
 	static inline flx::Observable<int32_t> simulateWifi {1};
@@ -111,6 +112,7 @@ public:
 	}
 
 private:
+
 	static void updateSimulateBattery(bool enabled) {
 		if (!s_active) return;
 		auto& pm = flx::system::PowerManager::getInstance();

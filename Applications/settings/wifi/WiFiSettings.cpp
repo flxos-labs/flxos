@@ -9,9 +9,9 @@
 #include <cstdint>
 #include <display/lv_display.h>
 #include <esp_err.h>
+#include <esp_netif.h>
 #include <esp_wifi.h>
 #include <esp_wifi_types_generic.h>
-#include <esp_netif.h>
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
@@ -408,7 +408,7 @@ void WiFiSettings::refreshScan() {
 			std::vector<wifi_ap_record_t> availableNets;
 			auto& store = flx::connectivity::WiFiCredentialStore::getInstance();
 
-			for (const auto& net : networks) {
+			for (const auto& net: networks) {
 				char ssid_buf[34];
 				memcpy(ssid_buf, net.ssid, 33);
 				ssid_buf[33] = '\0';
@@ -496,15 +496,24 @@ const char* WiFiSettings::getSignalIcon(int8_t rssi) {
 
 static const char* wifi_authmode_str(wifi_auth_mode_t mode) {
 	switch (mode) {
-		case WIFI_AUTH_OPEN: return "Open";
-		case WIFI_AUTH_WEP: return "WEP";
-		case WIFI_AUTH_WPA_PSK: return "WPA-PSK";
-		case WIFI_AUTH_WPA2_PSK: return "WPA2-PSK";
-		case WIFI_AUTH_WPA_WPA2_PSK: return "WPA/WPA2-PSK";
-		case WIFI_AUTH_WPA2_ENTERPRISE: return "WPA2-Enterprise";
-		case WIFI_AUTH_WPA3_PSK: return "WPA3-PSK";
-		case WIFI_AUTH_WPA2_WPA3_PSK: return "WPA2/WPA3-PSK";
-		default: return "Unknown";
+		case WIFI_AUTH_OPEN:
+			return "Open";
+		case WIFI_AUTH_WEP:
+			return "WEP";
+		case WIFI_AUTH_WPA_PSK:
+			return "WPA-PSK";
+		case WIFI_AUTH_WPA2_PSK:
+			return "WPA2-PSK";
+		case WIFI_AUTH_WPA_WPA2_PSK:
+			return "WPA/WPA2-PSK";
+		case WIFI_AUTH_WPA2_ENTERPRISE:
+			return "WPA2-Enterprise";
+		case WIFI_AUTH_WPA3_PSK:
+			return "WPA3-PSK";
+		case WIFI_AUTH_WPA2_WPA3_PSK:
+			return "WPA2/WPA3-PSK";
+		default:
+			return "Unknown";
 	}
 }
 
@@ -932,8 +941,7 @@ void WiFiSettings::showInfoPage() {
 			cm.removeWiFiNetwork(std::string((char*)ap_info.ssid));
 			cm.disconnectWiFi();
 		}
-		instance->hideInfoPage();
-	}, LV_EVENT_CLICKED, this);
+		instance->hideInfoPage(); }, LV_EVENT_CLICKED, this);
 
 	lv_obj_t* list = create_settings_list(m_infoContainer);
 

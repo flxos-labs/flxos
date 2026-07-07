@@ -151,7 +151,7 @@ private:
 			if (m_fsTypeLabel) lv_label_set_text(m_fsTypeLabel, "--");
 			if (m_totalLabel) lv_label_set_text(m_totalLabel, "--");
 			if (m_freeLabel) lv_label_set_text(m_freeLabel, "--");
-			
+
 			if (m_mountPathBtn) lv_obj_add_flag(m_mountPathBtn, LV_OBJ_FLAG_HIDDEN);
 			if (m_fsTypeBtn) lv_obj_add_flag(m_fsTypeBtn, LV_OBJ_FLAG_HIDDEN);
 			if (m_totalBtn) lv_obj_add_flag(m_totalBtn, LV_OBJ_FLAG_HIDDEN);
