@@ -9,6 +9,7 @@
 #include "system_info/SystemInfoApp.hpp"
 #include "text_editor/TextEditorApp.hpp"
 #include "tools/ToolsApp.hpp"
+#include "video_player/VideoPlayerApp.hpp"
 #include "wallpaper_engine/WallpaperEngineApp.hpp"
 
 namespace System::Apps {
@@ -24,6 +25,7 @@ void registerBuiltInApps() {
 	appRegistry.addApp(SystemInfoApp::manifest);
 	appRegistry.addApp(TextEditorApp::manifest);
 	appRegistry.addApp(ToolsApp::manifest);
+	appRegistry.addApp(VideoPlayerApp::manifest);
 	appRegistry.addApp(WallpaperEngineApp::manifest);
 }
 

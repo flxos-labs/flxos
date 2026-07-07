@@ -74,6 +74,7 @@ constexpr MimeEntry MIME_TABLE[] = {
 	{"json", "text/plain"},
 	{"csv", "text/plain"},
 	{"md", "text/plain"},
+	{"flxrec", "video/flxrec"},
 };
 
 /// Returns the MIME type for a filename, or empty string_view if unknown.

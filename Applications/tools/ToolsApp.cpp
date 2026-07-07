@@ -20,10 +20,10 @@ const AppManifest ToolsApp::manifest = {
 	.category = AppCategory::Tools,
 	.flags = AppFlags::None,
 	.location = AppLocation::internal(),
-	.description = "Calculator, Stopwatch, Flashlight, Display Tester",
+	.description = "Calculator, Stopwatch, Flashlight, Display Tester, Screenshot, Screen Recorder",
 	.sortPriority = 45,
-	.capabilities = AppCapability::None,
-	.requiredServices = {},
+	.capabilities = AppCapability::Storage,
+	.requiredServices = {"com.flxos.screenrecorder"},
 	.supportedMimeTypes = {},
 	.urlSchemes = {},
 	.createApp = []() -> std::shared_ptr<App> { return std::make_shared<ToolsApp>(); }};
@@ -53,6 +53,7 @@ void ToolsApp::onStop() {
 	m_flashlight.destroy();
 	m_displayTester.destroy();
 	m_screenshot.destroy();
+	m_screenRecorder.destroy();
 }
 
 void ToolsApp::createUI(void* parent) {
@@ -64,6 +65,7 @@ void ToolsApp::createUI(void* parent) {
 void ToolsApp::update() {
 	if (!isActive()) return;
 	m_stopwatch.update();
+	m_screenRecorder.update();
 }
 
 // ============================================================================
@@ -77,6 +79,7 @@ void ToolsApp::hideAllViews() {
 	m_flashlight.hide();
 	m_displayTester.hide();
 	m_screenshot.hide();
+	m_screenRecorder.hide();
 }
 
 void ToolsApp::showMainList() {
@@ -115,6 +118,11 @@ void ToolsApp::showMainList() {
 		lv_obj_add_event_cb(screenshotBtn, [](lv_event_t* e) {
 			auto* app = static_cast<ToolsApp*>(lv_event_get_user_data(e));
 			app->showScreenshot(); }, LV_EVENT_CLICKED, this);
+
+		lv_obj_t* recorderBtn = add_list_btn(m_mainList, LV_SYMBOL_VIDEO, "Screen Recorder");
+		lv_obj_add_event_cb(recorderBtn, [](lv_event_t* e) {
+			auto* app = static_cast<ToolsApp*>(lv_event_get_user_data(e));
+			app->showScreenRecorder(); }, LV_EVENT_CLICKED, this);
 	} else {
 		lv_obj_remove_flag(m_mainList, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -158,6 +166,14 @@ void ToolsApp::showScreenshot() {
 		m_screenshot.createView(m_container, m_onBackToMain);
 	}
 	m_screenshot.show();
+}
+
+void ToolsApp::showScreenRecorder() {
+	hideAllViews();
+	if (m_screenRecorder.getView() == nullptr) {
+		m_screenRecorder.createView(m_container, m_onBackToMain);
+	}
+	m_screenRecorder.show();
 }
 
 } // namespace System::Apps

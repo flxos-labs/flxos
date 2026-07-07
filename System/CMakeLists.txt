@@ -23,6 +23,7 @@ if(NOT "$ENV{FLXOS_HEADLESS_MODE_ENABLED}" STREQUAL "ON")
         "Source/managers/ThemeManager.cpp"
         "Source/managers/WallpaperManager.cpp"
         "Source/managers/NotificationManager.cpp"
+        "Source/services/ScreenRecorderService.cpp"
         "Source/services/ScreenshotService.cpp"
     )
 else()

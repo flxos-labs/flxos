@@ -10,6 +10,7 @@
 #include "implementation/Calculator.hpp"
 #include "implementation/DisplayTester.hpp"
 #include "implementation/Flashlight.hpp"
+#include "implementation/ScreenRecorder.hpp"
 #include "implementation/Screenshot.hpp"
 #include "implementation/Stopwatch.hpp"
 
@@ -46,6 +47,7 @@ private:
 	Tools::Flashlight m_flashlight;
 	Tools::DisplayTester m_displayTester;
 	Tools::Screenshot m_screenshot;
+	Tools::ScreenRecorder m_screenRecorder;
 
 	// Back callback
 	std::function<void()> m_onBackToMain;
@@ -60,6 +62,7 @@ private:
 	void showFlashlight();
 	void showDisplayTester();
 	void showScreenshot();
+	void showScreenRecorder();
 };
 
 } // namespace System::Apps

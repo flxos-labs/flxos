@@ -4,6 +4,7 @@
 #include <flx/hal/i2c/II2cBus.hpp>
 #include <flx/hal/input/IInputDevice.hpp>
 #include <lvgl.h>
+#include <memory>
 #include <mutex>
 #include <string_view>
 #include <vector>
