@@ -1,0 +1,123 @@
+# FlxOS Profile: LilyGO T-Deck
+id: lilygo-tdeck
+vendor: LilyGO
+name:
+  - T-Deck
+  - LilyGO T-Deck
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: true
+    speed: 80M
+    xip_from_psram: false
+    ecc_enable: false
+  power:
+    on_pins:
+      - 10
+    on_level: 1
+  display:
+    enabled: true
+    driver: ST7789
+    bus: spi
+    width: 320
+    height: 240
+    color_depth: 16
+    size_inches: 2.8
+    rotation: 1
+    pins:
+      cs: 12
+      dc: 11
+      rst: -1
+      busy: -1
+      bckl: 42
+      mosi: 41
+      sclk: 40
+      miso: 38
+    spi:
+      host: 2
+      mode: 0
+      freq_write: 62500000
+      freq_read: 16000000
+      three_wire: false
+      dma_channel: 0
+    backlight:
+      freq: 30000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 0
+      offset_y: 0
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: true
+      invert: true
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: true
+    driver: GT911
+    bus: i2c
+    pins:
+      cs: -1
+      int: 16
+    i2c:
+      port: 0
+      addr: 0x5D
+      sda: 18
+      scl: 8
+  sdcard:
+    enabled: true
+    bus: spi
+    cs: 39
+    spi_host: 2
+    max_freq_khz: 20000
+    mount_point: /sdcard
+    pins:
+      mosi: 41
+      miso: 38
+      sclk: 40
+  battery:
+    enabled: false
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_64kb: true
+  data_cache_line_64b: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: true
+  lora: true
+  camera: false
+  audio: true
+  keyboard: true
+  trackball: true
+
+distribution:
+  incubating: true
+  tags:
+    - spi
+    - st7789
+    - 2.8-inch
+    - touch
+    - gt911
+    - lora
+    - keyboard
+    - trackball

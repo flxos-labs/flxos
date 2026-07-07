@@ -1,0 +1,96 @@
+# FlxOS Profile: M5Stack StickC Plus2
+id: m5stack-stickc-plus2
+vendor: M5Stack
+name:
+  - StickC Plus2
+  - M5Stack StickC Plus2
+target: esp32
+flash_size: 4MB
+flash_mode: DIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: false
+  power:
+    on_pins:
+      - 4
+    on_level: 1
+  display:
+    enabled: true
+    driver: ST7789
+    bus: spi
+    width: 135
+    height: 240
+    color_depth: 16
+    size_inches: 1.14
+    rotation: 1
+    pins:
+      cs: 5
+      dc: 14
+      rst: 12
+      busy: -1
+      bckl: 27
+      mosi: 15
+      sclk: 13
+      miso: -1
+    spi:
+      host: 2
+      mode: 0
+      freq_write: 40000000
+      freq_read: 16000000
+      three_wire: false
+      dma_channel: 0
+    backlight:
+      freq: 20000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 52
+      offset_y: 40
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: true
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: false
+  sdcard:
+    enabled: false
+  battery:
+    enabled: false
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_32kb: true
+
+console:
+  usb_serial_jtag: false
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+  keyboard: false
+  trackball: false
+
+distribution:
+  incubating: true
+  tags:
+    - spi
+    - st7789
+    - 1.14-inch
+    - m5stack
