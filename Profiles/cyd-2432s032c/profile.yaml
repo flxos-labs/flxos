@@ -1,9 +1,9 @@
-# FlxOS Profile: Cheap Yellow Display 3.5" Capacitive (CYD 3248S035C)
-id: cyd-3248s035c
+# FlxOS Profile: Cheap Yellow Display 3.2" Capacitive (CYD 2432S032C)
+id: cyd-2432s032c
 vendor: CYD
 name:
-  - 3248S035C
-  - CYD 3248S035C
+  - 2432S032C
+  - CYD 2432S032C
 target: esp32
 flash_size: 4MB
 flash_mode: DIO
@@ -15,12 +15,12 @@ hardware:
     enabled: false
   display:
     enabled: true
-    driver: ST7796
+    driver: ILI9341
     bus: spi
-    width: 320
-    height: 480
+    width: 240
+    height: 320
     color_depth: 16
-    size_inches: 3.5
+    size_inches: 3.2
     rotation: 1
     pins:
       cs: 15
@@ -48,10 +48,10 @@ hardware:
       offset_rotation: 0
       dummy_read_pixel: 8
       dummy_read_bits: 1
-      readable: false
-      bus_shared: false
-      invert: false
-      rgb_order: false
+      readable: true
+      bus_shared: true
+      invert: true
+      rgb_order: true
       dlen_16bit: false
   touch:
     enabled: true
@@ -104,8 +104,8 @@ distribution:
   incubating: true
   tags:
     - spi
-    - st7796
-    - 3.5-inch
+    - ili9341
+    - 3.2-inch
     - touch
     - gt911
     - cyd

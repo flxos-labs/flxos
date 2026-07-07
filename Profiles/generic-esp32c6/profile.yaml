@@ -1,0 +1,31 @@
+# FlxOS Profile: Generic ESP32-C6 (Headless)
+id: generic-esp32c6
+vendor: Generic
+name: ESP32-C6 (Headless)
+target: esp32c6
+flash_size: 8MB
+flash_mode: QIO
+headless: true
+inherits: _bases/base-headless
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+  keyboard: false
+  trackball: false
+
+distribution:
+  incubating: false
+  tags:
+    - headless
+    - esp32c6

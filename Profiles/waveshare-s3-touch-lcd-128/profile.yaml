@@ -1,36 +1,38 @@
-# FlxOS Profile: Cheap Yellow Display 3.5" Capacitive (CYD 3248S035C)
-id: cyd-3248s035c
-vendor: CYD
+# FlxOS Profile: Waveshare S3 Touch LCD 1.28" (circular)
+id: waveshare-s3-touch-lcd-128
+vendor: WaveShare
 name:
-  - 3248S035C
-  - CYD 3248S035C
-target: esp32
-flash_size: 4MB
-flash_mode: DIO
+  - S3 Touch LCD 1.28
+  - Waveshare S3 Touch LCD 1.28
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
 headless: false
 inherits: _bases/base-esp32-spi
 
 hardware:
   spiram:
-    enabled: false
+    enabled: true
+    mode: QUAD
+    speed: 120M
   display:
     enabled: true
-    driver: ST7796
+    driver: GC9A01
     bus: spi
-    width: 320
-    height: 480
+    width: 240
+    height: 240
     color_depth: 16
-    size_inches: 3.5
-    rotation: 1
+    size_inches: 1.28
+    rotation: 0
     pins:
-      cs: 15
-      dc: 2
-      rst: -1
+      cs: 9
+      dc: 8
+      rst: 14
       busy: -1
-      bckl: 27
-      mosi: 13
-      sclk: 14
-      miso: -1
+      bckl: 2
+      mosi: 11
+      sclk: 10
+      miso: 12
     spi:
       host: 2
       mode: 0
@@ -55,36 +57,38 @@ hardware:
       dlen_16bit: false
   touch:
     enabled: true
-    driver: GT911
+    driver: CST816S
     bus: i2c
     pins:
       cs: -1
-      int: -1
+      int: 5
     i2c:
       port: 0
-      addr: 0x5D
-      sda: 33
-      scl: 32
+      addr: 0x15
+      sda: 6
+      scl: 7
   sdcard:
     enabled: true
     bus: spi
-    cs: 5
+    cs: 18
     spi_host: 3
     max_freq_khz: 20000
     mount_point: /sdcard
     pins:
-      mosi: 23
-      miso: 19
-      sclk: 18
+      mosi: 16
+      miso: 15
+      sclk: 17
   battery:
     enabled: false
+  usb:
+    tiny_usb: true
 
 target_config:
   instruction_cache_32kb: true
   data_cache_32kb: true
 
 console:
-  usb_serial_jtag: false
+  usb_serial_jtag: true
 
 cli:
   enabled: true
@@ -100,12 +104,23 @@ capabilities:
   camera: false
   audio: false
 
+lvgl:
+  font_size: 14
+  theme: Dark
+  ui_density: compact
+
+sdkconfig:
+  CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "n"
+  CONFIG_SPIRAM_RODATA: "n"
+  CONFIG_SPIRAM_XIP_FROM_PSRAM: "n"
+
 distribution:
   incubating: true
   tags:
     - spi
-    - st7796
-    - 3.5-inch
+    - gc9a01
+    - 1.28-inch
+    - circle
     - touch
-    - gt911
-    - cyd
+    - cst816s
+    - waveshare

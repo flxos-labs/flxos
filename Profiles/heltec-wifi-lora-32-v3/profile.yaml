@@ -1,0 +1,98 @@
+# FlxOS Profile: Heltec WiFi LoRa 32 V3 - ESP32-S3, 0.96" OLED (I2C SSD1306)
+id: heltec-wifi-lora-32-v3
+vendor: Heltec
+name:
+  - WiFi LoRa 32 V3
+  - Heltec WiFi LoRa 32 v3
+target: esp32s3
+flash_size: 8MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: false
+  display:
+    enabled: true
+    driver: SSD1306
+    bus: i2c
+    width: 128
+    height: 64
+    color_depth: 1
+    size_inches: 0.96
+    rotation: 0
+    pins:
+      cs: -1
+      dc: -1
+      rst: -1
+      busy: -1
+      bckl: -1
+      mosi: -1
+      sclk: -1
+      miso: -1
+    i2c:
+      port: 0
+      addr: 0x3C
+      sda: 17
+      scl: 18
+      freq: 200000
+    backlight:
+      freq: 0
+      pwm_channel: -1
+      invert: false
+    panel:
+      offset_x: 0
+      offset_y: 0
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: false
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: false
+  sdcard:
+    enabled: false
+  battery:
+    enabled: false
+  usb:
+    tiny_usb: true
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_32kb: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: true
+  camera: false
+  audio: false
+
+lvgl:
+  font_size: 8
+  theme: Mono
+  ui_density: compact
+
+distribution:
+  incubating: true
+  tags:
+    - i2c
+    - ssd1306
+    - oled
+    - 0.96-inch
+    - lora
+    - heltec

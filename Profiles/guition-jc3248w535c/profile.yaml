@@ -1,36 +1,38 @@
-# FlxOS Profile: Cheap Yellow Display 3.5" Capacitive (CYD 3248S035C)
-id: cyd-3248s035c
-vendor: CYD
+# FlxOS Profile: Guition JC3248W535C - ESP32-S3, 3.5" 320x480 (AXS15231B QSPI)
+id: guition-jc3248w535c
+vendor: Guition
 name:
-  - 3248S035C
-  - CYD 3248S035C
-target: esp32
-flash_size: 4MB
-flash_mode: DIO
+  - JC3248W535C
+  - Guition JC3248W535C
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
 headless: false
 inherits: _bases/base-esp32-spi
 
 hardware:
   spiram:
-    enabled: false
+    enabled: true
+    mode: OCT
+    speed: 120M
   display:
     enabled: true
-    driver: ST7796
+    driver: AXS15231B
     bus: spi
     width: 320
     height: 480
     color_depth: 16
     size_inches: 3.5
-    rotation: 1
+    rotation: 0
     pins:
-      cs: 15
-      dc: 2
+      cs: 45
+      dc: -1
       rst: -1
       busy: -1
-      bckl: 27
-      mosi: 13
-      sclk: 14
-      miso: -1
+      bckl: -1
+      mosi: 21
+      sclk: 47
+      miso: 48
     spi:
       host: 2
       mode: 0
@@ -55,36 +57,38 @@ hardware:
       dlen_16bit: false
   touch:
     enabled: true
-    driver: GT911
+    driver: AXS15231B
     bus: i2c
     pins:
       cs: -1
       int: -1
     i2c:
       port: 0
-      addr: 0x5D
-      sda: 33
-      scl: 32
+      addr: 0x3B
+      sda: 4
+      scl: 8
   sdcard:
     enabled: true
     bus: spi
-    cs: 5
+    cs: 10
     spi_host: 3
     max_freq_khz: 20000
     mount_point: /sdcard
     pins:
-      mosi: 23
-      miso: 19
-      sclk: 18
+      mosi: 11
+      miso: 13
+      sclk: 12
   battery:
     enabled: false
+  usb:
+    tiny_usb: true
 
 target_config:
   instruction_cache_32kb: true
   data_cache_32kb: true
 
 console:
-  usb_serial_jtag: false
+  usb_serial_jtag: true
 
 cli:
   enabled: true
@@ -98,14 +102,18 @@ capabilities:
   gps: false
   lora: false
   camera: false
-  audio: false
+  audio: true
+
+lvgl:
+  font_size: 16
+  theme: Dark
+  ui_density: normal
 
 distribution:
-  incubating: true
+  incubating: false
   tags:
     - spi
-    - st7796
+    - axs15231b
     - 3.5-inch
     - touch
-    - gt911
-    - cyd
+    - guition

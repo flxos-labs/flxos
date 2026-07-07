@@ -13,3 +13,23 @@
 - [x] Create profile for `guition-jc2432w328c` <!-- id: 111 -->
 - [x] Create profile for `cyd-e32r28t` <!-- id: 112 -->
 - [x] Create profile for `cyd-e32r32p` <!-- id: 113 -->
+- [x] Create profile for `cyd-2432s032c` <!-- id: 114 -->
+- [x] Create profile for `waveshare-s3-touch-lcd-128` <!-- id: 115 -->
+- [x] Create profile for `cyd-8048s043c` <!-- id: 116 -->
+- [x] Create profile for `guition-jc8048w550c` <!-- id: 117 -->
+- [x] Create profile for `waveshare-s3-touch-lcd-43` <!-- id: 118 -->
+- [x] Create profile for `waveshare-s3-touch-lcd-147` <!-- id: 119 -->
+- [x] Create profile for `cyd-2432s024c` <!-- id: 120 -->
+- [x] Create profile for `cyd-2432s024r` <!-- id: 121 -->
+- [x] Create profile for `cyd-3248s035c` <!-- id: 122 -->
+- [x] Create profile for `elecrow-crowpanel-advance-50` <!-- id: 123 -->
+- [x] Create profile for `elecrow-crowpanel-basic-35` <!-- id: 124 -->
+- [x] Create profile for `elecrow-crowpanel-basic-50` <!-- id: 125 -->
+- [x] Create profile for `generic-esp32c6` <!-- id: 126 -->
+- [x] Create profile for `generic-esp32p4` <!-- id: 127 -->
+- [x] Create profile for `guition-jc1060p470ciwy` <!-- id: 128 -->
+- [x] Create profile for `lilygo-tlora-pager` <!-- id: 129 -->
+- [x] Create profile for `m5stack-papers3` <!-- id: 130 -->
+- [x] Create profile for `m5stack-tab5` <!-- id: 131 -->
+- [x] Create profile for `unphone` <!-- id: 132 -->
+

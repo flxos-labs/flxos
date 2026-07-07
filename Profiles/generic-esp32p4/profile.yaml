@@ -1,0 +1,31 @@
+# FlxOS Profile: Generic ESP32-P4 (Headless)
+id: generic-esp32p4
+vendor: Generic
+name: ESP32-P4 (Headless)
+target: esp32p4
+flash_size: 8MB
+flash_mode: QIO
+headless: true
+inherits: _bases/base-headless
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: false
+  bluetooth: false
+  ble: false
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+  keyboard: false
+  trackball: false
+
+distribution:
+  incubating: false
+  tags:
+    - headless
+    - esp32p4

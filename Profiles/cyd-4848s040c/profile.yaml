@@ -1,35 +1,39 @@
-# FlxOS Profile: Cheap Yellow Display 3.5" Capacitive (CYD 3248S035C)
-id: cyd-3248s035c
+# FlxOS Profile: CYD 4848S040C - ESP32-S3, 4" 480x480 round-ish (ST7701S RGB-SPI)
+# Note: ST7701S display crashes in Tactility DisplayDriver; see Source/devices/St7701Display.h
+id: cyd-4848s040c
 vendor: CYD
 name:
-  - 3248S035C
-  - CYD 3248S035C
-target: esp32
-flash_size: 4MB
-flash_mode: DIO
+  - 4848S040C
+  - CYD 4848S040C
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
 headless: false
 inherits: _bases/base-esp32-spi
 
 hardware:
   spiram:
-    enabled: false
-  display:
     enabled: true
-    driver: ST7796
+    mode: OCT
+    speed: 80M
+  display:
+    # ST7701S uses a hybrid SPI-RGB interface; treat as custom/incubating
+    enabled: true
+    driver: ST7701S
     bus: spi
-    width: 320
+    width: 480
     height: 480
     color_depth: 16
-    size_inches: 3.5
-    rotation: 1
+    size_inches: 4.0
+    rotation: 0
     pins:
-      cs: 15
-      dc: 2
+      cs: -1
+      dc: -1
       rst: -1
       busy: -1
-      bckl: 27
-      mosi: 13
-      sclk: 14
+      bckl: -1
+      mosi: -1
+      sclk: -1
       miso: -1
     spi:
       host: 2
@@ -55,27 +59,18 @@ hardware:
       dlen_16bit: false
   touch:
     enabled: true
-    driver: GT911
+    driver: CST816S
     bus: i2c
     pins:
       cs: -1
       int: -1
     i2c:
       port: 0
-      addr: 0x5D
-      sda: 33
-      scl: 32
+      addr: 0x15
+      sda: 19
+      scl: 45
   sdcard:
-    enabled: true
-    bus: spi
-    cs: 5
-    spi_host: 3
-    max_freq_khz: 20000
-    mount_point: /sdcard
-    pins:
-      mosi: 23
-      miso: 19
-      sclk: 18
+    enabled: false
   battery:
     enabled: false
 
@@ -84,7 +79,7 @@ target_config:
   data_cache_32kb: true
 
 console:
-  usb_serial_jtag: false
+  usb_serial_jtag: true
 
 cli:
   enabled: true
@@ -103,9 +98,9 @@ capabilities:
 distribution:
   incubating: true
   tags:
-    - spi
-    - st7796
-    - 3.5-inch
+    - st7701s
+    - rgb-spi
+    - 4.0-inch
     - touch
-    - gt911
+    - cst816s
     - cyd

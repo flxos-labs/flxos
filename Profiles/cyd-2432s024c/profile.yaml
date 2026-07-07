@@ -48,8 +48,8 @@ hardware:
       offset_rotation: 0
       dummy_read_pixel: 8
       dummy_read_bits: 1
-      readable: false
-      bus_shared: false
+      readable: true
+      bus_shared: true
       invert: false
       rgb_order: false
       dlen_16bit: false
@@ -57,6 +57,9 @@ hardware:
     enabled: true
     driver: CST816S
     bus: i2c
+    pins:
+      cs: -1
+      int: -1
     i2c:
       port: 0
       addr: 0x15
@@ -67,7 +70,7 @@ hardware:
     bus: spi
     cs: 5
     spi_host: 3
-    max_freq_khz: 4000
+    max_freq_khz: 20000
     mount_point: /sdcard
     pins:
       mosi: 23
@@ -96,8 +99,6 @@ capabilities:
   lora: false
   camera: false
   audio: false
-  keyboard: false
-  trackball: false
 
 distribution:
   incubating: true
@@ -107,3 +108,4 @@ distribution:
     - 2.4-inch
     - touch
     - cst816s
+    - cyd

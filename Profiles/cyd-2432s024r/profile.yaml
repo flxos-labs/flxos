@@ -51,7 +51,7 @@ hardware:
       readable: true
       bus_shared: true
       invert: false
-      rgb_order: false
+      rgb_order: true
       dlen_16bit: false
   touch:
     enabled: true
@@ -59,15 +59,12 @@ hardware:
     bus: spi
     pins:
       cs: 33
-      int: -1
-      sclk: 25
-      mosi: 32
-      miso: 39
+      int: 36
     spi:
-      host: -1
+      host: 2
       freq: 1000000
-      bus_shared: false
-      separate_pins: true
+      bus_shared: true
+      separate_pins: false
     calibration:
       x_min: 300
       x_max: 3900
@@ -79,7 +76,7 @@ hardware:
     bus: spi
     cs: 5
     spi_host: 3
-    max_freq_khz: 4000
+    max_freq_khz: 20000
     mount_point: /sdcard
     pins:
       mosi: 23
@@ -108,8 +105,6 @@ capabilities:
   lora: false
   camera: false
   audio: false
-  keyboard: false
-  trackball: false
 
 distribution:
   incubating: true
@@ -119,3 +114,4 @@ distribution:
     - 2.4-inch
     - touch
     - xpt2046
+    - cyd
