@@ -122,7 +122,7 @@ void WiFiSettings::createUI() {
 	lv_obj_t* statusCont = lv_obj_create(body);
 	lv_obj_set_size(statusCont, lv_pct(100), LV_SIZE_CONTENT);
 	lv_obj_set_style_pad_all(statusCont, 0, 0);
-	lv_obj_set_style_pad_gap(statusCont, 0, 0);
+	lv_obj_set_style_pad_gap(statusCont, lv_dpx(UiConstants::PAD_SMALL), 0);
 	lv_obj_set_style_pad_hor(statusCont, lv_dpx(UiConstants::PAD_MEDIUM), 0);
 	lv_obj_set_style_border_width(statusCont, 0, 0);
 	lv_obj_set_flex_flow(statusCont, LV_FLEX_FLOW_ROW);
@@ -404,6 +404,21 @@ void WiFiSettings::refreshScan() {
 
 			m_scanResults = networks;
 
+			std::vector<wifi_ap_record_t> savedNets;
+			std::vector<wifi_ap_record_t> availableNets;
+			auto& store = flx::connectivity::WiFiCredentialStore::getInstance();
+
+			for (const auto& net : networks) {
+				char ssid_buf[34];
+				memcpy(ssid_buf, net.ssid, 33);
+				ssid_buf[33] = '\0';
+				if (store.contains(ssid_buf)) {
+					savedNets.push_back(net);
+				} else {
+					availableNets.push_back(net);
+				}
+			}
+
 			auto wifiClickCb = [](lv_event_t* e) {
 				auto* instance = (WiFiSettings*)lv_event_get_user_data(e);
 				auto* btn = (lv_obj_t*)lv_event_get_current_target(e);
@@ -417,7 +432,14 @@ void WiFiSettings::refreshScan() {
 					}
 				}
 
-				if (authmode == WIFI_AUTH_OPEN) {
+				auto& store = flx::connectivity::WiFiCredentialStore::getInstance();
+				flx::connectivity::WiFiCredential cred;
+				bool is_saved = store.load(ssid, cred);
+
+				if (is_saved) {
+					flx::connectivity::ConnectivityManager::getInstance().connectWiFi(ssid, cred.password.c_str(), false);
+					instance->updateStatus();
+				} else if (authmode == WIFI_AUTH_OPEN) {
 					flx::connectivity::ConnectivityManager::getInstance().connectWiFi(ssid, "");
 					instance->updateStatus();
 				} else {
@@ -425,26 +447,38 @@ void WiFiSettings::refreshScan() {
 				}
 			};
 
-			for (const auto& net: networks) {
-				char ssid_buf[34];
-				memcpy(ssid_buf, net.ssid, 33);
-				ssid_buf[33] = '\0';
+			auto populateList = [this, wifiClickCb](const std::vector<wifi_ap_record_t>& nets) {
+				for (const auto& net: nets) {
+					char ssid_buf[34];
+					memcpy(ssid_buf, net.ssid, 33);
+					ssid_buf[33] = '\0';
 
-				const char* icon = getSignalIcon(net.rssi);
-				lv_obj_t* btn = lv_list_add_button(m_list, icon, ssid_buf);
-				lv_obj_add_event_cb(btn, wifiClickCb, LV_EVENT_CLICKED, this);
+					const char* icon = getSignalIcon(net.rssi);
+					lv_obj_t* btn = lv_list_add_button(m_list, icon, ssid_buf);
+					lv_obj_add_event_cb(btn, wifiClickCb, LV_EVENT_CLICKED, this);
 
-				lv_obj_t* rssi_label = lv_label_create(btn);
-				lv_label_set_text_fmt(rssi_label, "%d dBm", net.rssi);
-				lv_obj_set_style_text_opa(rssi_label, LV_OPA_60, 0);
+					lv_obj_t* rssi_label = lv_label_create(btn);
+					lv_label_set_text_fmt(rssi_label, "%d dBm", net.rssi);
+					lv_obj_set_style_text_opa(rssi_label, LV_OPA_60, 0);
 
-				if (net.authmode != WIFI_AUTH_OPEN) {
-					lv_obj_t* lock = lv_image_create(btn);
-					lv_image_set_src(lock, LV_SYMBOL_EYE_CLOSE);
-					lv_obj_align(lock, LV_ALIGN_RIGHT_MID, 0, 0);
-				} else {
-					lv_obj_align(rssi_label, LV_ALIGN_RIGHT_MID, 0, 0);
+					if (net.authmode != WIFI_AUTH_OPEN) {
+						lv_obj_t* lock = lv_image_create(btn);
+						lv_image_set_src(lock, LV_SYMBOL_EYE_CLOSE);
+						lv_obj_align(lock, LV_ALIGN_RIGHT_MID, 0, 0);
+					} else {
+						lv_obj_align(rssi_label, LV_ALIGN_RIGHT_MID, 0, 0);
+					}
 				}
+			};
+
+			if (!savedNets.empty()) {
+				lv_list_add_text(m_list, "Saved Networks");
+				populateList(savedNets);
+			}
+
+			if (!availableNets.empty()) {
+				lv_list_add_text(m_list, "Available Networks");
+				populateList(availableNets);
 			}
 			flx::ui::GuiTask::unlock();
 		});
