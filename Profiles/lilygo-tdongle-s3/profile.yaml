@@ -1,0 +1,103 @@
+# FlxOS Profile: LilyGO T-Dongle S3
+id: lilygo-tdongle-s3
+vendor: LilyGO
+name:
+  - T-Dongle-S3
+  - LilyGO T-Dongle S3
+target: esp32s3
+flash_size: 4MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: false
+  display:
+    enabled: true
+    driver: ST7735
+    bus: spi
+    width: 80
+    height: 160
+    color_depth: 16
+    size_inches: 0.96
+    rotation: 1
+    pins:
+      cs: 4
+      dc: 2
+      rst: 1
+      busy: -1
+      bckl: 38
+      mosi: 3
+      sclk: 5
+      miso: -1
+    spi:
+      host: 2
+      mode: 0
+      freq_write: 27000000
+      freq_read: 16000000
+      three_wire: false
+      dma_channel: 0
+    backlight:
+      freq: 12000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 0
+      offset_y: 26
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: true
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: false
+  sdcard:
+    enabled: true
+    bus: sdmmc
+    mount_point: /sdcard
+    pins:
+      clk: 12
+      cmd: 16
+      d0: 14
+      d1: 17
+      d2: 21
+      d3: 18
+  battery:
+    enabled: false
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_64kb: true
+  data_cache_line_64b: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+  keyboard: false
+  trackball: false
+
+distribution:
+  incubating: true
+  tags:
+    - spi
+    - st7735
+    - 0.96-inch
+    - sdmmc
+    - lilygo

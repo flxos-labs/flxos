@@ -1,0 +1,131 @@
+# FlxOS Profile: Wireless-Tag WT32-SC01 Plus
+id: wireless-tag-wt32-sc01-plus
+vendor: Wireless-Tag
+name:
+  - WT32-SC01-Plus
+  - Wireless-Tag WT32-SC01 Plus
+target: esp32s3
+flash_size: 8MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: true
+    speed: 80M
+    xip_from_psram: false
+    ecc_enable: false
+  display:
+    enabled: true
+    driver: ST7796
+    bus: parallel8
+    width: 320
+    height: 480
+    color_depth: 16
+    size_inches: 3.5
+    rotation: 1
+    pins:
+      cs: -1
+      dc: 0
+      rst: 4
+      busy: -1
+      bckl: 45
+      mosi: -1
+      sclk: -1
+      miso: -1
+    parallel:
+      freq_write: 10000000
+      freq_read: 10000000
+      rd: -1
+      wr: 47
+      rs: 0
+      d0: 9
+      d1: 46
+      d2: 3
+      d3: 8
+      d4: 18
+      d5: 17
+      d6: 16
+      d7: 15
+      d8: -1
+      d9: -1
+      d10: -1
+      d11: -1
+      d12: -1
+      d13: -1
+      d14: -1
+      d15: -1
+    backlight:
+      freq: 20000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 0
+      offset_y: 0
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: false
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: true
+    driver: FT5X06
+    bus: i2c
+    pins:
+      cs: -1
+      int: 7
+    i2c:
+      port: 0
+      addr: 0x38
+      sda: 6
+      scl: 5
+  sdcard:
+    enabled: true
+    bus: spi
+    cs: 41
+    spi_host: 2
+    max_freq_khz: 4000
+    mount_point: /sdcard
+    pins:
+      mosi: 40
+      miso: 38
+      sclk: 39
+  battery:
+    enabled: false
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_64kb: true
+  data_cache_line_64b: true
+
+console:
+  usb_serial_jtag: false
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+  keyboard: false
+  trackball: false
+
+distribution:
+  incubating: true
+  tags:
+    - parallel8
+    - st7796
+    - 3.5-inch
+    - touch
+    - ft5x06

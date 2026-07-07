@@ -1,0 +1,111 @@
+# FlxOS Profile: LilyGO T-Display S3
+id: lilygo-tdisplay-s3
+vendor: LilyGO
+name:
+  - T-Display-S3
+  - LilyGO T-Display S3
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: true
+    speed: 80M
+    xip_from_psram: false
+    ecc_enable: false
+  display:
+    enabled: true
+    driver: ST7789
+    bus: parallel8
+    width: 170
+    height: 320
+    color_depth: 16
+    size_inches: 1.9
+    rotation: 1
+    pins:
+      cs: 6
+      dc: 7
+      rst: 5
+      busy: -1
+      bckl: 38
+      mosi: -1
+      sclk: -1
+      miso: -1
+    parallel:
+      freq_write: 10000000
+      freq_read: 10000000
+      rd: 9
+      wr: 8
+      rs: 7
+      d0: 39
+      d1: 40
+      d2: 41
+      d3: 42
+      d4: 45
+      d5: 46
+      d6: 47
+      d7: 48
+      d8: -1
+      d9: -1
+      d10: -1
+      d11: -1
+      d12: -1
+      d13: -1
+      d14: -1
+      d15: -1
+    backlight:
+      freq: 20000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 35
+      offset_y: 0
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: true
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: false
+  sdcard:
+    enabled: false
+  battery:
+    enabled: false
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_64kb: true
+  data_cache_line_64b: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+  keyboard: false
+  trackball: false
+
+distribution:
+  incubating: true
+  tags:
+    - parallel8
+    - st7789
+    - 1.9-inch
+    - lilygo
