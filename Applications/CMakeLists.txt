@@ -17,6 +17,11 @@ else()
             "*.cpp"
         )
     endif()
+
+    list(LENGTH APP_SOURCES _app_src_count)
+    message(STATUS "APPLICATIONS: ${_app_src_count} sources after profile filtering"
+        " (sd=${FLXOS_HAS_SD}, kbd=${FLXOS_HAS_KEYBOARD})")
+
     set(APP_REQUIRES Core Apps UI Connectivity System lwip)
 endif()
 
