@@ -41,6 +41,7 @@ private:
 	lv_obj_t* m_securityDropdown = nullptr;
 	lv_obj_t* m_txPowerSlider = nullptr;
 	lv_obj_t* m_autoShutdownSwitch = nullptr;
+	lv_obj_t* m_powerSaveDropdown = nullptr;
 	lv_obj_t* m_clientsCont = nullptr;
 	lv_obj_t* m_configTitle = nullptr;
 	lv_timer_t* m_refreshTimer = nullptr;

@@ -118,7 +118,10 @@ void SettingsApp::onStop() {
 
 void SettingsApp::onPause() {
 	if (!m_activePluginId.empty()) {
-		deactivatePlugin(m_activePluginId);
+		auto it = m_plugins.find(m_activePluginId);
+		if (it != m_plugins.end() && it->second.instance) {
+			it->second.instance->onSave();
+		}
 	}
 	m_pluginRefreshPending.store(false);
 }
@@ -128,10 +131,11 @@ bool SettingsApp::onResume() {
 		return true;
 	}
 
-	// onPause() deactivated the plugin (hiding its UI) but left
-	// m_mainList and m_searchTa hidden.  Restore the main settings view
-	// so the user doesn't see a blank white screen.
-	showMainSettings();
+	if (!m_activePluginId.empty()) {
+		showPlugin(m_activePluginId);
+	} else {
+		showMainSettings();
+	}
 	return true;
 }
 

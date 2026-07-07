@@ -59,11 +59,29 @@ private:
 	void hideSavedNetworks();
 	void refreshSavedNetworksList();
 
+	// Info panel sub-page
+	lv_obj_t* m_infoContainer = nullptr;
+	lv_obj_t* m_infoBtn = nullptr;
+	lv_obj_t* m_infoSsidLabel = nullptr;
+	lv_obj_t* m_infoIpLabel = nullptr;
+	lv_obj_t* m_infoSubnetLabel = nullptr;
+	lv_obj_t* m_infoGatewayLabel = nullptr;
+	lv_obj_t* m_infoDnsLabel = nullptr;
+	lv_obj_t* m_infoSecurityLabel = nullptr;
+	lv_obj_t* m_infoStandardLabel = nullptr;
+	lv_obj_t* m_infoRssiLabel = nullptr;
+	lv_obj_t* m_infoChannelLabel = nullptr;
+	lv_obj_t* m_infoBssidLabel = nullptr;
+	lv_obj_t* m_infoMacLabel = nullptr;
+	void showInfoPage();
+	void hideInfoPage();
+	void updateInfoPanel();
+
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiEnabledBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiStatusBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiConnectedBridge;
 	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiScanIntervalBridge;
-	std::unique_ptr<flx::ui::LvglObserverBridge<int32_t>> m_wifiAutostartBridge;
+	std::unique_ptr<flx::ui::LvglStringObserverBridge> m_wifiIpBridge;
 };
 
 } // namespace System::Apps::Settings

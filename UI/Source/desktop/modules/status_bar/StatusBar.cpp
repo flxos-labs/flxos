@@ -13,6 +13,7 @@
 #include <flx/system/SystemManager.hpp>
 #include <flx/system/managers/NotificationManager.hpp>
 #include <flx/system/managers/PowerManager.hpp>
+#include <flx/system/managers/SettingsManager.hpp>
 #include <flx/ui/desktop/modules/status_bar/StatusBar.hpp>
 #include <flx/ui/theming/StyleUtils.hpp>
 #include <flx/ui/theming/UiThemeManager.hpp>
@@ -26,6 +27,7 @@
 #include <misc/lv_timer.h>
 #include <misc/lv_types.h>
 #include <string>
+#include <widgets/arc/lv_arc.h>
 #include <widgets/image/lv_image.h>
 #include <widgets/label/lv_label.h>
 
@@ -244,7 +246,18 @@ void StatusBar::create() {
 		lv_obj_set_flex_flow(batt_cont, LV_FLEX_FLOW_ROW);
 		lv_obj_set_flex_align(batt_cont, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-		lv_image_create(batt_cont);
+		lv_obj_t* batt_icon = lv_arc_create(batt_cont);
+		lv_obj_remove_style_all(batt_icon);
+		lv_obj_set_size(batt_icon, lv_dpx(12), lv_dpx(12));
+		lv_arc_set_bg_angles(batt_icon, 0, 360);
+		lv_arc_set_rotation(batt_icon, 270);
+		lv_obj_remove_flag(batt_icon, LV_OBJ_FLAG_CLICKABLE);
+		lv_obj_set_style_bg_opa(batt_icon, 0, LV_PART_KNOB);
+		lv_obj_set_style_opa(batt_icon, 0, LV_PART_KNOB);
+		lv_obj_set_style_arc_width(batt_icon, lv_dpx(2), LV_PART_MAIN);
+		lv_obj_set_style_arc_width(batt_icon, lv_dpx(2), LV_PART_INDICATOR);
+		lv_obj_set_style_arc_rounded(batt_icon, true, LV_PART_INDICATOR);
+
 		lv_label_create(batt_cont);
 
 		m_batteryLevelBridge.reset(new flx::ui::LvglObserverBridge<int32_t>(flx::system::PowerManager::getInstance().getBatteryLevelObservable()));
@@ -258,29 +271,19 @@ void StatusBar::create() {
 				ThemeConfig const cfg = Themes::GetConfig(ThemeEngine::get_current_theme());
 
 				lv_label_set_text_fmt(label, "%d%%", (int)level);
+				lv_arc_set_value(icon, level);
+
 				if (level < 20) {
-					lv_image_set_src(icon, LV_SYMBOL_BATTERY_EMPTY);
+					lv_obj_set_style_arc_color(icon, cfg.error, LV_PART_INDICATOR);
 					lv_obj_set_style_text_color(label, cfg.error, 0);
 				} else if (level < 50) {
-					lv_image_set_src(icon, LV_SYMBOL_BATTERY_1);
+					lv_obj_set_style_arc_color(icon, cfg.warning, LV_PART_INDICATOR);
 					lv_obj_set_style_text_color(label, cfg.warning, 0);
-				} else if (level < 80) {
-					lv_image_set_src(icon, LV_SYMBOL_BATTERY_2);
-					lv_obj_set_style_text_color(label, cfg.text_primary, 0);
 				} else {
-					lv_image_set_src(icon, LV_SYMBOL_BATTERY_FULL);
+					lv_obj_set_style_arc_color(icon, cfg.text_primary, LV_PART_INDICATOR);
 					lv_obj_set_style_text_color(label, cfg.text_primary, 0);
 				}
-
-				// Color based on level
-				if (level <= 15) {
-					lv_obj_set_style_image_recolor(icon, cfg.error, 0);
-					lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
-				} else {
-					// Fallback to theme primary color via status bar inheritance
-					lv_obj_set_style_image_recolor(icon, cfg.text_primary, 0);
-					lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
-				}
+				lv_obj_set_style_arc_color(icon, cfg.muted, LV_PART_MAIN);
 			},
 			batt_cont, nullptr);
 
@@ -301,18 +304,15 @@ void StatusBar::create() {
 
 				if (level < 20) {
 					lv_obj_set_style_text_color(label, cfg.error, 0);
+					lv_obj_set_style_arc_color(icon, cfg.error, LV_PART_INDICATOR);
 				} else if (level < 50) {
 					lv_obj_set_style_text_color(label, cfg.warning, 0);
+					lv_obj_set_style_arc_color(icon, cfg.warning, LV_PART_INDICATOR);
 				} else {
 					lv_obj_set_style_text_color(label, cfg.text_primary, 0);
+					lv_obj_set_style_arc_color(icon, cfg.text_primary, LV_PART_INDICATOR);
 				}
-
-				if (level <= 15) {
-					lv_obj_set_style_image_recolor(icon, cfg.error, 0);
-				} else {
-					lv_obj_set_style_image_recolor(icon, cfg.text_primary, 0);
-				}
-				lv_obj_set_style_image_recolor_opa(icon, UiConstants::OPA_COVER, 0);
+				lv_obj_set_style_arc_color(icon, cfg.muted, LV_PART_MAIN);
 			},
 			batt_cont, this);
 	}
@@ -325,18 +325,36 @@ void StatusBar::create() {
 
 	time_t now = 0;
 	struct tm timeinfo = {};
+	tzset();
 	time(&now);
 	localtime_r(&now, &timeinfo);
-	lv_label_set_text_fmt(m_timeLabel, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+
+	bool const is24h = flx::system::SettingsManager::getInstance().getTimeFormat24h().get() != 0;
+	if (is24h) {
+		lv_label_set_text_fmt(m_timeLabel, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+	} else {
+		int const hour12 = timeinfo.tm_hour % 12 == 0 ? 12 : timeinfo.tm_hour % 12;
+		const char* ampm = timeinfo.tm_hour >= 12 ? "PM" : "AM";
+		lv_label_set_text_fmt(m_timeLabel, "%d:%02d %s", hour12, timeinfo.tm_min, ampm);
+	}
 
 	m_timer = lv_timer_create(
 		[](lv_timer_t* t) {
 			auto* label = (lv_obj_t*)lv_timer_get_user_data(t);
-			time_t now = 0;
-			struct tm timeinfo = {};
-			time(&now);
-			localtime_r(&now, &timeinfo);
-			lv_label_set_text_fmt(label, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+			tzset();
+			time_t now_tick = 0;
+			struct tm timeinfo_tick = {};
+			time(&now_tick);
+			localtime_r(&now_tick, &timeinfo_tick);
+
+			bool const is24h_tick = flx::system::SettingsManager::getInstance().getTimeFormat24h().get() != 0;
+			if (is24h_tick) {
+				lv_label_set_text_fmt(label, "%02d:%02d", timeinfo_tick.tm_hour, timeinfo_tick.tm_min);
+			} else {
+				int const hour12 = timeinfo_tick.tm_hour % 12 == 0 ? 12 : timeinfo_tick.tm_hour % 12;
+				const char* ampm = timeinfo_tick.tm_hour >= 12 ? "PM" : "AM";
+				lv_label_set_text_fmt(label, "%d:%02d %s", hour12, timeinfo_tick.tm_min, ampm);
+			}
 		},
 		1000, m_timeLabel);
 

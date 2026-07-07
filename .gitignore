@@ -92,3 +92,7 @@ reports/
 # Agent files
 .agents
 .codex
+
+# Monitor summary
+flxos_monitor_summary.json
+

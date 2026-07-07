@@ -80,14 +80,26 @@ void SystemInfoService::initBatteryAdc() {
 
 	// Calibration
 	adc_cali_handle_t cali_handle = nullptr;
+#if ADC_CALI_SCHEME_CURVE_FITTING_SUPPORTED
 	adc_cali_curve_fitting_config_t cali_config = {
 		.unit_id = (adc_unit_t)(flx::config::battery.adcUnit == 1 ? ADC_UNIT_1 : ADC_UNIT_2),
 		.chan = (adc_channel_t)flx::config::battery.adcChannel,
 		.atten = ADC_ATTEN_DB_12,
 		.bitwidth = ADC_BITWIDTH_DEFAULT,
 	};
-
 	esp_err_t const ret = adc_cali_create_scheme_curve_fitting(&cali_config, &cali_handle);
+#elif ADC_CALI_SCHEME_LINE_FITTING_SUPPORTED
+	adc_cali_line_fitting_config_t cali_config = {
+		.unit_id = (adc_unit_t)(flx::config::battery.adcUnit == 1 ? ADC_UNIT_1 : ADC_UNIT_2),
+		.atten = ADC_ATTEN_DB_12,
+		.bitwidth = ADC_BITWIDTH_DEFAULT,
+		.default_vref = 0, // 0 = use eFuse-burned calibration value
+	};
+	esp_err_t const ret = adc_cali_create_scheme_line_fitting(&cali_config, &cali_handle);
+#else
+	esp_err_t const ret = ESP_FAIL;
+#endif
+
 	if (ret == ESP_OK) {
 		m_adcCaliHandle = cali_handle;
 		Log::info(TAG, "ADC Calibration scheme created");
@@ -277,7 +289,7 @@ BatteryStats SystemInfoService::getBatteryStats() {
 #if FLXOS_BATTERY_ENABLED
 	stats.isConfigured = true;
 	if (flx::config::battery.mock) {
-		static int32_t level = 85;
+		static int32_t level = 50;
 		static bool charging = false;
 		static uint64_t lastUpdateSec = 0;
 		uint64_t nowSec = esp_timer_get_time() / 1000000;

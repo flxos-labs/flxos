@@ -312,6 +312,41 @@ def cmd_list(args):
     return 0
 
 
+def _update_vscode_settings(target: str):
+    """Synchronize the target to .vscode/settings.json to prevent IDF mismatch errors in VS Code."""
+    vscode_dir = SCRIPT_DIR / ".vscode"
+    settings_file = vscode_dir / "settings.json"
+    if not settings_file.exists():
+        return
+    try:
+        import json
+        with open(settings_file, "r") as f:
+            data = json.load(f)
+
+        # Update target in idf.customExtraVars
+        if "idf.customExtraVars" not in data or not isinstance(data["idf.customExtraVars"], dict):
+            data["idf.customExtraVars"] = {}
+        data["idf.customExtraVars"]["IDF_TARGET"] = target
+
+        # Optionally update OpenOCD config for the target
+        if "idf.openOcdConfigs" in data and isinstance(data["idf.openOcdConfigs"], list):
+            configs = data["idf.openOcdConfigs"]
+            if len(configs) >= 2 and any("target/" in cfg for cfg in configs):
+                builtin_jtag_targets = {"esp32s3", "esp32c3", "esp32c6", "esp32h2", "esp32p4"}
+                interface_cfg = f"interface/ftdi/{target}_builtin.cfg" if target in builtin_jtag_targets else "interface/ftdi/esp_ftdi.cfg"
+                data["idf.openOcdConfigs"] = [
+                    interface_cfg,
+                    f"target/{target}.cfg"
+                ]
+
+        with open(settings_file, "w") as f:
+            json.dump(data, f, indent=2)
+            f.write("\n")
+        print(f"  {C_GREEN}✓{C_RESET} Updated .vscode/settings.json target to: {target}")
+    except Exception as e:
+        print(f"  {C_YELLOW}⚠ Failed to update .vscode/settings.json: {e}{C_RESET}")
+
+
 def cmd_select(args):
     """Select a profile for building."""
     profile_id = args.profile_id
@@ -326,6 +361,9 @@ def cmd_select(args):
     old_profile = get_current_profile()
     data = parse_yaml(yaml_file)
     new_target = data.get("target", "esp32")
+
+    # Sync selected target with VS Code settings to keep environment aligned
+    _update_vscode_settings(new_target)
 
     # Read current target from CMake cache (actual source of truth)
     old_target = _get_cached_idf_target()
