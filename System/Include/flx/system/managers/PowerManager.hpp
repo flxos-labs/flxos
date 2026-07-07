@@ -1,5 +1,6 @@
 #pragma once
 
+#include <esp_timer.h>
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
 #include <flx/hal/power/IPowerDevice.hpp>
@@ -50,6 +51,8 @@ private:
 
 	/// HAL power event subscription ID (-1 if not subscribed)
 	int m_halSubscriptionId = -1;
+
+	esp_timer_handle_t m_timer = nullptr;
 
 	flx::Observable<int32_t> m_batteryLevel {100};
 	flx::Observable<int32_t> m_isCharging {0};
