@@ -1,16 +1,16 @@
 #include "VideoPlayerApp.hpp"
+#include <algorithm>
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
+#include <esp_timer.h>
 #include <flx/apps/AppManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/ui/common/SettingsCommon.hpp>
+#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
 #include <flx/ui/theming/theme_engine/ThemeEngine.hpp>
 #include <flx/ui/theming/themes/Themes.hpp>
 #include <flx/ui/theming/ui_constants/UiConstants.hpp>
-#include <flx/ui/theming/layout_constants/LayoutConstants.hpp>
-#include <esp_timer.h>
-#include <cstring>
-#include <algorithm>
-#include <cstdlib>
-#include <cerrno>
 
 using namespace flx::apps;
 using namespace flx::ui::common;
@@ -193,8 +193,7 @@ void VideoPlayerApp::createUI(void* parent) {
 
 	lv_obj_add_event_cb(m_playBtn, [](lv_event_t* e) {
 		auto* app = static_cast<VideoPlayerApp*>(lv_event_get_user_data(e));
-		app->togglePlay();
-	}, LV_EVENT_CLICKED, this);
+		app->togglePlay(); }, LV_EVENT_CLICKED, this);
 
 	m_stopBtn = lv_button_create(buttonsRow);
 	lv_obj_set_size(m_stopBtn, lv_dpx(80), lv_dpx(LayoutConstants::SIZE_TOUCH_TARGET));
@@ -204,8 +203,7 @@ void VideoPlayerApp::createUI(void* parent) {
 
 	lv_obj_add_event_cb(m_stopBtn, [](lv_event_t* e) {
 		auto* app = static_cast<VideoPlayerApp*>(lv_event_get_user_data(e));
-		app->restartPlay();
-	}, LV_EVENT_CLICKED, this);
+		app->restartPlay(); }, LV_EVENT_CLICKED, this);
 
 	ThemeConfig const theme = Themes::GetConfig(ThemeEngine::get_current_theme());
 	lv_obj_set_style_bg_color(m_playBtn, theme.success, 0);

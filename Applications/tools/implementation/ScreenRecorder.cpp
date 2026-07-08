@@ -177,7 +177,7 @@ void ScreenRecorder::startRecording() {
 		intervalMs,
 		[this](const flx::services::ScreenRecordingStats& stats) {
 			char buf[160];
-				snprintf(buf,
+			snprintf(buf,
 				sizeof(buf),
 				"Saved %lu frames: %s",
 				static_cast<unsigned long>(stats.frameCount - stats.failedFrames),
