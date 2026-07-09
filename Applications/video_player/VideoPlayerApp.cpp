@@ -387,7 +387,9 @@ bool VideoPlayerApp::readNextFrame() {
 
 	uint32_t expectedPayload = static_cast<uint32_t>(w) * h * 2U;
 	if (payloadBytes != expectedPayload) {
-		Log::error(TAG, "Frame payload size mismatch: expected %u, got %u", expectedPayload, payloadBytes);
+		Log::error(TAG, "Frame payload size mismatch: expected %lu, got %lu",
+			static_cast<unsigned long>(expectedPayload),
+			static_cast<unsigned long>(payloadBytes));
 		return false;
 	}
 
