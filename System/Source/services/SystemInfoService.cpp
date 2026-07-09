@@ -7,8 +7,10 @@
 #include <esp_system.h>
 #include <esp_timer.h>
 #include <esp_vfs_fat.h>
+#if FLXOS_WIFI_ENABLED
 #include <esp_wifi.h>
 #include <esp_wifi_types_generic.h>
+#endif
 #include <flx/connectivity/ConnectivityManager.hpp>
 #include <flx/core/Logger.hpp>
 #include <flx/system/services/SdCardService.hpp>
@@ -368,6 +370,7 @@ WiFiStats SystemInfoService::getWiFiStats() {
 	// Get MAC address
 	esp_read_mac(stats.mac, ESP_MAC_WIFI_STA);
 
+#if FLXOS_WIFI_ENABLED
 	if (stats.connected) {
 		wifi_ap_record_t ap_info;
 		if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
@@ -385,7 +388,8 @@ WiFiStats SystemInfoService::getWiFiStats() {
 				stats.signalStrength = "Weak";
 			}
 		}
-
+	}
+#endif
 		// Retrieve IP address from ConnectivityManager
 		std::string ip = flx::connectivity::ConnectivityManager::getInstance().getWiFiIpObservable().get();
 		stats.ipAddress = !ip.empty() ? ip : "0.0.0.0";

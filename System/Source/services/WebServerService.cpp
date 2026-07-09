@@ -5,7 +5,9 @@
 #include <esp_netif.h>
 #include <esp_system.h>
 #include <esp_timer.h>
+#if FLXOS_WIFI_ENABLED
 #include <esp_wifi.h>
+#endif
 #include <flx/apps/AppManager.hpp>
 #include <flx/apps/AppRegistry.hpp>
 #include <flx/connectivity/ConnectivityManager.hpp>
@@ -494,11 +496,13 @@ esp_err_t WebServerService::getWifiHandler(httpd_req_t* req) {
 
 	int rssi = -100;
 	int channel = 0;
+#if FLXOS_WIFI_ENABLED
 	wifi_ap_record_t ap_info;
 	if (connected && esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
 		rssi = ap_info.rssi;
 		channel = ap_info.primary;
 	}
+#endif
 
 	std::stringstream ss;
 	ss << "{"

@@ -1,8 +1,19 @@
 #pragma once
 
+#include <Config.hpp>
 #include "esp_err.h"
 #include "esp_event.h"
+
+#if FLXOS_WIFI_ENABLED
 #include "esp_wifi.h"
+#else
+struct wifi_ap_record_t {
+	uint8_t ssid[33];
+	int8_t rssi;
+	uint8_t primary;
+	int authmode;
+};
+#endif
 #include <atomic>
 #include <esp_timer.h>
 #include <flx/connectivity/wifi/WiFiCredentialStore.hpp>

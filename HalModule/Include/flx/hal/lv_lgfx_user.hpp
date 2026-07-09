@@ -4,6 +4,11 @@
 
 #include <Config.hpp>
 #include <LovyanGFX.hpp>
+
+#if defined(CONFIG_IDF_TARGET_ESP32S3) && (defined(FLXOS_DISPLAY_DRIVER_RGB) || defined(FLXOS_DISPLAY_BUS_RGB))
+#include <lgfx/v1/platforms/esp32s3/Panel_RGB.hpp>
+#include <lgfx/v1/platforms/esp32s3/Bus_RGB.hpp>
+#endif
 #include <cstdint>
 #include <limits>
 #include <type_traits>
@@ -165,7 +170,7 @@ using LgfxTouch = lgfx::Touch_GT911;
 #elif FLXOS_TOUCH_DRIVER_FT5X06
 using LgfxTouch = lgfx::Touch_FT5x06;
 #elif FLXOS_TOUCH_DRIVER_CSTXXX || FLXOS_TOUCH_DRIVER_CST816S
-using LgfxTouch = lgfx::Touch_CSTxxx;
+using LgfxTouch = lgfx::Touch_CST816S;
 #elif FLXOS_TOUCH_DRIVER_CHSC6X || FLXOS_TOUCH_DRIVER_CHSC5816
 using LgfxTouch = lgfx::Touch_CHSC6x;
 #elif FLXOS_TOUCH_DRIVER_NS2009

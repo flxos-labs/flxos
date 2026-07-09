@@ -104,3 +104,11 @@ CONFIG_LV_LOG_TRACE_OBJ_CREATE=n
 CONFIG_LV_LOG_TRACE_LAYOUT=n
 CONFIG_LV_LOG_TRACE_ANIM=n
 CONFIG_LV_LOG_TRACE_CACHE=n
+
+# Shrink bootloader to fit partition table offset of 0x8000
+CONFIG_BOOTLOADER_LOG_LEVEL_WARN=y
+CONFIG_BOOTLOADER_LOG_LEVEL=2
+
+# Suppress High Performance Mode QSPI Flash warnings treated as errors
+CONFIG_SPI_FLASH_HPM_DC_DISABLE=y
+
