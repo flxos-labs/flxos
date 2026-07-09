@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Config.hpp>
 #include "esp_err.h"
 #include "esp_event.h"
+#include <Config.hpp>
 
 #if FLXOS_WIFI_ENABLED
 #include "esp_wifi_types.h"

@@ -6,8 +6,8 @@
 #include <LovyanGFX.hpp>
 
 #if defined(CONFIG_IDF_TARGET_ESP32S3) && (defined(FLXOS_DISPLAY_DRIVER_RGB) || defined(FLXOS_DISPLAY_BUS_RGB))
-#include <lgfx/v1/platforms/esp32s3/Panel_RGB.hpp>
 #include <lgfx/v1/platforms/esp32s3/Bus_RGB.hpp>
+#include <lgfx/v1/platforms/esp32s3/Panel_RGB.hpp>
 #endif
 #include <cstdint>
 #include <limits>
