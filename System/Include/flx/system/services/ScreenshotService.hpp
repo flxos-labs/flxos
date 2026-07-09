@@ -35,9 +35,10 @@ public:
 	/**
 	 * Capture the active screen and save as PNG.
 	 * @param savePath  Full VFS path including filename (e.g. "/data/screenshots/scr_001.png")
+	 * @param notify    Whether to show success/failure notifications.
 	 * @return true if capture and save succeeded
 	 */
-	bool capture(const std::string& savePath);
+	bool capture(const std::string& savePath, bool notify = true);
 
 	/**
 	 * Generate a timestamped filename in the given directory.

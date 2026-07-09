@@ -1,0 +1,125 @@
+# FlxOS Profile: Waveshare ESP32-S3 Touch LCD 1.47" 172x320 (JD9853)
+# Note: Touch may not work reliably (AXS5106 driver not yet integrated in FlxOS HAL)
+id: waveshare-s3-touch-lcd-147
+vendor: WaveShare
+name:
+  - S3 Touch LCD 1.47
+  - Waveshare ESP32-S3-Touch-LCD-1.47
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: true
+    mode: OCT
+    speed: 120M
+  display:
+    enabled: true
+    driver: ST7789
+    bus: spi
+    width: 172
+    height: 320
+    color_depth: 16
+    size_inches: 1.47
+    rotation: 0
+    pins:
+      cs: 21
+      dc: 45
+      rst: 40
+      busy: -1
+      bckl: -1
+      mosi: 39
+      sclk: 38
+      miso: -1
+    spi:
+      host: 2
+      mode: 0
+      freq_write: 40000000
+      freq_read: 16000000
+      three_wire: false
+      dma_channel: 0
+    backlight:
+      freq: 20000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 34
+      offset_y: 0
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: true
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    # AXS5106 touch - driver not yet integrated in FlxOS HAL
+    enabled: false
+    driver: CSTXXX
+    bus: i2c
+    pins:
+      cs: -1
+      int: 47
+    i2c:
+      port: 0
+      addr: 0x3B
+      sda: 42
+      scl: 41
+  sdcard:
+    enabled: true
+    bus: spi
+    cs: 14
+    spi_host: 3
+    max_freq_khz: 20000
+    mount_point: /sdcard
+    pins:
+      mosi: 15
+      miso: 17
+      sclk: 16
+  battery:
+    enabled: false
+  usb:
+    tiny_usb: true
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_32kb: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+
+lvgl:
+  font_size: 14
+  theme: Dark
+  ui_density: compact
+
+sdkconfig:
+  CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "n"
+  CONFIG_SPIRAM_RODATA: "n"
+  CONFIG_SPIRAM_XIP_FROM_PSRAM: "n"
+
+distribution:
+  incubating: true
+  tags:
+    - spi
+    - st7789
+    - 1.47-inch
+    - waveshare

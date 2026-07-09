@@ -1,0 +1,114 @@
+# FlxOS Profile: LilyGO T-Lora Pager - ESP32-S3, 2.33" 222x480 (ST7796 SPI)
+id: lilygo-tlora-pager
+vendor: LilyGO
+name:
+  - T-Lora Pager
+  - LilyGO T-Lora Pager
+target: esp32s3
+flash_size: 16MB
+flash_mode: DIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: true
+    mode: AUTO
+    speed: 120M
+  display:
+    enabled: true
+    driver: ST7796
+    bus: spi
+    width: 222
+    height: 480
+    color_depth: 16
+    size_inches: 2.33
+    rotation: 1
+    pins:
+      cs: 38
+      dc: 37
+      rst: -1
+      busy: -1
+      bckl: 46
+      mosi: 34
+      sclk: 35
+      miso: 33
+    spi:
+      host: 2
+      mode: 0
+      freq_write: 40000000
+      freq_read: 16000000
+      three_wire: false
+      dma_channel: 0
+    backlight:
+      freq: 30000
+      pwm_channel: 1
+      invert: false
+    panel:
+      offset_x: 0
+      offset_y: 49
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: true
+      invert: true
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: false
+  sdcard:
+    enabled: true
+    bus: spi
+    cs: 21
+    spi_host: 2
+    max_freq_khz: 20000
+    mount_point: /sdcard
+    pins:
+      mosi: 34
+      miso: 33
+      sclk: 35
+  battery:
+    enabled: true
+    driver: BQ27220
+    i2c_port: 0
+    i2c_addr: 0x55
+  usb:
+    tiny_usb: true
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_32kb: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: true
+  lora: true
+  camera: false
+  audio: true
+  keyboard: true
+
+lvgl:
+  font_size: 14
+  theme: Dark
+  ui_density: compact
+
+distribution:
+  incubating: false
+  tags:
+    - spi
+    - st7796
+    - 2.33-inch
+    - keyboard
+    - lora
+    - lilygo

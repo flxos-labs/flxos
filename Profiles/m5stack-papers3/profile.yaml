@@ -1,0 +1,113 @@
+# FlxOS Profile: M5Stack PaperS3 - ESP32-S3, 4.7" 540x960 E-Ink (EPDiy, GT911)
+id: m5stack-papers3
+vendor: M5Stack
+name:
+  - PaperS3
+  - M5Stack PaperS3
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: true
+    mode: OPI
+    speed: 80M
+  display:
+    enabled: true
+    driver: EPDIY
+    bus: epdiy
+    width: 540
+    height: 960
+    color_depth: 8
+    size_inches: 4.7
+    rotation: 1
+    pins:
+      cs: 47
+      dc: -1
+      rst: -1
+      busy: -1
+      bckl: -1
+      mosi: 38
+      sclk: 39
+      miso: 40
+  touch:
+    enabled: true
+    driver: GT911
+    bus: i2c
+    pins:
+      cs: -1
+      int: -1
+    i2c:
+      port: 0
+      addr: 0x5D
+      sda: 41
+      scl: 42
+  sdcard:
+    enabled: true
+    bus: spi
+    cs: 47
+    spi_host: 2
+    max_freq_khz: 20000
+    mount_point: /sdcard
+    pins:
+      mosi: 38
+      miso: 40
+      sclk: 39
+  battery:
+    enabled: true
+    driver: ADC
+    adc_channel: 2
+    adc_unit: 1
+    atten: DB_12
+    multiplier: 2.0
+    power_off_pin: 44
+    charge_status_pin: 4
+    usb_detect_pin: 5
+  buzzer:
+    enabled: true
+    pin: 21
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_32kb: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+
+lvgl:
+  font_size: 24
+  theme: Mono
+  ui_density: normal
+
+sdkconfig:
+  CONFIG_EPD_DISPLAY_TYPE_ED047TC2: "y"
+  CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "n"
+  CONFIG_SPIRAM_RODATA: "n"
+  CONFIG_SPIRAM_XIP_FROM_PSRAM: "n"
+
+distribution:
+  incubating: true
+  tags:
+    - epdiy
+    - eink
+    - 4.7-inch
+    - touch
+    - gt911
+    - m5stack

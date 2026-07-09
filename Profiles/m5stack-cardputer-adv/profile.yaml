@@ -1,0 +1,131 @@
+# FlxOS Profile: M5Stack Cardputer Adv
+id: m5stack-cardputer-adv
+vendor: M5Stack
+name:
+  - Cardputer Adv
+  - M5Stack Cardputer Adv
+target: esp32s3
+flash_size: 8MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+lvgl_ui_density: compact
+
+hardware:
+  init:
+    enabled: true
+  spiram:
+    enabled: false
+  display:
+    enabled: true
+    driver: ST7789
+    bus: spi
+    width: 135
+    height: 240
+    color_depth: 16
+    size_inches: 1.14
+    rotation: 1
+    pins:
+      cs: 37
+      dc: 34
+      rst: 33
+      busy: -1
+      bckl: 38
+      mosi: 35
+      sclk: 36
+      miso: -1
+    spi:
+      host: 2
+      mode: 0
+      freq_write: 62500000
+      freq_read: 16000000
+      three_wire: false
+      dma_channel: 0
+    backlight:
+      freq: 20000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 40
+      offset_y: 53
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: true
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: false
+  sdcard:
+    enabled: true
+    bus: spi
+    cs: 12
+    spi_host: 3
+    max_freq_khz: 4000
+    mount_point: /sdcard
+    pins:
+      mosi: 14
+      miso: 39
+      sclk: 40
+  battery:
+    enabled: true
+    adc_unit: 1
+    adc_channel: 9
+    voltage_max: 4200
+    voltage_min: 3300
+    divider_factor: 200
+  power:
+    on_pins: []
+  keyboard:
+    type: tca8418
+    i2c:
+      port: 0
+      sda: 8
+      scl: 9
+      freq: 400000
+  usb:
+    tiny_usb: true
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_64kb: true
+  data_cache_line_64b: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: false
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+lvgl:
+  font_size: 14
+  theme: Dark
+  ui_density: compact
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+  keyboard: true
+  trackball: false
+
+distribution:
+  incubating: true
+  warning_message: "Cardputer Adv only (TCA8418 Keyboard)"
+  tags:
+    - spi
+    - st7789
+    - 1.14-inch
+    - keyboard
+    - compact
+
+webserver:
+  enabled: true

@@ -35,6 +35,7 @@
 #endif
 #if LV_USE_LOVYAN_GFX
 #include <flx/system/managers/NotificationManager.hpp>
+#include <flx/system/services/ScreenRecorderService.hpp>
 #include <flx/system/services/ScreenshotService.hpp>
 #include <font/lv_symbol_def.h>
 #endif
@@ -128,6 +129,7 @@ void SystemManager::registerServices() {
 #if LV_USE_LOVYAN_GFX
 	registry.addService(std::shared_ptr<flx::services::IService>(&NotificationManager::getInstance(), noDelete));
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenshotService::getInstance(), noDelete));
+	registry.addService(std::shared_ptr<flx::services::IService>(&flx::services::ScreenRecorderService::getInstance(), noDelete));
 #endif
 #if CONFIG_FLXOS_WEBSERVER_ENABLED
 	registry.addService(std::shared_ptr<flx::services::IService>(&flx::system::services::WebServerService::getInstance(), noDelete));

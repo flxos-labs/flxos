@@ -424,61 +424,99 @@ def derive_topology_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
         )
         peripherals["display"] = display_peripheral
 
-    if bool(touch.get("enabled")) and str(touch.get("bus", "spi")).lower() == "spi":
-        touch_spi = _as_dict(touch.get("spi"))
-        touch_host_raw = touch_spi.get("host", -1)
-        touch_host_literal = _spi_host_literal(touch_host_raw, default=display_host_num or 2)
-        touch_host_num = _spi_host_number(touch_host_literal)
+    if bool(touch.get("enabled")):
+        touch_bus_type = str(touch.get("bus", "spi")).strip().lower()
+        if touch_bus_type == "spi":
+            touch_spi = _as_dict(touch.get("spi"))
+            touch_host_raw = touch_spi.get("host", -1)
+            touch_host_literal = _spi_host_literal(touch_host_raw, default=display_host_num or 2)
+            touch_host_num = _spi_host_number(touch_host_literal)
 
-        touch_bus_shared = bool(touch_spi.get("bus_shared", False))
-        touch_separate_pins = bool(touch_spi.get("separate_pins", False))
+            touch_bus_shared = bool(touch_spi.get("bus_shared", False))
+            touch_separate_pins = bool(touch_spi.get("separate_pins", False))
 
-        same_host_as_display = (
-            display_host_literal is not None
-            and touch_host_literal == display_host_literal
-        ) or (touch_host_num is None and display_host_literal is not None)
+            same_host_as_display = (
+                display_host_literal is not None
+                and touch_host_literal == display_host_literal
+            ) or (touch_host_num is None and display_host_literal is not None)
 
-        share_display_bus = bool(
-            display_bus_name
-            and touch_bus_shared
-            and not touch_separate_pins
-            and (same_host_as_display or _is_disabled_pin(touch_host_raw))
-        )
+            share_display_bus = bool(
+                display_bus_name
+                and touch_bus_shared
+                and not touch_separate_pins
+                and (same_host_as_display or _is_disabled_pin(touch_host_raw))
+            )
 
-        touch_bus_name: str
-        if share_display_bus and display_bus_name:
-            touch_bus_name = display_bus_name
-        else:
-            preferred = "spi_touch" if touch_separate_pins else _spi_bus_name(touch_host_literal, "spi_touch")
-            touch_bus_name = preferred if preferred not in buses else _unique_bus_name(preferred, buses)
-            touch_bus_cfg = _compact_dict(
+            touch_bus_name: str
+            if share_display_bus and display_bus_name:
+                touch_bus_name = display_bus_name
+            else:
+                preferred = "spi_touch" if touch_separate_pins else _spi_bus_name(touch_host_literal, "spi_touch")
+                touch_bus_name = preferred if preferred not in buses else _unique_bus_name(preferred, buses)
+                touch_bus_cfg = _compact_dict(
+                    {
+                        "type": "spi",
+                        "host": touch_host_literal,
+                        "mode": touch_spi.get("mode", 0),
+                        "freq_hz": touch_spi.get("freq"),
+                        "shared_with": display_bus_name if touch_bus_shared and display_bus_name else None,
+                        "pins": _filter_pins(_as_dict(touch.get("pins")), ("mosi", "miso", "sclk")),
+                    }
+                )
+                buses[touch_bus_name] = touch_bus_cfg
+
+            touch_peripheral = _compact_dict(
                 {
-                    "type": "spi",
-                    "host": touch_host_literal,
-                    "mode": touch_spi.get("mode", 0),
-                    "freq_hz": touch_spi.get("freq"),
-                    "shared_with": display_bus_name if touch_bus_shared and display_bus_name else None,
-                    "pins": _filter_pins(_as_dict(touch.get("pins")), ("mosi", "miso", "sclk")),
+                    "type": "touch",
+                    "driver": touch.get("driver"),
+                    "bus": touch_bus_name,
+                    "pins": _filter_pins(_as_dict(touch.get("pins")), ("cs", "int")),
+                    "calibration": {
+                        "x_min": get_nested(touch, "calibration.x_min"),
+                        "x_max": get_nested(touch, "calibration.x_max"),
+                        "y_min": get_nested(touch, "calibration.y_min"),
+                        "y_max": get_nested(touch, "calibration.y_max"),
+                        "offset_rotation": get_nested(touch, "calibration.offset_rotation"),
+                    },
                 }
             )
-            buses[touch_bus_name] = touch_bus_cfg
+            peripherals["touch"] = touch_peripheral
 
-        touch_peripheral = _compact_dict(
-            {
-                "type": "touch",
-                "driver": touch.get("driver"),
-                "bus": touch_bus_name,
-                "pins": _filter_pins(_as_dict(touch.get("pins")), ("cs", "int")),
-                "calibration": {
-                    "x_min": get_nested(touch, "calibration.x_min"),
-                    "x_max": get_nested(touch, "calibration.x_max"),
-                    "y_min": get_nested(touch, "calibration.y_min"),
-                    "y_max": get_nested(touch, "calibration.y_max"),
-                    "offset_rotation": get_nested(touch, "calibration.offset_rotation"),
-                },
-            }
-        )
-        peripherals["touch"] = touch_peripheral
+        elif touch_bus_type == "i2c":
+            touch_i2c = _as_dict(touch.get("i2c"))
+            touch_port = touch_i2c.get("port", 0)
+            touch_sda = touch_i2c.get("sda", -1)
+            touch_scl = touch_i2c.get("scl", -1)
+            touch_freq = touch_i2c.get("freq", 400000)
+
+            touch_bus_name = f"i2c{touch_port}"
+            buses.setdefault(
+                touch_bus_name,
+                {
+                    "type": "i2c",
+                    "port": touch_port,
+                    "sda": touch_sda,
+                    "scl": touch_scl,
+                    "freq": touch_freq,
+                }
+            )
+
+            touch_peripheral = _compact_dict(
+                {
+                    "type": "touch",
+                    "driver": touch.get("driver"),
+                    "bus": touch_bus_name,
+                    "pins": _filter_pins(_as_dict(touch.get("pins")), ("cs", "int")),
+                    "calibration": {
+                        "x_min": get_nested(touch, "calibration.x_min"),
+                        "x_max": get_nested(touch, "calibration.x_max"),
+                        "y_min": get_nested(touch, "calibration.y_min"),
+                        "y_max": get_nested(touch, "calibration.y_max"),
+                        "offset_rotation": get_nested(touch, "calibration.offset_rotation"),
+                    },
+                }
+            )
+            peripherals["touch"] = touch_peripheral
 
     if bool(sdcard.get("enabled")):
         sd_bus_type = str(sdcard.get("bus", "spi")).strip().lower()
@@ -583,12 +621,42 @@ def derive_topology_from_profile(profile: dict[str, Any]) -> dict[str, Any]:
         )
         peripherals["board_power"] = board_power_peripheral
 
-    keyboard = _as_dict(hardware.get("keyboard"))
-    if keyboard and keyboard.get("type") == "matrix_demux":
-        peripherals["keyboard"] = {
-            "type": "keyboard",
-            "driver": "matrix_demux"
+    pmic = hardware.get("pmic")
+    if pmic:
+        peripherals["pmic"] = {
+            "type": "pmic",
+            "model": str(pmic).strip().lower()
         }
+
+    keyboard = _as_dict(hardware.get("keyboard"))
+    if keyboard:
+        kb_type = keyboard.get("type")
+        if kb_type == "matrix_demux":
+            peripherals["keyboard"] = {
+                "type": "keyboard",
+                "driver": "matrix_demux"
+            }
+        elif kb_type == "tca8418":
+            i2c_cfg = _as_dict(keyboard.get("i2c"))
+            i2c_port = i2c_cfg.get("port", 0)
+            i2c_sda = i2c_cfg.get("sda", 8)
+            i2c_scl = i2c_cfg.get("scl", 9)
+            i2c_freq = i2c_cfg.get("freq", 400000)
+            
+            i2c_bus_name = f"i2c{i2c_port}"
+            buses[i2c_bus_name] = {
+                "type": "i2c",
+                "port": i2c_port,
+                "sda": i2c_sda,
+                "scl": i2c_scl,
+                "freq": i2c_freq
+            }
+            
+            peripherals["keyboard"] = {
+                "type": "keyboard",
+                "driver": "tca8418",
+                "bus": i2c_bus_name
+            }
 
     return topology
 
@@ -692,9 +760,19 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
         )
 
     has_cardputer_keyboard = False
+    has_cardputer_adv_keyboard = False
+    pmic_model = None
     for per_cfg in peripherals.values():
-        if isinstance(per_cfg, dict) and per_cfg.get("type") == "keyboard" and per_cfg.get("driver") == "matrix_demux":
-            has_cardputer_keyboard = True
+        if isinstance(per_cfg, dict):
+            ptype = per_cfg.get("type")
+            if ptype == "keyboard":
+                drv = per_cfg.get("driver")
+                if drv == "matrix_demux":
+                    has_cardputer_keyboard = True
+                elif drv == "tca8418":
+                    has_cardputer_adv_keyboard = True
+            elif ptype == "pmic":
+                pmic_model = per_cfg.get("model")
 
     lines: list[str] = [
         f"// {GENERATED_SIGNATURE}",
@@ -708,10 +786,12 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
         "#include <array>",
         *(["#include <driver/gpio.h>"] if board_power_pins else []),
         "#include <esp_err.h>",
+        *(["#include <freertos/FreeRTOS.h>", "#include <freertos/task.h>"] if pmic_model else []),
         "",
         "#include <flx/hal/DeviceRegistry.hpp>",
         "#include <flx/hal/display/LgfxDisplayDevice.hpp>",
         *(["#include <flx/hal/input/CardputerMatrixKeyboard.hpp>"] if has_cardputer_keyboard else []),
+        *(["#include <flx/hal/input/CardputerAdvKeyboard.hpp>"] if has_cardputer_adv_keyboard else []),
         "#include <flx/hal/touch/LgfxTouchDevice.hpp>",
         "#include <flx/hal/sdcard/SpiSdCardDevice.hpp>",
         "#include <flx/hal/spi/EspSpiBus.hpp>",
@@ -814,14 +894,72 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
             lines.append(f"    registry.registerDevice(std::make_shared<flx::hal::spi::EspSpiBus>({host}, {mosi}, {miso}, {sclk}));")
         elif cfg.get("type") == "i2c":
             port = cfg.get("port", "0")
+            sda = cfg.get("sda", -1)
+            scl = cfg.get("scl", -1)
+            freq = cfg.get("freq", 400000)
             lines.extend([
                 "    {",
-                f"        auto i2c_bus = std::make_shared<flx::hal::i2c::EspI2cBus>({port}, -1, -1, 400000);",
+                f"        auto i2c_bus = std::make_shared<flx::hal::i2c::EspI2cBus>({port}, {sda}, {scl}, {freq});",
                 "        if (i2c_bus->start()) {",
                 "            registry.registerDevice(i2c_bus);",
                 "        }",
                 "    }"
             ])
+
+    if pmic_model == "axp192":
+        lines.extend([
+            "    {",
+            "        auto i2c_bus = registry.findFirst<flx::hal::i2c::II2cBus>(flx::hal::IDevice::Type::I2c);",
+            "        if (i2c_bus) {",
+            "            i2c_bus->writeRegister8(0x34, 0x28, 0xF0); // LDO2 = 3.3V, LDO3 = 0V",
+            "            i2c_bus->writeRegister8(0x27, 104); // DCDC3 = 3.3V (Backlight)",
+            "            uint8_t val = 0;",
+            "            if (i2c_bus->readRegister8(0x34, 0x12, val)) {",
+            "                i2c_bus->writeRegister8(0x34, 0x12, val | 0x06); // Enable LDO2 and DCDC3",
+            "            } else {",
+            "                i2c_bus->writeRegister8(0x34, 0x12, 0x06);",
+            "            }",
+            "            i2c_bus->writeRegister8(0x34, 0x95, 0x84); // GPIO4 output enable",
+            "            i2c_bus->writeRegister8(0x34, 0x96, 0x00); // GPIO4 Low (RST LCD)",
+            "            vTaskDelay(pdMS_TO_TICKS(10));",
+            "            i2c_bus->writeRegister8(0x34, 0x96, 0x02); // GPIO4 High",
+            "        }",
+            "    }"
+        ])
+    elif pmic_model == "axp2101":
+        lines.extend([
+            "    {",
+            "        auto i2c_bus = registry.findFirst<flx::hal::i2c::II2cBus>(flx::hal::IDevice::Type::I2c);",
+            "        if (i2c_bus) {",
+            "            // AW9523 GPIO expander init first",
+            "            i2c_bus->writeRegister8(0x58, 0x11, 0x10); // Port 0 and Port 1 push-pull mode",
+            "            i2c_bus->writeRegister8(0x58, 0x0C, 0x00); // Port 0 as outputs",
+            "            i2c_bus->writeRegister8(0x58, 0x0D, 0x00); // Port 1 as outputs",
+            "            i2c_bus->writeRegister8(0x58, 0x02, 0x17); // Enable touch, bus, Speaker, SD",
+            "            i2c_bus->writeRegister8(0x58, 0x03, 0x82); // Enable LCD P1_1, boost P1_7",
+            "",
+            "            // AXP2101 init",
+            "            i2c_bus->writeRegister8(0x34, 0x90, 0xBF); // Enable ALDOs/BLDOs",
+            "            i2c_bus->writeRegister8(0x34, 0x92, 13);  // ALDO1 = 1.8V",
+            "            i2c_bus->writeRegister8(0x34, 0x93, 28);  // ALDO2 = 3.3V",
+            "            i2c_bus->writeRegister8(0x34, 0x94, 28);  // ALDO3 = 3.3V",
+            "            i2c_bus->writeRegister8(0x34, 0x95, 28);  // ALDO4 = 3.3V",
+            "            i2c_bus->writeRegister8(0x34, 0x27, 0x00); // PowerKey",
+            "            i2c_bus->writeRegister8(0x34, 0x69, 0x11); // CHGLED",
+            "            i2c_bus->writeRegister8(0x34, 0x10, 0x30); // PMU Common",
+            "            i2c_bus->writeRegister8(0x34, 0x30, 0x0F); // ADC Enable",
+            "            i2c_bus->writeRegister8(0x34, 0x80, 0x05); // DCDC1 / DCDC3 ON",
+            "            i2c_bus->writeRegister8(0x34, 0x82, 0x12); // DCDC1 = 3.3V",
+            "            i2c_bus->writeRegister8(0x34, 0x84, 0x6A); // DCDC3 = 3.3V",
+            "            i2c_bus->writeRegister8(0x34, 0x99, 26);   // BLDO1 = 2.6V (backlight)",
+            "",
+            "            // Reset sequence",
+            "            i2c_bus->writeRegister8(0x58, 0x03, 0x80); // LCD reset Low (P1_1 = 0)",
+            "            vTaskDelay(pdMS_TO_TICKS(10));",
+            "            i2c_bus->writeRegister8(0x58, 0x03, 0x82); // LCD reset High (P1_1 = 1)",
+            "        }",
+            "    }"
+        ])
 
     for per_name in sorted(
         peripherals.keys(),
@@ -844,6 +982,16 @@ def render_cpp(profile_id: str, source_ref: str, hw: dict[str, Any]) -> str:
                 "    {",
                 "        auto keyboard = std::make_shared<flx::hal::input::CardputerMatrixKeyboard>();",
                 "        if (keyboard->start()) registry.registerDevice(keyboard);",
+                "    }"
+            ])
+        elif ptype == "keyboard" and cfg.get("driver") == "tca8418":
+            lines.extend([
+                "    {",
+                "        auto i2c_bus = registry.findFirst<flx::hal::i2c::II2cBus>(flx::hal::IDevice::Type::I2c);",
+                "        if (i2c_bus) {",
+                "            auto keyboard = std::make_shared<flx::hal::input::CardputerAdvKeyboard>(i2c_bus);",
+                "            if (keyboard->start()) registry.registerDevice(keyboard);",
+                "        }",
                 "    }"
             ])
         elif ptype == "touch":

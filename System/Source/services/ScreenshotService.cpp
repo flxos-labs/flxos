@@ -121,7 +121,7 @@ void ScreenshotService::onStop() {
 	Log::info(TAG, "Screenshot service stopped");
 }
 
-bool ScreenshotService::capture(const std::string& savePath) {
+bool ScreenshotService::capture(const std::string& savePath, bool notify) {
 	flx::core::GuiLock::lock();
 
 	lv_obj_t* screen = lv_screen_active();
@@ -178,27 +178,31 @@ bool ScreenshotService::capture(const std::string& savePath) {
 
 	if (error) {
 		Log::error(TAG, "PNG encode failed (error %u): %s", error, lodepng_error_text(error));
-		flx::system::NotificationManager::getInstance().addNotification(
-			"Screenshot Failed",
-			"Could not save image",
-			"System",
-			LV_SYMBOL_WARNING,
-			2 // High priority
-		);
+		if (notify) {
+			flx::system::NotificationManager::getInstance().addNotification(
+				"Screenshot Failed",
+				"Could not save image",
+				"System",
+				LV_SYMBOL_WARNING,
+				2 // High priority
+			);
+		}
 		return false;
 	}
 
 	Log::info(TAG, "Screenshot saved: %s (%dx%d)", savePath.c_str(), width, height);
-	flx::system::NotificationManager::getInstance().addNotification(
-		"Screenshot Saved",
-		savePath,
-		"System",
-		LV_SYMBOL_IMAGE,
-		1,
-		true,
-		"",
-		"com.flxos.imageviewer",
-		savePath);
+	if (notify) {
+		flx::system::NotificationManager::getInstance().addNotification(
+			"Screenshot Saved",
+			savePath,
+			"System",
+			LV_SYMBOL_IMAGE,
+			1,
+			true,
+			"",
+			"com.flxos.imageviewer",
+			savePath);
+	}
 	return true;
 }
 

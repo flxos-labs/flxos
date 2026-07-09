@@ -74,11 +74,36 @@ bool PowerManager::onStart() {
 	}
 
 	refresh();
+
+	esp_timer_create_args_t const timer_args = {
+		.callback = [](void* /*arg*/) {
+			PowerManager::getInstance().refresh();
+		},
+		.arg = nullptr,
+		.dispatch_method = ESP_TIMER_TASK,
+		.name = "power_poll",
+		.skip_unhandled_events = true,
+	};
+	if (esp_timer_create(&timer_args, &m_timer) == ESP_OK) {
+		// Poll every 10 seconds (10,000,000 microseconds)
+		esp_timer_start_periodic(m_timer, 10000000);
+		Log::info(TAG, "Battery polling timer started");
+	} else {
+		Log::error(TAG, "Failed to create battery polling timer");
+	}
+
 	Log::info(TAG, "Power service started");
 	return true;
 }
 
 void PowerManager::onStop() {
+	// Stop and delete the periodic polling timer
+	if (m_timer) {
+		esp_timer_stop(m_timer);
+		esp_timer_delete(m_timer);
+		m_timer = nullptr;
+	}
+
 	// Unsubscribe from HAL events
 	if (m_powerDevice && m_halSubscriptionId >= 0) {
 		m_powerDevice->unsubscribePowerEvents(m_halSubscriptionId);

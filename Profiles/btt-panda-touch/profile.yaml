@@ -1,0 +1,138 @@
+# FlxOS Profile: BigTreeTech Panda Touch / K Touch 5" 800x480 (RGB)
+id: btt-panda-touch
+vendor: BigTreeTech
+name:
+  - Panda Touch
+  - K Touch
+  - BigTreeTech Panda Touch
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: true
+    mode: OCT
+    speed: 120M
+  display:
+    enabled: true
+    driver: RGB
+    bus: rgb
+    width: 800
+    height: 480
+    color_depth: 16
+    size_inches: 5.0
+    rotation: 0
+    pins:
+      cs: -1
+      dc: -1
+      rst: -1
+      busy: -1
+      bckl: -1
+      mosi: -1
+      sclk: -1
+      miso: -1
+    rgb:
+      freq_write: 14000000
+      pclk: 5
+      vsync: -1
+      hsync: -1
+      henable: 38
+      d0: 17
+      d1: 18
+      d2: 48
+      d3: 47
+      d4: 39
+      d5: 11
+      d6: 12
+      d7: 13
+      d8: 14
+      d9: 15
+      d10: 16
+      d11: 6
+      d12: 7
+      d13: 8
+      d14: 9
+      d15: 10
+      hsync_pulse_width: 4
+      hsync_back_porch: 8
+      hsync_front_porch: 8
+      vsync_pulse_width: 4
+      vsync_back_porch: 16
+      vsync_front_porch: 16
+      hsync_polarity: false
+      vsync_polarity: false
+      pclk_active_neg: true
+      de_idle_high: false
+      pclk_idle_high: true
+    backlight:
+      freq: 20000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 0
+      offset_y: 0
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: false
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: true
+    driver: GT911
+    bus: i2c
+    pins:
+      cs: -1
+      int: 40
+    i2c:
+      port: 0
+      addr: 0x5D
+      sda: 2
+      scl: 1
+  sdcard:
+    enabled: false
+  battery:
+    enabled: false
+  usb:
+    usb_host: true
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_32kb: true
+
+console:
+  usb_serial_jtag: true
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+
+lvgl:
+  font_size: 18
+  theme: Dark
+  ui_density: normal
+
+distribution:
+  incubating: false
+  tags:
+    - rgb
+    - 5.0-inch
+    - touch
+    - gt911
+    - bigtreetech
+    - panda-touch

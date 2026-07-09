@@ -1,0 +1,143 @@
+# FlxOS Profile: Cheap Yellow Display 4.3" 800x480 (CYD 8048S043C)
+id: cyd-8048s043c
+vendor: CYD
+name:
+  - 8048S043C
+  - CYD 8048S043C
+target: esp32s3
+flash_size: 16MB
+flash_mode: QIO
+headless: false
+inherits: _bases/base-esp32-spi
+
+hardware:
+  spiram:
+    enabled: true
+    mode: OCT
+    speed: 80M
+  display:
+    enabled: true
+    driver: RGB
+    bus: rgb
+    width: 800
+    height: 480
+    color_depth: 16
+    size_inches: 4.3
+    rotation: 0
+    pins:
+      cs: -1
+      dc: -1
+      rst: -1
+      busy: -1
+      bckl: 2
+      mosi: -1
+      sclk: -1
+      miso: -1
+    rgb:
+      freq_write: 16000000
+      pclk: 42
+      vsync: 41
+      hsync: 39
+      henable: 40
+      d0: 8
+      d1: 3
+      d2: 46
+      d3: 9
+      d4: 1
+      d5: 5
+      d6: 6
+      d7: 7
+      d8: 15
+      d9: 16
+      d10: 4
+      d11: 45
+      d12: 48
+      d13: 47
+      d14: 21
+      d15: 14
+      hsync_pulse_width: 4
+      hsync_back_porch: 8
+      hsync_front_porch: 8
+      vsync_pulse_width: 4
+      vsync_back_porch: 8
+      vsync_front_porch: 8
+      hsync_polarity: false
+      vsync_polarity: false
+      pclk_active_neg: true
+      de_idle_high: false
+      pclk_idle_high: false
+    backlight:
+      freq: 20000
+      pwm_channel: 0
+      invert: false
+    panel:
+      offset_x: 0
+      offset_y: 0
+      offset_rotation: 0
+      dummy_read_pixel: 8
+      dummy_read_bits: 1
+      readable: false
+      bus_shared: false
+      invert: false
+      rgb_order: false
+      dlen_16bit: false
+  touch:
+    enabled: true
+    driver: GT911
+    bus: i2c
+    pins:
+      cs: -1
+      int: -1
+    i2c:
+      port: 0
+      addr: 0x5D
+      sda: 19
+      scl: 20
+  sdcard:
+    enabled: true
+    bus: spi
+    cs: 10
+    spi_host: 2
+    max_freq_khz: 20000
+    mount_point: /sdcard
+    pins:
+      mosi: 11
+      miso: 13
+      sclk: 12
+  battery:
+    enabled: false
+
+target_config:
+  instruction_cache_32kb: true
+  data_cache_32kb: true
+
+console:
+  usb_serial_jtag: false
+
+cli:
+  enabled: true
+  prompt: "flxos> "
+  max_cmdline_length: 256
+
+capabilities:
+  wifi: true
+  bluetooth: true
+  ble: true
+  gps: false
+  lora: false
+  camera: false
+  audio: false
+
+lvgl:
+  font_size: 18
+  theme: Dark
+  ui_density: normal
+
+distribution:
+  incubating: false
+  tags:
+    - rgb
+    - 4.3-inch
+    - touch
+    - gt911
+    - cyd
