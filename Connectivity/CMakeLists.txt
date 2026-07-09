@@ -1,6 +1,7 @@
 set(CONNECTIVITY_SRCS "Source/ConnectivityManager.cpp")
-set(CONNECTIVITY_REQUIRES Core Services esp_event mbedtls esp_wifi)
+set(CONNECTIVITY_REQUIRES Core Services esp_event mbedtls esp_wifi dhcpserver)
 set(CONNECTIVITY_PRIV_REQUIRES nvs_flash esp_netif lwip esp_timer System)
+
 
 message("CONNECTIVITY CMake: FLXOS_HAS_WIFI = '${FLXOS_HAS_WIFI}'")
 message("CONNECTIVITY CMake: FLXOS_HAS_BLUETOOTH = '${FLXOS_HAS_BLUETOOTH}'")
