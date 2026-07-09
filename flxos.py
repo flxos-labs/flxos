@@ -1748,6 +1748,12 @@ def _regenerate_cdn_index():
     (RELEASES_DIR / "index.json").write_text(json.dumps(entries, indent=2) + "\n", encoding="utf-8")
 
 
+def cmd_cdn_index(args):
+    """Regenerate CDN index.json file."""
+    _regenerate_cdn_index()
+    return 0
+
+
 def _get_cached_idf_target() -> Optional[str]:
     """Read IDF_TARGET from CMake cache — the actual source of truth for compiler toolchain."""
     cache_file = BUILD_DIR / "CMakeCache.txt"
@@ -1846,6 +1852,9 @@ def main():
     p_cdn = sub.add_parser("cdn", help="Generate ESP Web Tools CDN manifests")
     p_cdn.add_argument("version", help="Release version (e.g. 1.2.3 or v1.2.3)")
 
+    # cdn-index
+    sub.add_parser("cdn-index", help="Regenerate releases/index.json from all cdn manifests")
+
     # doctor
     sub.add_parser("doctor", help="Check build environment")
 
@@ -1874,6 +1883,7 @@ def main():
         "flash": cmd_flash,
         "release": cmd_release,
         "cdn": cmd_cdn,
+        "cdn-index": cmd_cdn_index,
         "doctor": cmd_doctor,
         "hwgen": cmd_hwgen,
     }
