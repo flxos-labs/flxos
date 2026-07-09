@@ -393,9 +393,8 @@ WiFiStats SystemInfoService::getWiFiStats() {
 	// Retrieve IP address from ConnectivityManager
 	std::string ip = flx::connectivity::ConnectivityManager::getInstance().getWiFiIpObservable().get();
 	stats.ipAddress = !ip.empty() ? ip : "0.0.0.0";
-}
 
-return stats;
+	return stats;
 }
 
 std::vector<TaskInfo> SystemInfoService::getTaskList(size_t maxTasks) {
