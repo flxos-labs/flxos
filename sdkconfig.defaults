@@ -37,7 +37,7 @@ CONFIG_WL_SECTOR_SIZE_512=y
 CONFIG_WL_SECTOR_MODE_PERF=y
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y
 CONFIG_COMPILER_CXX_RTTI=n
-CONFIG_FLXOS_PROFILE="generic-esp32p4"
+CONFIG_FLXOS_PROFILE="m5stack-tab5"
 
 # === Memory Optimizations ===
 # WiFi: reduce static RX buffers from 10 → 6 (ESP-IDF default), saves ~6.5 KB
