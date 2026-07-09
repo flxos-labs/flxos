@@ -41,6 +41,9 @@ else()
     if(NOT FLXOS_KEYBOARD_TYPE STREQUAL "matrix_demux")
         list(FILTER HALMODULE_SRCS EXCLUDE REGEX "Source/input/CardputerMatrixKeyboard\\.cpp")
     endif()
+    if(NOT FLXOS_KEYBOARD_TYPE STREQUAL "tca8418" AND NOT FLXOS_KEYBOARD_TYPE STREQUAL "matrix_demux")
+        list(FILTER HALMODULE_SRCS EXCLUDE REGEX "Source/input/CardputerKeyboard.*\\.cpp")
+    endif()
 endif()
 
 # GPS drivers

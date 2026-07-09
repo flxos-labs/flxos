@@ -378,7 +378,18 @@ bool VideoPlayerApp::readNextFrame() {
 	uint16_t y = static_cast<uint16_t>(hdr[6] | (hdr[7] << 8));
 	uint16_t w = static_cast<uint16_t>(hdr[8] | (hdr[9] << 8));
 	uint16_t h = static_cast<uint16_t>(hdr[10] | (hdr[11] << 8));
-	[[maybe_unused]] uint32_t payloadBytes = static_cast<uint32_t>(hdr[12] | (hdr[13] << 8) | (hdr[14] << 16) | (hdr[15] << 24));
+	uint32_t payloadBytes = static_cast<uint32_t>(hdr[12] | (hdr[13] << 8) | (hdr[14] << 16) | (hdr[15] << 24));
+
+	if (w > m_videoWidth || h > m_videoHeight) {
+		Log::error(TAG, "Frame dimensions %ux%u exceed video dimensions %ux%u", w, h, m_videoWidth, m_videoHeight);
+		return false;
+	}
+
+	uint32_t expectedPayload = static_cast<uint32_t>(w) * h * 2U;
+	if (payloadBytes != expectedPayload) {
+		Log::error(TAG, "Frame payload size mismatch: expected %u, got %u", expectedPayload, payloadBytes);
+		return false;
+	}
 
 	uint32_t rowBytes = w * 2U;
 	uint8_t* rowBuf = static_cast<uint8_t*>(std::malloc(rowBytes));
