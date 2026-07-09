@@ -27,6 +27,16 @@ class HotspotManager : public flx::Singleton<HotspotManager> {
 
 public:
 
+	struct ClientInfo {
+		uint8_t mac[6] {};
+		int aid {};
+		std::string hostname {};
+		std::string ip {};
+		int8_t rssi {};
+		uint32_t connected_duration {}; // Seconds
+		uint64_t connection_timestamp {};
+	};
+
 #if FLXOS_WIFI_ENABLED
 	esp_err_t init(flx::Observable<int32_t>* enabled_subject, flx::Observable<int32_t>* client_count_subject);
 	esp_err_t start(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);
@@ -59,15 +69,6 @@ public:
 		void* p); // Using void* to avoid pbuf header requirement in hpp
 	static void startUsageTimer();
 
-	struct ClientInfo {
-		uint8_t mac[6] {};
-		int aid {};
-		std::string hostname {};
-		std::string ip {};
-		int8_t rssi {};
-		uint32_t connected_duration {}; // Seconds
-		uint64_t connection_timestamp {};
-	};
 	std::vector<ClientInfo> getConnectedClients();
 #else
 	esp_err_t init(flx::Observable<int32_t>*, flx::Observable<int32_t>*) { return 0; }
@@ -97,15 +98,6 @@ public:
 	void processIncomingPacket(void*) {}
 	static void startUsageTimer() {}
 
-	struct ClientInfo {
-		uint8_t mac[6] {};
-		int aid {};
-		std::string hostname {};
-		std::string ip {};
-		int8_t rssi {};
-		uint32_t connected_duration {}; // Seconds
-		uint64_t connection_timestamp {};
-	};
 	std::vector<ClientInfo> getConnectedClients() { return {}; }
 #endif
 
