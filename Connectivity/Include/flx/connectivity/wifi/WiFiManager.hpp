@@ -13,6 +13,21 @@ struct wifi_ap_record_t {
 	uint8_t primary;
 	int authmode;
 };
+#ifndef WIFI_AUTH_WPA2_PSK
+#define WIFI_AUTH_WPA2_PSK 0
+#endif
+#ifndef WIFI_AUTH_WEP
+#define WIFI_AUTH_WEP 1
+#endif
+#ifndef WIFI_AUTH_WPA_PSK
+#define WIFI_AUTH_WPA_PSK 2
+#endif
+#ifndef WIFI_AUTH_WPA_WPA2_PSK
+#define WIFI_AUTH_WPA_WPA2_PSK 3
+#endif
+#ifndef WIFI_AUTH_WPA3_PSK
+#define WIFI_AUTH_WPA3_PSK 4
+#endif
 #endif
 #include <atomic>
 #include <esp_timer.h>
@@ -41,6 +56,7 @@ class WiFiManager : public flx::Singleton<WiFiManager> {
 
 public:
 
+#if FLXOS_WIFI_ENABLED
 	esp_err_t init(flx::Observable<int32_t>* connected_subject, flx::StringObservable* ssid_subject, flx::StringObservable* ip_subject, flx::Observable<int32_t>* status_subject);
 	esp_err_t connect(const char* ssid, const char* password);
 	esp_err_t disconnect();
@@ -59,9 +75,26 @@ public:
 		m_got_ip_callback = callback;
 	}
 
-	/// Scan for visible networks and connect to the highest-priority known network.
-	/// Used for smart auto-connect after boot and after disconnections.
 	esp_err_t connectBestKnownNetwork();
+#else
+	esp_err_t init(flx::Observable<int32_t>*, flx::StringObservable*, flx::StringObservable*, flx::Observable<int32_t>*) { return 0; }
+	esp_err_t connect(const char*, const char*) { return 0; }
+	esp_err_t disconnect() { return 0; }
+	bool isConnected() const { return false; }
+	static int8_t getRssi() { return 0; }
+
+	esp_err_t setEnabled(bool) { return 0; }
+	bool isEnabled() const { return false; }
+
+	using ScanCallback =
+		std::function<void(const std::vector<wifi_ap_record_t>&)>;
+	esp_err_t scan(ScanCallback) { return 0; }
+
+	using GotIPCallback = std::function<void()>;
+	void setOnGotIPCallback(GotIPCallback) {}
+
+	esp_err_t connectBestKnownNetwork() { return 0; }
+#endif
 
 private:
 

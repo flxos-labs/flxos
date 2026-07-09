@@ -5,17 +5,23 @@
 #include <esp_event.h>
 #include <esp_timer.h>
 
-#if FLXOS_WIFI_ENABLED
-#include <esp_wifi_types.h>
 #include <flx/connectivity/hotspot/HotspotManager.hpp>
 #include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
+
+#if FLXOS_WIFI_ENABLED
+#include <esp_wifi_types.h>
 #else
 // Dummy definitions to compile without WiFi support on headless/P4 targets
-typedef int wifi_mode_t;
+#ifndef WIFI_AUTH_WPA2_PSK
 typedef int wifi_auth_mode_t;
-#define WIFI_MODE_NULL 0
 #define WIFI_AUTH_WPA2_PSK 0
+#endif
+
+#ifndef WIFI_MODE_NULL
+typedef int wifi_mode_t;
+#define WIFI_MODE_NULL 0
+#endif
 
 namespace flx::connectivity {
 struct WiFiCredential;
