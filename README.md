@@ -44,7 +44,7 @@ FlxOS is a production-focused operating system architecture for ESP32-class devi
 ## ⚡ Quick Start
 
 ### Prerequisites
-- **ESP-IDF v6.0.1** (installed and sourced: `source $IDF_PATH/export.sh`)
+- **ESP-IDF v6.0.2** (installed and sourced: `source $IDF_PATH/export.sh`)
 - Python 3.10+ and Git
 
 ### 1. Clone the Repository
