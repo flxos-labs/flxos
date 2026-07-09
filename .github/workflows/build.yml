@@ -92,6 +92,7 @@ jobs:
           python flxos.py select ${{ matrix.profile }}
           python flxos.py build
           version=$(cat version.txt)
+          rm -rf releases/flxos-${{ matrix.profile }}-v*-cdn releases/flxos-${{ matrix.profile }}-*-cdn || true
           python flxos.py cdn "$version"
         extra_docker_args: -v ${{ github.workspace }}/.ccache:/root/.ccache -e CCACHE_DIR=/root/.ccache
 
@@ -142,7 +143,6 @@ jobs:
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git checkout --orphan temp-releases
         git rm -rf .
-        mv releases/ .
         git add releases/
         git commit -m "Deploy releases for ${{ github.sha }}"
         git push origin temp-releases:releases --force
