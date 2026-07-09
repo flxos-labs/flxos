@@ -1,8 +1,8 @@
 #pragma once
 
 #include <flx/hal/DeviceBase.hpp>
-#include <flx/hal/input/IInputDevice.hpp>
 #include <flx/hal/input/CardputerKeyboardCommon.hpp>
+#include <flx/hal/input/IInputDevice.hpp>
 #include <lvgl.h>
 #include <mutex>
 #include <vector>
@@ -11,6 +11,7 @@ namespace flx::hal::input {
 
 class CardputerKeyboardBase : public DeviceBase<IKeyboardDevice> {
 public:
+
 	CardputerKeyboardBase();
 	~CardputerKeyboardBase() override;
 
@@ -20,6 +21,7 @@ public:
 	void unsubscribeKeyEvents(int id) override;
 
 protected:
+
 	bool initLvglIndev();
 	void deinitLvglIndev();
 
@@ -33,7 +35,7 @@ protected:
 	virtual void updateKeyList() = 0;
 
 	lv_indev_t* m_indev = nullptr;
-	std::mutex m_mutex;
+	std::recursive_mutex m_mutex;
 	std::vector<std::pair<int, KeyEventCallback>> m_observers;
 	int m_nextObserverId = 1;
 

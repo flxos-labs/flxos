@@ -37,6 +37,7 @@ CardputerMatrixKeyboard::~CardputerMatrixKeyboard() {
 }
 
 bool CardputerMatrixKeyboard::start() {
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	if (getState() == State::Ready) {
 		flx::Log::warn("CardputerKeyboard", "start() called on already-running keyboard; ignoring");
 		return true;
@@ -58,6 +59,7 @@ bool CardputerMatrixKeyboard::start() {
 }
 
 bool CardputerMatrixKeyboard::stop() {
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	deinitLvglIndev();
 	this->setState(State::Stopped);
 	return true;

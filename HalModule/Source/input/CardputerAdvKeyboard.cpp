@@ -15,6 +15,7 @@ CardputerAdvKeyboard::~CardputerAdvKeyboard() {
 }
 
 bool CardputerAdvKeyboard::start() {
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	if (getState() == State::Ready) {
 		flx::Log::warn("CardputerAdvKeyboard", "start() called on already-running keyboard; ignoring");
 		return true;
@@ -67,6 +68,7 @@ bool CardputerAdvKeyboard::start() {
 }
 
 bool CardputerAdvKeyboard::stop() {
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	deinitLvglIndev();
 	this->setState(State::Stopped);
 	return true;

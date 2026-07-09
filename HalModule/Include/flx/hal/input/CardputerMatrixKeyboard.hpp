@@ -21,9 +21,11 @@ public:
 	bool stop() override;
 
 protected:
+
 	void updateKeyList() override;
 
 private:
+
 	void initHardware();
 	void setDemuxOutput(uint8_t output);
 	uint8_t readRowInputs();

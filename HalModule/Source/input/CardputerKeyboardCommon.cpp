@@ -61,12 +61,6 @@ namespace flx::hal::input {
 
 #define KEY_LEFTCTRL 0xe0
 #define KEY_LEFTALT 0xe2
-#define KEY_KPASTERISK 0x55
-#define KEY_KPLEFTPAREN 0xb6
-#define KEY_KPRIGHTPAREN 0xb7
-#define KEY_KPMINUS 0x56
-#define KEY_KPPLUS 0x57
-#define KEY_KPSLASH 0x54
 
 const KeyValue_t CardputerKeyValueMap[4][14] = {
 	{{"`", KEY_GRAVE, "~", KEY_GRAVE},
@@ -77,11 +71,11 @@ const KeyValue_t CardputerKeyValueMap[4][14] = {
 		{"5", KEY_5, "%", KEY_5},
 		{"6", KEY_6, "^", KEY_6},
 		{"7", KEY_7, "&", KEY_7},
-		{"8", KEY_8, "*", KEY_KPASTERISK},
-		{"9", KEY_9, "(", KEY_KPLEFTPAREN},
-		{"0", KEY_0, ")", KEY_KPRIGHTPAREN},
-		{"-", KEY_MINUS, "_", KEY_KPMINUS},
-		{"=", KEY_EQUAL, "+", KEY_KPPLUS},
+		{"8", KEY_8, "*", KEY_8},
+		{"9", KEY_9, "(", KEY_9},
+		{"0", KEY_0, ")", KEY_0},
+		{"-", KEY_MINUS, "_", KEY_MINUS},
+		{"=", KEY_EQUAL, "+", KEY_EQUAL},
 		{"del", KEY_BACKSPACE, "del", KEY_BACKSPACE}},
 	{{"tab", KEY_TAB, "tab", KEY_TAB},
 		{"q", KEY_Q, "Q", KEY_Q},
@@ -123,7 +117,7 @@ const KeyValue_t CardputerKeyValueMap[4][14] = {
 		{"m", KEY_M, "M", KEY_M},
 		{",", KEY_COMMA, "<", KEY_COMMA},
 		{".", KEY_DOT, ">", KEY_DOT},
-		{"/", KEY_KPSLASH, "?", KEY_KPSLASH},
+		{"/", KEY_SLASH, "?", KEY_SLASH},
 		{"space", KEY_SPACE, "space", KEY_SPACE}}};
 
 } // namespace flx::hal::input

@@ -23,9 +23,11 @@ public:
 	bool stop() override;
 
 protected:
+
 	void updateKeyList() override;
 
 private:
+
 	void remap(uint8_t& row, uint8_t& col);
 
 	std::shared_ptr<flx::hal::i2c::II2cBus> m_i2cBus;

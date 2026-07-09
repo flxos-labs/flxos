@@ -15,7 +15,7 @@ CardputerKeyboardBase::~CardputerKeyboardBase() {
 }
 
 bool CardputerKeyboardBase::initLvglIndev() {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	m_indev = lv_indev_create();
 	if (!m_indev) {
 		return false;
@@ -27,7 +27,7 @@ bool CardputerKeyboardBase::initLvglIndev() {
 }
 
 void CardputerKeyboardBase::deinitLvglIndev() {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	if (m_indev) {
 		lv_indev_delete(m_indev);
 		m_indev = nullptr;
@@ -39,14 +39,14 @@ lv_indev_t* CardputerKeyboardBase::getLvglIndev() const {
 }
 
 int CardputerKeyboardBase::subscribeKeyEvents(KeyEventCallback cb) {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	int id = m_nextObserverId++;
 	m_observers.push_back({id, cb});
 	return id;
 }
 
 void CardputerKeyboardBase::unsubscribeKeyEvents(int id) {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	std::lock_guard<std::recursive_mutex> lock(m_mutex);
 	for (auto it = m_observers.begin(); it != m_observers.end(); ++it) {
 		if (it->first == id) {
 			m_observers.erase(it);
@@ -107,7 +107,7 @@ void CardputerKeyboardBase::updateKeysState() {
 
 	// Deal with the rest of the keys
 	for (auto& i: m_keyValuesWithoutSpecialKeys) {
-		if (m_keysStateBuffer.ctrl || m_keysStateBuffer.shift) {
+		if (m_keysStateBuffer.shift) {
 			m_keysStateBuffer.values.push_back(*CardputerKeyValueMap[i.y][i.x].value_second);
 			m_keysStateBuffer.hidKey.push_back(CardputerKeyValueMap[i.y][i.x].value_num_second);
 		} else {
@@ -120,7 +120,7 @@ void CardputerKeyboardBase::updateKeysState() {
 void CardputerKeyboardBase::notifyObservers(const KeyEvent& event) {
 	std::vector<KeyEventCallback> callbacks;
 	{
-		std::lock_guard<std::mutex> lock(m_mutex);
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
 		for (const auto& observer: m_observers) {
 			if (observer.second) callbacks.push_back(observer.second);
 		}
