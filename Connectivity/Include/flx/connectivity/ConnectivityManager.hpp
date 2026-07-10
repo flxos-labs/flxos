@@ -1,11 +1,20 @@
 #pragma once
 
+#include <Config.hpp>
 #include <esp_err.h>
 #include <esp_event.h>
 #include <esp_timer.h>
+
 #include <flx/connectivity/hotspot/HotspotManager.hpp>
 #include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
+
+#include <esp_wifi_types.h>
+#if !FLXOS_WIFI_ENABLED
+namespace flx::connectivity {
+struct WiFiCredential;
+}
+#endif
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
 #include <flx/services/IService.hpp>

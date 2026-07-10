@@ -66,8 +66,18 @@ message("ROOT: COMPONENTS = ${COMPONENTS}")
 message("ROOT: EXTRA_COMPONENT_DIRS = ${EXTRA_COMPONENT_DIRS}")
 message("ROOT: EXCLUDE_COMPONENTS = ${EXCLUDE_COMPONENTS}")
 
+# Fallback CONFIG environment variable for EPDiy e-paper component (vroland/epdiy)
+if(NOT DEFINED ENV{CONFIG})
+    set(ENV{CONFIG} "epd_board_v6")
+endif()
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(FlxOS)
+
+# Link epdiy to LovyanGFX target if defined (to keep LovyanGFX library clean of project-specific edits)
+if(TARGET __idf_LovyanGFX AND TARGET __idf_vroland__epdiy)
+    target_link_libraries(__idf_LovyanGFX PRIVATE __idf_vroland__epdiy)
+endif()
 
 # ── Storage Partition Images ──
 # Generate FAT images for the `system` and `data` partitions from the

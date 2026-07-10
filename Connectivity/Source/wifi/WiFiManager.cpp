@@ -1,4 +1,5 @@
 #include "flx/connectivity/wifi/WiFiManager.hpp"
+#if FLXOS_WIFI_ENABLED
 #include "flx/connectivity/ConnectivityManager.hpp"
 
 #include "esp_err.h"
@@ -466,3 +467,4 @@ esp_err_t WiFiManager::connectBestKnownNetwork() {
 }
 
 } // namespace flx::connectivity
+#endif // FLXOS_WIFI_ENABLED

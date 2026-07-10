@@ -97,6 +97,7 @@ lvgl:
   ui_density: normal
 
 sdkconfig:
+  CONFIG_FLXOS_USE_EPDIY: "y"
   CONFIG_EPD_DISPLAY_TYPE_ED047TC2: "y"
   CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "n"
   CONFIG_SPIRAM_RODATA: "n"

@@ -2,12 +2,16 @@
 
 #include "esp_err.h"
 #include "esp_event.h"
+#include <Config.hpp>
+
 #include "esp_wifi_types.h"
-#include <flx/core/Observable.hpp>
-#include <flx/core/Singleton.hpp>
+#if FLXOS_WIFI_ENABLED
 extern "C" {
 #include "dhcpserver/dhcpserver_hostname.h"
 }
+#endif
+#include <flx/core/Observable.hpp>
+#include <flx/core/Singleton.hpp>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -19,6 +23,17 @@ class HotspotManager : public flx::Singleton<HotspotManager> {
 
 public:
 
+	struct ClientInfo {
+		uint8_t mac[6] {};
+		int aid {};
+		std::string hostname {};
+		std::string ip {};
+		int8_t rssi {};
+		uint32_t connected_duration {}; // Seconds
+		uint64_t connection_timestamp {};
+	};
+
+#if FLXOS_WIFI_ENABLED
 	esp_err_t init(flx::Observable<int32_t>* enabled_subject, flx::Observable<int32_t>* client_count_subject);
 	esp_err_t start(const char* ssid, const char* password, int channel = 1, int max_connections = 4, bool hidden = false, wifi_auth_mode_t auth_mode = WIFI_AUTH_WPA2_PSK, int8_t max_tx_power = 80);
 	esp_err_t stop();
@@ -50,16 +65,37 @@ public:
 		void* p); // Using void* to avoid pbuf header requirement in hpp
 	static void startUsageTimer();
 
-	struct ClientInfo {
-		uint8_t mac[6] {};
-		int aid {};
-		std::string hostname {};
-		std::string ip {};
-		int8_t rssi {};
-		uint32_t connected_duration {}; // Seconds
-		uint64_t connection_timestamp {};
-	};
 	std::vector<ClientInfo> getConnectedClients();
+#else
+	esp_err_t init(flx::Observable<int32_t>*, flx::Observable<int32_t>*) { return 0; }
+	esp_err_t start(const char*, const char*, int = 1, int = 4, bool = false, wifi_auth_mode_t = WIFI_AUTH_WPA2_PSK, int8_t = 80) { return 0; }
+	esp_err_t stop() { return 0; }
+	static bool isEnabled() { return false; }
+	int getClientCount() const { return 0; }
+
+	esp_err_t setNatEnabled(bool, bool = false) { return 0; }
+	bool isNatEnabled() const { return false; }
+
+	uint64_t getBytesSent() const { return 0; }
+	uint64_t getBytesReceived() const { return 0; }
+	void resetUsage() {}
+
+	uint32_t getUploadSpeed() const { return 0; }
+	uint32_t getDownloadSpeed() const { return 0; }
+	uint32_t getUptime() const { return 0; }
+
+	void addBytesSent(uint32_t) {}
+	void addBytesReceived(uint32_t) {}
+	void* getStaNetif() const { return nullptr; }
+	void* getOriginalInput() const { return nullptr; }
+	void* getOriginalLinkoutput() const { return nullptr; }
+	void initByteCounter() {}
+	void initApHook() {}
+	void processIncomingPacket(void*) {}
+	static void startUsageTimer() {}
+
+	std::vector<ClientInfo> getConnectedClients() { return {}; }
+#endif
 
 	void setAutoShutdownTimeout(uint32_t seconds) {
 		m_auto_shutdown_timeout = seconds;

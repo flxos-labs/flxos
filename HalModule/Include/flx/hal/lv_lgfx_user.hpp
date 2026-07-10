@@ -4,6 +4,18 @@
 
 #include <Config.hpp>
 #include <LovyanGFX.hpp>
+
+#if defined(CONFIG_IDF_TARGET_ESP32S3) && (defined(FLXOS_DISPLAY_DRIVER_RGB) || defined(FLXOS_DISPLAY_BUS_RGB) || defined(FLXOS_DISPLAY_DRIVER_ST7701) || defined(FLXOS_DISPLAY_DRIVER_ST7701S))
+#include <lgfx/v1/platforms/esp32s3/Bus_RGB.hpp>
+#include <lgfx/v1/platforms/esp32s3/Panel_RGB.hpp>
+#elif defined(CONFIG_IDF_TARGET_ESP32P4) && (defined(FLXOS_DISPLAY_DRIVER_ILI9881C) || defined(FLXOS_DISPLAY_BUS_MIPI_DSI))
+#include <lgfx/v1/platforms/esp32p4/Bus_DSI.hpp>
+#include <lgfx/v1/platforms/esp32p4/Panel_DSI.hpp>
+#include <lgfx/v1/platforms/esp32p4/Panel_ILI9881C.hpp>
+#endif
+#if FLXOS_DISPLAY_DRIVER_EPDIY
+#include <lgfx/v1/panel/Panel_EPDiy.hpp>
+#endif
 #include <cstdint>
 #include <limits>
 #include <type_traits>
@@ -126,10 +138,20 @@ using LgfxDisplayPanel = lgfx::Panel_M5UnitGLASS;
 using LgfxDisplayPanel = lgfx::Panel_M5UnitLCD;
 #elif FLXOS_DISPLAY_DRIVER_RGB
 using LgfxDisplayPanel = lgfx::Panel_RGB;
-#elif FLXOS_DISPLAY_DRIVER_ST7701
+#elif FLXOS_DISPLAY_DRIVER_ST7701 || FLXOS_DISPLAY_DRIVER_ST7701S
 using LgfxDisplayPanel = lgfx::Panel_ST7701;
 #elif FLXOS_DISPLAY_DRIVER_GC9503
 using LgfxDisplayPanel = lgfx::Panel_GC9503;
+#elif FLXOS_DISPLAY_DRIVER_ILI9881C
+using LgfxDisplayPanel = lgfx::Panel_ILI9881C;
+#elif FLXOS_DISPLAY_DRIVER_HX8357D
+using LgfxDisplayPanel = lgfx::Panel_HX8357D;
+#elif FLXOS_DISPLAY_DRIVER_HX8357B
+using LgfxDisplayPanel = lgfx::Panel_HX8357B;
+#elif FLXOS_DISPLAY_DRIVER_AXS15231B
+using LgfxDisplayPanel = lgfx::Panel_ST7789; // Fallback mapping
+#elif FLXOS_DISPLAY_DRIVER_JD9165
+using LgfxDisplayPanel = lgfx::Panel_ILI9881C; // Fallback mapping (DSI)
 #else
 #error "FlxOS: Unsupported or missing hardware.display.driver in profile.yaml"
 #endif
@@ -147,6 +169,10 @@ using LgfxDisplayBus = lgfx::Bus_Parallel8;
 using LgfxDisplayBus = lgfx::Bus_Parallel16;
 #elif FLXOS_DISPLAY_BUS_RGB
 using LgfxDisplayBus = lgfx::Bus_RGB;
+#elif FLXOS_DISPLAY_BUS_MIPI_DSI
+using LgfxDisplayBus = lgfx::Bus_DSI;
+#elif FLXOS_DISPLAY_BUS_EPDIY
+using LgfxDisplayBus = lgfx::Bus_SPI; // Dummy bus type for EPDiy
 #else
 #error "FlxOS: Unsupported or missing hardware.display.bus in profile.yaml"
 #endif
@@ -165,7 +191,7 @@ using LgfxTouch = lgfx::Touch_GT911;
 #elif FLXOS_TOUCH_DRIVER_FT5X06
 using LgfxTouch = lgfx::Touch_FT5x06;
 #elif FLXOS_TOUCH_DRIVER_CSTXXX || FLXOS_TOUCH_DRIVER_CST816S
-using LgfxTouch = lgfx::Touch_CSTxxx;
+using LgfxTouch = lgfx::Touch_CST816S;
 #elif FLXOS_TOUCH_DRIVER_CHSC6X || FLXOS_TOUCH_DRIVER_CHSC5816
 using LgfxTouch = lgfx::Touch_CHSC6x;
 #elif FLXOS_TOUCH_DRIVER_NS2009
@@ -177,7 +203,11 @@ using LgfxTouch = lgfx::Touch_GSLx680;
 #else
 #if FLXOS_HEADLESS == 0
 // Provide a dummy touch type if none matched, it will only be instantiated if touch is enabled.
+#if FLXOS_TOUCH_BUS_I2C
+using LgfxTouch = lgfx::Touch_GT911;
+#else
 using LgfxTouch = lgfx::Touch_XPT2046;
+#endif
 #endif
 #endif
 
@@ -300,6 +330,10 @@ public:
 			cfg.pclk_active_neg = flx::config::display.rgb.pclkActiveNeg;
 			cfg.de_idle_high = flx::config::display.rgb.deIdleHigh;
 			cfg.pclk_idle_high = flx::config::display.rgb.pclkIdleHigh;
+#elif FLXOS_DISPLAY_BUS_MIPI_DSI
+			cfg.bus_id = 0;
+			cfg.lane_num = 2;
+			cfg.lane_mbps = 960;
 #endif
 
 			_bus_instance.config(cfg);

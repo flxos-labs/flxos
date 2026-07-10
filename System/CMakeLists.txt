@@ -1,5 +1,5 @@
 # System component — FlxOS System Services and Managers
-set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule Apps esp_http_server)
+set(SYSTEM_REQUIRES Core Services Kernel Connectivity Profiles wear_levelling esp_timer HalModule Apps esp_http_server esp_netif)
 set(SYSTEM_SRCS
     "Source/SystemManager.cpp"
     "Source/SystemDiagnostics.cpp"

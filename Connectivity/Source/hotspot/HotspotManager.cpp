@@ -1,4 +1,5 @@
 #include "flx/connectivity/hotspot/HotspotManager.hpp"
+#if FLXOS_WIFI_ENABLED
 #include "dhcpserver/dhcpserver_hostname.h"
 #include "esp_err.h"
 #include "esp_event.h"
@@ -527,3 +528,4 @@ void HotspotManager::updateNotification() {
 }
 
 } // namespace flx::connectivity
+#endif // FLXOS_WIFI_ENABLED

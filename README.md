@@ -20,12 +20,26 @@ FlxOS is a production-focused operating system architecture for ESP32-class devi
 
 ### 🖼️ Product Preview
 
-<table>
+<table align="center">
   <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_162354_sleek_app_launcher.png" width="180" alt="App launcher"/><br/><sub>App launcher</sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_162819_notification_panel.png" width="180" alt="Notification panel"/><br/><sub>Notifications</sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_162917_quickaccess_panel.png" width="180" alt="Quick access panel"/><br/><sub>Quick access</sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_163129_open_image_in_image_viewer_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="180" alt="Image viewer"/><br/><sub>Multi-window</sub></td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_162354_sleek_app_launcher.png" width="340" alt="App launcher" /><br/>
+      <sub>App launcher</sub>
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_162819_notification_panel.png" width="340" alt="Notification panel" /><br/>
+      <sub>Notifications</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_162917_quickaccess_panel.png" width="340" alt="Quick access panel" /><br/>
+      <sub>Quick access</sub>
+    </td>
+    <td align="center">
+      <img src="https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_163129_open_image_in_image_viewer_from_files_app_side_by_side_with_dynamic_dwindle_layout.png" width="340" alt="Image viewer" /><br/>
+      <sub>Multi-window</sub>
+    </td>
   </tr>
 </table>
 
@@ -44,7 +58,7 @@ FlxOS is a production-focused operating system architecture for ESP32-class devi
 ## ⚡ Quick Start
 
 ### Prerequisites
-- **ESP-IDF v6.0.1** (installed and sourced: `source $IDF_PATH/export.sh`)
+- **ESP-IDF v6.0.2** (installed and sourced: `source $IDF_PATH/export.sh`)
 - Python 3.10+ and Git
 
 ### 1. Clone the Repository

@@ -2,14 +2,20 @@
 #include "esp_err.h"
 #include "esp_event.h"
 #include "esp_netif.h"
+
+#if FLXOS_WIFI_ENABLED
 #include "esp_wifi.h"
 #include "esp_wifi_default.h"
 #include "esp_wifi_types_generic.h"
-#include "flx/connectivity/bluetooth/BluetoothManager.hpp"
 #include "flx/connectivity/hotspot/HotspotManager.hpp"
 #include "flx/connectivity/wifi/WiFiCredentialStore.hpp"
 #include "flx/connectivity/wifi/WiFiManager.hpp"
 #include "flx/connectivity/wifi/WiFiProvisioning.hpp"
+#endif
+
+#if FLXOS_BLUETOOTH_ENABLED
+#include "flx/connectivity/bluetooth/BluetoothManager.hpp"
+#endif
 #include <cstdint>
 #include <flx/core/Logger.hpp>
 #include <flx/system/managers/SettingsManager.hpp>
@@ -35,6 +41,8 @@ bool ConnectivityManager::onStart() {
 	Log::info(TAG, "Initializing networking stack...");
 	ESP_ERROR_CHECK(esp_netif_init());
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+#if FLXOS_WIFI_ENABLED
 	esp_netif_create_default_wifi_sta();
 	esp_netif_create_default_wifi_ap();
 	wifi_init_config_t const cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -43,7 +51,11 @@ bool ConnectivityManager::onStart() {
 	// Initialize sub-managers with observable references
 	WiFiManager::getInstance().init(&m_wifi_connected_subject, &m_wifi_ssid_subject, &m_wifi_ip_subject, &m_wifi_status_subject);
 	HotspotManager::getInstance().init(&m_hotspot_enabled_subject, &m_hotspot_clients_subject);
+#endif
+
+#if FLXOS_BLUETOOTH_ENABLED
 	BluetoothManager::getInstance().init(&m_bluetooth_enabled_subject);
+#endif
 
 	// Register config settings for persistence
 	flx::system::SettingsManager::getInstance().registerSetting("hs_ssid", m_hotspot_ssid_subject);
@@ -57,9 +69,12 @@ bool ConnectivityManager::onStart() {
 	flx::system::SettingsManager::getInstance().registerSetting("wifi_ssid", m_saved_wifi_ssid_subject);
 	flx::system::SettingsManager::getInstance().registerSetting("wifi_pass", m_saved_wifi_password_subject);
 
+#if FLXOS_WIFI_ENABLED
 	ESP_ERROR_CHECK(setWifiMode(WIFI_MODE_NULL));
+#endif
 	Log::info(TAG, "Connectivity service started");
 
+#if FLXOS_WIFI_ENABLED
 	// ── Migration: move old flat wifi_ssid/wifi_pass into the credential store ──
 	{
 		std::string old_ssid = m_saved_wifi_ssid_subject.get();
@@ -121,12 +136,14 @@ bool ConnectivityManager::onStart() {
 
 	// Start hotspot usage timer
 	HotspotManager::getInstance().startUsageTimer();
+#endif
 
 	return true;
 }
 
 void ConnectivityManager::onStop() {
 	Log::info(TAG, "Connectivity service stopping...");
+#if FLXOS_WIFI_ENABLED
 	// Disconnect WiFi if connected
 	if (isWiFiConnected()) {
 		WiFiManager::getInstance().disconnect();
@@ -140,10 +157,12 @@ void ConnectivityManager::onStop() {
 		esp_timer_delete(m_scan_timer);
 		m_scan_timer = nullptr;
 	}
+#endif
 	Log::info(TAG, "Connectivity service stopped");
 }
 
 esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode, bool auto_start) {
+#if FLXOS_WIFI_ENABLED
 	std::lock_guard<std::recursive_mutex> lock(m_wifi_mutex);
 
 	wifi_mode_t current_mode;
@@ -170,9 +189,13 @@ esp_err_t ConnectivityManager::setWifiMode(wifi_mode_t mode, bool auto_start) {
 		return esp_wifi_start();
 	}
 	return ESP_OK;
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
 
 esp_err_t ConnectivityManager::connectWiFi(const char* ssid, const char* password, bool remember) {
+#if FLXOS_WIFI_ENABLED
 	esp_err_t err = WiFiManager::getInstance().connect(ssid, password);
 	if (err == ESP_OK && remember && ssid) {
 		// Save to multi-network credential store
@@ -185,71 +208,138 @@ esp_err_t ConnectivityManager::connectWiFi(const char* ssid, const char* passwor
 		saveWiFiCredentials(ssid, password);
 	}
 	return err;
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
+
 esp_err_t ConnectivityManager::disconnectWiFi() {
+#if FLXOS_WIFI_ENABLED
 	return WiFiManager::getInstance().disconnect();
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
+
 bool ConnectivityManager::isWiFiConnected() {
+#if FLXOS_WIFI_ENABLED
 	return WiFiManager::getInstance().isConnected();
+#else
+	return false;
+#endif
 }
+
 esp_err_t ConnectivityManager::scanWiFi(WiFiManager::ScanCallback callback) {
+#if FLXOS_WIFI_ENABLED
 	return WiFiManager::getInstance().scan(callback);
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
+
 esp_err_t ConnectivityManager::setWiFiEnabled(bool enabled) {
+#if FLXOS_WIFI_ENABLED
 	Log::info(TAG, "WiFi enabled set to: %s", enabled ? "TRUE" : "FALSE");
 	esp_err_t const err = WiFiManager::getInstance().setEnabled(enabled);
 	if (err == ESP_OK) {
 		m_wifi_enabled_subject.set(enabled ? 1 : 0);
 	}
 	return err;
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
+
 bool ConnectivityManager::isWiFiEnabled() {
+#if FLXOS_WIFI_ENABLED
 	return WiFiManager::getInstance().isEnabled();
+#else
+	return false;
+#endif
 }
+
 esp_err_t ConnectivityManager::startHotspot(const char* s, const char* p, int c, int m, bool h, wifi_auth_mode_t auth, int8_t tx) {
+#if FLXOS_WIFI_ENABLED
 	Log::info(TAG, "Starting Hotspot (SSID: %s)", s);
 	return HotspotManager::getInstance().start(s, p, c, m, h, auth, tx);
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
+
 esp_err_t ConnectivityManager::stopHotspot() {
+#if FLXOS_WIFI_ENABLED
 	Log::info(TAG, "Stopping Hotspot");
 	return HotspotManager::getInstance().stop();
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
+
 bool ConnectivityManager::isHotspotEnabled() {
+#if FLXOS_WIFI_ENABLED
 	return HotspotManager::getInstance().isEnabled();
+#else
+	return false;
+#endif
 }
+
 std::vector<HotspotManager::ClientInfo>
 ConnectivityManager::getHotspotClientsList() const {
+#if FLXOS_WIFI_ENABLED
 	return HotspotManager::getInstance().getConnectedClients();
+#else
+	return {};
+#endif
 }
+
 esp_err_t ConnectivityManager::enableBluetooth(bool e) {
+#if FLXOS_BLUETOOTH_ENABLED
 	return BluetoothManager::getInstance().enable(e);
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
+
 bool ConnectivityManager::isBluetoothEnabled() {
+#if FLXOS_BLUETOOTH_ENABLED
 	return BluetoothManager::getInstance().isEnabled();
+#else
+	return false;
+#endif
 }
 
 void ConnectivityManager::saveWiFiCredentials(const char* ssid, const char* password) {
+#if FLXOS_WIFI_ENABLED
 	m_saved_wifi_ssid_subject.set(ssid ? ssid : "");
 	m_saved_wifi_password_subject.set(password ? password : "");
 	Log::info(TAG, "WiFi credentials saved for: %s", ssid);
+#endif
 }
 
 void ConnectivityManager::clearSavedWiFiCredentials() {
+#if FLXOS_WIFI_ENABLED
 	m_saved_wifi_ssid_subject.set("");
 	m_saved_wifi_password_subject.set("");
 	Log::info(TAG, "Saved WiFi credentials cleared");
+#endif
 }
 
 bool ConnectivityManager::hasSavedWiFiCredentials() const {
+#if FLXOS_WIFI_ENABLED
 	// Check credential store first (preferred), fall back to legacy flat string
 	if (WiFiCredentialStore::getInstance().count() > 0) {
 		return true;
 	}
 	std::string ssid = m_saved_wifi_ssid_subject.get();
 	return !ssid.empty();
+#else
+	return false;
+#endif
 }
 
 std::string ConnectivityManager::getSavedWiFiSsid() const {
+#if FLXOS_WIFI_ENABLED
 	// After migration the legacy subject is empty; serve from the store instead.
 	const std::string legacy = m_saved_wifi_ssid_subject.get();
 	if (!legacy.empty()) {
@@ -261,10 +351,12 @@ std::string ConnectivityManager::getSavedWiFiSsid() const {
 			return cred.ssid;
 		}
 	}
+#endif
 	return {};
 }
 
 std::string ConnectivityManager::getSavedWiFiPassword() const {
+#if FLXOS_WIFI_ENABLED
 	const std::string legacy_ssid = m_saved_wifi_ssid_subject.get();
 	if (!legacy_ssid.empty()) {
 		return m_saved_wifi_password_subject.get();
@@ -275,20 +367,30 @@ std::string ConnectivityManager::getSavedWiFiPassword() const {
 			return cred.password;
 		}
 	}
+#endif
 	return {};
 }
 
 // ──── Multi-network credential store delegation ────
 
 esp_err_t ConnectivityManager::saveWiFiNetwork(const WiFiCredential& cred) {
+#if FLXOS_WIFI_ENABLED
 	return WiFiCredentialStore::getInstance().save(cred);
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
 
 bool ConnectivityManager::loadWiFiNetwork(const std::string& ssid, WiFiCredential& out) const {
+#if FLXOS_WIFI_ENABLED
 	return WiFiCredentialStore::getInstance().load(ssid, out);
+#else
+	return false;
+#endif
 }
 
 esp_err_t ConnectivityManager::removeWiFiNetwork(const std::string& ssid) {
+#if FLXOS_WIFI_ENABLED
 	esp_err_t err = WiFiCredentialStore::getInstance().remove(ssid);
 	// If this was also the legacy saved SSID, clear it too
 	if (m_saved_wifi_ssid_subject.get() == ssid) {
@@ -296,17 +398,29 @@ esp_err_t ConnectivityManager::removeWiFiNetwork(const std::string& ssid) {
 		m_saved_wifi_password_subject.set("");
 	}
 	return err;
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
 
 std::vector<WiFiCredential> ConnectivityManager::getSavedNetworks() const {
+#if FLXOS_WIFI_ENABLED
 	return WiFiCredentialStore::getInstance().loadAll();
+#else
+	return {};
+#endif
 }
 
 esp_err_t ConnectivityManager::connectBestKnownNetwork() {
+#if FLXOS_WIFI_ENABLED
 	return WiFiManager::getInstance().connectBestKnownNetwork();
+#else
+	return ESP_ERR_NOT_SUPPORTED;
+#endif
 }
 
 void ConnectivityManager::updateScanTimer() {
+#if FLXOS_WIFI_ENABLED
 	if (m_scan_timer) {
 		esp_timer_stop(m_scan_timer);
 	}
@@ -320,6 +434,7 @@ void ConnectivityManager::updateScanTimer() {
 	} else {
 		Log::info(TAG, "Periodic auto-connect scan timer disabled");
 	}
+#endif
 }
 
 } // namespace flx::connectivity

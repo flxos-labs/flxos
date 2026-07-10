@@ -82,13 +82,67 @@ jobs:
         restore-keys: |
           ccache-${{ matrix.profile }}-${{ matrix.target }}-
 
-    - name: esp-idf build
+    - name: esp-idf build and package cdn
       uses: espressif/esp-idf-ci-action@v1
       with:
-        esp_idf_version: v6.0.1
-        target: ${{ matrix.target }}
+        esp_idf_version: v6.0.2
         path: "."
         command: |
+          rm -rf build/
           python flxos.py select ${{ matrix.profile }}
           python flxos.py build
+          version=$(cat version.txt)
+          rm -rf releases/flxos-${{ matrix.profile }}-v*-cdn releases/flxos-${{ matrix.profile }}-*-cdn || true
+          python flxos.py cdn "$version"
         extra_docker_args: -v ${{ github.workspace }}/.ccache:/root/.ccache -e CCACHE_DIR=/root/.ccache
+
+    - name: Upload CDN Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: cdn-${{ matrix.profile }}
+        path: releases/flxos-${{ matrix.profile }}-v*-cdn
+        if-no-files-found: error
+
+  publish:
+    needs: build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Download all CDN artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: raw-releases
+        pattern: cdn-*
+        merge-multiple: true
+
+    - name: Move artifacts to releases
+      run: |
+        mkdir -p releases
+        cp -r raw-releases/* releases/ || true
+        rm -rf raw-releases
+
+    - name: Regenerate CDN Index
+      run: |
+        python flxos.py cdn-index
+
+    - name: Publish to releases branch
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git checkout --orphan temp-releases
+        git rm -rf .
+        git add releases/
+        git commit -m "Deploy releases for ${{ github.sha }}"
+        git push origin temp-releases:releases --force
