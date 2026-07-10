@@ -1,0 +1,5 @@
+dependencies:
+  vroland/epdiy:
+    version: "^2.0.0"
+    rules:
+      - if: "target in [esp32, esp32s3]"
