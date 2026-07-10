@@ -82,16 +82,13 @@ jobs:
         restore-keys: |
           ccache-${{ matrix.profile }}-${{ matrix.target }}-
 
-    - name: Clean build directory
-      run: rm -rf build/
-
     - name: esp-idf build and package cdn
       uses: espressif/esp-idf-ci-action@v1
       with:
         esp_idf_version: v6.0.2
-        target: ${{ matrix.target }}
         path: "."
         command: |
+          rm -rf build/
           python flxos.py select ${{ matrix.profile }}
           python flxos.py build
           version=$(cat version.txt)
