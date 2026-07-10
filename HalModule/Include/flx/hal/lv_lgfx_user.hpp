@@ -13,6 +13,9 @@
 #include <lgfx/v1/platforms/esp32p4/Panel_DSI.hpp>
 #include <lgfx/v1/platforms/esp32p4/Panel_ILI9881C.hpp>
 #endif
+#if FLXOS_DISPLAY_DRIVER_EPDIY
+#include <lgfx/v1/panel/Panel_EPDiy.hpp>
+#endif
 #include <cstdint>
 #include <limits>
 #include <type_traits>
@@ -141,6 +144,10 @@ using LgfxDisplayPanel = lgfx::Panel_ST7701;
 using LgfxDisplayPanel = lgfx::Panel_GC9503;
 #elif FLXOS_DISPLAY_DRIVER_ILI9881C
 using LgfxDisplayPanel = lgfx::Panel_ILI9881C;
+#elif FLXOS_DISPLAY_DRIVER_HX8357D
+using LgfxDisplayPanel = lgfx::Panel_HX8357D;
+#elif FLXOS_DISPLAY_DRIVER_HX8357B
+using LgfxDisplayPanel = lgfx::Panel_HX8357B;
 #else
 #error "FlxOS: Unsupported or missing hardware.display.driver in profile.yaml"
 #endif
@@ -160,6 +167,8 @@ using LgfxDisplayBus = lgfx::Bus_Parallel16;
 using LgfxDisplayBus = lgfx::Bus_RGB;
 #elif FLXOS_DISPLAY_BUS_MIPI_DSI
 using LgfxDisplayBus = lgfx::Bus_DSI;
+#elif FLXOS_DISPLAY_BUS_EPDIY
+using LgfxDisplayBus = lgfx::Bus_SPI; // Dummy bus type for EPDiy
 #else
 #error "FlxOS: Unsupported or missing hardware.display.bus in profile.yaml"
 #endif

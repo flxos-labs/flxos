@@ -466,5 +466,5 @@ esp_err_t WiFiManager::connectBestKnownNetwork() {
 	return err;
 }
 
-#endif // FLXOS_WIFI_ENABLED
 } // namespace flx::connectivity
+#endif // FLXOS_WIFI_ENABLED

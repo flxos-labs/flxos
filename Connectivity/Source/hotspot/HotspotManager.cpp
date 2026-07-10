@@ -527,5 +527,5 @@ void HotspotManager::updateNotification() {
 	flx::core::EventBus::getInstance().publish("system.notify", data);
 }
 
-#endif // FLXOS_WIFI_ENABLED
 } // namespace flx::connectivity
+#endif // FLXOS_WIFI_ENABLED
