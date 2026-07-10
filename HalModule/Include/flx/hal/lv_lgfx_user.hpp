@@ -5,7 +5,7 @@
 #include <Config.hpp>
 #include <LovyanGFX.hpp>
 
-#if defined(CONFIG_IDF_TARGET_ESP32S3) && (defined(FLXOS_DISPLAY_DRIVER_RGB) || defined(FLXOS_DISPLAY_BUS_RGB))
+#if defined(CONFIG_IDF_TARGET_ESP32S3) && (defined(FLXOS_DISPLAY_DRIVER_RGB) || defined(FLXOS_DISPLAY_BUS_RGB) || defined(FLXOS_DISPLAY_DRIVER_ST7701) || defined(FLXOS_DISPLAY_DRIVER_ST7701S))
 #include <lgfx/v1/platforms/esp32s3/Bus_RGB.hpp>
 #include <lgfx/v1/platforms/esp32s3/Panel_RGB.hpp>
 #elif defined(CONFIG_IDF_TARGET_ESP32P4) && (defined(FLXOS_DISPLAY_DRIVER_ILI9881C) || defined(FLXOS_DISPLAY_BUS_MIPI_DSI))
