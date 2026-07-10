@@ -82,6 +82,9 @@ jobs:
         restore-keys: |
           ccache-${{ matrix.profile }}-${{ matrix.target }}-
 
+    - name: Clean build directory
+      run: rm -rf build/
+
     - name: esp-idf build and package cdn
       uses: espressif/esp-idf-ci-action@v1
       with:
