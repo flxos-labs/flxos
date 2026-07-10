@@ -71,7 +71,7 @@ project(FlxOS)
 
 # Link epdiy to LovyanGFX target if defined (to keep LovyanGFX library clean of project-specific edits)
 if(TARGET __idf_LovyanGFX AND TARGET __idf_vroland__epdiy)
-    target_link_libraries(__idf_LovyanGFX PUBLIC __idf_vroland__epdiy)
+    target_link_libraries(__idf_LovyanGFX PRIVATE __idf_vroland__epdiy)
 endif()
 
 # ── Storage Partition Images ──
