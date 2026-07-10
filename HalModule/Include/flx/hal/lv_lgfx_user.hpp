@@ -138,7 +138,7 @@ using LgfxDisplayPanel = lgfx::Panel_M5UnitGLASS;
 using LgfxDisplayPanel = lgfx::Panel_M5UnitLCD;
 #elif FLXOS_DISPLAY_DRIVER_RGB
 using LgfxDisplayPanel = lgfx::Panel_RGB;
-#elif FLXOS_DISPLAY_DRIVER_ST7701
+#elif FLXOS_DISPLAY_DRIVER_ST7701 || FLXOS_DISPLAY_DRIVER_ST7701S
 using LgfxDisplayPanel = lgfx::Panel_ST7701;
 #elif FLXOS_DISPLAY_DRIVER_GC9503
 using LgfxDisplayPanel = lgfx::Panel_GC9503;
@@ -148,6 +148,10 @@ using LgfxDisplayPanel = lgfx::Panel_ILI9881C;
 using LgfxDisplayPanel = lgfx::Panel_HX8357D;
 #elif FLXOS_DISPLAY_DRIVER_HX8357B
 using LgfxDisplayPanel = lgfx::Panel_HX8357B;
+#elif FLXOS_DISPLAY_DRIVER_AXS15231B
+using LgfxDisplayPanel = lgfx::Panel_ST7789; // Fallback mapping
+#elif FLXOS_DISPLAY_DRIVER_JD9165
+using LgfxDisplayPanel = lgfx::Panel_ILI9881C; // Fallback mapping (DSI)
 #else
 #error "FlxOS: Unsupported or missing hardware.display.driver in profile.yaml"
 #endif
@@ -199,7 +203,11 @@ using LgfxTouch = lgfx::Touch_GSLx680;
 #else
 #if FLXOS_HEADLESS == 0
 // Provide a dummy touch type if none matched, it will only be instantiated if touch is enabled.
+#if FLXOS_TOUCH_BUS_I2C
+using LgfxTouch = lgfx::Touch_GT911;
+#else
 using LgfxTouch = lgfx::Touch_XPT2046;
+#endif
 #endif
 #endif
 
