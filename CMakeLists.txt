@@ -66,6 +66,11 @@ message("ROOT: COMPONENTS = ${COMPONENTS}")
 message("ROOT: EXTRA_COMPONENT_DIRS = ${EXTRA_COMPONENT_DIRS}")
 message("ROOT: EXCLUDE_COMPONENTS = ${EXCLUDE_COMPONENTS}")
 
+# Fallback CONFIG environment variable for EPDiy e-paper component (vroland/epdiy)
+if(NOT DEFINED ENV{CONFIG})
+    set(ENV{CONFIG} "epd_board_v6")
+endif()
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(FlxOS)
 
