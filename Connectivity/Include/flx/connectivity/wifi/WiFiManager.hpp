@@ -4,30 +4,9 @@
 #include "esp_event.h"
 #include <Config.hpp>
 
+#include "esp_wifi_types.h"
 #if FLXOS_WIFI_ENABLED
 #include "esp_wifi.h"
-#else
-struct wifi_ap_record_t {
-	uint8_t ssid[33];
-	int8_t rssi;
-	uint8_t primary;
-	int authmode;
-};
-#ifndef WIFI_AUTH_WPA2_PSK
-#define WIFI_AUTH_WPA2_PSK 0
-#endif
-#ifndef WIFI_AUTH_WEP
-#define WIFI_AUTH_WEP 1
-#endif
-#ifndef WIFI_AUTH_WPA_PSK
-#define WIFI_AUTH_WPA_PSK 2
-#endif
-#ifndef WIFI_AUTH_WPA_WPA2_PSK
-#define WIFI_AUTH_WPA_WPA2_PSK 3
-#endif
-#ifndef WIFI_AUTH_WPA3_PSK
-#define WIFI_AUTH_WPA3_PSK 4
-#endif
 #endif
 #include <atomic>
 #include <esp_timer.h>

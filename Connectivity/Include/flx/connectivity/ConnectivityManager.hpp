@@ -9,20 +9,8 @@
 #include <flx/connectivity/wifi/WiFiCredentialStore.hpp>
 #include <flx/connectivity/wifi/WiFiManager.hpp>
 
-#if FLXOS_WIFI_ENABLED
 #include <esp_wifi_types.h>
-#else
-// Dummy definitions to compile without WiFi support on headless/P4 targets
-#ifndef WIFI_AUTH_WPA2_PSK
-typedef int wifi_auth_mode_t;
-#define WIFI_AUTH_WPA2_PSK 0
-#endif
-
-#ifndef WIFI_MODE_NULL
-typedef int wifi_mode_t;
-#define WIFI_MODE_NULL 0
-#endif
-
+#if !FLXOS_WIFI_ENABLED
 namespace flx::connectivity {
 struct WiFiCredential;
 }

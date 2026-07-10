@@ -4,15 +4,11 @@
 #include "esp_event.h"
 #include <Config.hpp>
 
-#if FLXOS_WIFI_ENABLED
 #include "esp_wifi_types.h"
+#if FLXOS_WIFI_ENABLED
 extern "C" {
 #include "dhcpserver/dhcpserver_hostname.h"
 }
-#else
-// Dummy definitions when WiFi is disabled
-typedef int wifi_auth_mode_t;
-#define WIFI_AUTH_WPA2_PSK 0
 #endif
 #include <flx/core/Observable.hpp>
 #include <flx/core/Singleton.hpp>
