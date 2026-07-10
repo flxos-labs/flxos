@@ -3,4 +3,4 @@ dependencies:
     git: https://github.com/vroland/epdiy.git
     rules:
       - if: "target == esp32s3"
-      - if: "$CONFIG{FLXOS_USE_EPDIY} == y"
+      - if: "$CONFIG{FLXOS_USE_EPDIY} == True"
