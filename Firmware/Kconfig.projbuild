@@ -32,4 +32,11 @@ menu "FlxOS Configuration"
             Provides remote dashboard for system diagnostics, wifi management,
             file system explorer, and REST APIs.
 
+    config FLXOS_USE_EPDIY
+        bool "Enable EPDiy E-Ink Display Driver"
+        default n
+        help
+            Enable the EPDiy e-paper driver dependency.
+            This is required for profiles using E-Ink displays like M5Stack PaperS3.
+
 endmenu
