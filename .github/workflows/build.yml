@@ -141,8 +141,11 @@ jobs:
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        cp releases/index.json /tmp/index.json
         git checkout --orphan temp-releases
         git rm -rf .
+        mkdir -p releases
+        cp /tmp/index.json releases/index.json
         git add releases/
         git commit -m "Deploy releases for ${{ github.sha }}"
         git push origin temp-releases:releases --force
