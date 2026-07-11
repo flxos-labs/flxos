@@ -1,0 +1,36 @@
+{
+  "name": "FlxOS for FlxOS ESP32-S3-ILI9341",
+  "version": "0.1.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "bootloader.bin",
+          "offset": 0
+        },
+        {
+          "path": "partition-table.bin",
+          "offset": 32768
+        },
+        {
+          "path": "ota_data_initial.bin",
+          "offset": 61440
+        },
+        {
+          "path": "flxos.bin",
+          "offset": 131072
+        },
+        {
+          "path": "system.bin",
+          "offset": 6422528
+        },
+        {
+          "path": "data.bin",
+          "offset": 7471104
+        }
+      ]
+    }
+  ]
+}

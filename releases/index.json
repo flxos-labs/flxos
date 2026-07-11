@@ -1,0 +1,792 @@
+[
+  {
+    "profile": "btt-panda-touch",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for BigTreeTech Panda Touch",
+    "manifest": "flxos-btt-panda-touch-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "rgb",
+      "5.0-inch",
+      "touch",
+      "gt911",
+      "bigtreetech",
+      "panda-touch"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "cyd-2432s024c",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for CYD 2432S024C",
+    "manifest": "flxos-cyd-2432s024c-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9341",
+      "2.4-inch",
+      "touch",
+      "cst816s",
+      "cyd"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "cyd-2432s024r",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for CYD 2432S024R",
+    "manifest": "flxos-cyd-2432s024r-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9341",
+      "2.4-inch",
+      "touch",
+      "xpt2046",
+      "cyd"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "cyd-2432s028r",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for Sunton CYD-2432S028R",
+    "manifest": "flxos-cyd-2432s028r-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9341",
+      "2.8-inch",
+      "budget"
+    ],
+    "incubating": false,
+    "warning_message": "3 hardware variants exist. This build is for v1 only."
+  },
+  {
+    "profile": "cyd-2432s028rv3",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for CYD 2432S028R v3",
+    "manifest": "flxos-cyd-2432s028rv3-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "2.8-inch",
+      "touch",
+      "xpt2046"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "cyd-2432s032c",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for CYD 2432S032C",
+    "manifest": "flxos-cyd-2432s032c-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9341",
+      "3.2-inch",
+      "touch",
+      "gt911",
+      "cyd"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "cyd-3248s035c",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for CYD 3248S035C",
+    "manifest": "flxos-cyd-3248s035c-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7796",
+      "3.5-inch",
+      "touch",
+      "gt911",
+      "cyd"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "cyd-4848s040c",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for CYD 4848S040C",
+    "manifest": "flxos-cyd-4848s040c-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "st7701s",
+      "rgb-spi",
+      "4.0-inch",
+      "touch",
+      "cst816s",
+      "cyd"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "cyd-8048s043c",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for CYD 8048S043C",
+    "manifest": "flxos-cyd-8048s043c-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "rgb",
+      "4.3-inch",
+      "touch",
+      "gt911",
+      "cyd"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "cyd-e32r28t",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for CYD E32R28T",
+    "manifest": "flxos-cyd-e32r28t-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9341",
+      "2.8-inch",
+      "touch",
+      "xpt2046",
+      "cyd"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "cyd-e32r32p",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for CYD E32R32P",
+    "manifest": "flxos-cyd-e32r32p-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "2.8-inch",
+      "touch",
+      "xpt2046",
+      "cyd"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "elecrow-crowpanel-advance-28",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Elecrow CrowPanel Advance 2.8",
+    "manifest": "flxos-elecrow-crowpanel-advance-28-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "2.8-inch",
+      "touch",
+      "ft5x06",
+      "elecrow"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "elecrow-crowpanel-advance-35",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Elecrow CrowPanel Advance 3.5",
+    "manifest": "flxos-elecrow-crowpanel-advance-35-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9488",
+      "3.5-inch",
+      "touch",
+      "gt911",
+      "elecrow"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "elecrow-crowpanel-advance-50",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Elecrow CrowPanel Advance 5.0",
+    "manifest": "flxos-elecrow-crowpanel-advance-50-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "rgb",
+      "5.0-inch",
+      "touch",
+      "gt911",
+      "elecrow",
+      "crowpanel"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "elecrow-crowpanel-basic-28",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for Elecrow CrowPanel Basic 2.8",
+    "manifest": "flxos-elecrow-crowpanel-basic-28-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9341",
+      "2.8-inch",
+      "touch",
+      "xpt2046",
+      "elecrow"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "elecrow-crowpanel-basic-35",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for Elecrow CrowPanel Basic 3.5",
+    "manifest": "flxos-elecrow-crowpanel-basic-35-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9488",
+      "3.5-inch",
+      "touch",
+      "xpt2046",
+      "elecrow",
+      "crowpanel"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "elecrow-crowpanel-basic-50",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Elecrow CrowPanel Basic 5.0",
+    "manifest": "flxos-elecrow-crowpanel-basic-50-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "rgb",
+      "5.0-inch",
+      "touch",
+      "gt911",
+      "elecrow",
+      "crowpanel"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "esp32s3-ili9341-xpt",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for FlxOS ESP32-S3-ILI9341",
+    "manifest": "flxos-esp32s3-ili9341-xpt-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9341",
+      "dev-board"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "generic-esp32",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for Generic ESP32 (Headless)",
+    "manifest": "flxos-generic-esp32-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "headless"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "generic-esp32c6",
+    "target": "esp32c6",
+    "version": "0.1.0",
+    "name": "FlxOS for Generic ESP32-C6 (Headless)",
+    "manifest": "flxos-generic-esp32c6-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "headless",
+      "esp32c6"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "generic-esp32p4",
+    "target": "esp32p4",
+    "version": "0.1.0",
+    "name": "FlxOS for Generic ESP32-P4 (Headless)",
+    "manifest": "flxos-generic-esp32p4-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "headless",
+      "esp32p4"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "generic-esp32s3",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Generic ESP32-S3 (Headless)",
+    "manifest": "flxos-generic-esp32s3-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "headless"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "guition-jc1060p470ciwy",
+    "target": "esp32p4",
+    "version": "0.1.0",
+    "name": "FlxOS for Guition JC1060P470C-I-W-Y",
+    "manifest": "flxos-guition-jc1060p470ciwy-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "mipi-dsi",
+      "jd9165",
+      "7.0-inch",
+      "touch",
+      "gt911",
+      "guition"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "guition-jc2432w328c",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for Guition JC2432W328C",
+    "manifest": "flxos-guition-jc2432w328c-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "2.8-inch",
+      "touch",
+      "cst816s",
+      "guition"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "guition-jc3248w535c",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Guition JC3248W535C",
+    "manifest": "flxos-guition-jc3248w535c-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "axs15231b",
+      "3.5-inch",
+      "touch",
+      "guition"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "guition-jc8048w550c",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Guition JC8048W550C",
+    "manifest": "flxos-guition-jc8048w550c-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "rgb",
+      "5.0-inch",
+      "touch",
+      "gt911",
+      "guition"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "heltec-wifi-lora-32-v3",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Heltec WiFi LoRa 32 V3",
+    "manifest": "flxos-heltec-wifi-lora-32-v3-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "i2c",
+      "ssd1306",
+      "oled",
+      "0.96-inch",
+      "lora",
+      "heltec"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "lilygo-t-hmi",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for LilyGO T-HMI",
+    "manifest": "flxos-lilygo-t-hmi-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "lilygo",
+      "t-hmi",
+      "st7789v",
+      "parallel8",
+      "xpt2046"
+    ],
+    "incubating": false,
+    "warning_message": "Touch controller defaults may still need final on-device calibration."
+  },
+  {
+    "profile": "lilygo-tdeck",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for LilyGO T-Deck",
+    "manifest": "flxos-lilygo-tdeck-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "2.8-inch",
+      "touch",
+      "gt911",
+      "lora",
+      "keyboard",
+      "trackball"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "lilygo-tdisplay",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for LilyGO T-Display",
+    "manifest": "flxos-lilygo-tdisplay-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "1.14-inch",
+      "lilygo"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "lilygo-tdisplay-s3",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for LilyGO T-Display-S3",
+    "manifest": "flxos-lilygo-tdisplay-s3-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "parallel8",
+      "st7789",
+      "1.9-inch",
+      "lilygo"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "lilygo-tdongle-s3",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for LilyGO T-Dongle-S3",
+    "manifest": "flxos-lilygo-tdongle-s3-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7735",
+      "0.96-inch",
+      "sdmmc",
+      "lilygo"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "lilygo-tlora-pager",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for LilyGO T-Lora Pager",
+    "manifest": "flxos-lilygo-tlora-pager-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7796",
+      "2.33-inch",
+      "keyboard",
+      "lora",
+      "lilygo"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "m5stack-cardputer",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for M5Stack Cardputer",
+    "manifest": "flxos-m5stack-cardputer-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "1.14-inch",
+      "keyboard",
+      "compact"
+    ],
+    "incubating": true,
+    "warning_message": "Standard Cardputer v1.x only (NOT Cardputer ADV)"
+  },
+  {
+    "profile": "m5stack-cardputer-adv",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for M5Stack Cardputer Adv",
+    "manifest": "flxos-m5stack-cardputer-adv-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "1.14-inch",
+      "keyboard",
+      "compact"
+    ],
+    "incubating": true,
+    "warning_message": "Cardputer Adv only (TCA8418 Keyboard)"
+  },
+  {
+    "profile": "m5stack-core2",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for M5Stack Core2",
+    "manifest": "flxos-m5stack-core2-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9342",
+      "2.0-inch",
+      "touch",
+      "axp192"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "m5stack-cores3",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for M5Stack CoreS3",
+    "manifest": "flxos-m5stack-cores3-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9342",
+      "2.0-inch",
+      "touch",
+      "axp2101"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "m5stack-papers3",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for M5Stack PaperS3",
+    "manifest": "flxos-m5stack-papers3-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "epdiy",
+      "eink",
+      "4.7-inch",
+      "touch",
+      "gt911",
+      "m5stack"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "m5stack-stackchan",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for M5Stack StackChan",
+    "manifest": "flxos-m5stack-stackchan-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "ili9342",
+      "2.0-inch",
+      "touch",
+      "axp2101",
+      "m5stack"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "m5stack-stickc-plus2",
+    "target": "esp32",
+    "version": "0.1.0",
+    "name": "FlxOS for M5Stack StickC Plus2",
+    "manifest": "flxos-m5stack-stickc-plus2-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "1.14-inch",
+      "m5stack"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "m5stack-sticks3",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for M5Stack StickS3",
+    "manifest": "flxos-m5stack-sticks3-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "1.14-inch",
+      "m5stack"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "m5stack-tab5",
+    "target": "esp32p4",
+    "version": "0.1.0",
+    "name": "FlxOS for M5Stack Tab5",
+    "manifest": "flxos-m5stack-tab5-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "mipi-dsi",
+      "ili9881c",
+      "5.0-inch",
+      "touch",
+      "gt911",
+      "m5stack",
+      "keyboard"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "unphone",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for unPhone unPhone",
+    "manifest": "flxos-unphone-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "hx8357d",
+      "3.5-inch",
+      "touch",
+      "xpt2046",
+      "unphone"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "waveshare-esp32-s3-geek",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Waveshare ESP32-S3-GEEK",
+    "manifest": "flxos-waveshare-esp32-s3-geek-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "1.14-inch",
+      "sdmmc",
+      "waveshare"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "waveshare-s3-lcd-13",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Waveshare S3-LCD-13",
+    "manifest": "flxos-waveshare-s3-lcd-13-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "1.3-inch",
+      "waveshare"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "waveshare-s3-touch-lcd-128",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for WaveShare S3 Touch LCD 1.28",
+    "manifest": "flxos-waveshare-s3-touch-lcd-128-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "gc9a01",
+      "1.28-inch",
+      "circle",
+      "touch",
+      "cst816s",
+      "waveshare"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "waveshare-s3-touch-lcd-147",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for WaveShare S3 Touch LCD 1.47",
+    "manifest": "flxos-waveshare-s3-touch-lcd-147-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "spi",
+      "st7789",
+      "1.47-inch",
+      "waveshare"
+    ],
+    "incubating": true,
+    "warning_message": null
+  },
+  {
+    "profile": "waveshare-s3-touch-lcd-43",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for WaveShare S3 Touch LCD 4.3",
+    "manifest": "flxos-waveshare-s3-touch-lcd-43-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "rgb",
+      "4.3-inch",
+      "touch",
+      "gt911",
+      "waveshare"
+    ],
+    "incubating": false,
+    "warning_message": null
+  },
+  {
+    "profile": "wireless-tag-wt32-sc01-plus",
+    "target": "esp32s3",
+    "version": "0.1.0",
+    "name": "FlxOS for Wireless-Tag WT32-SC01-Plus",
+    "manifest": "flxos-wireless-tag-wt32-sc01-plus-v0.1.0-cdn/manifest.json",
+    "tags": [
+      "parallel8",
+      "st7796",
+      "3.5-inch",
+      "touch",
+      "ft5x06"
+    ],
+    "incubating": true,
+    "warning_message": null
+  }
+]

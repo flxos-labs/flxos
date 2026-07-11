@@ -1,0 +1,32 @@
+{
+  "name": "FlxOS for CYD 3248S035C",
+  "version": "0.1.0",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "bootloader.bin",
+          "offset": 4096
+        },
+        {
+          "path": "partition-table.bin",
+          "offset": 32768
+        },
+        {
+          "path": "flxos.bin",
+          "offset": 65536
+        },
+        {
+          "path": "system.bin",
+          "offset": 3211264
+        },
+        {
+          "path": "data.bin",
+          "offset": 3342336
+        }
+      ]
+    }
+  ]
+}
