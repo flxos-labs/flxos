@@ -96,3 +96,6 @@ reports/
 # Monitor summary
 flxos_monitor_summary.json
 
+# Compiled release outputs
+releases/
+
