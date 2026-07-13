@@ -23,6 +23,8 @@ FlxOS is a production-focused operating system architecture for ESP32-class devi
 You can run the fully interactive FlxOS web simulator directly in your browser:
 👉 **[flxos-labs.github.io/#simulator](https://flxos-labs.github.io/#simulator)**
 
+> ⚠️ **Note:** This is a browser-based web simulator demonstrating the user interface and features of FlxOS, not the actual OS running on embedded microcontrollers.
+
 [![FlxOS Web Simulator](https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_161725_home_screen_with_dock_status_bar_wallpaper.png)](https://flxos-labs.github.io/#simulator)
 
 ---
