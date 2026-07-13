@@ -25,7 +25,7 @@ You can run the fully interactive FlxOS web simulator directly in your browser:
 
 > ⚠️ **Note:** This is a browser-based web simulator demonstrating the user interface and features of FlxOS, not the actual OS running on embedded microcontrollers.
 
-[![FlxOS Web Simulator](https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/scr_20260312_161725_home_screen_with_dock_status_bar_wallpaper.png)](https://flxos-labs.vercel.app/#simulator)
+[![FlxOS Web Simulator Demo](https://raw.githubusercontent.com/flxos-labs/flxos-labs/main/public/images/screenshots/simulator_demo.gif)](https://flxos-labs.vercel.app/#simulator)
 
 ---
 
