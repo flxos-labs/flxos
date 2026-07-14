@@ -29,6 +29,16 @@ You can run the fully interactive FlxOS web simulator directly in your browser:
 
 ---
 
+## ✨ Features
+
+- 🖥️ **Desktop Shell**: Window manager (dwindle layout), app launcher, status bar, notifications, quick access panel, and gesture navigation.
+- 📱 **App Framework**: Manifest-driven applications, intent routing, MIME handlers, and URL schemes.
+- ⚙️ **Service Lifecycle**: Dependency-aware startup, health checks, watchdog integration, and self-healing.
+- 🔌 **Hardware Portability**: Unified YAML-based hardware profile definition per board, supporting ESP32, S2, S3, C3, C6, H2, and P4 chips.
+- 📦 **Core Runtime**: EventBus, system preferences, diagnostic tools, and storage management utilities.
+
+---
+
 ### 🖼️ Product Preview
 
 <table align="center">
@@ -53,16 +63,6 @@ You can run the fully interactive FlxOS web simulator directly in your browser:
     </td>
   </tr>
 </table>
-
----
-
-## ✨ Features
-
-- 🖥️ **Desktop Shell**: Window manager (dwindle layout), app launcher, status bar, notifications, quick access panel, and gesture navigation.
-- 📱 **App Framework**: Manifest-driven applications, intent routing, MIME handlers, and URL schemes.
-- ⚙️ **Service Lifecycle**: Dependency-aware startup, health checks, watchdog integration, and self-healing.
-- 🔌 **Hardware Portability**: Unified YAML-based hardware profile definition per board, supporting ESP32, S2, S3, C3, C6, H2, and P4 chips.
-- 📦 **Core Runtime**: EventBus, system preferences, diagnostic tools, and storage management utilities.
 
 ---
 
